@@ -1,0 +1,3 @@
+node_modules/
+*.zr3/
+package-lock.json
