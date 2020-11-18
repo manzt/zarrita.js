@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "zora": "https://cdn.skypack.dev/zora",
+    "numcodecs/": "https://cdn.skypack.dev/numcodecs/"
+  }
+}

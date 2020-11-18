@@ -1,4 +1,4 @@
-name: Node.js CI
+name: test CI
 
 on: [push]
 
@@ -12,8 +12,15 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '14.x'
+        node-version: 14.x
     - run: npm install
     - run: npm run test:ci
-      env:
-        CI: true
+
+
+    - uses: actions/checkout@v2
+    - name: Use Deno
+      uses: denolib/setup-deno@v2
+      with:
+        deno-version: v1.x
+    - run: deno --version
+    - run: deno run --unstable --allow-net --import-map=import_map.json test/memstore.test.js
