@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { KeyError, ListDirResult, Store, assert } from './zarrita.js';
+import { KeyError, ListDirResult, Store, assert } from './core.js';
 
 export default class FileSystemStore extends Store {
   constructor(fp) {

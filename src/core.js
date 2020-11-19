@@ -131,11 +131,11 @@ function _check_shape(shape) {
 
 // no support for >u8, <u8, |b1
 const DTYPE_STRS = new Set([
-  'i1', 'u1', 
+   'i1',  'u1', // '|b1'
   '<i2', '<i4', '<i8',
   '>i2', '>i4', '>i8',
-  '<u2', '<u4',
-  '>u2', '>u4',
+  '<u2', '<u4', // 'u8'
+  '>u2', '>u4', // '>u8'
   '<f2', '<f4', '<f8',
   '>f2', '>f4', '>f8',
 ]);
@@ -722,20 +722,8 @@ export class ZarrArray extends Node {
 
   async get_chunk(chunk_coords) {
     const chunk_key = this._chunk_key(chunk_coords);
-    let data;
-    try {
-      const buffer = await this.store.get(chunk_key);
-      data = await this._decode_chunk(buffer);
-    } catch (err) {
-      if (!(err instanceof KeyError)) {
-        throw err;
-      }
-      const size = this.chunk_shape.reduce((a, b) => a * b, 1);
-      data = new this.TypedArray(size);
-      if (typeof this.fill_value === 'number') {
-        data.fill(this.fill_value);
-      }
-    }
+    const buffer = await this.store.get(chunk_key);
+    const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
   }
 

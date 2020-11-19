@@ -7,7 +7,7 @@
   "scripts": {
     "test": "node test/index.test.js",
     "test:ci": "npm run lint && npm test | tap-set-exit",
-    "lint": "eslint zarrita.js fsstore.js test --ext .js"
+    "lint": "eslint src test --ext .js"
   },
   "files": [
     "zarrita.js",
