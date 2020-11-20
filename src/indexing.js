@@ -22,13 +22,8 @@ Object.defineProperties(ZarrArray.prototype, {
   },
   set_basic_selection: {
     value(selection, value) {
-      const indexer = new _BasicIndexer(selection, this);
+      const indexer = new _BasicIndexer({ selection, ...this });
       return _set_selection.call(this, indexer, value);
-    },
-  },
-  chunk_size: {
-    get() {
-      return this.chunk_shape.reduce((a, b) => a * b, 1);
     },
   },
 });
@@ -50,7 +45,7 @@ async function _get_selection(indexer) {
     await _chunk_getitem.call(this, chunk_coords, chunk_selection, out, out_selection);
   }
   // Return scalar if no shape ?
-  return out.shape ? out : out.data[0];
+  return out.shape.length === 0 ? out.data[0] : out;
 }
 
 async function _chunk_getitem(chunk_coords, chunk_selection, out, out_selection) {
@@ -96,7 +91,6 @@ async function _set_selection(indexer, value) {
   }
   // iterate over chunks in range
   for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
-    // put data
     await _chunk_setitem.call(this, chunk_coords, chunk_selection, value, out_selection);
   }
 }
@@ -112,7 +106,8 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
     // optimization: we are completely replacing the chunk, so no need 
     // to access the exisiting chunk data
     if (_isscalar(value)) {
-      cdata = new this.TypedArray(this.chunk_size).fill(value);
+      const chunk_size = this.chunk_shape.reduce((a, b) => a * b, 1);
+      cdata = new this.TypedArray(chunk_size).fill(value);
     }
     // Otherwise data just contiguous TypedArray
     cdata = value.data;
@@ -130,7 +125,7 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
         throw err;
       }
       chunk = {
-        data: this.TypedArray(this.chunk_size),
+        data: this.TypedArray(this.chunk_shape.reduce((a, b) => a * b, 1)),
         shape: this.chunk_shape,
         strides,
       };
@@ -180,19 +175,19 @@ export function slice(start, stop, step = null) {
     stop = start;
     start = null;
   }
-  const indices = size => {
-    let [start_ix, end_ix] = [start ?? 0, stop ?? size];
-    if (start_ix < 0) start_ix += size;
-    if (end_ix < 0) end_ix += size;
+  const indices = length => {
     const istep = step ?? 1;
-    const len = Math.floor((end_ix - start_ix - 1) / istep + 1);
-    return [start_ix, end_ix, istep, len];
+    let start_ix = start ?? (istep < 0 ? length - 1 : 0);
+    let end_ix = stop ?? (istep < 0 ? -1 : length);
+    if (start_ix < 0) start_ix += length;
+    if (end_ix < 0) end_ix += length;
+    return [start_ix, end_ix, istep];
   };
   return { start, stop, step, indices, _slice: true };
 }
 
 // python-like range generator
-function *range(start, stop, step = 1) {
+function* range(start, stop, step = 1) {
   if (stop == undefined) {
     stop = start;
     start = 0;

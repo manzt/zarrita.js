@@ -77,7 +77,6 @@ export async function get_hierarchy(store) {
   // instantiate hierarchy
   const meta_key_suffix = meta.metadata_key_suffix;
   const hierarchy = new Hierarchy({ store, meta_key_suffix });
-
   return hierarchy;
 }
 
@@ -124,7 +123,6 @@ function _check_shape(shape) {
   if (Number.isInteger(shape)) {
     shape = [shape];
   }
-
   assert(shape.every(i => Number.isInteger(i)), `Invalid array shape, got: ${shape}`);
   return shape;
 }
@@ -192,7 +190,11 @@ async function _decode_codec_metadata(meta) {
   if (meta.codec !== 'https://purl.org/zarr/spec/codec/gzip/1.0') {
     throw new NotImplementedError();
   }
-  const GZip = await registry.get('gzip')();
+  const importer = registry.get('gzip');
+  if (!importer) {
+    throw Error('Codec not in registry');
+  }
+  const GZip = await importer();
   const codec = new GZip(meta.configuration.level);
   return codec;
 }

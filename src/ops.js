@@ -6,13 +6,18 @@ export function set(out, out_selection, value, value_selection) {
   return set_from_chunk(out, out_selection, value, value_selection);
 }
 
+function indices_len(start, stop, step) {
+  if (step < 0 && stop < start) return Math.floor((start - stop - 1) / (-step) + 1);
+  if (start < stop) return Math.floor((stop - start - 1) / step) + 1;
+  return 0;
+}
+
 function set_scalar(out, out_selection, value) {
   const [slice, ...slices] = out_selection;
   const [stride, ...strides] = out.strides;
   const [out_len, ...shape] = out.shape;
-  /* eslint-disable no-unused-vars */
-  const [from, _to, step, len] = slice.indices(out_len);
-  /* eslint-enable no-unused-vars */
+  const [from, to, step] = slice.indices(out_len);
+  const len = indices_len(from, to, step);
   if (slices.length === 1) {
     if (step === 1 && stride === 1) {
       out.data.fill(value, from, from + len);
@@ -63,11 +68,10 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   const [out_stride, ...out_strides] = out.strides;
   const [out_len, ...out_shape] = out.shape;
 
-  /* eslint-disable no-unused-vars */
-  const [from, _to, step, len] = out_slice.indices(out_len); // only need len of out slice since chunk subset
-  const [cfrom, _cto, cstep] = chunk_slice.indices(chunk_len);
-  /* eslint-enable no-unused-vars */
+  const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
+  const [cfrom, _to, cstep] = chunk_slice.indices(chunk_len); // eslint-disable-line no-unused-vars
 
+  const len = indices_len(from, to, step);
   if (out_slices.length === 0 && chunk_slices.length === 0) {
     if (step === 1 && out_stride === 1 && cstep === 1 && chunk_stride === 1) {
       out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
