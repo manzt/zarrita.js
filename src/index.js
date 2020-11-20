@@ -1,2 +1,2 @@
 export * from './core.js';
-import './indexing.js';
+export * from './indexing.js';

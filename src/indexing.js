@@ -1,4 +1,5 @@
-import { IndexError, KeyError, NotImplementedError, ZarrArray, assert } from './core.js';
+import { IndexError, KeyError, ZarrArray, assert } from './core.js';
+import { set } from './ops.js';
 
 // This module mutates the ZarrArray prototype to add chunk indexing and slicing
 
@@ -58,25 +59,16 @@ async function _chunk_getitem(chunk_coords, chunk_selection, out, out_selection)
     const chunk = await this.get_chunk(chunk_coords);
     chunk.strides = get_strides(chunk.shape);
     // store selected data in output
-    _set_arr_direct(out, out_selection, chunk, chunk_selection);
+    set(out, out_selection, chunk, chunk_selection);
   } catch (err) {
     if (!(err instanceof KeyError)) {
       throw err;
     }
     if (this.fill_value !== null) {
-      _set_arr_scalar(out, out_selection, this.fill_value);
+      set(out, out_selection, this.fill_value);
     }
   }
 }
-
-function _set_arr_scalar(out, out_selection, value) {
-  throw new NotImplementedError();
-}
-
-function _set_arr_direct(out, out_selection, chunk, chunk_selection) {
-  throw new NotImplementedError();
-}
-
 
 async function _set_selection(indexer, value) {
   // We iterate over all chunks which overlap the selection and thus contain data
@@ -149,9 +141,9 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
 
     // Modify chunk data
     if (typeof value === 'number') {
-      _set_arr_scalar(chunk, chunk_selection, value);
+      set(chunk, chunk_selection, value);
     } else {
-      _set_arr_direct(chunk, chunk_selection, value, out_selection);
+      set(chunk, chunk_selection, value, out_selection);
     }
 
     cdata = chunk.data;
@@ -190,9 +182,11 @@ export function slice(start, stop, step = null) {
   }
   const indices = size => {
     let [start_ix, end_ix] = [start ?? 0, stop ?? size];
-    if (start_ix < 0) start_ix = size + start_ix;
-    if (end_ix < 0) end_ix = size + end_ix;
-    return [start_ix, end_ix, step ?? 1];
+    if (start_ix < 0) start_ix += size;
+    if (end_ix < 0) end_ix += size;
+    const istep = step ?? 1;
+    const len = Math.floor((end_ix - start_ix - 1) / istep + 1);
+    return [start_ix, end_ix, istep, len];
   };
   return { start, stop, step, indices, _slice: true };
 }
@@ -308,7 +302,7 @@ class _IntDimIndexer {
     const dim_chunk_ix = Math.floor(this.dim_sel / this.dim_chunk_len);
     const dim_offset = dim_chunk_ix * this.dim_chunk_len;
     const dim_chunk_sel = this.dim_sel - dim_offset;
-    const dim_out_sel = null;
+    const dim_out_sel = this.dim_sel;
     // ChunkDimProjection
     yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
   }
