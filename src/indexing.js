@@ -36,7 +36,7 @@ async function _get_selection(indexer) {
   const out = {
     data: new this.TypedArray(outsize),
     shape: indexer.shape,
-    strides: get_strides(indexer.shape),
+    stride: get_strides(indexer.shape),
   };
   // iterator over chunks
   for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
@@ -52,7 +52,7 @@ async function _chunk_getitem(chunk_coords, chunk_selection, out, out_selection)
   try {
     // decode chunk
     const chunk = await this.get_chunk(chunk_coords);
-    chunk.strides = get_strides(chunk.shape);
+    chunk.stride = get_strides(chunk.shape);
     // store selected data in output
     set(out, out_selection, chunk, chunk_selection);
   } catch (err) {
@@ -81,12 +81,12 @@ async function _set_selection(indexer, value) {
   }
 
   // If input is missing strides, compute from array shape
-  if (!Array.isArray(value.strides)) {
+  if (!Array.isArray(value.stride)) {
     // Don't mutate input object
     value = {
       data: value.data,
       shape: value.shape,
-      strides: get_strides(value.shape),
+      stride: get_strides(value.shape),
     };
   }
   // iterate over chunks in range
@@ -115,11 +115,11 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
     // partially replace the contents of this chunk
 
     let chunk;
-    const strides = get_strides(this.chunk_shape);
+    const stride = get_strides(this.chunk_shape);
     try {
       // decode previous chunk from store
       chunk = await this.get_chunk(chunk_coords);
-      chunk.strides = strides;
+      chunk.stride = stride;
     } catch (err) {
       if (!(err instanceof KeyError)) {
         throw err;
@@ -127,7 +127,7 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
       chunk = {
         data: this.TypedArray(this.chunk_shape.reduce((a, b) => a * b, 1)),
         shape: this.chunk_shape,
-        strides,
+        stride,
       };
       if (typeof this.fill_value === 'number') {
         chunk.data.fill(this.fill_value);

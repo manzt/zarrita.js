@@ -14,23 +14,23 @@ function indices_len(start, stop, step) {
 
 function set_scalar(out, out_selection, value) {
   const [slice, ...slices] = out_selection;
-  const [stride, ...strides] = out.strides;
+  const [curr_stride, ...stride] = out.stride;
   const [out_len, ...shape] = out.shape;
   const [from, to, step] = slice.indices(out_len);
   const len = indices_len(from, to, step);
   if (slices.length === 1) {
-    if (step === 1 && stride === 1) {
+    if (step === 1 && curr_stride === 1) {
       out.data.fill(value, from, from + len);
     } else {
       for (let i = 0; i < len; i++) {
-        out.data[stride * (from + (step * i))] = value;
+        out.data[curr_stride * (from + (step * i))] = value;
       }
     }
     return;
   }
   for (let i = 0; i < len; i++) {
-    const data = out.data.subarray(stride * (from + (step * i)));
-    set_scalar({ data, strides, shape }, slices, value);
+    const data = out.data.subarray(curr_stride * (from + (step * i)));
+    set_scalar({ data, stride, shape }, slices, value);
   }
 }
 
@@ -44,7 +44,7 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   const [out_slice, ...out_slices] = out_selection;
   const [chunk_slice, ...chunk_slices] = chunk_selection;
 
-  const [chunk_stride, ...chunk_strides] = chunk.strides;
+  const [chunk_stride, ...chunk_strides] = chunk.stride;
   const [chunk_len, ...chunk_shape] = chunk.shape;
 
   // This source dimension is squeezed
@@ -59,13 +59,13 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     const chunk_view = {
       data: chunk.data.subarray(chunk_stride * chunk_slice),
       shape: chunk_shape, 
-      strides: chunk_strides,
+      stride: chunk_strides,
     };
     set_from_chunk(out, out_selection, chunk_view, chunk_slices);
     return;
   }
 
-  const [out_stride, ...out_strides] = out.strides;
+  const [out_stride, ...out_strides] = out.stride;
   const [out_len, ...out_shape] = out.shape;
 
   const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
@@ -86,12 +86,12 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     const out_view = {
       data: out.data.subarray(out_stride * (from + (i * step))),
       shape: out_shape,
-      strides: out_strides,
+      stride: out_strides,
     };
     const chunk_view = {
       data: chunk.data.subarray(chunk_stride * (cfrom + (i * cstep))),
       shape: chunk_shape,
-      strides: chunk_strides,
+      stride: chunk_strides,
     };
     set_from_chunk(out_view, out_slices, chunk_view, chunk_slices);
   }
