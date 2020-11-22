@@ -1,13 +1,11 @@
 // private utitlites to fill strided output array
 export function set(out, out_selection, value, value_selection) {
-  if (typeof value === 'number') {
-    return set_scalar(out, out_selection, value);
-  }
+  if (typeof value === 'number') return set_scalar(out, out_selection, value);
   return set_from_chunk(out, out_selection, value, value_selection);
 }
 
 function indices_len(start, stop, step) {
-  if (step < 0 && stop < start) return Math.floor((start - stop - 1) / (-step) + 1);
+  if (step < 0 && stop < start) return Math.floor((start - stop - 1) / (-step)) + 1;
   if (start < stop) return Math.floor((stop - start - 1) / step) + 1;
   return 0;
 }
@@ -18,7 +16,7 @@ function set_scalar(out, out_selection, value) {
   const [out_len, ...shape] = out.shape;
   const [from, to, step] = slice.indices(out_len);
   const len = indices_len(from, to, step);
-  if (slices.length === 1) {
+  if (slices.length === 0) {
     if (step === 1 && curr_stride === 1) {
       out.data.fill(value, from, from + len);
     } else {

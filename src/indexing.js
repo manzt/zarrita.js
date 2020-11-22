@@ -77,18 +77,17 @@ async function _set_selection(indexer, value) {
   const sel_shape = indexer.shape;
   // check value shape
   if (sel_shape?.length === 0) {
-      assert(_isscalar(value), `value not scalar for scalar selection, got ${value}`);
+    assert(_isscalar(value), `value not scalar for scalar selection, got ${value}`);
   }
-
-  // If input is missing strides, compute from array shape
-  if (!Array.isArray(value.stride)) {
-    // Don't mutate input object
+  if (value.data && value.shape && !value.stride) {
+    // If input is missing strides, compute from array shape
     value = {
       data: value.data,
       shape: value.shape,
       stride: get_strides(value.shape),
     };
   }
+
   // iterate over chunks in range
   for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
     await _chunk_setitem.call(this, chunk_coords, chunk_selection, value, out_selection);
@@ -97,8 +96,7 @@ async function _set_selection(indexer, value) {
 
 async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selection) {
   // obtain key for chunk storage
-  const chunk_key = self._chunk_key(chunk_coords);
-
+  const chunk_key = this._chunk_key(chunk_coords);
   let cdata;
   if (_is_total_slice(chunk_selection, this.chunk_shape)) {
     // totally replace chunk
@@ -108,18 +106,18 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
     if (_isscalar(value)) {
       const chunk_size = this.chunk_shape.reduce((a, b) => a * b, 1);
       cdata = new this.TypedArray(chunk_size).fill(value);
+    } else {
+      // Otherwise data just contiguous TypedArray
+      cdata = value.data;
     }
-    // Otherwise data just contiguous TypedArray
-    cdata = value.data;
   } else {
     // partially replace the contents of this chunk
-
     let chunk;
-    const stride = get_strides(this.chunk_shape);
+    const chunk_stride = get_strides(this.chunk_shape);
     try {
       // decode previous chunk from store
       chunk = await this.get_chunk(chunk_coords);
-      chunk.stride = stride;
+      chunk.stride = chunk_stride;
     } catch (err) {
       if (!(err instanceof KeyError)) {
         throw err;
@@ -127,7 +125,7 @@ async function _chunk_setitem(chunk_coords, chunk_selection, value, out_selectio
       chunk = {
         data: this.TypedArray(this.chunk_shape.reduce((a, b) => a * b, 1)),
         shape: this.chunk_shape,
-        stride,
+        stride: chunk_stride,
       };
       if (typeof this.fill_value === 'number') {
         chunk.data.fill(this.fill_value);
