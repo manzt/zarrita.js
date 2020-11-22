@@ -127,15 +127,16 @@ function _check_shape(shape) {
   return shape;
 }
 
-// no support for >u8, <u8, |b1
+// no support for >u8, <u8, |b1, <f2, >f2
 const DTYPE_STRS = new Set([
-   'i1',  'u1', // '|b1'
-  '<i2', '<i4', '<i8',
-  '>i2', '>i4', '>i8',
-  '<u2', '<u4', // 'u8'
-  '>u2', '>u4', // '>u8'
-  '<f2', '<f4', '<f8',
-  '>f2', '>f4', '>f8',
+   'i1',  'u1',
+  '<i2', '<i4',
+  '<i8', '>i8',
+  '>i2', '>i4',
+  '<u2', '<u4',
+  '>u2', '>u4',
+  '<f4', '<f8',
+  '>f4', '>f8',
 ]);
 
 function _check_dtype(dtype) {
