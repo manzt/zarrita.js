@@ -11,9 +11,18 @@ function indices_len(start, stop, step) {
 }
 
 function set_scalar(out, out_selection, value) {
+  if (out_selection.length === 0) {
+    out.data[0] = value;
+    return;
+  }
   const [slice, ...slices] = out_selection;
   const [curr_stride, ...stride] = out.stride;
   const [out_len, ...shape] = out.shape;
+  if (typeof slice === 'number') {
+    const data = out.data.subarray(curr_stride * slice);
+    set_scalar({ data, stride, shape }, slices, value);
+    return;
+  }
   const [from, to, step] = slice.indices(out_len);
   const len = indices_len(from, to, step);
   if (slices.length === 0) {
@@ -45,15 +54,8 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   const [chunk_stride, ...chunk_strides] = chunk.stride;
   const [chunk_len, ...chunk_shape] = chunk.shape;
 
-  // This source dimension is squeezed
   if (typeof chunk_slice === 'number') {
-    /*
-    Sets dimension offset for squeezed dimension.
-    Ex. if 0th dimension is squeezed to 2nd index (numpy : arr[2,i])
-        sourceArr[stride[0]* 2 + i] --> sourceArr.subarray(stride[0] * 2)[i] (sourceArr[i] in next call)
-    Thus, subsequent squeezed dims are appended to the source offset.
-    */
-    // Don't update destination offset/slices, just source
+    // chunk dimension is squeezed
     const chunk_view = {
       data: chunk.data.subarray(chunk_stride * chunk_slice),
       shape: chunk_shape, 
@@ -65,6 +67,17 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
 
   const [out_stride, ...out_strides] = out.stride;
   const [out_len, ...out_shape] = out.shape;
+
+  if (typeof out_slice === 'number') {
+    // chunk dimension is squeezed
+    const out_view = {
+      data: out.data.subarray(out_stride * out_slice),
+      shape: out_shape, 
+      stride: out_strides,
+    };
+    set_from_chunk(out_view, out_slices, chunk, chunk_selection);
+    return;
+  }
 
   const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
   const [cfrom, _to, cstep] = chunk_slice.indices(chunk_len); // eslint-disable-line no-unused-vars
