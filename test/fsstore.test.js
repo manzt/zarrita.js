@@ -1,7 +1,7 @@
 import fsp from 'fs/promises';
 import fs from 'fs';
 
-import FileSystemStore from '../fsstore.js';
+import FileSystemStore from '../src/fsstore.js';
 import { run_test_suite } from './common.js';
 
 const config = {

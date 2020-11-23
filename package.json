@@ -7,7 +7,7 @@
   "scripts": {
     "test": "node test/index.test.js",
     "test:ci": "npm run lint && npm test | tap-set-exit",
-    "lint": "eslint zarrita.js fsstore.js test --ext .js"
+    "lint": "eslint src test --ext .js"
   },
   "files": [
     "zarrita.js",
@@ -21,9 +21,7 @@
   "author": "Trevor Manz",
   "license": "MIT",
   "eslintConfig": {
-    "extends": [
-      "eslint:recommended"
-    ],
+    "extends": ["eslint:recommended"],
     "env": {
       "es6": true,
       "browser": true,
@@ -34,34 +32,14 @@
       "sourceType": "module"
     },
     "rules": {
-      "comma-dangle": [
-        "error",
-        "always-multiline"
-      ],
+      "comma-dangle": ["error", "always-multiline"],
       "no-console": "error",
       "no-cond-assign": "off",
-      "no-fallthrough": [
-        "error",
-        {
-          "commentPattern": "break omitted"
-        }
-      ],
+      "no-fallthrough": ["error", { "commentPattern": "break omitted" }],
       "semi": "error",
-      "quotes": [
-        "error",
-        "single",
-        {
-          "avoidEscape": true
-        }
-      ],
+      "quotes": ["error", "single", { "avoidEscape": true }],
       "prefer-const": "error",
-      "sort-imports": [
-        "error",
-        {
-          "ignoreCase": false,
-          "ignoreDeclarationSort": true
-        }
-      ]
+      "sort-imports": ["error", { "ignoreCase": false, "ignoreDeclarationSort": true }]
     }
   },
   "dependencies": {},

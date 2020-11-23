@@ -1,4 +1,4 @@
-import { MemoryStore } from '../zarrita.js';
+import { MemoryStore } from '../src/index.js';
 import { run_test_suite } from './common.js';
 
 const config = {

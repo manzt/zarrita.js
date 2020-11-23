@@ -77,7 +77,6 @@ export async function get_hierarchy(store) {
   // instantiate hierarchy
   const meta_key_suffix = meta.metadata_key_suffix;
   const hierarchy = new Hierarchy({ store, meta_key_suffix });
-
   return hierarchy;
 }
 
@@ -124,20 +123,20 @@ function _check_shape(shape) {
   if (Number.isInteger(shape)) {
     shape = [shape];
   }
-
   assert(shape.every(i => Number.isInteger(i)), `Invalid array shape, got: ${shape}`);
   return shape;
 }
 
-// no support for >u8, <u8, |b1
+// no support for >u8, <u8, |b1, <f2, >f2
 const DTYPE_STRS = new Set([
-  'i1', 'u1', 
-  '<i2', '<i4', '<i8',
-  '>i2', '>i4', '>i8',
+   'i1',  'u1',
+  '<i2', '<i4',
+  '<i8', '>i8',
+  '>i2', '>i4',
   '<u2', '<u4',
   '>u2', '>u4',
-  '<f2', '<f4', '<f8',
-  '>f2', '>f4', '>f8',
+  '<f4', '<f8',
+  '>f4', '>f8',
 ]);
 
 function _check_dtype(dtype) {
@@ -192,7 +191,11 @@ async function _decode_codec_metadata(meta) {
   if (meta.codec !== 'https://purl.org/zarr/spec/codec/gzip/1.0') {
     throw new NotImplementedError();
   }
-  const GZip = await registry.get('gzip')();
+  const importer = registry.get('gzip');
+  if (!importer) {
+    throw Error('Codec not in registry');
+  }
+  const GZip = await importer();
   const codec = new GZip(meta.configuration.level);
   return codec;
 }
@@ -722,20 +725,8 @@ export class ZarrArray extends Node {
 
   async get_chunk(chunk_coords) {
     const chunk_key = this._chunk_key(chunk_coords);
-    let data;
-    try {
-      const buffer = await this.store.get(chunk_key);
-      data = await this._decode_chunk(buffer);
-    } catch (err) {
-      if (!(err instanceof KeyError)) {
-        throw err;
-      }
-      const size = this.chunk_shape.reduce((a, b) => a * b, 1);
-      data = new this.TypedArray(size);
-      if (typeof this.fill_value === 'number') {
-        data.fill(this.fill_value);
-      }
-    }
+    const buffer = await this.store.get(chunk_key);
+    const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
   }
 
