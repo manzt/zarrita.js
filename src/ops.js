@@ -74,7 +74,7 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       data: out.data.subarray(out_stride * out_slice),
       shape: out_shape,
       stride: out_strides,
-    }
+    };
     set_from_chunk(out_view, out_slices, chunk, chunk_selection);
     return;
   }
