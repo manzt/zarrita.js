@@ -79,6 +79,18 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     return;
   }
 
+  if (out_slice === null) {
+    const out_view = { data: out.data, shape: out_shape, stride: out_strides };
+    set_from_chunk(out_view, out_slices, chunk, chunk_selection);
+    return;
+  }
+
+  if (chunk_slice === null) {
+    const chunk_view = { data: chunk.data, shape: chunk_shape, stride: chunk_strides };
+    set_from_chunk(out, out_selection, chunk_view, chunk_slices);
+    return;
+  }
+
   const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
   const [cfrom, _cto, cstep] = chunk_slice.indices(chunk_len); // eslint-disable-line no-unused-vars
 

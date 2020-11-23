@@ -311,7 +311,7 @@ class _IntDimIndexer {
     const dim_chunk_ix = Math.floor(this.dim_sel / this.dim_chunk_len);
     const dim_offset = dim_chunk_ix * this.dim_chunk_len;
     const dim_chunk_sel = this.dim_sel - dim_offset;
-    const dim_out_sel = this.dim_sel;
+    const dim_out_sel = null;
     // ChunkDimProjection
     yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
   }
