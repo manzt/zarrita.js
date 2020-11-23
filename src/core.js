@@ -1,12 +1,40 @@
-export class NotImplementedError extends Error {}
-export class ValueError extends Error {}
-export class NodeNotFoundError extends Error {}
-export class IndexError extends Error {}
-export class KeyError extends Error {}
+export class NotImplementedError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'NotImplementedError';
+  }
+}
+export class NodeNotFoundError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'NodeNotFoundError';
+  }
+}
+export class IndexError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'IndexError';
+  }
+}
+export class KeyError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'KeyError';
+  }
+}
+export class ZarrAssertionError extends Error {
+  constructor(msg) {
+    super(msg);
+    this.name = 'ZarrAssertionError';
+  }
+}
 
 export function assert(condition, msg = 'Assertion failed') {
-  if (!condition) throw new Error(msg);
+  if (!condition) {
+    throw new ZarrAssertionError(msg);
+  }
 }
+
 function _json_encode_object(o) {
   const str = JSON.stringify(o, null, 2);
   const encoder = new TextEncoder('utf-8');
@@ -55,22 +83,22 @@ export async function get_hierarchy(store) {
   const protocol_version = segments.pop();
   const protocol_uri = segments.join('/');
   if (protocol_uri !== 'https://purl.org/zarr/spec/protocol/core') {
-    throw new NotImplementedError();
+    throw new NotImplementedError(`No support for Protocol URI, got ${protocol_uri}.`);
   }
   const protocol_major_version = protocol_version.split('.')[0];
   if (protocol_major_version !== '3') {
-    throw new NotImplementedError();
+    throw new NotImplementedError(`No support for protocol version, got ${protocol_major_version}.`);
   }
 
   // check metadata encoding
   if (meta.metadata_encoding !== 'https://purl.org/zarr/spec/protocol/core/3.0') {
-    throw new NotImplementedError();
+    throw new NotImplementedError(`No support for metadata encoding, got ${meta.metadata_encoding}.`);
   }
 
   // check extensions
   for (const spec of meta.extensions) {
     if (spec.must_understand) {
-      throw new NotImplementedError();
+      throw new NotImplementedError(`No support for required extensions, got ${JSON.stringify(spec)}.`);
     }
   }
 
@@ -85,7 +113,7 @@ const ALLOWED_NODE_NAME_CHARS = new Set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
 
 function _check_path(path) {
   if (path.length === 0) {
-    throw new ValueError();
+    throw new TypeError('Path cannot be empty string.');
   }
 
   if (path[0] !== '/') {
@@ -97,15 +125,15 @@ function _check_path(path) {
     const segments = path.slice(1).split('/');
     for (const segment of segments) {
       if (segment.length === 0) {
-        throw new ValueError();
+        throw new TypeError('Path segment cannot be empty string.');
       }
       for (const c of segment) {
         if (!ALLOWED_NODE_NAME_CHARS.has(c)) {
-          throw new ValueError(`Invalid path character: ${c}`);
+          throw new TypeError(`Invalid Zarr path character: ${c}.`);
         }
       }
       if (segment.split('').every(c => c === '.')) {
-        throw new ValueError();
+        throw new TypeError('Path cannot be empty.');
       }
     }
   }
@@ -120,7 +148,7 @@ function _check_attrs(attrs = {}) {
 
 
 function _check_shape(shape) {
-  if (Number.isInteger(shape)) {
+  if (typeof shape === 'number') {
     shape = [shape];
   }
   assert(shape.every(i => Number.isInteger(i)), `Invalid array shape, got: ${shape}`);
@@ -144,9 +172,8 @@ function _check_dtype(dtype) {
   return dtype;
 }
 
-
 function _check_chunk_shape(chunk_shape, shape) {
-  const msg = `chunk_shape must be integer or array of integers, got: ${chunk_shape}`;
+  const msg = `chunk_shape must be integer or array of integers, got: ${chunk_shape}.`;
   assert(Number.isInteger(chunk_shape) || Array.isArray(chunk_shape), msg);
   if (Number.isInteger(chunk_shape)) {
     chunk_shape = [chunk_shape];
@@ -173,7 +200,7 @@ function _encode_codec_metadata(codec) {
   const codec_id = codec.constructor.codecId;
   assert(
     !supported_codecs.has(codec_id),
-    `codec not supported for metadata, got: ${codec_id}`,
+    `codec not supported for metadata, got: ${codec_id}.`,
   );
   const config = { level: codec.level };
   delete config.id;
@@ -189,12 +216,10 @@ async function _decode_codec_metadata(meta) {
   if (meta === null) return null;
   // only support gzip for now
   if (meta.codec !== 'https://purl.org/zarr/spec/codec/gzip/1.0') {
-    throw new NotImplementedError();
+    throw new NotImplementedError(`No support for codec, got ${meta.codec}.`);
   }
   const importer = registry.get('gzip');
-  if (!importer) {
-    throw Error('Codec not in registry');
-  }
+  assert(importer, 'Codec not in registry.');
   const GZip = await importer();
   const codec = new GZip(meta.configuration.level);
   return codec;
@@ -333,15 +358,15 @@ export class Hierarchy {
 
     _check_shape(chunk_grid.chunk_shape);
     if (chunk_grid.type !== 'regular') {
-      throw new NotImplementedError();
+      throw new NotImplementedError(`Only support for "regular" chunk_grids, got ${chunk_grid.type}.`);
     }
     _check_chunk_shape(chunk_grid.chunk_shape, shape);
     if (chunk_memory_layout !== 'C') {
-      throw new NotImplementedError();
+      throw new NotImplementedError(`Only support for "C" order chunk_memory_layout, got ${chunk_memory_layout}.`);
     }
     for (const spec of extensions) {
       if (spec.must_understand) {
-        throw NotImplementedError(spec);
+        throw NotImplementedError(`No support for required extensions found, ${JSON.stringify(spec)}.`);
       }
     }
 
@@ -465,28 +490,25 @@ export class Hierarchy {
   async get_nodes() {
     const nodes = new Map();
     const result = await this.store.list_prefix('meta/');
+
+    const lookup = key => {
+      if (key.endsWith(this.array_suffix)) {
+        return { suffix: this.array_suffix, type: 'array' };
+      } else if (key.endsWith(this.group_suffix)){
+        return { suffix: this.group_suffix, type: 'explicit_group' };
+      }
+    };
+
     for (const key of result) {
       if (key === 'root.array' + this.meta_key_suffix) {
         nodes.set('/', 'array');
       } else if (key == 'root.group') {
         nodes.set('/', 'explicit_group');
       } else if (key.startsWith('root/')) {
-        // TODO remove code duplication below
-        if (key.endsWith(this.array_suffix)) {
-          const path = key.slice('root'.length, -this.array_suffix.length);
-          nodes.set(path, 'array');
-          const segments = path.split('/');
-          segments.pop();
-          while (segments.length > 1) {
-            const parent = segments.join('/');
-            nodes.set(parent, nodes.get(parent) || 'implicit_group');
-            segments.pop();
-          }
-          nodes.set('/', nodes.get('/') || 'implicit_group');
-        }
-        if (key.endsWith(this.group_suffix)) {
-          const path = key.slice('root'.length, -this.group_suffix.length);
-          nodes.set(path, 'explicit_group');
+        const m = lookup(key);
+        if (m) {
+          const path = key.slice('root'.length, -m.suffix.length);
+          nodes.set(path, m.type);
           const segments = path.split('/');
           segments.pop();
           while (segments.length > 1) {
@@ -688,7 +710,7 @@ export class ZarrArray extends Node {
 
   // eslint-disable-next-line no-unused-vars
   get(selection) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Must import main package export for array indexing.');
   }
   
   _chunk_key(chunk_coords) {
@@ -732,7 +754,7 @@ export class ZarrArray extends Node {
 
   // eslint-disable-next-line no-unused-vars
   set(selection, value) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Must import main package export for array indexing.');
   }
 
   repr() {
@@ -754,17 +776,17 @@ export class ListDirResult {
 /* eslint-disable no-unused-vars */
 export class Store {
   async get(key, _default) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.get');
   }
   async set(key, value) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.set');
   }
   async delete(key) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.delete');
   }
 
   async keys() {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.keys');
   }
 
   async length() {
@@ -774,10 +796,10 @@ export class Store {
     return size;
   }
   async list_prefix(prefix) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.list_prefix');
   }
   async list_dir(prefix) {
-    throw new NotImplementedError();
+    throw new NotImplementedError('Store.list_dir');
   }
 }
 /* eslint-enable no-unused-vars */
