@@ -490,28 +490,25 @@ export class Hierarchy {
   async get_nodes() {
     const nodes = new Map();
     const result = await this.store.list_prefix('meta/');
+
+    const lookup = key => {
+      if (key.endsWith(this.array_suffix)) {
+        return { suffix: this.array_suffix, type: 'array' };
+      } else if (key.endsWith(this.group_suffix)){
+        return { suffix: this.group_suffix, type: 'explicit_group' };
+      }
+    };
+
     for (const key of result) {
       if (key === 'root.array' + this.meta_key_suffix) {
         nodes.set('/', 'array');
       } else if (key == 'root.group') {
         nodes.set('/', 'explicit_group');
       } else if (key.startsWith('root/')) {
-        // TODO remove code duplication below
-        if (key.endsWith(this.array_suffix)) {
-          const path = key.slice('root'.length, -this.array_suffix.length);
-          nodes.set(path, 'array');
-          const segments = path.split('/');
-          segments.pop();
-          while (segments.length > 1) {
-            const parent = segments.join('/');
-            nodes.set(parent, nodes.get(parent) || 'implicit_group');
-            segments.pop();
-          }
-          nodes.set('/', nodes.get('/') || 'implicit_group');
-        }
-        if (key.endsWith(this.group_suffix)) {
-          const path = key.slice('root'.length, -this.group_suffix.length);
-          nodes.set(path, 'explicit_group');
+        const m = lookup(key);
+        if (m) {
+          const path = key.slice('root'.length, -m.suffix.length);
+          nodes.set(path, m.type);
           const segments = path.split('/');
           segments.pop();
           while (segments.length > 1) {
