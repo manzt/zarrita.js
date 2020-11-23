@@ -305,14 +305,15 @@ export function run_test_suite({ name, setup }) {
       expected.fill(42);
       t.deepEqual((await a.get(null)).data, expected, 'should entirely fill with 42.');
 
-      let arr = { data: new Int32Array([...Array(10).keys()]), shape: [1, 10] };
+      let arr = { data: new Int32Array([...Array(10).keys()]), shape: [10] };
       expected.set(arr.data, 0, arr.data.length);
       await a.set([0, null], arr);
-      t.deepEqual((await a.get(null)).data, expected, 'should fill first row with arrange.');
+      res = await a.get(null);
+      t.deepEqual(res.data, expected, 'should fill first row with arange.');
 
       arr = { data: new Int32Array([...Array(50).keys()]), shape: [5, 10] };
       await a.set(null, arr);
-      t.deepEqual((await a.get(null)).data, arr.data, 'should fill entire with arrange.');
+      t.deepEqual((await a.get(null)).data, arr.data, 'should fill entire with arange.');
 
 
       // Read array slices

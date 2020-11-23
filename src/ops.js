@@ -51,8 +51,8 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   const [out_slice, ...out_slices] = out_selection;
   const [chunk_slice, ...chunk_slices] = chunk_selection;
 
-  const [chunk_stride, ...chunk_strides] = chunk.stride;
-  const [chunk_len, ...chunk_shape] = chunk.shape;
+  const [chunk_stride = 1, ...chunk_strides] = chunk.stride;
+  const [chunk_len = chunk.data.length, ...chunk_shape] = chunk.shape;
 
   if (typeof chunk_slice === 'number') {
     // chunk dimension is squeezed
@@ -65,26 +65,26 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     return;
   }
 
-  const [out_stride, ...out_strides] = out.stride;
-  const [out_len, ...out_shape] = out.shape;
+  const [out_stride = 1, ...out_strides] = out.stride;
+  const [out_len = out.data.length, ...out_shape] = out.shape;
 
   if (typeof out_slice === 'number') {
-    // chunk dimension is squeezed
+    // out dimension is squeezed
     const out_view = {
       data: out.data.subarray(out_stride * out_slice),
-      shape: out_shape, 
+      shape: out_shape,
       stride: out_strides,
-    };
+    }
     set_from_chunk(out_view, out_slices, chunk, chunk_selection);
     return;
   }
 
   const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
-  const [cfrom, _to, cstep] = chunk_slice.indices(chunk_len); // eslint-disable-line no-unused-vars
+  const [cfrom, _cto, cstep] = chunk_slice.indices(chunk_len); // eslint-disable-line no-unused-vars
 
   const len = indices_len(from, to, step);
   if (out_slices.length === 0 && chunk_slices.length === 0) {
-    if (step === 1 && out_stride === 1 && cstep === 1 && chunk_stride === 1) {
+    if (step === 1 && cstep === 1 && out_stride === 1 && chunk_stride === 1) {
       out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
     } else {
       for (let i = 0; i < len; i++) {

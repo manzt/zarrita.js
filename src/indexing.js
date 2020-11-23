@@ -189,6 +189,7 @@ export function slice(start, stop, step = null) {
     start = null;
   }
   const indices = length => {
+    assert(typeof length === 'number', 'must provide sized length for slice indices.');
     const istep = step ?? 1;
     let start_ix = start ?? (istep < 0 ? length - 1 : 0);
     let end_ix = stop ?? (istep < 0 ? -1 : length);
