@@ -13,7 +13,8 @@
   "files": [
     "zarrita.js",
     "core.js",
-    "fsstore.js"
+    "fsstore.js",
+    "src"
   ],
   "exports": {
     ".": "./zarrita.js",
