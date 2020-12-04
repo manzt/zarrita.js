@@ -1,6 +1,6 @@
 {
   "name": "zarrita",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A minimal, exploratory implementation of the Zarr version 3.0 core protocol.",
   "main": "zarrita.js",
   "type": "module",
@@ -25,7 +25,9 @@
   "author": "Trevor Manz",
   "license": "MIT",
   "eslintConfig": {
-    "extends": ["eslint:recommended"],
+    "extends": [
+      "eslint:recommended"
+    ],
     "env": {
       "es6": true,
       "browser": true,
@@ -36,14 +38,34 @@
       "sourceType": "module"
     },
     "rules": {
-      "comma-dangle": ["error", "always-multiline"],
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
       "no-console": "error",
       "no-cond-assign": "off",
-      "no-fallthrough": ["error", { "commentPattern": "break omitted" }],
+      "no-fallthrough": [
+        "error",
+        {
+          "commentPattern": "break omitted"
+        }
+      ],
       "semi": "error",
-      "quotes": ["error", "single", { "avoidEscape": true }],
+      "quotes": [
+        "error",
+        "single",
+        {
+          "avoidEscape": true
+        }
+      ],
       "prefer-const": "error",
-      "sort-imports": ["error", { "ignoreCase": false, "ignoreDeclarationSort": true }]
+      "sort-imports": [
+        "error",
+        {
+          "ignoreCase": false,
+          "ignoreDeclarationSort": true
+        }
+      ]
     }
   },
   "dependencies": {},
