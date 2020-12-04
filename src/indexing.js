@@ -1,36 +1,8 @@
-import { IndexError, KeyError, ZarrArray, assert } from './core.js';
+import { IndexError, KeyError, assert } from './errors.js';
 import { set } from './ops.js';
 
-// This module mutates the ZarrArray prototype to add chunk indexing and slicing
-
-Object.defineProperties(ZarrArray.prototype, {
-  get: {
-    value(selection) {
-      return this.get_basic_selection(selection);
-    },
-  },
-  get_basic_selection: {
-    value(selection) {
-      const indexer = new _BasicIndexer({ selection, ...this });
-      return _get_selection.call(this, indexer);
-    },
-  },
-  set: {
-    value(selection, value) {
-      return this.set_basic_selection(selection, value);
-    },
-  },
-  set_basic_selection: {
-    value(selection, value) {
-      const indexer = new _BasicIndexer({ selection, ...this });
-      return _set_selection.call(this, indexer, value);
-    },
-  },
-});
-
 // ZarrArray GET
-
-async function _get_selection(indexer) {
+export async function _get_selection(indexer) {
   // setup output array
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);
   const out = {
@@ -65,7 +37,7 @@ async function _chunk_getitem(chunk_coords, chunk_selection, out, out_selection)
   }
 }
 
-async function _set_selection(indexer, value) {
+export async function _set_selection(indexer, value) {
   // We iterate over all chunks which overlap the selection and thus contain data
   // that needs to be replaced. Each chunk is processed in turn, extracting the
   // necessary data from the value array and storing into the chunk array.
@@ -381,7 +353,7 @@ function _normalize_selection(selection, shape) {
 }
 
 
-class _BasicIndexer {
+export class _BasicIndexer {
   constructor({ selection, shape, chunk_shape }) {
     // handle normalize selection 
     selection = _normalize_selection(selection, shape);
