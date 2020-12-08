@@ -3,12 +3,13 @@ import { set } from './ops.js';
 
 // ZarrArray GET
 export async function _get_selection(indexer) {
-  // setup output array
-  const outsize = indexer.shape.reduce((a, b) => a * b, 1);
+  // Setup output array
+  const unsqueezed_shape = indexer.dim_indexers.map(ixr => ixr.nitems);
+  const outsize = unsqueezed_shape.reduce((a, b) => a * b, 1);
   const out = {
     data: new this.TypedArray(outsize),
-    shape: indexer.shape,
-    stride: get_strides(indexer.shape),
+    shape: unsqueezed_shape,
+    stride: get_strides(unsqueezed_shape),
   };
   // iterator over chunks
   for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
@@ -16,7 +17,11 @@ export async function _get_selection(indexer) {
     // load chunk selection into output array
     await _chunk_getitem.call(this, chunk_coords, chunk_selection, out, out_selection);
   }
-  // Return scalar if no shape ?
+  // Finally, we "squeeze" the output array shape/strides by using the indexer shape.
+  // This removes dimensions which have size 1 and were indexed by integer.
+  out.shape = indexer.shape;
+  out.strides = get_strides(indexer.shape);
+  // If the final out shape is empty, we just return a scalar.
   return out.shape.length === 0 ? out.data[0] : out;
 }
 
