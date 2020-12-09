@@ -20,7 +20,7 @@ export async function _get_selection(indexer) {
   // Finally, we "squeeze" the output array shape/strides by using the indexer shape.
   // This removes dimensions which have size 1 and were indexed by integer.
   out.shape = indexer.shape;
-  out.strides = get_strides(indexer.shape);
+  out.stride = get_strides(indexer.shape);
   // If the final out shape is empty, we just return a scalar.
   return out.shape.length === 0 ? out.data[0] : out;
 }
