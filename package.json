@@ -10,7 +10,10 @@
     "test:ci": "npm run lint && npm test | tap-set-exit",
     "lint": "eslint src test --ext .js"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "zarrita.js",
+    "src/zarrita.js"
+  ],
   "files": [
     "zarrita.js",
     "core.js",
