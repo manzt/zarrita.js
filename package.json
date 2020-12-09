@@ -1,6 +1,6 @@
 {
   "name": "zarrita",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A minimal, exploratory implementation of the Zarr version 3.0 core protocol.",
   "main": "zarrita.js",
   "type": "module",
@@ -12,9 +12,7 @@
   },
   "sideEffects": false,
   "files": [
-    "zarrita.js",
-    "core.js",
-    "fsstore.js",
+    "*.js",
     "src"
   ],
   "exports": {
