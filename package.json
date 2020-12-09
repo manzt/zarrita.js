@@ -12,9 +12,7 @@
   },
   "sideEffects": false,
   "files": [
-    "zarrita.js",
-    "core.js",
-    "fsstore.js",
+    "*.js",
     "src"
   ],
   "exports": {
