@@ -1,4 +1,4 @@
-import { KeyError, NodeNotFoundError, NotImplementedError, assert } from './errors.js';
+import { KeyError, NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
 function _json_encode_object(o) {
   const str = JSON.stringify(o, null, 2);

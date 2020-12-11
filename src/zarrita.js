@@ -1,8 +1,8 @@
 export * from './core.js';
-export { slice } from './indexing.js';
+export { slice } from './lib/indexing.js';
 
 import { ZarrArray } from './core.js';
-import { _BasicIndexer, _get_selection, _set_selection } from './indexing.js';
+import { _BasicIndexer, _get_selection, _set_selection } from './lib/indexing.js';
 
 // This module mutates the ZarrArray prototype to add chunk indexing and slicing
 

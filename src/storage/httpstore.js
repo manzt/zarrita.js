@@ -1,4 +1,4 @@
-import { KeyError, Store } from './core.js';
+import { KeyError, Store } from '../core.js';
 
 export default class HTTPStore extends Store {
   constructor(url) {
