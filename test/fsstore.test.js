@@ -1,7 +1,7 @@
 import fsp from 'fs/promises';
 import fs from 'fs';
 
-import FileSystemStore from '../src/storage/fsstore.js';
+import FileSystemStore from 'zarrita/storage/fsstore';
 import { run_test_suite } from './common.js';
 
 const config = {

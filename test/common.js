@@ -1,6 +1,6 @@
 import { test } from 'zora';
 
-import { create_hierarchy, registry, slice } from '../src/zarrita.js';
+import { create_hierarchy, registry, slice } from 'zarrita';
 // add dynamic codec to registry
 registry.set('gzip', async () => (await import('numcodecs/gzip')).default);
 
