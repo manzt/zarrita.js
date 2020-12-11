@@ -1,17 +1,14 @@
-**Here be dragons (in JavaScript)**. Zarrita.js is a minimal, exploratory implementation of the Zarr version 3.0 core protocol. 
-This repo is meant to mirror [`zarrita`](https://github.com/alimanfoo/zarrita), the python implementation. The test suite in 
-`test/index.test.js` mirrors the doctest from `zarrita`, and tests both the default `MemoryStore` and Node.js-specific 
-`FileSystemStore` (located in `./src/fsstore.js`).
+**Here be dragons (in JavaScript)**. Zarrita.js is a minimal, exploratory implementation of the Zarr version 3.0 core protocol.
+This repo is meant to mirror [`zarrita`](https://github.com/alimanfoo/zarrita), the python implementation.
+The test suite in `test/index.test.js` mirrors the doctest from `zarrita`, and tests both the default 
+`MemoryStore` and Node.js-specific `FileSystemStore` (located in `./src/storage/fsstore.js`).
 
-#### TODO:
-
-- Implement simple `HTTPStore`.
 
 #### Usage:
 
 ```javascript
-import FileSystemStore from './src/fsstore.js';
-import { create_hierarchy, slice, registry } from './src/index.js';
+import { create_hierarchy, slice, registry } from 'zarrita';
+import FileSystemStore from 'zarrita/storage/fsstore';
 import GZip from 'numcodecs/gzip';
 
 // codec registry is empty by default, so must add codecs
