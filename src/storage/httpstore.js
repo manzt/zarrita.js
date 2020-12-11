@@ -1,4 +1,5 @@
-import { KeyError, Store } from '../core.js';
+import { ListDirResult, Store } from '../core.js';
+import { KeyError } from '../lib/errors.js';
 
 export default class HTTPStore extends Store {
   constructor(url) {
@@ -26,7 +27,7 @@ export default class HTTPStore extends Store {
   }
 
   list_dir() {
-    return { contents: [], prefixes: [] };
+    return new ListDirResult({ contents: [], prefixes: [] });
   }
 
   repr() {
