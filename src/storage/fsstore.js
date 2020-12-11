@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { ListDirResult, Store } from './core.js';
-import { KeyError, assert } from './errors.js';
+import { ListDirResult, Store } from '../core.js';
+import { KeyError, assert } from '../lib/errors.js';
 
 export default class FileSystemStore extends Store {
   constructor(fp) {
