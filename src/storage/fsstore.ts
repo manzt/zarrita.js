@@ -18,7 +18,7 @@ export default class FileSystemStore implements Store {
       return value;
     } catch (err) {
       if (err.code === 'ENOENT') {
-        if (_default) return _default
+        if (_default) return _default;
         throw new KeyError(key);
       }
       throw err;
@@ -39,7 +39,7 @@ export default class FileSystemStore implements Store {
 
   async list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
-    assert(prefix[prefix.length-1] === '/', "Prefix must end with '/'.");
+    assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");
     const fp = path.join(this.root, prefix);
     try {
       const items = [];
@@ -89,7 +89,7 @@ export default class FileSystemStore implements Store {
   }
 }
 
-async function* _walk(dir: string): AsyncGenerator<string>  {
+async function* _walk(dir: string): AsyncGenerator<string> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   for (const dirent of dirents) {
     const res = path.join(dir, dirent.name);

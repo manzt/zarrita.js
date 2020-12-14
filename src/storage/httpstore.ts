@@ -32,7 +32,7 @@ export default class HTTPStore implements Store {
   delete(key: string) {
     throw new NotImplementedError('HTTPStore is read-only.');
     return false;
-  };
+  }
 
   *keys() {
     return;

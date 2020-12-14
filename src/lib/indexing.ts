@@ -4,12 +4,12 @@ import type { ZarrArray, TypedArray } from '../core.js';
 
 export type Indices = [start: number, stop: number, step: number];
 
-export interface Slice { 
-    start: number | null;
-    stop: number | null;
-    step: number | null;
-    indices: (length: number) => Indices;
-    _slice: true;
+export interface Slice {
+  start: number | null;
+  stop: number | null;
+  step: number | null;
+  indices: (length: number) => Indices;
+  _slice: true;
 }
 
 export type Selection = (number | null | Slice)[];
@@ -44,7 +44,13 @@ export async function _get_selection(this: ZarrArray, indexer: _BasicIndexer): P
   return out.shape.length === 0 ? out.data[0] : out;
 }
 
-async function _chunk_getitem(this: ZarrArray, chunk_coords: number[], chunk_selection: (number | Slice)[], out: NDArray, out_selection: (null | number | Slice)[]) {
+async function _chunk_getitem(
+  this: ZarrArray,
+  chunk_coords: number[],
+  chunk_selection: (number | Slice)[],
+  out: NDArray,
+  out_selection: (null | number | Slice)[]
+) {
   try {
     // decode chunk
     const { data, shape } = await this.get_chunk(chunk_coords);
@@ -87,7 +93,7 @@ export async function _set_selection(this: ZarrArray, indexer: _BasicIndexer, va
   if (!(typeof value === 'number')) {
     assert(
       value.data instanceof (this.TypedArray as any),
-      `Incorrect dtype, tried to assign ${value.data.constructor.name} to ${this.dtype} (${this.TypedArray.constructor.name}).`,
+      `Incorrect dtype, tried to assign ${value.data.constructor.name} to ${this.dtype} (${this.TypedArray.constructor.name}).`
     );
   }
 
@@ -97,7 +103,13 @@ export async function _set_selection(this: ZarrArray, indexer: _BasicIndexer, va
   }
 }
 
-async function _chunk_setitem(this: ZarrArray, chunk_coords: number[], chunk_selection: (number | Slice)[], value: number | NDArray, out_selection: (null | number | Slice)[]) {
+async function _chunk_setitem(
+  this: ZarrArray,
+  chunk_coords: number[],
+  chunk_selection: (number | Slice)[],
+  value: number | NDArray,
+  out_selection: (null | number | Slice)[]
+) {
   // obtain key for chunk storage
   const chunk_key = this._chunk_key(chunk_coords);
   const chunk_size = this.chunk_shape.reduce((a, b) => a * b, 1);
@@ -106,7 +118,7 @@ async function _chunk_setitem(this: ZarrArray, chunk_coords: number[], chunk_sel
   if (_is_total_slice(chunk_selection, this.chunk_shape)) {
     // totally replace chunk
 
-    // optimization: we are completely replacing the chunk, so no need 
+    // optimization: we are completely replacing the chunk, so no need
     // to access the exisiting chunk data
     if (typeof value === 'number') {
       cdata = new (this.TypedArray as any)(chunk_size).fill(value) as TypedArray;
@@ -153,7 +165,7 @@ async function _chunk_setitem(this: ZarrArray, chunk_coords: number[], chunk_sel
   }
   // encode chunk
   const encoded_chunk_data = await this._encode_chunk(cdata);
-  // store 
+  // store
   await this.store.set(chunk_key, encoded_chunk_data);
 }
 
@@ -203,23 +215,31 @@ function* range(start: number, stop?: number, step = 1): Generator<number> {
 
 // python-like itertools.product generator
 // https://gist.github.com/cybercase/db7dde901d7070c98c48
-function* product<T extends Array<Iterable<any>>>(...iterables: T): IterableIterator<{
-  [K in keyof T]: T[K] extends Iterable<infer U> ? U : never
-}> {
-  if (iterables.length === 0) { return; }
+function* product<T extends Array<Iterable<any>>>(
+  ...iterables: T
+): IterableIterator<
+  {
+    [K in keyof T]: T[K] extends Iterable<infer U> ? U : never;
+  }
+> {
+  if (iterables.length === 0) {
+    return;
+  }
   // make a list of iterators from the iterables
   const iterators = iterables.map(it => it[Symbol.iterator]());
   const results = iterators.map(it => it.next());
   if (results.some(r => r.done)) {
     throw new Error('Input contains an empty iterator.');
   }
-  for (let i = 0;;) {
+  for (let i = 0; ; ) {
     if (results[i].done) {
       // reset the current iterator
       iterators[i] = iterables[i][Symbol.iterator]();
       results[i] = iterators[i].next();
       // advance, and exit if we've reached the end
-      if (++i >= iterators.length) { return; }
+      if (++i >= iterators.length) {
+        return;
+      }
     } else {
       yield results.map(({ value }) => value) as any;
       i = 0;
@@ -230,13 +250,12 @@ function* product<T extends Array<Iterable<any>>>(...iterables: T): IterableIter
 
 function _is_total_slice(item: (null | number | Slice)[], shape: number[]): boolean {
   for (const [i, s] of item.entries()) {
-
     if (typeof s === 'number') {
       return false; // can't be a full slice, return early.
     }
 
     if (s === null) {
-      continue; // complete slice 
+      continue; // complete slice
     }
 
     if (s.start === null && s.stop === null && s.step === null) {
@@ -256,21 +275,16 @@ function _is_total_slice(item: (null | number | Slice)[], shape: number[]): bool
 }
 
 function _err_too_many_indices(selection: (number | Slice)[], shape: number[]) {
-  throw new IndexError(
-    `too many indicies for array; expected ${shape.length}, got ${selection.length}`,
-  );
+  throw new IndexError(`too many indicies for array; expected ${shape.length}, got ${selection.length}`);
 }
 
 function _err_boundscheck(dim_len: number) {
-  throw new IndexError(
-    `index out of bounds for dimension with length ${dim_len}`,
-  );
+  throw new IndexError(`index out of bounds for dimension with length ${dim_len}`);
 }
 
 function _err_negative_step() {
   throw new IndexError('only slices with step >= 1 are supported');
 }
-
 
 function _check_selection_length(selection: (number | Slice)[], shape: number[]) {
   if (selection.length > shape.length) {
@@ -278,7 +292,7 @@ function _check_selection_length(selection: (number | Slice)[], shape: number[])
   }
 }
 
-// INDEXING 
+// INDEXING
 
 function _normalize_integer_selection(dim_sel: number, dim_len: number) {
   // normalize type to int
@@ -294,14 +308,13 @@ function _normalize_integer_selection(dim_sel: number, dim_len: number) {
   return dim_sel;
 }
 
-
 class _IntDimIndexer {
   dim_sel: number;
   dim_len: number;
   dim_chunk_len: number;
   nitems: number;
 
-  constructor({ dim_sel, dim_len, dim_chunk_len }: { dim_sel: number, dim_len: number, dim_chunk_len: number }) {
+  constructor({ dim_sel, dim_len, dim_chunk_len }: { dim_sel: number; dim_len: number; dim_chunk_len: number }) {
     // normalize
     dim_sel = _normalize_integer_selection(dim_sel, dim_len);
     // store properties
@@ -335,7 +348,7 @@ class _SliceDimIndexer {
   nitems: number;
   nchunks: number;
 
-  constructor({ dim_sel, dim_len, dim_chunk_len }: { dim_sel: Slice, dim_len: number, dim_chunk_len: number }) {
+  constructor({ dim_sel, dim_len, dim_chunk_len }: { dim_sel: Slice; dim_len: number; dim_chunk_len: number }) {
     // normalize
     const [start, stop, step] = dim_sel.indices(dim_len);
     this.start = start;
@@ -372,14 +385,14 @@ class _SliceDimIndexer {
         // selection starts within current chunk
         dim_chunk_sel_start = this.start - dim_offset;
       }
-      // selection starts within current chunk if true, 
+      // selection starts within current chunk if true,
       // otherwise selection ends after current chunk.
       const dim_chunk_sel_stop = this.stop > dim_limit ? dim_chunk_len : this.stop - dim_offset;
 
       const dim_chunk_sel = slice(dim_chunk_sel_start, dim_chunk_sel_stop, this.step);
       const dim_chunk_nitems = Math.ceil((dim_chunk_sel_stop - dim_chunk_sel_start) / this.step);
       const dim_out_sel = slice(dim_out_offset, dim_out_offset + dim_chunk_nitems, 1);
-      // ChunkDimProjection      
+      // ChunkDimProjection
       yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
     }
   }
@@ -396,15 +409,14 @@ function _normalize_selection(selection: null | (Slice | null | number)[], shape
   return normalized;
 }
 
-
 export class _BasicIndexer {
   dim_indexers: (_IntDimIndexer | _SliceDimIndexer)[];
   shape: number[];
 
-  constructor({ selection, shape, chunk_shape }: { selection: Selection, shape: number[], chunk_shape: number[] }) {
-    // handle normalize selection 
+  constructor({ selection, shape, chunk_shape }: { selection: Selection; shape: number[]; chunk_shape: number[] }) {
+    // handle normalize selection
     selection = _normalize_selection(selection, shape);
-    
+
     // setup per-dimension indexers
     this.dim_indexers = selection.map((dim_sel, i) => {
       if (typeof dim_sel === 'number') {
@@ -412,14 +424,17 @@ export class _BasicIndexer {
       } else if ((dim_sel as Slice)._slice) {
         return new _SliceDimIndexer({ dim_sel: dim_sel as Slice, dim_len: shape[i], dim_chunk_len: chunk_shape[i] });
       }
-      throw new IndexError(`unsupported selection item for basic indexing; expected integer or slice, got ${JSON.stringify(dim_sel)}`);
+      throw new IndexError(
+        `unsupported selection item for basic indexing; expected integer or slice, got ${JSON.stringify(dim_sel)}`
+      );
     });
-    this.shape = this.dim_indexers
-      .filter(ixr => !(ixr instanceof _IntDimIndexer))
-      .map(sixr => sixr.nitems);
-    
+    this.shape = this.dim_indexers.filter(ixr => !(ixr instanceof _IntDimIndexer)).map(sixr => sixr.nitems);
   }
-  *[Symbol.iterator](): IterableIterator<{ chunk_coords: number[], chunk_selection: (number| Slice)[], out_selection: (null | number | Slice)[]}> {
+  *[Symbol.iterator](): IterableIterator<{
+    chunk_coords: number[];
+    chunk_selection: (number | Slice)[];
+    out_selection: (null | number | Slice)[];
+  }> {
     for (const dim_projections of product(...this.dim_indexers)) {
       const chunk_coords = dim_projections.map(p => p.dim_chunk_ix);
       const chunk_selection = dim_projections.map(p => p.dim_chunk_sel);

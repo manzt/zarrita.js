@@ -7,7 +7,7 @@ export function set(out: NDArray, out_selection: Selection, value: number | NDAr
 }
 
 function indices_len(start: number, stop: number, step: number) {
-  if (step < 0 && stop < start) return Math.floor((start - stop - 1) / (-step)) + 1;
+  if (step < 0 && stop < start) return Math.floor((start - stop - 1) / -step) + 1;
   if (start < stop) return Math.floor((stop - start - 1) / step) + 1;
   return 0;
 }
@@ -32,13 +32,13 @@ function set_scalar(out: NDArray, out_selection: Selection, value: number) {
       out.data.fill(value, from, from + len);
     } else {
       for (let i = 0; i < len; i++) {
-        out.data[curr_stride * (from + (step * i))] = value;
+        out.data[curr_stride * (from + step * i)] = value;
       }
     }
     return;
   }
   for (let i = 0; i < len; i++) {
-    const data = out.data.subarray(curr_stride * (from + (step * i)));
+    const data = out.data.subarray(curr_stride * (from + step * i));
     set_scalar({ data, stride, shape }, slices, value);
   }
 }
@@ -60,7 +60,7 @@ function set_from_chunk(out: NDArray, out_selection: Selection, chunk: NDArray, 
     // chunk dimension is squeezed
     const chunk_view = {
       data: chunk.data.subarray(chunk_stride * chunk_slice),
-      shape: chunk_shape, 
+      shape: chunk_shape,
       stride: chunk_strides,
     };
     set_from_chunk(out, out_selection, chunk_view, chunk_slices);
@@ -102,19 +102,19 @@ function set_from_chunk(out: NDArray, out_selection: Selection, chunk: NDArray, 
       out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
     } else {
       for (let i = 0; i < len; i++) {
-        out.data[out_stride * (from + (step * i))] = chunk.data[chunk_stride * (cfrom + (cstep * i))];
+        out.data[out_stride * (from + step * i)] = chunk.data[chunk_stride * (cfrom + cstep * i)];
       }
     }
     return;
   }
   for (let i = 0; i < len; i++) {
     const out_view = {
-      data: out.data.subarray(out_stride * (from + (i * step))),
+      data: out.data.subarray(out_stride * (from + i * step)),
       shape: out_shape,
       stride: out_strides,
     };
     const chunk_view = {
-      data: chunk.data.subarray(chunk_stride * (cfrom + (i * cstep))),
+      data: chunk.data.subarray(chunk_stride * (cfrom + i * cstep)),
       shape: chunk_shape,
       stride: chunk_strides,
     };
