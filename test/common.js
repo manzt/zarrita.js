@@ -343,95 +343,41 @@ export function run_test_suite({ name, setup }) {
 
       res = await a.get([null, slice(0, 7)]);
       t.equal(res.shape, [5, 7]);
-      t.deepEqual(
-        res.data,
-        new Int32Array([
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          20,
-          21,
-          22,
-          23,
-          24,
-          25,
-          26,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36,
-          40,
-          41,
-          42,
-          43,
-          44,
-          45,
-          46,
-        ])
-      );
+      // prettier-ignore
+      t.deepEqual(res.data, new Int32Array([
+         0,  1,  2,  3,  4,  5,  6,
+        10, 11, 12, 13, 14, 15, 16,
+        20, 21, 22, 23, 24, 25, 26,
+        30, 31, 32, 33, 34, 35, 36,
+        40, 41, 42, 43, 44, 45, 46,
+      ]));
 
       res = await a.get([slice(0, 3), null]);
       t.equal(res.shape, [3, 10]);
-      t.deepEqual(
-        res.data,
-        new Int32Array([
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20,
-          21,
-          22,
-          23,
-          24,
-          25,
-          26,
-          27,
-          28,
-          29,
-        ])
-      );
+      // prettier-ignore
+      t.deepEqual(res.data, new Int32Array([
+         0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+     ]));
 
       res = await a.get([slice(0, 3), slice(0, 7)]);
       t.equal(res.shape, [3, 7]);
-      t.deepEqual(
-        res.data,
-        new Int32Array([0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 25, 26])
-      );
+      // prettier-ignore
+      t.deepEqual(res.data, new Int32Array([
+         0,  1,  2,  3,  4,  5,  6,
+        10, 11, 12, 13, 14, 15, 16,
+        20, 21, 22, 23, 24, 25, 26,
+      ]));
 
       res = await a.get([slice(1, 4), slice(2, 7)]);
       t.equal(res.shape, [3, 5]);
-      t.deepEqual(res.data, new Int32Array([12, 13, 14, 15, 16, 22, 23, 24, 25, 26, 32, 33, 34, 35, 36]));
+      // prettier-ignore
+      t.deepEqual(res.data, new Int32Array([
+        12, 13, 14, 15, 16,
+        22, 23, 24, 25, 26,
+        32, 33, 34, 35, 36,
+      ]));
 
       const b = await h.get('deep/thought');
       res = await b.get([slice(10)]);
