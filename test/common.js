@@ -107,7 +107,7 @@ export function run_test_suite({ name, setup }) {
     await t.test('Create nodes via groups', async t => {
       const marvin = await h.create_group('marvin');
       const paranoid = await marvin.create_group('paranoid');
-      const android = await marvin.create_array('android', { shape: [42, 42], dtype: 'u1', chunk_shape: [2, 2] });
+      const android = await marvin.create_array('android', { shape: [42, 42], dtype: '|u1', chunk_shape: [2, 2] });
       t.equal(marvin.repr(), '<Group /marvin>', 'should have repr "<Group /marvin>".');
       t.equal(paranoid.repr(), '<Group /marvin/paranoid>', 'should have repr "<Group /marvin/paranoid>".');
       t.equal(android.repr(), '<Array /marvin/android>', 'should be "<Array /marvin/android>".');
