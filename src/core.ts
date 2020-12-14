@@ -27,7 +27,7 @@ interface GroupMetadata {
   extensions: any[];
 }
 
-interface Codec {
+export interface Codec {
   id: string;
   encode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
   decode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
@@ -175,8 +175,8 @@ function _check_shape(shape: number | number[]): number[] {
 
 // no support for >u8, <u8, |b1, <f2, >f2
 // prettier-ignore
-const DTYPE_STRS = new Set([
-   'i1',  'u1',
+export const DTYPE_STRS = new Set([
+  '|i1', '|u1',
   '<i2', '<i4',
   '<i8', '>i8',
   '>i2', '>i4',
@@ -755,8 +755,7 @@ export class ZarrArray extends Node {
     this.compressor = compressor;
     this.fill_value = fill_value;
     this.attrs = attrs;
-    const key = this.dtype[0] === '<' || this.dtype[0] === '>' ? this.dtype.slice(1, 3) : this.dtype;
-    this.TypedArray = (DTYPES.get(key) as any) as TypedArray;
+    this.TypedArray = (DTYPES.get(this.dtype.slice(1)) as any) as TypedArray;
     this.should_byte_swap = (dtype[0] === '>' && LITTLE_ENDIAN_OS) || (dtype[0] === '<' && !LITTLE_ENDIAN_OS);
   }
 

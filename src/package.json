@@ -11,7 +11,8 @@
     "zarrita.js"
   ],
   "files": [
-    "**/*.js"
+    "**/*.js",
+    "**/*.d.ts"
   ],
   "exports": {
     ".": "./zarrita.js",
