@@ -1,7 +1,7 @@
 {
   "name": "zarrita",
   "main": "index.js",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "A minimal, exploratory implementation of the Zarr version 3.0 core protocol.",
   "type": "module",
   "scripts": {
