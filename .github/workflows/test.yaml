@@ -14,7 +14,8 @@ jobs:
       with:
         node-version: '14.x'
     - run: npm install
+    - run: npm run lint
     - run: npm run build:clean
-    - run: npm run test:ci
+    - run: npm test
       env:
         CI: true

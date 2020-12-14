@@ -39,6 +39,22 @@ interface CodecMeta {
   configuration: any;
 }
 
+export type Indices = [start: number, stop: number, step: number];
+
+export interface Slice {
+  start: number | null;
+  stop: number | null;
+  step: number | null;
+  indices: (length: number) => Indices;
+  _slice: true;
+}
+
+export interface NDArray {
+  data: TypedArray;
+  shape: number[];
+  stride: number[];
+}
+
 function _json_encode_object(o: RootMetadata | ArrayMetadata | GroupMetadata): Uint8Array {
   const str = JSON.stringify(o, null, 2);
   const encoder = new TextEncoder();
@@ -748,7 +764,11 @@ export class ZarrArray extends Node {
     return this.shape.length;
   }
 
-  get() {
+  get(selection: null | (null | number | Slice)[]): Promise<number | NDArray> {
+    throw new NotImplementedError('Must import main package export for array indexing.');
+  }
+
+  set(selection: null | (null | number | Slice)[]): Promise<void> {
     throw new NotImplementedError('Must import main package export for array indexing.');
   }
 
@@ -789,10 +809,6 @@ export class ZarrArray extends Node {
     const buffer = await this.store.get(chunk_key);
     const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
-  }
-
-  set() {
-    throw new NotImplementedError('Must import main package export for array indexing.');
   }
 
   repr() {

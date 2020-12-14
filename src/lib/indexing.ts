@@ -1,24 +1,6 @@
 import { IndexError, KeyError, assert } from './errors.js';
 import { set } from './ops.js';
-import type { ZarrArray, TypedArray } from '../core.js';
-
-export type Indices = [start: number, stop: number, step: number];
-
-export interface Slice {
-  start: number | null;
-  stop: number | null;
-  step: number | null;
-  indices: (length: number) => Indices;
-  _slice: true;
-}
-
-export type Selection = (number | null | Slice)[];
-
-export interface NDArray {
-  data: TypedArray;
-  shape: number[];
-  stride: number[];
-}
+import type { ZarrArray, TypedArray, Slice, Indices, NDArray } from '../core.js';
 
 // ZarrArray GET
 export async function _get_selection(this: ZarrArray, indexer: _BasicIndexer): Promise<number | NDArray> {
@@ -413,7 +395,15 @@ export class _BasicIndexer {
   dim_indexers: (_IntDimIndexer | _SliceDimIndexer)[];
   shape: number[];
 
-  constructor({ selection, shape, chunk_shape }: { selection: Selection; shape: number[]; chunk_shape: number[] }) {
+  constructor({
+    selection,
+    shape,
+    chunk_shape,
+  }: {
+    selection: null | (null | number | Slice)[];
+    shape: number[];
+    chunk_shape: number[];
+  }) {
     // handle normalize selection
     selection = _normalize_selection(selection, shape);
 

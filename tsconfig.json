@@ -9,6 +9,7 @@
       "strict": true,
       "skipLibCheck": true,
       "noImplicitAny": true,
+      "declaration": true,
       "importsNotUsedAsValues": "error",
       "allowSyntheticDefaultImports": true,
     }

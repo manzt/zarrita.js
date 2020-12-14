@@ -1,5 +1,7 @@
 // private utitlites to fill strided output array
-import type { Selection, NDArray, Slice } from './indexing.js';
+import type { NDArray, Slice } from '../core.js';
+
+type Selection = (null | number | Slice)[];
 
 export function set(out: NDArray, out_selection: Selection, value: number | NDArray, value_selection?: Selection) {
   if (typeof value === 'number') return set_scalar(out, out_selection, value);
