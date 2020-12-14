@@ -1,16 +1,18 @@
 // private utitlites to fill strided output array
-export function set(out, out_selection, value, value_selection) {
+import type { Selection, NDArray, Slice } from './indexing.js';
+
+export function set(out: NDArray, out_selection: Selection, value: number | NDArray, value_selection?: Selection) {
   if (typeof value === 'number') return set_scalar(out, out_selection, value);
-  return set_from_chunk(out, out_selection, value, value_selection);
+  return set_from_chunk(out, out_selection, value, value_selection as Selection);
 }
 
-function indices_len(start, stop, step) {
+function indices_len(start: number, stop: number, step: number) {
   if (step < 0 && stop < start) return Math.floor((start - stop - 1) / (-step)) + 1;
   if (start < stop) return Math.floor((stop - start - 1) / step) + 1;
   return 0;
 }
 
-function set_scalar(out, out_selection, value) {
+function set_scalar(out: NDArray, out_selection: Selection, value: number) {
   if (out_selection.length === 0) {
     out.data[0] = value;
     return;
@@ -23,7 +25,7 @@ function set_scalar(out, out_selection, value) {
     set_scalar({ data, stride, shape }, slices, value);
     return;
   }
-  const [from, to, step] = slice.indices(out_len);
+  const [from, to, step] = (slice as Slice).indices(out_len);
   const len = indices_len(from, to, step);
   if (slices.length === 0) {
     if (step === 1 && curr_stride === 1) {
@@ -41,7 +43,7 @@ function set_scalar(out, out_selection, value) {
   }
 }
 
-function set_from_chunk(out, out_selection, chunk, chunk_selection) {
+function set_from_chunk(out: NDArray, out_selection: Selection, chunk: NDArray, chunk_selection: Selection) {
   if (chunk_selection.length === 0) {
     // Case when last chunk dim is squeezed
     out.data.set(chunk.data.subarray(0, out.data.length));

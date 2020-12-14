@@ -1,0 +1,16 @@
+
+{
+    "include": ["src"],
+    "compilerOptions": {
+      "module": "esnext",
+      "target": "esnext",
+      "moduleResolution": "node",
+      "baseUrl": "./",
+      "paths": {},
+      "strict": true,
+      "skipLibCheck": true,
+      "noImplicitAny": true,
+      "importsNotUsedAsValues": "error",
+      "allowSyntheticDefaultImports": true,
+    }
+  }
