@@ -158,6 +158,7 @@ function _check_shape(shape: number | number[]): number[] {
 }
 
 // no support for >u8, <u8, |b1, <f2, >f2
+// prettier-ignore
 const DTYPE_STRS = new Set([
    'i1',  'u1',
   '<i2', '<i4',
@@ -651,9 +652,9 @@ export class Group extends Node {
 export class ExplicitGroup extends Group {
   attrs: any;
 
-  constructor({ store, path, owner, attrs }: NodeProps & { attrs: any }) {
-    super({ store, path, owner });
-    this.attrs = attrs;
+  constructor(props: NodeProps & { attrs?: any }) {
+    super(props);
+    this.attrs = props.attrs || {};
   } 
 
   repr() {
@@ -727,15 +728,16 @@ export class ZarrArray extends Node {
   TypedArray: TypedArray;
   private should_byte_swap: boolean;
 
-  constructor({ store, path, owner, shape, dtype, chunk_shape, chunk_separator, compressor, fill_value, attrs }: NodeProps & ArrayProps) {
-    super({ store, path, owner });
+  constructor(props: NodeProps & ArrayProps) {
+    const { shape, dtype, chunk_shape, chunk_separator, compressor, fill_value = null, attrs = {} } = props;
+    super(props);
     this.shape = shape;
     this.dtype = dtype;
     this.chunk_shape = chunk_shape;
     this.chunk_separator = chunk_separator;
     this.compressor = compressor;
-    this.fill_value = fill_value || null;
-    this.attrs = attrs || {};
+    this.fill_value = fill_value;
+    this.attrs = attrs;
     const key = (this.dtype[0] === '<' || this.dtype[0] === '>') ? this.dtype.slice(1, 3) : this.dtype;
     this.TypedArray = DTYPES.get(key) as any as TypedArray;
     this.should_byte_swap = (dtype[0] === '>' && LITTLE_ENDIAN_OS) || (dtype[0] === '<' && !LITTLE_ENDIAN_OS);
