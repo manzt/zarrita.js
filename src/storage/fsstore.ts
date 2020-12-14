@@ -1,43 +1,45 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { ListDirResult, Store } from '../core.js';
 import { KeyError, assert } from '../lib/errors.js';
 
-export default class FileSystemStore extends Store {
-  constructor(fp) {
-    super();
+import type { Store } from '../core.js';
+
+export default class FileSystemStore implements Store {
+  root: string;
+
+  constructor(fp: string) {
     this.root = fp;
   }
 
-  async get(key, _default = null) {
+  async get(key: string, _default?: Uint8Array): Promise<Uint8Array> {
     const fp = path.join(this.root, key);
     try {
       const value = await fs.readFile(fp, null);
       return value;
     } catch (err) {
       if (err.code === 'ENOENT') {
-        if (_default !== null) return _default;
+        if (_default) return _default;
         throw new KeyError(key);
       }
       throw err;
     }
   }
 
-  async set(key, value) {
+  async set(key: string, value: Uint8Array) {
     const fp = path.join(this.root, key);
     await fs.mkdir(path.dirname(fp), { recursive: true });
     await fs.writeFile(fp, value, null);
   }
 
-  async delete(key) {
+  async delete(key: string) {
     const fp = path.join(this.root, key);
     await fs.unlink(fp);
     return true;
   }
 
-  async list_prefix(prefix) {
+  async list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
-    assert(prefix[prefix.length-1] === '/', "Prefix must end with '/'.");
+    assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");
     const fp = path.join(this.root, prefix);
     try {
       const items = [];
@@ -59,8 +61,8 @@ export default class FileSystemStore extends Store {
       assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'");
     }
 
-    const contents = [];
-    const prefixes = []; // could have redundant keys
+    const contents: string[] = [];
+    const prefixes: string[] = []; // could have redundant keys
 
     const fp = path.join(this.root, prefix);
     try {
@@ -71,11 +73,11 @@ export default class FileSystemStore extends Store {
       });
     } catch (err) {
       if (err.code === 'ENOENT') {
-        return new ListDirResult({ contents: [], prefixes: [] });
+        return { contents: [], prefixes: [] };
       }
       throw err;
     }
-    return new ListDirResult({ contents, prefixes });
+    return { contents, prefixes };
   }
 
   keys() {
@@ -87,7 +89,7 @@ export default class FileSystemStore extends Store {
   }
 }
 
-async function* _walk(dir) {
+async function* _walk(dir: string): AsyncGenerator<string> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   for (const dirent of dirents) {
     const res = path.join(dir, dirent.name);

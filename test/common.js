@@ -4,7 +4,6 @@ import { create_hierarchy, registry, slice } from 'zarrita';
 // add dynamic codec to registry
 registry.set('gzip', async () => (await import('numcodecs/gzip')).default);
 
-
 export function run_test_suite({ name, setup }) {
   test(`Zarrita test suite: ${name}.`, async t => {
     const { store, get_json } = await setup();
@@ -108,7 +107,7 @@ export function run_test_suite({ name, setup }) {
     await t.test('Create nodes via groups', async t => {
       const marvin = await h.create_group('marvin');
       const paranoid = await marvin.create_group('paranoid');
-      const android = await marvin.create_array('android', { shape: [42, 42], dtype: 'u1', chunk_shape: [2, 2] });
+      const android = await marvin.create_array('android', { shape: [42, 42], dtype: '|u1', chunk_shape: [2, 2] });
       t.equal(marvin.repr(), '<Group /marvin>', 'should have repr "<Group /marvin>".');
       t.equal(paranoid.repr(), '<Group /marvin/paranoid>', 'should have repr "<Group /marvin/paranoid>".');
       t.equal(android.repr(), '<Array /marvin/android>', 'should be "<Array /marvin/android>".');
@@ -142,9 +141,8 @@ export function run_test_suite({ name, setup }) {
       const tricia = await h.get('/tricia');
       t.equal(root.repr(), '<Group / (implied)>', 'should have repr "<Group / (implied)>".');
       t.equal(arthur.repr(), '<Group /arthur (implied)>', 'should have repr "<Group /arthur (implied)>".');
-      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".'); 
+      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".');
     });
-    
 
     await t.test('Access implicit groups', async t => {
       const root = await h.get('/');
@@ -152,7 +150,7 @@ export function run_test_suite({ name, setup }) {
       const tricia = await h.get('/tricia');
       t.equal(root.repr(), '<Group / (implied)>', 'should have repr "<Group / (implied)>".');
       t.equal(arthur.repr(), '<Group /arthur (implied)>', 'should have repr "<Group /arthur (implied)>".');
-      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".'); 
+      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".');
     });
 
     await t.test('Access nodes via groups', async t => {
@@ -161,16 +159,28 @@ export function run_test_suite({ name, setup }) {
       const tricia = await root.get('tricia');
       t.equal(root.repr(), '<Group / (implied)>', 'should have repr "<Group / (implied)>".');
       t.equal(arthur.repr(), '<Group /arthur (implied)>', 'should have repr "<Group /arthur (implied)>".');
-      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".'); 
+      t.equal(tricia.repr(), '<Group /tricia (implied)>', 'should have repr "<Group /tricia (implied)>".');
     });
 
     await t.test('Access nodes - convenience', async t => {
       t.equal((await h.get('/')).repr(), '<Group / (implied)>', 'should have repr "<Group / (implied)>".');
       t.equal((await h.root).repr(), '<Group / (implied)>', 'should have repr "<Group / (implied)>".');
 
-      t.equal((await h.get('/arthur')).repr(), '<Group /arthur (implied)>', 'should have repr "<Group /arthur (implied)>".');
-      t.equal((await h.get('arthur')).repr(), '<Group /arthur (implied)>', 'should have repr "<Group /arthur (implied)>".');
-      t.equal((await h.get('/tricia/mcmillan')).repr(), '<Group /tricia/mcmillan>', 'should have repr "<Group /tricia/mcmillan>".');
+      t.equal(
+        (await h.get('/arthur')).repr(),
+        '<Group /arthur (implied)>',
+        'should have repr "<Group /arthur (implied)>".'
+      );
+      t.equal(
+        (await h.get('arthur')).repr(),
+        '<Group /arthur (implied)>',
+        'should have repr "<Group /arthur (implied)>".'
+      );
+      t.equal(
+        (await h.get('/tricia/mcmillan')).repr(),
+        '<Group /tricia/mcmillan>',
+        'should have repr "<Group /tricia/mcmillan>".'
+      );
       const g = await (await h.get('tricia')).get('mcmillan');
       t.equal(g.repr(), '<Group /tricia/mcmillan>', 'should have repr "<Group /tricia/mcmillan>".');
     });
@@ -202,7 +212,8 @@ export function run_test_suite({ name, setup }) {
       res = await (await h.get('tricia')).get_children();
       t.equal(res.get('mcmillan'), 'explicit_group', 'tricia/mcmillan should be explicit group.');
 
-      res = await h.get('tricia')
+      res = await h
+        .get('tricia')
         .then(n => n.get('mcmillan'))
         .then(n => n.get_children());
       t.ok([...res.keys()], 0, 'should be no children for /tricia.');
@@ -210,7 +221,6 @@ export function run_test_suite({ name, setup }) {
       res = await h.get('arthur').then(n => n.get_children());
       t.equal(res.get('dent'), 'array', 'dent should be an array.');
     });
-
 
     await t.test('View the whole hierarchy in one go', async t => {
       const n = await h.get_nodes();
@@ -248,7 +258,6 @@ export function run_test_suite({ name, setup }) {
       t.ok(await g.has('mcmillan'), 'tricia should have "mcmillan".');
       t.notOk(await g.has('beeblebrox'), 'tricia should not have "breeblebox".');
     });
-
 
     await t.test('Iterating over a group returns names of all child nodes', async t => {
       const root = await h.get('/');
@@ -295,9 +304,9 @@ export function run_test_suite({ name, setup }) {
 
       await a.set([0, null], 42);
       t.deepEqual((await a.get(null)).data, new Int32Array(50).fill(42, 0, 10), 'should fill 42 in first row.');
-      
+
       const expected = new Int32Array(50).fill(42, 0, 10);
-      [10, 20, 30, 40].forEach(i => expected[i] = 42);
+      [10, 20, 30, 40].forEach(i => (expected[i] = 42));
       await a.set([null, 0], 42);
       t.deepEqual((await a.get(null)).data, expected, 'should fill 42 in first row & col.');
 
@@ -314,7 +323,6 @@ export function run_test_suite({ name, setup }) {
       arr = { data: new Int32Array([...Array(50).keys()]), shape: [5, 10] };
       await a.set(null, arr);
       t.deepEqual((await a.get(null)).data, arr.data, 'should fill entire with arange.');
-
 
       // Read array slices
       res = await a.get([null, 0]);
@@ -335,6 +343,7 @@ export function run_test_suite({ name, setup }) {
 
       res = await a.get([null, slice(0, 7)]);
       t.equal(res.shape, [5, 7]);
+      // prettier-ignore
       t.deepEqual(res.data, new Int32Array([
          0,  1,  2,  3,  4,  5,  6,
         10, 11, 12, 13, 14, 15, 16,
@@ -345,14 +354,16 @@ export function run_test_suite({ name, setup }) {
 
       res = await a.get([slice(0, 3), null]);
       t.equal(res.shape, [3, 10]);
+      // prettier-ignore
       t.deepEqual(res.data, new Int32Array([
          0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-      ]));
+     ]));
 
       res = await a.get([slice(0, 3), slice(0, 7)]);
       t.equal(res.shape, [3, 7]);
+      // prettier-ignore
       t.deepEqual(res.data, new Int32Array([
          0,  1,  2,  3,  4,  5,  6,
         10, 11, 12, 13, 14, 15, 16,
@@ -361,6 +372,7 @@ export function run_test_suite({ name, setup }) {
 
       res = await a.get([slice(1, 4), slice(2, 7)]);
       t.equal(res.shape, [3, 5]);
+      // prettier-ignore
       t.deepEqual(res.data, new Int32Array([
         12, 13, 14, 15, 16,
         22, 23, 24, 25, 26,
@@ -376,6 +388,5 @@ export function run_test_suite({ name, setup }) {
       await b.set([slice(5)], 1);
       t.deepEqual((await b.get([slice(10)])).data, new Float64Array(10).fill(1, 0, 5));
     });
-
   });
-} 
+}

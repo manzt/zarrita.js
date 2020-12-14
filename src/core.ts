@@ -1,26 +1,78 @@
 import { KeyError, NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
-function _json_encode_object(o) {
+interface RootMetadata {
+  zarr_format: string;
+  metadata_encoding: string;
+  metadata_key_suffix: string;
+  extensions: any[];
+}
+
+interface ArrayMetadata {
+  shape: number[];
+  data_type: string;
+  chunk_grid: {
+    type: 'regular';
+    separator: string;
+    chunk_shape: number[];
+  };
+  chunk_memory_layout: 'C';
+  fill_value: null | number;
+  extensions: any[];
+  attributes: any;
+  compressor?: CodecMeta;
+}
+
+interface GroupMetadata {
+  attributes: any;
+  extensions: any[];
+}
+
+export interface Codec {
+  id: string;
+  encode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
+  decode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
+  fromConfig(config: { id: string }): Codec;
+}
+
+interface CodecMeta {
+  codec: string;
+  configuration: any;
+}
+
+export type Indices = [start: number, stop: number, step: number];
+
+export interface Slice {
+  start: number | null;
+  stop: number | null;
+  step: number | null;
+  indices: (length: number) => Indices;
+  _slice: true;
+}
+
+export interface NDArray {
+  data: TypedArray;
+  shape: number[];
+  stride: number[];
+}
+
+function _json_encode_object(o: RootMetadata | ArrayMetadata | GroupMetadata): Uint8Array {
   const str = JSON.stringify(o, null, 2);
-  const encoder = new TextEncoder('utf-8');
+  const encoder = new TextEncoder();
   return encoder.encode(str);
 }
 
-function _json_decode_object(buffer) {
-  const decoder = new TextDecoder('utf-8');
+function _json_decode_object(buffer: Uint8Array): unknown {
+  const decoder = new TextDecoder();
   const str = decoder.decode(buffer);
   return JSON.parse(str);
 }
 
-export const registry = new Map();
+export const registry: Map<String, () => Codec | Promise<Codec>> = new Map();
 
-export async function create_hierarchy(store) {
+export async function create_hierarchy(store: Store = new MemoryStore()) {
   // create entry point metadata document
-  if (store === undefined) {
-    store = new MemoryStore();
-  }
   const meta_key_suffix = '.json';
-  const meta = { 
+  const meta: RootMetadata = {
     zarr_format: 'https://purl.org/zarr/spec/protocol/core/3.0',
     metadata_encoding: 'https://purl.org/zarr/spec/protocol/core/3.0',
     metadata_key_suffix: meta_key_suffix,
@@ -37,15 +89,15 @@ export async function create_hierarchy(store) {
   return hierarchy;
 }
 
-export async function get_hierarchy(store) {
+export async function get_hierarchy(store: Store) {
   // retrieve and parse entry point metadata document
   const meta_key = 'zarr.json';
   const meta_doc = await store.get(meta_key);
-  const meta = _json_decode_object(meta_doc);
+  const meta = _json_decode_object(meta_doc) as RootMetadata;
 
   // check protocol version
   const segments = meta.zarr_format.split('/');
-  const protocol_version = segments.pop();
+  const protocol_version = segments.pop() || '';
   const protocol_uri = segments.join('/');
   if (protocol_uri !== 'https://purl.org/zarr/spec/protocol/core') {
     throw new NotImplementedError(`No support for Protocol URI, got ${protocol_uri}.`);
@@ -75,8 +127,7 @@ export async function get_hierarchy(store) {
 
 const ALLOWED_NODE_NAME_CHARS = new Set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._-');
 
-
-function _check_path(path) {
+function _check_path(path: string): string {
   if (path.length === 0) {
     throw new TypeError('Path cannot be empty string.');
   }
@@ -102,27 +153,30 @@ function _check_path(path) {
       }
     }
   }
+
   return path;
 }
 
-
-function _check_attrs(attrs = {}) {
-    // assert attrs is None or isinstance(attrs, Mapping)
-    return attrs;
+function _check_attrs(attrs = {}): any {
+  // assert attrs is None or isinstance(attrs, Mapping)
+  return attrs;
 }
 
-
-function _check_shape(shape) {
+function _check_shape(shape: number | number[]): number[] {
   if (typeof shape === 'number') {
     shape = [shape];
   }
-  assert(shape.every(i => Number.isInteger(i)), `Invalid array shape, got: ${shape}`);
+  assert(
+    shape.every(i => Number.isInteger(i)),
+    `Invalid array shape, got: ${shape}`
+  );
   return shape;
 }
 
 // no support for >u8, <u8, |b1, <f2, >f2
-const DTYPE_STRS = new Set([
-   'i1',  'u1',
+// prettier-ignore
+export const DTYPE_STRS = new Set([
+  '|i1', '|u1',
   '<i2', '<i4',
   '<i8', '>i8',
   '>i2', '>i4',
@@ -132,43 +186,36 @@ const DTYPE_STRS = new Set([
   '>f4', '>f8',
 ]);
 
-function _check_dtype(dtype) {
+function _check_dtype(dtype: string): string {
   assert(DTYPE_STRS.has(dtype), `Invalid dtype, got: ${dtype}`);
   return dtype;
 }
 
-function _check_chunk_shape(chunk_shape, shape) {
-  const msg = `chunk_shape must be integer or array of integers, got: ${chunk_shape}.`;
-  assert(Number.isInteger(chunk_shape) || Array.isArray(chunk_shape), msg);
-  if (Number.isInteger(chunk_shape)) {
+function _check_chunk_shape(chunk_shape: number | number[], shape: number[]): number[] {
+  if (typeof chunk_shape === 'number') {
     chunk_shape = [chunk_shape];
   }
-  assert(chunk_shape.every(i => Number.isInteger(i), msg));
   assert(chunk_shape.length === shape.length, 'chunk_shape and shape have different dim sizes.');
   return chunk_shape;
 }
 
-function _check_compressor(compressor) {
+function _check_compressor(compressor?: Codec) {
   // TODO: Beter validattion for compressor
-  assert(
-    compressor === null || (typeof compressor.encode === 'function' && typeof compressor.decode === 'function'), 
-    "compressor doesn't not have required decode and enode methods.",
-  );
+  if (compressor) {
+    assert(
+      typeof compressor.encode === 'function' && typeof compressor.decode === 'function',
+      "compressor doesn't not have required decode and enode methods."
+    );
+  }
 }
 
-function _encode_codec_metadata(codec) {
-  if (codec === null) return null;
-
+function _encode_codec_metadata(codec: Codec): CodecMeta {
   // only support gzip for now
   const supported_codecs = new Set('gzip');
   // TODO: better support for numcodecs;
-  const codec_id = codec.constructor.codecId;
-  assert(
-    !supported_codecs.has(codec_id),
-    `codec not supported for metadata, got: ${codec_id}.`,
-  );
-  const config = { level: codec.level };
-  delete config.id;
+  const codec_id = (codec.constructor as any).codecId as string;
+  assert(!supported_codecs.has(codec_id), `codec not supported for metadata, got: ${codec_id}.`);
+  const config = { level: (codec as any).level };
   const meta = {
     codec: 'https://purl.org/zarr/spec/codec/gzip/1.0',
     configuration: config,
@@ -176,21 +223,20 @@ function _encode_codec_metadata(codec) {
   return meta;
 }
 
-
-async function _decode_codec_metadata(meta) {
-  if (meta === null) return null;
+async function _decode_codec_metadata(meta?: CodecMeta) {
+  if (!meta) return;
   // only support gzip for now
   if (meta.codec !== 'https://purl.org/zarr/spec/codec/gzip/1.0') {
     throw new NotImplementedError(`No support for codec, got ${meta.codec}.`);
   }
   const importer = registry.get('gzip');
-  assert(importer, 'Codec not in registry.');
-  const GZip = await importer();
-  const codec = new GZip(meta.configuration.level);
+  assert(importer !== undefined, 'Codec not in registry.');
+  const GZip = await (importer as () => Promise<Codec>)();
+  const codec = GZip.fromConfig(meta.configuration);
   return codec;
 }
 
-function _array_meta_key(path, suffix) {
+function _array_meta_key(path: string, suffix: string): string {
   if (path === '/') {
     // special case root path
     return 'meta/root.array' + suffix;
@@ -198,8 +244,7 @@ function _array_meta_key(path, suffix) {
   return `meta/root${path}.array` + suffix;
 }
 
-
-function _group_meta_key(path, suffix) {
+function _group_meta_key(path: string, suffix: string): string {
   if (path === '/') {
     // special case root path
     return 'meta/root.group' + suffix;
@@ -207,8 +252,21 @@ function _group_meta_key(path, suffix) {
   return `meta/root${path}.group` + suffix;
 }
 
+interface CreateArrayProps {
+  shape: number | number[];
+  dtype: string;
+  chunk_shape: number | number[];
+  chunk_separator?: string;
+  compressor?: Codec;
+  fill_value?: number;
+  attrs?: any;
+}
+
 export class Hierarchy {
-  constructor({ store, meta_key_suffix }) {
+  store: Store;
+  meta_key_suffix: string;
+
+  constructor({ store, meta_key_suffix }: { store: Store; meta_key_suffix: string }) {
     this.store = store;
     this.meta_key_suffix = meta_key_suffix;
   }
@@ -225,14 +283,14 @@ export class Hierarchy {
     return '.group' + this.meta_key_suffix;
   }
 
-  async create_group(path, props = {}) {
+  async create_group(path: string, props: any = {}) {
     const { attrs = {} } = props;
     // sanity checks
     path = _check_path(path);
     _check_attrs(attrs);
 
     // create group metadata
-    const meta = { extensions: [], attributes: attrs };
+    const meta: GroupMetadata = { extensions: [], attributes: attrs };
 
     // serialise and store metadata document
     const meta_doc = _json_encode_object(meta);
@@ -244,7 +302,8 @@ export class Hierarchy {
     return group;
   }
 
-  async create_array(path, { shape, dtype, chunk_shape, chunk_separator = '/', compressor = null, fill_value = null, attrs = {} } = {}) {
+  async create_array(path: string, props: CreateArrayProps): Promise<ZarrArray> {
+    let { shape, dtype, chunk_shape, compressor, fill_value = null, chunk_separator = '/', attrs = {} } = props;
 
     // sanity checks
     path = _check_path(path);
@@ -255,7 +314,7 @@ export class Hierarchy {
     attrs = _check_attrs(attrs);
 
     // create array metadata
-    const meta = {
+    const meta: ArrayMetadata = {
       shape,
       data_type: dtype,
       chunk_grid: {
@@ -264,12 +323,12 @@ export class Hierarchy {
         chunk_shape,
       },
       chunk_memory_layout: 'C',
-      fill_value,
+      fill_value: fill_value,
       extensions: [],
       attributes: attrs,
     };
 
-    if (compressor !== null) {
+    if (compressor) {
       meta.compressor = _encode_codec_metadata(compressor);
     }
 
@@ -279,7 +338,7 @@ export class Hierarchy {
     await this.store.set(meta_key, meta_doc);
 
     // instantiate array
-    const array = new ZarrArray({
+    return new ZarrArray({
       store: this.store,
       path,
       owner: this,
@@ -291,15 +350,13 @@ export class Hierarchy {
       fill_value,
       attrs,
     });
-
-    return array;
   }
 
-  async get_array(path) {
+  async get_array(path: string): Promise<ZarrArray> {
     path = _check_path(path);
     // retrieve and parse array metadata document
     const meta_key = _array_meta_key(path, this.meta_key_suffix);
-    let meta_doc;
+    let meta_doc: Uint8Array;
     try {
       meta_doc = await this.store.get(meta_key);
     } catch (err) {
@@ -308,10 +365,10 @@ export class Hierarchy {
       }
       throw err;
     }
-    const meta = _json_decode_object(meta_doc);
+    const meta = _json_decode_object(meta_doc) as ArrayMetadata;
 
     // decode and check metadata
-    const { 
+    const {
       shape,
       data_type: dtype,
       chunk_grid,
@@ -331,14 +388,14 @@ export class Hierarchy {
     }
     for (const spec of extensions) {
       if (spec.must_understand) {
-        throw NotImplementedError(`No support for required extensions found, ${JSON.stringify(spec)}.`);
+        throw new NotImplementedError(`No support for required extensions found, ${JSON.stringify(spec)}.`);
       }
     }
 
-    const compressor = await _decode_codec_metadata(meta.compressor || null);
+    const compressor = await _decode_codec_metadata(meta.compressor);
 
     // instantiate array
-    const array = new ZarrArray({
+    return new ZarrArray({
       store: this.store,
       path,
       owner: this,
@@ -350,35 +407,32 @@ export class Hierarchy {
       fill_value,
       attrs,
     });
-    
-    return array;
   }
 
-  async get_explicit_group(path) {
+  async get_explicit_group(path: string): Promise<ExplicitGroup> {
     path = _check_path(path);
 
     // retrieve and parse group metadata document
     const meta_key = _group_meta_key(path, this.meta_key_suffix);
-    let meta_doc;
+    let meta_doc: Uint8Array;
     try {
       meta_doc = await this.store.get(meta_key);
     } catch (err) {
       if (err instanceof KeyError) {
         throw new NodeNotFoundError(path);
       }
+      throw err;
     }
-    const meta = _json_decode_object(meta_doc);
+    const meta = _json_decode_object(meta_doc) as GroupMetadata;
 
     // check metadata
     const { attributes: attrs } = meta;
 
     // instantiate explicit group
-    const grp = new ExplicitGroup({ store: this.store, path, owner: this, attrs });
-
-    return grp;
+    return new ExplicitGroup({ store: this.store, path, owner: this, attrs });
   }
 
-  async get_implicit_group(path) {
+  async get_implicit_group(path: string): Promise<ImplicitGroup> {
     path = _check_path(path);
 
     // attempt to list directory
@@ -391,12 +445,10 @@ export class Hierarchy {
     }
 
     // instantiate implicit group
-    const grp = new ImplicitGroup({ store: this.store, path, owner: this });
-
-    return grp;
+    return new ImplicitGroup({ store: this.store, path, owner: this });
   }
 
-  async get(path) {
+  async get(path: string): Promise<ZarrArray | ExplicitGroup | ImplicitGroup> {
     assert(typeof path === 'string', 'path must be string.');
     // try array
     try {
@@ -426,7 +478,7 @@ export class Hierarchy {
     }
   }
 
-  async has(path) {
+  async has(path: string): Promise<boolean> {
     try {
       await this.get(path);
       return true;
@@ -438,28 +490,28 @@ export class Hierarchy {
     }
   }
 
-  async length() {
+  async length(): Promise<number> {
     const key_iter = await this.keys();
     return [...key_iter].length;
   }
 
-  async keys() {
+  async keys(): Promise<IterableIterator<string>> {
     const nodes = await this.get_nodes();
     return nodes.keys();
   }
 
   repr() {
-    return `<Hierarchy at ${this.store.repr()}>`;
+    return `<Hierarchy at ${this.store.repr?.()}>`;
   }
 
-  async get_nodes() {
-    const nodes = new Map();
+  async get_nodes(): Promise<Map<string, string>> {
+    const nodes: Map<string, string> = new Map();
     const result = await this.store.list_prefix('meta/');
 
-    const lookup = key => {
+    const lookup = (key: string) => {
       if (key.endsWith(this.array_suffix)) {
         return { suffix: this.array_suffix, type: 'array' };
-      } else if (key.endsWith(this.group_suffix)){
+      } else if (key.endsWith(this.group_suffix)) {
         return { suffix: this.group_suffix, type: 'explicit_group' };
       }
     };
@@ -488,14 +540,14 @@ export class Hierarchy {
     return nodes;
   }
 
-  async get_children(path = '/') {
+  async get_children(path = '/'): Promise<Map<string, string>> {
     path = _check_path(path);
-    const children = new Map();
-    
+    const children: Map<string, string> = new Map();
+
     // attempt to list directory
     const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;
     const result = await this.store.list_dir(key_prefix);
-    
+
     // find explicit children
     for (const n of result.contents) {
       if (n.endsWith(this.array_suffix)) {
@@ -516,20 +568,29 @@ export class Hierarchy {
   }
 }
 
+interface NodeProps {
+  store: Store;
+  path: string;
+  owner: Hierarchy;
+}
+
 class Node {
-  constructor({ store, path, owner }) {
+  store: Store;
+  path: string;
+  owner: Hierarchy;
+
+  constructor({ store, path, owner }: NodeProps) {
     this.store = store;
     this.path = path;
     this.owner = owner;
   }
 
-  get name() {
-    return this.path.split('/').pop();
+  get name(): string {
+    return this.path.split('/').pop() || '';
   }
 }
 
 export class Group extends Node {
-
   async length() {
     const keys_iter = await this.keys();
     return [...keys_iter].length;
@@ -544,7 +605,7 @@ export class Group extends Node {
     return this.owner.get_children(this.path);
   }
 
-  _dereference_path(path) {
+  private dereference_path(path: string): string {
     if (path[0] !== '/') {
       // treat as relative path
       if (this.path === '/') {
@@ -560,52 +621,53 @@ export class Group extends Node {
     return path;
   }
 
-  get(path) {
-    path = this._dereference_path(path);
+  get(path: string) {
+    path = this.dereference_path(path);
     return this.owner.get(path);
   }
 
-  has(path) {
-    path = this._dereference_path(path);
+  has(path: string) {
+    path = this.dereference_path(path);
     return this.owner.has(path);
   }
 
-  create_group(path, props) {
-    path = this._dereference_path(path);
+  create_group(path: string, props: any) {
+    path = this.dereference_path(path);
     return this.owner.create_group(path, props);
   }
 
-  create_array(path, props) {
-    path = this._dereference_path(path);
+  create_array(path: string, props: CreateArrayProps) {
+    path = this.dereference_path(path);
     return this.owner.create_array(path, props);
   }
 
-  get_array(path) {
-    path = this._dereference_path(path);
+  get_array(path: string) {
+    path = this.dereference_path(path);
     return this.owner.get_array(path);
   }
 
-  get_explicit_group(path) {
-    path = this._dereference_path(path);
+  get_explicit_group(path: string) {
+    path = this.dereference_path(path);
     return this.owner.get_explicit_group(path);
   }
 
-  get_implicit_group(path) {
-    path = this._dereference_path(path);
+  get_implicit_group(path: string) {
+    path = this.dereference_path(path);
     return this.owner.get_implicit_group(path);
   }
 }
 
-
 export class ExplicitGroup extends Group {
-  constructor({ store, path, owner, attrs }) {
-    super({ store, path, owner });
-    this.attrs = attrs;
-  } 
+  attrs: any;
+
+  constructor(props: NodeProps & { attrs?: any }) {
+    super(props);
+    this.attrs = props.attrs || {};
+  }
+
   repr() {
     return `<Group ${this.path}>`;
   }
-
 }
 
 class ImplicitGroup extends Group {
@@ -614,10 +676,9 @@ class ImplicitGroup extends Group {
   }
 }
 
-
 // Array
 
-function system_is_little_endian() {
+function system_is_little_endian(): boolean {
   const a = new Uint32Array([0x12345678]);
   const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
   return !(b[0] === 0x12);
@@ -625,18 +686,30 @@ function system_is_little_endian() {
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
-const DTYPES = {
-  u1: Uint8Array,
-  i1: Int8Array,
-  u2: Uint16Array,
-  i2: Int16Array,
-  u4: Uint32Array,
-  i4: Int32Array,
-  f4: Float32Array,
-  f8: Float64Array,
-};
+const DTYPES = new Map(
+  Object.entries({
+    u1: Uint8Array,
+    i1: Int8Array,
+    u2: Uint16Array,
+    i2: Int16Array,
+    u4: Uint32Array,
+    i4: Int32Array,
+    f4: Float32Array,
+    f8: Float64Array,
+  })
+);
 
-function byte_swap_inplace(src) {
+export type TypedArray =
+  | Uint8Array
+  | Int8Array
+  | Uint16Array
+  | Int16Array
+  | Uint32Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
+function byte_swap_inplace(src: TypedArray): void {
   const b = src.BYTES_PER_ELEMENT;
   const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
   const numFlips = b / 2;
@@ -651,9 +724,30 @@ function byte_swap_inplace(src) {
   }
 }
 
+interface ArrayProps {
+  shape: number[];
+  dtype: string;
+  chunk_shape: number[];
+  chunk_separator: string;
+  compressor?: Codec;
+  fill_value: number | null;
+  attrs?: any;
+}
+
 export class ZarrArray extends Node {
-  constructor({ store, path, owner, shape, dtype, chunk_shape, chunk_separator, compressor, fill_value, attrs }) {
-    super({ store, path, owner });
+  shape: number[];
+  dtype: string;
+  chunk_shape: number[];
+  chunk_separator: string;
+  compressor?: Codec;
+  fill_value: number | null;
+  attrs: any;
+  TypedArray: TypedArray;
+  private should_byte_swap: boolean;
+
+  constructor(props: NodeProps & ArrayProps) {
+    const { shape, dtype, chunk_shape, chunk_separator, compressor, fill_value = null, attrs = {} } = props;
+    super(props);
     this.shape = shape;
     this.dtype = dtype;
     this.chunk_shape = chunk_shape;
@@ -661,65 +755,59 @@ export class ZarrArray extends Node {
     this.compressor = compressor;
     this.fill_value = fill_value;
     this.attrs = attrs;
-    this._should_byte_swap = (dtype[0] === '>' && LITTLE_ENDIAN_OS) || (dtype[0] === '<' && !LITTLE_ENDIAN_OS);
+    this.TypedArray = (DTYPES.get(this.dtype.slice(1)) as any) as TypedArray;
+    this.should_byte_swap = (dtype[0] === '>' && LITTLE_ENDIAN_OS) || (dtype[0] === '<' && !LITTLE_ENDIAN_OS);
   }
 
   get ndim() {
     return this.shape.length;
   }
 
-  get TypedArray() {
-    const lookup = (this.dtype[0] === '<' || this.dtype[0] === '>') ? this.dtype.slice(1, 3) : this.dtype;
-    return DTYPES[lookup];
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  get(selection) {
+  get(selection: null | (null | number | Slice)[]): Promise<number | NDArray> {
     throw new NotImplementedError('Must import main package export for array indexing.');
   }
-  
-  _chunk_key(chunk_coords) {
+
+  set(selection: null | (null | number | Slice)[]): Promise<void> {
+    throw new NotImplementedError('Must import main package export for array indexing.');
+  }
+
+  _chunk_key(chunk_coords: number[]): string {
     const chunk_identifier = 'c' + chunk_coords.join(this.chunk_separator);
     const chunk_key = `data/root${this.path}/${chunk_identifier}`;
     return chunk_key;
   }
 
-  async _decode_chunk(buffer) {
+  async _decode_chunk(buffer: Uint8Array): Promise<TypedArray> {
     // decompress
     let bytes = new Uint8Array(buffer);
     if (this.compressor) {
       bytes = await this.compressor.decode(bytes);
     }
     // view as an NDArray with correct dtype & shape
-    const data = new this.TypedArray(bytes.buffer);
+    const data: TypedArray = new (this.TypedArray as any)(bytes.buffer);
 
-    if (this._should_byte_swap) {
+    if (this.should_byte_swap) {
       byte_swap_inplace(data);
     }
     return data;
   }
 
-  async _encode_chunk(data) {
-    if(this._should_byte_swap) {
+  async _encode_chunk(data: TypedArray): Promise<Uint8Array> {
+    if (this.should_byte_swap) {
       byte_swap_inplace(data);
     }
     let bytes = new Uint8Array(data.buffer);
     if (this.compressor) {
-      bytes = this.compressor.encode(bytes);
+      bytes = await this.compressor.encode(bytes);
     }
     return bytes;
   }
 
-  async get_chunk(chunk_coords) {
+  async get_chunk(chunk_coords: number[]) {
     const chunk_key = this._chunk_key(chunk_coords);
     const buffer = await this.store.get(chunk_key);
     const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  set(selection, value) {
-    throw new NotImplementedError('Must import main package export for array indexing.');
   }
 
   repr() {
@@ -727,72 +815,49 @@ export class ZarrArray extends Node {
   }
 }
 
-
 // STORAGE //
 
-
-export class ListDirResult {
-  constructor({ contents, prefixes }) {
-    this.contents = contents;
-    this.prefixes = prefixes;
-  }
+export interface ListDirResult {
+  contents: string[];
+  prefixes: string[];
 }
 
-/* eslint-disable no-unused-vars */
-export class Store {
-  async get(key, _default) {
-    throw new NotImplementedError('Store.get');
-  }
-  async set(key, value) {
-    throw new NotImplementedError('Store.set');
-  }
-  async delete(key) {
-    throw new NotImplementedError('Store.delete');
-  }
-
-  async keys() {
-    throw new NotImplementedError('Store.keys');
-  }
-
-  async length() {
-    let size = 0;
-    const key_iter = await this.keys();
-    for await (const _ of key_iter) size++;
-    return size;
-  }
-  async list_prefix(prefix) {
-    throw new NotImplementedError('Store.list_prefix');
-  }
-  async list_dir(prefix) {
-    throw new NotImplementedError('Store.list_dir');
-  }
+export interface Store {
+  get(key: string, _default?: Uint8Array): Uint8Array | Promise<Uint8Array>;
+  set(key: string, value: Uint8Array): void | Promise<void>;
+  delete(key: string): boolean | Promise<boolean>;
+  keys(): IterableIterator<string> | Generator<string> | AsyncGenerator<string>;
+  list_prefix(prefix: string): string[] | Promise<string[]>;
+  list_dir(prefix: string): ListDirResult | Promise<ListDirResult>;
+  repr?: () => string;
 }
-/* eslint-enable no-unused-vars */
 
-export class MemoryStore extends Store {
+export class MemoryStore implements Store {
+  map: Map<string, Uint8Array>;
+
   constructor() {
-    super();
     this.map = new Map();
   }
 
-  get(key, _default = null) {
+  get(key: string, _default?: Uint8Array) {
     const value = this.map.get(key);
     if (!value) {
-      if (_default !== null) return _default;
+      if (_default) return _default;
       throw new KeyError(key);
     }
     return value;
   }
 
-  set(key, value) {
-    return this.map.set(key, value);
+  set(key: string, value: Uint8Array) {
+    this.map.set(key, value);
+    return;
   }
 
-  delete(key) {
+  delete(key: string) {
     return this.map.delete(key);
   }
 
-  list_prefix(prefix) {
+  list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
     assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");
     const items = [];
@@ -811,15 +876,15 @@ export class MemoryStore extends Store {
     }
 
     const contents = [];
-    const prefixes = new Set(); // could have redundant keys
+    const prefixes: Set<string> = new Set();
 
     for (const path of this.map.keys()) {
       if (path.includes(prefix)) {
         const name = prefix ? path.split(prefix)[1] : path;
-        const segments = name.split('/'); 
+        const segments = name.split('/');
         const item = segments[0];
         if (segments.length === 1) {
-          // file 
+          // file
           contents.push(item);
         } else {
           prefixes.add(item);
@@ -827,7 +892,7 @@ export class MemoryStore extends Store {
       }
     }
 
-    return new ListDirResult({ contents, prefixes: [...prefixes] });
+    return { contents, prefixes: [...prefixes] };
   }
 
   keys() {

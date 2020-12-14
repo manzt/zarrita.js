@@ -9,7 +9,7 @@ const config = {
   setup: async () => {
     const file_path = 'test.zr3';
     fs.rmdirSync(file_path, { recursive: true });
-    return { 
+    return {
       store: new FileSystemStore(file_path),
       get_json: async key => {
         const blob = await fsp.readFile(file_path + '/' + key);
