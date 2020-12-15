@@ -1,4 +1,4 @@
-import { KeyError, NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
+import { NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
 interface RootMetadata {
   zarr_format: string;
@@ -93,6 +93,9 @@ export async function get_hierarchy(store: Store) {
   // retrieve and parse entry point metadata document
   const meta_key = 'zarr.json';
   const meta_doc = await store.get(meta_key);
+  if (!meta_doc) {
+    throw Error('Root metadata is missing.');
+  }
   const meta = _json_decode_object(meta_doc) as RootMetadata;
 
   // check protocol version
@@ -356,14 +359,9 @@ export class Hierarchy {
     path = _check_path(path);
     // retrieve and parse array metadata document
     const meta_key = _array_meta_key(path, this.meta_key_suffix);
-    let meta_doc: Uint8Array;
-    try {
-      meta_doc = await this.store.get(meta_key);
-    } catch (err) {
-      if (err instanceof KeyError) {
-        throw new NodeNotFoundError(path);
-      }
-      throw err;
+    const meta_doc = await this.store.get(meta_key);
+    if (!meta_doc) {
+      throw new NodeNotFoundError(path);
     }
     const meta = _json_decode_object(meta_doc) as ArrayMetadata;
 
@@ -414,17 +412,11 @@ export class Hierarchy {
 
     // retrieve and parse group metadata document
     const meta_key = _group_meta_key(path, this.meta_key_suffix);
-    let meta_doc: Uint8Array;
-    try {
-      meta_doc = await this.store.get(meta_key);
-    } catch (err) {
-      if (err instanceof KeyError) {
-        throw new NodeNotFoundError(path);
-      }
-      throw err;
+    const meta_doc = await this.store.get(meta_key);
+    if (!meta_doc) {
+      throw new NodeNotFoundError(path);
     }
     const meta = _json_decode_object(meta_doc) as GroupMetadata;
-
     // check metadata
     const { attributes: attrs } = meta;
 
@@ -468,14 +460,7 @@ export class Hierarchy {
     }
 
     // try implicit group
-    try {
-      return this.get_implicit_group(path);
-    } catch (err) {
-      if (!(err instanceof NodeNotFoundError)) {
-        throw err;
-      }
-      throw new KeyError(path);
-    }
+    return this.get_implicit_group(path);
   }
 
   async has(path: string): Promise<boolean> {
@@ -806,6 +791,7 @@ export class ZarrArray extends Node {
   async get_chunk(chunk_coords: number[]) {
     const chunk_key = this._chunk_key(chunk_coords);
     const buffer = await this.store.get(chunk_key);
+    if (!buffer) return;
     const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
   }
@@ -823,8 +809,8 @@ export interface ListDirResult {
 }
 
 export interface Store {
-  get(key: string, _default?: Uint8Array): Uint8Array | Promise<Uint8Array>;
-  set(key: string, value: Uint8Array): void | Promise<void>;
+  get(key: string): undefined | Uint8Array | Promise<Uint8Array | undefined>;
+  set(key: string, value: Uint8Array): any | void | Promise<void>;
   delete(key: string): boolean | Promise<boolean>;
   keys(): IterableIterator<string> | Generator<string> | AsyncGenerator<string>;
   list_prefix(prefix: string): string[] | Promise<string[]>;
@@ -832,36 +818,12 @@ export interface Store {
   repr?: () => string;
 }
 
-export class MemoryStore implements Store {
-  map: Map<string, Uint8Array>;
-
-  constructor() {
-    this.map = new Map();
-  }
-
-  get(key: string, _default?: Uint8Array) {
-    const value = this.map.get(key);
-    if (!value) {
-      if (_default) return _default;
-      throw new KeyError(key);
-    }
-    return value;
-  }
-
-  set(key: string, value: Uint8Array) {
-    this.map.set(key, value);
-    return;
-  }
-
-  delete(key: string) {
-    return this.map.delete(key);
-  }
-
+export class MemoryStore extends Map<string, Uint8Array> implements Store {
   list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
     assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");
     const items = [];
-    for (const path of this.map.keys()) {
+    for (const path of this.keys()) {
       if (path.startsWith(prefix)) {
         items.push(path.split(prefix)[1]);
       }
@@ -878,7 +840,7 @@ export class MemoryStore implements Store {
     const contents = [];
     const prefixes: Set<string> = new Set();
 
-    for (const path of this.map.keys()) {
+    for (const path of this.keys()) {
       if (path.includes(prefix)) {
         const name = prefix ? path.split(prefix)[1] : path;
         const segments = name.split('/');
@@ -893,10 +855,6 @@ export class MemoryStore implements Store {
     }
 
     return { contents, prefixes: [...prefixes] };
-  }
-
-  keys() {
-    return this.map.keys();
   }
 
   repr() {

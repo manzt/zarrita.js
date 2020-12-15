@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { KeyError, assert } from '../lib/errors.js';
+import { assert } from '../lib/errors.js';
 
 import type { Store } from '../core.js';
 
@@ -11,15 +11,14 @@ export default class FileSystemStore implements Store {
     this.root = fp;
   }
 
-  async get(key: string, _default?: Uint8Array): Promise<Uint8Array> {
+  async get(key: string) {
     const fp = path.join(this.root, key);
     try {
       const value = await fs.readFile(fp, null);
-      return value;
+      return value as Uint8Array;
     } catch (err) {
       if (err.code === 'ENOENT') {
-        if (_default) return _default;
-        throw new KeyError(key);
+        return undefined;
       }
       throw err;
     }

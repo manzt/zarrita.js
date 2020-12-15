@@ -16,12 +16,6 @@ export class IndexError extends Error {
     this.name = 'IndexError';
   }
 }
-export class KeyError extends Error {
-  constructor(msg: string) {
-    super(msg);
-    this.name = 'KeyError';
-  }
-}
 
 export class ZarrAssertionError extends Error {
   constructor(msg: string) {

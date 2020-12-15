@@ -1,4 +1,4 @@
-import { KeyError, NotImplementedError } from '../lib/errors.js';
+import { NotImplementedError } from '../lib/errors.js';
 
 import type { Store } from '../core.js';
 
@@ -13,12 +13,11 @@ export default class HTTPStore implements Store {
     return `${this.url}/${key.startsWith('/') ? key.slice(1) : key}`;
   }
 
-  async get(key: string, _default?: Uint8Array) {
+  async get(key: string) {
     const path = this._path(key);
     const res = await fetch(path);
     if (res.status === 404) {
-      if (_default) return _default;
-      throw new KeyError(key);
+      return;
     }
     const value = await res.arrayBuffer();
     return new Uint8Array(value);
