@@ -21,7 +21,7 @@ export default class HTTPStore implements AsyncStore {
       return new Uint8Array(value);
     } else if (res.status !== 404) {
       // throw error if not 404
-      throw new Error(`HTTP Error: key=${path}, status=${res.status}.`)
+      throw new Error(`HTTP Error: key=${path}, status=${res.status}.`);
     }
     // 404 returns undefined
   }

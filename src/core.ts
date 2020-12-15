@@ -1,4 +1,3 @@
-import type { AnyARecord } from 'dns';
 import { NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
 interface RootMetadata {
