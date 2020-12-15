@@ -9,8 +9,8 @@
   "scripts": {
     "test": "node test/index.test.js",
     "test:ci": "npm test | tap-set-exit",
-    "format": "prettier --write src/**/*.ts test/**/*.js",
-    "lint": "prettier --check src src/**/*.ts test/**/*.js",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.js'",
+    "lint": "prettier --check 'src/**/*.ts' 'test/**/*.js'",
     "build": "tsc",
     "clean": "rimraf src/**/*.js src/**/*.d.ts",
     "build:clean": "npm run clean && npm run build"

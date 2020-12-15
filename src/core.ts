@@ -831,7 +831,6 @@ export interface AsyncStore {
 export type Store = SyncStore | AsyncStore;
 
 export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
-
   list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
     assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");
