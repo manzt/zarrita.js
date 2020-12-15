@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
+
 import { assert } from '../lib/errors.js';
+import type { AsyncStore } from '../core.js';
 
-import type { Store } from '../core.js';
-
-export default class FileSystemStore implements Store {
+export default class FileSystemStore implements AsyncStore {
   root: string;
 
   constructor(fp: string) {

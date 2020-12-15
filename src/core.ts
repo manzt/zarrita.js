@@ -1,3 +1,4 @@
+import type { AnyARecord } from 'dns';
 import { NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
 interface RootMetadata {
@@ -808,17 +809,30 @@ export interface ListDirResult {
   prefixes: string[];
 }
 
-export interface Store {
-  get(key: string): undefined | Uint8Array | Promise<Uint8Array | undefined>;
-  set(key: string, value: Uint8Array): any | void | Promise<void>;
-  delete(key: string): boolean | Promise<boolean>;
-  keys(): IterableIterator<string> | Generator<string> | AsyncGenerator<string>;
-  list_prefix(prefix: string): string[] | Promise<string[]>;
-  list_dir(prefix: string): ListDirResult | Promise<ListDirResult>;
-  repr?: () => string;
+export interface SyncStore {
+  get(key: string): Uint8Array | undefined;
+  set(key: string, value: Uint8Array): any;
+  delete(key: string): boolean;
+  keys(): IterableIterator<string> | Generator<string>;
+  list_prefix(prefix: string): string[];
+  list_dir(prefix: string): ListDirResult;
+  repr: () => string;
 }
 
-export class MemoryStore extends Map<string, Uint8Array> implements Store {
+export interface AsyncStore {
+  get(key: string): Promise<Uint8Array | undefined>;
+  set(key: string, value: Uint8Array): Promise<any>;
+  delete(key: string): boolean | Promise<boolean>;
+  keys(): AsyncIterableIterator<string> | AsyncGenerator<string>;
+  list_prefix(prefix: string): Promise<string[]>;
+  list_dir(prefix: string): Promise<ListDirResult>;
+  repr: () => string;
+}
+
+export type Store = SyncStore | AsyncStore;
+
+export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
+
   list_prefix(prefix: string) {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
     assert(prefix[prefix.length - 1] === '/', "Prefix must end with '/'.");

@@ -1,8 +1,7 @@
 import { NotImplementedError } from '../lib/errors.js';
+import type { AsyncStore } from '../core.js';
 
-import type { Store } from '../core.js';
-
-export default class HTTPStore implements Store {
+export default class HTTPStore implements AsyncStore {
   url: string;
 
   constructor(url: string) {
@@ -16,32 +15,36 @@ export default class HTTPStore implements Store {
   async get(key: string) {
     const path = this._path(key);
     const res = await fetch(path);
-    if (res.status === 404) {
-      return;
+    if (res.status === 200) {
+      // only decode if 200
+      const value = await res.arrayBuffer();
+      return new Uint8Array(value);
+    } else if (res.status !== 404) {
+      // throw error if not 404
+      throw new Error(`HTTP Error: key=${path}, status=${res.status}.`)
     }
-    const value = await res.arrayBuffer();
-    return new Uint8Array(value);
+    // 404 returns undefined
   }
 
+  // @ts-ignore
   set(key: string, value: Uint8Array) {
     throw new NotImplementedError('HTTPStore is read-only.');
-    return;
   }
 
-  delete(key: string) {
+  // @ts-ignore
+  async delete(key: string) {
     throw new NotImplementedError('HTTPStore is read-only.');
-    return false;
   }
 
-  *keys() {
+  async *keys() {
     return;
   }
 
-  list_prefix() {
+  async list_prefix() {
     return [];
   }
 
-  list_dir() {
+  async list_dir() {
     return { contents: [], prefixes: [] };
   }
 
