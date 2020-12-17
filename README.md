@@ -3,8 +3,12 @@ This repo is meant to mirror [`zarrita`](https://github.com/alimanfoo/zarrita), 
 The test suite in `test/index.test.js` mirrors the doctest from `zarrita`, and tests both the default 
 `MemoryStore` and Node.js-specific `FileSystemStore` (located in `./src/storage/fsstore.js`).
 
+The top-level package export and `/core` submodule are pure JS and will run in both modern Node 
+and browser environments. Each `/storage` entrypoint is specific to either Node (`/storage/fsstore`)
+or the browser (`/storage/httpstore`). 
 
-#### Usage:
+
+#### Usage (Node):
 
 ```javascript
 import { create_hierarchy, slice, registry } from 'zarrita';
@@ -159,6 +163,11 @@ test.zr3
 12 directories, 10 files
 ```
 
+#### Usage (Browser):
+
+For now, the browser-specific store `HTTPStore` uses the [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+API and is *read-only*. An example reading from a remote server in the browser can be 
+found [here](https://observablehq.com/d/7156b4838eed011d).
 
 #### Compatibility with `ndarray`
 
