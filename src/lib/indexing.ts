@@ -1,4 +1,4 @@
-import { IndexError, KeyError, assert } from './errors.js';
+import { IndexError, assert } from './errors.js';
 import { set } from './ops.js';
 import type { ZarrArray, TypedArray, Slice, Indices, NDArray } from '../core.js';
 
@@ -33,19 +33,14 @@ async function _chunk_getitem(
   out: NDArray,
   out_selection: (null | number | Slice)[]
 ) {
-  try {
-    // decode chunk
-    const { data, shape } = await this.get_chunk(chunk_coords);
+  const res = await this.get_chunk(chunk_coords);
+  if (res) {
+    const { data, shape } = res;
     const chunk: NDArray = { data, shape, stride: get_strides(shape) };
-    // store selected data in output
     set(out, out_selection, chunk, chunk_selection);
-  } catch (err) {
-    if (!(err instanceof KeyError)) {
-      throw err;
-    }
-    if (this.fill_value) {
-      set(out, out_selection, this.fill_value);
-    }
+  } else if (this.fill_value) {
+    // fill missing chunk with fill_value if fill_value isn't falsy
+    set(out, out_selection, this.fill_value);
   }
 }
 
@@ -118,14 +113,12 @@ async function _chunk_setitem(
   } else {
     // partially replace the contents of this chunk
     let chunk: NDArray;
-    try {
+    const res = await this.get_chunk(chunk_coords);
+    if (res) {
       // decode previous chunk from store
-      const { data, shape } = await this.get_chunk(chunk_coords);
+      const { data, shape } = res;
       chunk = { data, shape, stride: chunk_stride };
-    } catch (err) {
-      if (!(err instanceof KeyError)) {
-        throw err;
-      }
+    } else {
       chunk = {
         data: new (this.TypedArray as any)(chunk_size) as TypedArray,
         shape: this.chunk_shape,
