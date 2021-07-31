@@ -1,4 +1,4 @@
-import { KeyError, NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
+import { isKeyError, KeyError, NodeNotFoundError, NotImplementedError, assert } from './lib/errors.js';
 
 interface RootMetadata {
   zarr_format: string;
@@ -360,7 +360,7 @@ export class Hierarchy {
     try {
       meta_doc = await this.store.get(meta_key);
     } catch (err) {
-      if (err instanceof KeyError) {
+      if (isKeyError(err)) {
         throw new NodeNotFoundError(path);
       }
       throw err;
@@ -418,7 +418,7 @@ export class Hierarchy {
     try {
       meta_doc = await this.store.get(meta_key);
     } catch (err) {
-      if (err instanceof KeyError) {
+      if (isKeyError(err)) {
         throw new NodeNotFoundError(path);
       }
       throw err;
