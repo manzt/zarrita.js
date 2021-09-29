@@ -1,4 +1,4 @@
-import { MemoryStore } from 'zarrita';
+import { MemoryStore } from 'zarrita/storage/memory';
 import { run_test_suite } from './common.js';
 
 const config = {
@@ -8,7 +8,7 @@ const config = {
     const store = new MemoryStore();
     return {
       store,
-      get_json: async key => {
+      get_json: async (key) => {
         const buf = await store.get(key);
         const decoded = decoder.decode(buf);
         return JSON.parse(decoded);

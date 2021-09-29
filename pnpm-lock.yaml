@@ -1,0 +1,28 @@
+lockfileVersion: 5.3
+
+specifiers:
+  '@types/node': ^16.10.2
+  numcodecs: ^0.2.2
+  zora: ^5.0.0
+
+dependencies:
+  numcodecs: 0.2.2
+
+devDependencies:
+  '@types/node': 16.10.2
+  zora: 5.0.0
+
+packages:
+
+  /@types/node/16.10.2:
+    resolution: {integrity: sha512-zCclL4/rx+W5SQTzFs9wyvvyCwoK9QtBpratqz2IYJ3O8Umrn0m3nsTv0wQBk9sRGpvUe9CwPDrQFB10f1FIjQ==}
+    dev: true
+
+  /numcodecs/0.2.2:
+    resolution: {integrity: sha512-Y5K8mv80yb4MgVpcElBkUeMZqeE4TrovxRit/dTZvoRl6YkB6WEjY+fiUjGCblITnt3T3fmrDg8yRWu0gOLjhQ==}
+    engines: {node: '>=12'}
+    dev: false
+
+  /zora/5.0.0:
+    resolution: {integrity: sha512-fA6RdNLtzcCxy4m+HsWYVBnme7Jt1Ez4OgEMo62i6LanJCHawAhZ0n57hetWO35M/057eLVFRbtq7JTBpFNybg==}
+    dev: true
