@@ -1,5 +1,4 @@
 // @ts-check
-
 import { ExplicitGroup, ImplicitGroup, ZarrArray } from './hierarchy.js';
 import { registry } from './registry.js';
 import {
@@ -10,6 +9,9 @@ import {
 } from './lib/errors.js';
 import { json_decode_object, json_encode_object } from './lib/util.js';
 import * as checks from './lib/validation.js';
+
+export { slice } from './lib/indexing.js';
+export { registry, ExplicitGroup, ImplicitGroup, ZarrArray };
 
 /**
  * @typedef {{
