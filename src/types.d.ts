@@ -83,15 +83,23 @@ export interface ArrayAttributes<
   dtype: Dtype;
   fill_value: Scalar<Dtype> | null;
   attrs: Attrs | (() => Promise<Attrs>);
-  chunk_separator: '.' | '/';
+  chunk_key: (chunk_coords: number[]) => string;
   compressor?: import('numcodecs').Codec;
 }
 
-export type CreateArrayProps<Dtype extends DataType = DataType> = {
-  shape: number | number[];
-  chunk_shape: number | number[];
-  dtype: Dtype;
-} & Partial<Omit<ArrayAttributes, 'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape'>>;
+export type CreateArrayProps<Dtype extends DataType = DataType> =
+  & {
+    shape: number | number[];
+    chunk_shape: number | number[];
+    dtype: Dtype;
+    chunk_separator?: '.' | '/';
+  }
+  & Partial<
+    Omit<
+      ArrayAttributes,
+      'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape' | 'chunk_key'
+    >
+  >;
 
 type ZarrArray<D extends DataType, S extends Store> = import('./hierarchy').ZarrArray<
   D,

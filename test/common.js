@@ -58,8 +58,8 @@ export function run_test_suite({ name, setup }) {
       t.equal(a.shape, [5, 10], 'should have shape: [5, 10].');
       t.equal(a.dtype, '<i4', 'should have dtype <i4.');
       t.equal(a.chunk_shape, [2, 5], 'should have chunk_shape [2, 5].');
-      t.equal(a.attrs.question, 'life', 'should have question attrs of "life"');
-      t.equal(a.attrs.answer, 42, 'should have answer attrs of 42');
+      t.equal((await a.attrs).question, 'life', 'should have question attrs of "life"');
+      t.equal((await a.attrs).answer, 42, 'should have answer attrs of 42');
     });
 
     await t.test('Verify /arthur/dent metadata', async (t) => {
@@ -94,7 +94,7 @@ export function run_test_suite({ name, setup }) {
       t.deepEqual(a.shape, [7500000], 'should have shape: [7500000].');
       t.equal(a.dtype, '>f8', 'should have dtype >f8.');
       t.equal(a.chunk_shape, [42], 'should have chunk_shape [42].');
-      t.equal(a.attrs, {}, 'should have empty attrs.');
+      t.equal((await a.attrs), {}, 'should have empty attrs.');
     });
 
     await t.test('Verify /deep/thought metadata', async (t) => {
@@ -117,8 +117,9 @@ export function run_test_suite({ name, setup }) {
       });
       t.equal(g.path, '/tricia/mcmillan', 'should have path /tricia/mcmillan.');
       t.equal(g.name, 'mcmillan', 'should have name mcmillan.');
-      t.equal(g.attrs.heart, 'gold', 'should have heart of gold.');
-      t.equal(g.attrs.improbability, 'infinite', 'should have inifinite improbability.');
+	  const attrs = await g.attrs;
+      t.equal(attrs.heart, 'gold', 'should have heart of gold.');
+      t.equal(attrs.improbability, 'infinite', 'should have inifinite improbability.');
     });
 
     await t.test('Create nodes via groups', async (t) => {
@@ -145,14 +146,15 @@ export function run_test_suite({ name, setup }) {
       t.equal(a.shape, [5, 10], 'should have shape: [5, 10].');
       t.equal(a.dtype, '<i4', 'should have dtype <i4.');
       t.equal(a.chunk_shape, [2, 5], 'should have chunk_shape [2, 5].');
-      t.equal(a.attrs.question, 'life', 'should have question attrs of "life"');
-      t.equal(a.attrs.answer, 42, 'should have answer attrs of 42');
+      t.equal((await a.attrs).question, 'life', 'should have question attrs of "life"');
+      t.equal((await a.attrs).answer, 42, 'should have answer attrs of 42');
     });
 
     await t.test('Access an explicit group', async (t) => {
       const g = /** @type {ExplicitGroup<any, any>} */ (await h.get('/tricia/mcmillan'));
-      t.equal(g.attrs.heart, 'gold', 'should have attrs heart of gold.');
-      t.equal(g.attrs.improbability, 'infinite', 'should have attrs improbability of infinite.');
+	  const attrs = await g.attrs;
+      t.equal(attrs.heart, 'gold', 'should have attrs heart of gold.');
+      t.equal(attrs.improbability, 'infinite', 'should have attrs improbability of infinite.');
     });
 
     await t.test('Access implicit groups', async (t) => {

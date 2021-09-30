@@ -106,10 +106,26 @@ export class Group extends Node {
  * @extends {Group<Store, Hierarchy>}
  */
 export class ExplicitGroup extends Group {
-  /** @param {{ store: Store, path: string, owner: Hierarchy, attrs?: Record<string, any> }} props */
+  /** @param {{
+   *    store: Store,
+   *    path: string,
+   *    owner: Hierarchy,
+   *    attrs: import('./types').Attrs | (() => Promise<import('./types').Attrs>),
+   * }} props */
   constructor(props) {
     super(props);
-    this.attrs = props.attrs || {};
+    this._attrs = props.attrs || {};
+  }
+
+  /** @returns {Promise<import('./types').Attrs>} */
+  get attrs() {
+    if (typeof this._attrs === 'object') {
+      return Promise.resolve(this._attrs);
+    }
+    return this._attrs().then((attrs) => {
+      this._attrs = attrs;
+      return attrs;
+    });
   }
 }
 
@@ -133,9 +149,21 @@ export class ZarrArray extends Node {
     this.dtype = props.dtype;
     this.chunk_shape = props.chunk_shape;
     this.compressor = props.compressor;
-    this.chunk_separator = props.chunk_separator;
     this.fill_value = props.fill_value;
-    this.attrs = props.attrs;
+    this.chunk_key = props.chunk_key;
+    this._attrs = props.attrs;
+  }
+
+  /** @returns {Promise<Record<string, any>>} */
+  get attrs() {
+    if (typeof this._attrs === 'object') {
+      return Promise.resolve(this._attrs);
+    }
+    return this._attrs().then((attrs) => {
+      // cache the result
+      this._attrs = attrs;
+      return attrs;
+    });
   }
 
   get ndim() {
@@ -158,16 +186,6 @@ export class ZarrArray extends Node {
    */
   set(selection, value) {
     throw new Error('Not implemented');
-  }
-
-  /**
-   * @param {number[]} chunk_coords
-   * @returns {string}
-   */
-  _chunk_key(chunk_coords) {
-    const chunk_identifier = 'c' + chunk_coords.join(this.chunk_separator);
-    const chunk_key = `data/root${this.path}/${chunk_identifier}`;
-    return chunk_key;
   }
 
   /**
@@ -206,7 +224,7 @@ export class ZarrArray extends Node {
    * @returns {Promise<{ data: import('./types').TypedArray<Dtype>, shape: number[] }>}
    */
   async get_chunk(chunk_coords) {
-    const chunk_key = this._chunk_key(chunk_coords);
+    const chunk_key = this.chunk_key(chunk_coords);
     const buffer = await this.store.get(chunk_key);
     if (!buffer) throw new KeyError(chunk_key);
     const data = await this._decode_chunk(buffer);

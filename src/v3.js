@@ -119,6 +119,18 @@ export function group_meta_key(path, suffix) {
 }
 
 /**
+ * @param {string} path
+ * @param {'.' | '/'} chunk_separator
+ * @returns {(chunk_coords: number[]) => string}
+ */
+const chunk_key = (path, chunk_separator) =>
+  (chunk_coords) => {
+    const chunk_identifier = 'c' + chunk_coords.join(chunk_separator);
+    const chunk_key = `data/root${path}/${chunk_identifier}`;
+    return chunk_key;
+  };
+
+/**
  * @template {import('./types').Store} Store
  * @param {Store} store
  * @return {Promise<Hierarchy<Store>>}
@@ -247,12 +259,7 @@ export class Hierarchy {
     const meta_key = group_meta_key(path, this.meta_key_suffix);
     await this.store.set(meta_key, meta_doc);
 
-    return new ExplicitGroup({
-      store: this.store,
-      owner: this,
-      path,
-      attrs,
-    });
+    return new ExplicitGroup({ store: this.store, owner: this, path, attrs });
   }
 
   /**
@@ -299,7 +306,7 @@ export class Hierarchy {
       shape: meta.shape,
       dtype: dtype,
       chunk_shape: meta.chunk_grid.chunk_shape,
-      chunk_separator: meta.chunk_grid.separator,
+      chunk_key: chunk_key(path, meta.chunk_grid.separator),
       compressor: compressor,
       fill_value: meta.fill_value,
       attrs: meta.attributes,
@@ -361,7 +368,7 @@ export class Hierarchy {
       shape: shape,
       dtype: ensure_dtype(dtype),
       chunk_shape: chunk_grid.chunk_shape,
-      chunk_separator: chunk_grid.separator,
+      chunk_key: chunk_key(path, chunk_grid.separator),
       compressor: meta.compressor
         ? await decode_codec_metadata(meta.compressor)
         : undefined,
@@ -374,7 +381,7 @@ export class Hierarchy {
    * @param {string} path
    * @returns {Promise<ExplicitGroup<Store, Hierarchy<Store>>>}
    */
-  async get_explicit_group(path) {
+  async get_group(path) {
     path = normalize_path(path);
 
     // retrieve and parse group metadata document
@@ -431,7 +438,7 @@ export class Hierarchy {
     }
     // try explicit group
     try {
-      return await this.get_explicit_group(path);
+      return await this.get_group(path);
     } catch (err) {
       if (!(err instanceof NodeNotFoundError)) {
         throw err;

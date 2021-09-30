@@ -145,7 +145,7 @@ async function chunk_setitem(
   out_selection,
 ) {
   // obtain key for chunk storage
-  const chunk_key = this._chunk_key(chunk_coords);
+  const chunk_key = this.chunk_key(chunk_coords);
   const chunk_size = this.chunk_shape.reduce((a, b) => a * b, 1);
   const chunk_stride = get_strides(this.chunk_shape);
 

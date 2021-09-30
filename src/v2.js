@@ -8,8 +8,11 @@ import {
   ensure_dtype,
   json_decode_object,
   json_encode_object,
-  normalize_path,
+  // normalize_path,
 } from './lib/util.js';
+
+export { slice } from './lib/indexing.js';
+export { ExplicitGroup, registry, ZarrArray };
 
 /** @param {import('numcodecs').Codec} codec */
 function encode_codec_metadata(codec) {
@@ -46,16 +49,17 @@ async function decode_codec_metadata(config) {
 
 /** @typedef {{ zarr_format: 2 }} GroupMetadata */
 
-/** @typedef {Record<string, any>} Attrs */
+/** @param {string} path */
+const key_prefix = (path) => path.length > 1 ? path + '/' : '';
 
 /** @param {string} path */
-const array_meta_key = (path) => `${path}/.zarray`;
+const array_meta_key = (path) => key_prefix(path) + '.zarray';
 
 /** @param {string} path */
-const group_meta_key = (path) => `${path}/.zarray`;
+const group_meta_key = (path) => key_prefix(path) + '.zgroup';
 
 /** @param {string} path */
-const attrs_key = (path) => `${path}/.zattrs`;
+const attrs_key = (path) => key_prefix(path) + '.zattrs';
 
 /**
  * @param {import('./types').Store} store
@@ -67,6 +71,19 @@ const get_attrs = async (store, path) => {
   return attrs ? json_decode_object(attrs) : {};
 };
 
+/**
+ * @param {string} path
+ * @param {'.' | '/'} chunk_separator
+ * @returns {(chunk_coords: number[]) => string}
+ */
+const chunk_key = (path, chunk_separator) => {
+  const prefix = key_prefix(path);
+  return (chunk_coords) => {
+    const chunk_identifier = chunk_coords.join(chunk_separator);
+    const chunk_key = prefix + chunk_identifier;
+    return chunk_key;
+  };
+};
 /**
  * @template {import('./types').Store} S
  * @param {S} store
@@ -108,7 +125,7 @@ export class Hierarchy {
   async create_group(path, props = {}) {
     const { attrs } = props;
     // sanity checks
-    path = normalize_path(path);
+    // path = normalize_path(path);
 
     // serialise and store metadata document
     const meta_doc = json_encode_object({ zarr_format: 2 });
@@ -119,7 +136,7 @@ export class Hierarchy {
       await this.store.set(attrs_key(path), json_encode_object(attrs));
     }
 
-    return new ExplicitGroup({ store: this.store, owner: this, path, attrs });
+    return new ExplicitGroup({ store: this.store, owner: this, path, attrs: attrs ?? {} });
   }
 
   /**
@@ -131,12 +148,12 @@ export class Hierarchy {
    */
   async create_array(path, props) {
     // sanity checks
-    path = normalize_path(path);
+    // path = normalize_path(path);
     const shape = ensure_array(props.shape);
     const dtype = ensure_dtype(props.dtype);
     const chunk_shape = ensure_array(props.chunk_shape);
     const compressor = props.compressor;
-    const chunk_separator = props.chunk_separator ?? '/';
+    const chunk_separator = props.chunk_separator ?? '.';
 
     /** @type {ArrayMetadata<Dtype>} */
     const meta = {
@@ -166,7 +183,7 @@ export class Hierarchy {
       shape: meta.shape,
       dtype: dtype,
       chunk_shape: meta.chunks,
-      chunk_separator: chunk_separator,
+      chunk_key: chunk_key(path, chunk_separator),
       compressor: compressor,
       fill_value: meta.fill_value,
       attrs: props.attrs ?? {},
@@ -178,7 +195,7 @@ export class Hierarchy {
    * @returns {Promise<ZarrArray<import('./types').DataType, S>>}
    */
   async get_array(path) {
-    path = normalize_path(path);
+    // path = normalize_path(path);
     const meta_key = array_meta_key(path);
     const meta_doc = await this.store.get(meta_key);
 
@@ -195,7 +212,7 @@ export class Hierarchy {
       shape: meta.shape,
       dtype: meta.dtype,
       chunk_shape: meta.chunks,
-      chunk_separator: meta.dimension_separator ?? '.',
+      chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
       compressor: meta.compressor
         ? await decode_codec_metadata(meta.compressor)
         : undefined,
@@ -209,7 +226,7 @@ export class Hierarchy {
    * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
    */
   async get_group(path) {
-    path = normalize_path(path);
+    // path = normalize_path(path);
 
     const meta_key = group_meta_key(path);
     const meta_doc = await this.store.get(meta_key);
