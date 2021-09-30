@@ -11,7 +11,7 @@ import { assert } from '../lib/errors.js';
 export default class FileSystemStore {
   /** @param {string} fp */
   constructor(fp) {
-    this.root = path.resolve(fp);
+    this.root = fp;
   }
 
   /** @param {string} key */
@@ -29,7 +29,7 @@ export default class FileSystemStore {
   /** @param {string} key */
   has(key) {
     const fp = path.join(this.root, key);
-    return fs.promises.access(fp).then(_ => true).catch(_ => false)
+    return fs.promises.access(fp).then((_) => true).catch((_) => false);
   }
 
   /**

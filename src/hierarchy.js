@@ -88,9 +88,9 @@ export class Group extends Node {
   }
 
   /** @param {string} path */
-  get_explicit_group(path) {
+  get_group(path) {
     path = this._dereference_path(path);
-    return this.owner.get_explicit_group(path);
+    return this.owner.get_group(path);
   }
 
   /** @param {string} path */

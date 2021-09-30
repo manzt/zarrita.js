@@ -1,31 +1,43 @@
-// @ts-ignore
+// @ts-check
 
-import { ExplicitGroup, ImplicitGroup, ZarrArray } from './hierarchy.js';
+import { ExplicitGroup, ZarrArray } from './hierarchy.js';
 import { registry } from './registry.js';
+import { KeyError, NodeNotFoundError } from './lib/errors.js';
 import {
-  assert,
-  KeyError,
-  NodeNotFoundError,
-  NotImplementedError,
-} from './lib/errors.js';
-import { json_decode_object, json_encode_object } from './lib/util.js';
-import * as checks from './lib/validation.js';
+  ensure_array,
+  ensure_dtype,
+  json_decode_object,
+  json_encode_object,
+  normalize_path,
+} from './lib/util.js';
 
-/** @param {any} codec */
+/** @param {import('numcodecs').Codec} codec */
 function encode_codec_metadata(codec) {
+  // @ts-ignore
   return { id: codec.constructor.codecId, ...codec };
 }
 
 /**
- * @template {import('./types').Dtype} D
+ * @param {any} config
+ * @returns {Promise<import('numcodecs').Codec>}
+ */
+async function decode_codec_metadata(config) {
+  const importer = registry.get(config.id);
+  if (!importer) throw new Error('missing codec' + config.id);
+  const ctr = await importer();
+  return ctr.fromConfig(config);
+}
+
+/**
+ * @template {import('./types').DataType} Dtype
  *
  * @typedef {{
  * 	zarr_format: 2;
  * 	shape: number[];
  * 	chunks: number[];
- * 	dtype: D;
+ * 	dtype: Dtype;
  * 	compressor: null | Record<string, any>;
- * 	fill_value: import('./types').TypedArray<D>[0] | null;
+ * 	fill_value: import('./types').Scalar<Dtype> | null;
  * 	order: 'C' | 'F',
  * 	filters: null | Record<string, any>[];
  * 	dimension_separator?: '.' | '/'
@@ -44,6 +56,16 @@ const group_meta_key = (path) => `${path}/.zarray`;
 
 /** @param {string} path */
 const attrs_key = (path) => `${path}/.zattrs`;
+
+/**
+ * @param {import('./types').Store} store
+ * @param {string} path
+ * @returns {Promise<import('./types').Attrs>}
+ */
+const get_attrs = async (store, path) => {
+  const attrs = await store.get(attrs_key(path));
+  return attrs ? json_decode_object(attrs) : {};
+};
 
 /**
  * @template {import('./types').Store} S
@@ -80,49 +102,43 @@ export class Hierarchy {
 
   /**
    * @param {string} path
+   * @param {{ attrs?: Record<string, any> }} props
    * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
    */
-  async create_group(path) {
+  async create_group(path, props = {}) {
+    const { attrs } = props;
     // sanity checks
-    path = checks.check_path(path);
-
-    /** @type {GroupMetadata} */
-    const meta = { zarr_format: 2 };
+    path = normalize_path(path);
 
     // serialise and store metadata document
-    const meta_doc = json_encode_object(meta);
+    const meta_doc = json_encode_object({ zarr_format: 2 });
     const meta_key = group_meta_key(path);
     await this.store.set(meta_key, meta_doc);
 
-    return new ExplicitGroup({ store: this.store, owner: this, path });
+    if (attrs) {
+      await this.store.set(attrs_key(path), json_encode_object(attrs));
+    }
+
+    return new ExplicitGroup({ store: this.store, owner: this, path, attrs });
   }
 
   /**
-   * @template {import('./types').Dtype} D
+   * @template {import('./types').DataType} Dtype
    *
    * @param {string} path
-   * @param {{
-   *   shape: number | number[];
-   *   dtype: D;
-   *   chunk_shape: number | number[]
-   *   attrs?: Record<string, any>;
-   *   chunk_separator?: '/' | '.';
-   *   compressor?: import('./types').Codec;
-   *   fill_value?: null | number;
-   * }} props
-   * @returns {Promise<ZarrArray<D, S>>}
+   * @param {import('./types').CreateArrayProps<Dtype>} props
+   * @returns {Promise<ZarrArray<Dtype, S>>}
    */
   async create_array(path, props) {
     // sanity checks
-    path = checks.check_path(path);
-    const shape = checks.check_shape(props.shape);
-    const dtype = checks.check_dtype(props.dtype);
-    const chunk_shape = checks.check_chunk_shape(props.chunk_shape, shape);
-    const attrs = checks.check_attrs(props.attrs);
+    path = normalize_path(path);
+    const shape = ensure_array(props.shape);
+    const dtype = ensure_dtype(props.dtype);
+    const chunk_shape = ensure_array(props.chunk_shape);
     const compressor = props.compressor;
     const chunk_separator = props.chunk_separator ?? '/';
 
-    /** @type {ArrayMetadata<D>} */
+    /** @type {ArrayMetadata<Dtype>} */
     const meta = {
       zarr_format: 2,
       shape,
@@ -132,7 +148,7 @@ export class Hierarchy {
       order: 'C',
       fill_value: props.fill_value ?? null,
       filters: [],
-      compressor: props.compressor ? encode_codec_metadata(compressor) : null,
+      compressor: compressor ? encode_codec_metadata(compressor) : null,
     };
 
     // serialise and store metadata document
@@ -140,7 +156,10 @@ export class Hierarchy {
     const meta_key = array_meta_key(path);
     await this.store.set(meta_key, meta_doc);
 
-    // @ts-ignore
+    if (props.attrs) {
+      await this.store.set(attrs_key(path), json_encode_object(props.attrs));
+    }
+
     return new ZarrArray({
       store: this.store,
       path,
@@ -150,73 +169,38 @@ export class Hierarchy {
       chunk_separator: chunk_separator,
       compressor: compressor,
       fill_value: meta.fill_value,
-      attrs: {},
+      attrs: props.attrs ?? {},
     });
   }
 
   /**
    * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').Dtype, S>>}
+   * @returns {Promise<ZarrArray<import('./types').DataType, S>>}
    */
   async get_array(path) {
-    path = checks.check_path(path);
-    // retrieve and parse array metadata document
-    const meta_key = array_meta_key(path, this.meta_key_suffix);
-
+    path = normalize_path(path);
+    const meta_key = array_meta_key(path);
     const meta_doc = await this.store.get(meta_key);
 
     if (!meta_doc) {
       throw new NodeNotFoundError(path);
     }
 
-    /** @type {ArrayMetadata<import('./types').Dtype>} */
+    /** @type {ArrayMetadata<import('./types').DataType>} */
     const meta = json_decode_object(meta_doc);
-
-    // decode and check metadata
-    const {
-      shape,
-      data_type: dtype,
-      chunk_grid,
-      fill_value,
-      chunk_memory_layout,
-      extensions,
-      attributes: attrs,
-    } = meta;
-
-    checks.check_shape(chunk_grid.chunk_shape);
-    if (chunk_grid.type !== 'regular') {
-      throw new NotImplementedError(
-        `Only support for "regular" chunk_grids, got ${chunk_grid.type}.`,
-      );
-    }
-
-    checks.check_chunk_shape(chunk_grid.chunk_shape, shape);
-    if (chunk_memory_layout !== 'C') {
-      throw new NotImplementedError(
-        `Only support for "C" order chunk_memory_layout, got ${chunk_memory_layout}.`,
-      );
-    }
-
-    for (const spec of extensions) {
-      if (spec.must_understand) {
-        throw new NotImplementedError(
-          `No support for required extensions found, ${JSON.stringify(spec)}.`,
-        );
-      }
-    }
 
     return new ZarrArray({
       store: this.store,
       path,
-      shape: checks.check_shape(shape),
-      dtype: checks.check_dtype(dtype),
-      chunk_shape: chunk_grid.chunk_shape,
-      chunk_separator: chunk_grid.separator,
+      shape: meta.shape,
+      dtype: meta.dtype,
+      chunk_shape: meta.chunks,
+      chunk_separator: meta.dimension_separator ?? '.',
       compressor: meta.compressor
         ? await decode_codec_metadata(meta.compressor)
         : undefined,
-      fill_value,
-      attrs,
+      fill_value: meta.fill_value,
+      attrs: () => get_attrs(this.store, path),
     });
   }
 
@@ -224,52 +208,28 @@ export class Hierarchy {
    * @param {string} path
    * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
    */
-  async get_explicit_group(path) {
-    path = checks.check_path(path);
+  async get_group(path) {
+    path = normalize_path(path);
 
-    // retrieve and parse group metadata document
-    const meta_key = group_meta_key(path, this.meta_key_suffix);
+    const meta_key = group_meta_key(path);
     const meta_doc = await this.store.get(meta_key);
 
     if (!meta_doc) {
       throw new NodeNotFoundError(path);
     }
 
-    /** @type {GroupMetadata} */
-    const meta = json_decode_object(meta_doc);
-
     // instantiate explicit group
     return new ExplicitGroup({
       store: this.store,
       owner: this,
       path,
-      attrs: meta.attributes,
+      attrs: () => get_attrs(this.store, path),
     });
   }
 
   /**
    * @param {string} path
-   * @returns {Promise<ImplicitGroup<S, Hierarchy<S>>>}
-   */
-  async get_implicit_group(path) {
-    path = checks.check_path(path);
-
-    // attempt to list directory
-    const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;
-    const result = await this.store.list_dir(key_prefix);
-
-    const { contents, prefixes } = result;
-    if (contents.length === 0 && prefixes.length === 0) {
-      throw new NodeNotFoundError(path);
-    }
-
-    // instantiate implicit group
-    return new ImplicitGroup({ store: this.store, path, owner: this });
-  }
-
-  /**
-   * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').Dtype, S> | ExplicitGroup<S, Hierarchy<S>> | ImplicitGroup<S, Hierarchy<S>>>}
+   * @returns {Promise<ZarrArray<import('./types').DataType, S> | ExplicitGroup<S, Hierarchy<S>>>}
    */
   async get(path) {
     try {
@@ -281,22 +241,13 @@ export class Hierarchy {
     }
     // try explicit group
     try {
-      return await this.get_explicit_group(path);
+      return await this.get_group(path);
     } catch (err) {
       if (!(err instanceof NodeNotFoundError)) {
         throw err;
       }
     }
-
-    // try implicit group
-    try {
-      return this.get_implicit_group(path);
-    } catch (err) {
-      if (!(err instanceof NodeNotFoundError)) {
-        throw err;
-      }
-      throw new KeyError(path);
-    }
+    throw new KeyError(path);
   }
 
   /**
@@ -315,77 +266,17 @@ export class Hierarchy {
     }
   }
 
-  /** @returns {Promise<Map<string, string>>} */
-  async get_nodes() {
-    /** @type {Map<string, string>} */
-    const nodes = new Map();
-    const result = await this.store.list_prefix('meta/');
-
-    /** @param {string} key */
-    const lookup = (key) => {
-      if (key.endsWith(this.array_suffix)) {
-        return { suffix: this.array_suffix, type: 'array' };
-      } else if (key.endsWith(this.group_suffix)) {
-        return { suffix: this.group_suffix, type: 'explicit_group' };
-      }
-    };
-
-    for (const key of result) {
-      if (key === 'root.array' + this.meta_key_suffix) {
-        nodes.set('/', 'array');
-      } else if (key == 'root.group') {
-        nodes.set('/', 'explicit_group');
-      } else if (key.startsWith('root/')) {
-        const m = lookup(key);
-        if (m) {
-          const path = key.slice('root'.length, -m.suffix.length);
-          nodes.set(path, m.type);
-          const segments = path.split('/');
-          segments.pop();
-          while (segments.length > 1) {
-            const parent = segments.join('/');
-            nodes.set(
-              parent,
-              nodes.get(parent) || 'implicit_group',
-            );
-            segments.pop();
-          }
-          nodes.set('/', nodes.get('/') || 'implicit_group');
-        }
-      }
-    }
-    return nodes;
+  /** @param {string} _path */
+  async get_children(_path) {
+    console.warn('get_children not implemented for v2.');
+    return new Map();
   }
 
   /**
-   * @param {string} path
-   * @returns {Promise<Map<string, string>>}
+   * @param {string} _path
+   * @returns {never}
    */
-  async get_children(path = '/') {
-    path = checks.check_path(path);
-    /** @type {Map<string, string>} */
-    const children = new Map();
-
-    // attempt to list directory
-    const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;
-    const result = await this.store.list_dir(key_prefix);
-
-    // find explicit children
-    for (const n of result.contents) {
-      if (n.endsWith(this.array_suffix)) {
-        const name = n.slice(0, -this.array_suffix.length);
-        children.set(name, 'array');
-      } else if (n.endsWith(this.group_suffix)) {
-        const name = n.slice(0, -this.group_suffix.length);
-        children.set(name, 'explicit_group');
-      }
-    }
-
-    // find implicit children
-    for (const name of result.prefixes) {
-      children.set(name, children.get(name) || 'implicit_group');
-    }
-
-    return children;
+  get_implicit_group(_path) {
+    throw new Error('Implicit group not implemented for v2.');
   }
 }

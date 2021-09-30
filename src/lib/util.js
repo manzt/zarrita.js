@@ -104,20 +104,23 @@ const DTYPES = {
  * @returns {import('../types').ParsedDataType<Dtype>}
  */
 export function parse_dtype(dtype) {
-  // The type-casting in this function blocks preserves the 
+  // The type-casting in this function blocks preserves the
   // generic `Dtype` so type inference is more precise to end users.
 
   // can only be '<' | '>' | '|' for a valid `DataType`. Type inference returns 'string', so we need to cast.
-  const endianness = /** @type {import('../types').Endianness<Dtype>} */ (dtype[0]); 
+  const endianness = /** @type {import('../types').Endianness<Dtype>} */ (dtype[0]);
 
   // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-  const key = /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
+  const key =
+    /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
   const ctr = DTYPES[key];
 
-  // we should be able to use the constructor directly, but TypeScript's built-in TypedArray 
+  // we should be able to use the constructor directly, but TypeScript's built-in TypedArray
   // types return a union of TypedArrays rather than the instance type. The `ParsedDataType`
   // signature will contrain any caller of `create` to call with `ArrayBuffer` or `number`, which
   // are valid overloads for all TypedArray constructors.
-  const create = (/** @type {any} */ x) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
+  const create = (
+    /** @type {any} */ x,
+  ) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
   return { endianness, ctr, create };
 }

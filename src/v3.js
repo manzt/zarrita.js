@@ -258,11 +258,7 @@ export class Hierarchy {
   /**
    * @template {import('./types').DataType} Dtype
    * @param {string} path
-   * @param {{
-   *   shape: number | number[],
-   *   chunk_shape: number | number[],
-   *   dtype: Dtype;
-   * } & Partial<Omit<import('./types').ArrayAttributes, 'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape'>>} props
+   * @param {import('./types').CreateArrayProps<Dtype>} props
    * @returns {Promise<ZarrArray<Dtype, Store>>}
    */
   async create_array(path, props) {
@@ -272,11 +268,6 @@ export class Hierarchy {
     const dtype = ensure_dtype(props.dtype);
     const chunk_shape = ensure_array(props.chunk_shape);
     const compressor = props.compressor;
-
-    assert(
-      shape.length === chunk_shape.length,
-      'shape and chunk_shape must have same number of dims.',
-    );
 
     /** @type {ArrayMetadata<Dtype>} */
     const meta = {
@@ -524,7 +515,7 @@ export class Hierarchy {
     path = normalize_path(path);
 
     /** @type {Map<string, string>} */
-    const children = new Map;
+    const children = new Map();
 
     // attempt to list directory
     const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;
