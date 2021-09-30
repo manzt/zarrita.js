@@ -233,7 +233,6 @@ export class Hierarchy {
     const { attrs = {} } = props;
     // sanity checks
     path = checks.check_path(path);
-    checks.check_attrs(attrs);
 
     /** @type {GroupMetadata} */
     const meta = { extensions: [], attributes: attrs };
@@ -272,7 +271,6 @@ export class Hierarchy {
     const shape = checks.check_shape(props.shape);
     const dtype = checks.check_dtype(props.dtype);
     const chunk_shape = checks.check_chunk_shape(props.chunk_shape, shape);
-    const attrs = checks.check_attrs(props.attrs);
     const compressor = props.compressor;
 
     /** @type {ArrayMetadata<D>} */
@@ -287,7 +285,7 @@ export class Hierarchy {
       chunk_memory_layout: 'C',
       fill_value: props.fill_value ?? null,
       extensions: [],
-      attributes: attrs,
+      attributes: props.attrs ?? {},
     };
 
     if (compressor) {

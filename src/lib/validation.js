@@ -37,15 +37,6 @@ export function check_path(path) {
 }
 
 /**
- * @param {Record<string, any>} attrs
- * @returns {Record<string, any>}
- */
-export function check_attrs(attrs = {}) {
-  // assert attrs is None or isinstance(attrs, Mapping)
-  return attrs;
-}
-
-/**
  * @param {number | number[]} shape
  * @returns {number[]}
  */
