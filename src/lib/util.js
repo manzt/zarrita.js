@@ -24,7 +24,7 @@ const LITTLE_ENDIAN_OS = system_is_little_endian();
 /** @param {'|' | '<' | '>'} endianness */
 export const should_byte_swap = (endianness) => LITTLE_ENDIAN_OS && endianness === '>';
 
-/** @param {import('../types').TypedArray<import('../types').Dtype>} src */
+/** @param {import('../types').TypedArray<import('../types').DataType>} src */
 export function byte_swap_inplace(src) {
   const b = src.BYTES_PER_ELEMENT;
   const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
@@ -49,7 +49,7 @@ export function ensure_array(maybe_arr) {
   return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
-/** @type {Set<import('../types').Dtype>} */
+/** @type {Set<import('../types').DataType>} */
 const DTYPE_STRS = new Set([
   '|i1',
   '|u1',
@@ -71,7 +71,7 @@ const DTYPE_STRS = new Set([
  * @template {string} D
  *
  * @param {D} dtype
- * @returns {D extends import('../types').Dtype ? D : never}
+ * @returns {D extends import('../types').DataType ? D : never}
  */
 export function ensure_dtype(dtype) {
   if (!DTYPE_STRS.has(/** @type {any} */ (dtype))) {
@@ -85,7 +85,7 @@ export function normalize_path(path) {
   return path[0] !== '/' ? `/${path}` : path;
 }
 
-/** @typedef {typeof DTYPES} DtypeMapping */
+/** @typedef {typeof DTYPES} DataTypeMapping */
 const DTYPES = {
   u1: Uint8Array,
   i1: Int8Array,
@@ -98,21 +98,26 @@ const DTYPES = {
 };
 
 /**
- * @template {import('../types').Dtype} D
+ * @template {import('../types').DataType} Dtype
  *
- * @param {D} dtype
- * @returns {import('../types').ParsedDtype<D>}
+ * @param {Dtype} dtype
+ * @returns {import('../types').ParsedDataType<Dtype>}
  */
 export function parse_dtype(dtype) {
-  const endianness = /** @type {import('../types').Endianness<D>} */ (dtype[0]);
-  const key = /** @type {import('../types').MappingKey<D>} */ (dtype.slice(1));
+  // The type-casting in this function blocks preserves the 
+  // generic `Dtype` so type inference is more precise to end users.
+
+  // can only be '<' | '>' | '|' for a valid `DataType`. Type inference returns 'string', so we need to cast.
+  const endianness = /** @type {import('../types').Endianness<Dtype>} */ (dtype[0]); 
+
+  // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
+  const key = /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
   const ctr = DTYPES[key];
-  return {
-    endianness,
-    ctr,
-    // We should be able to use the constructor directly, but this is a hack
-    // to ensure that we get more precise types.
-    // @ts-ignore
-    create: (x) => new ctr(x),
-  };
+
+  // we should be able to use the constructor directly, but TypeScript's built-in TypedArray 
+  // types return a union of TypedArrays rather than the instance type. The `ParsedDataType`
+  // signature will contrain any caller of `create` to call with `ArrayBuffer` or `number`, which
+  // are valid overloads for all TypedArray constructors.
+  const create = (/** @type {any} */ x) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
+  return { endianness, ctr, create };
 }

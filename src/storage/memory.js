@@ -2,15 +2,14 @@
 import { assert } from '../lib/errors.js';
 
 /**
- * @typedef {import('../types').Store} Store
+ * @typedef {import('../types').SyncStore} SyncStore
  *
  * @extends {Map<string, Uint8Array>}
- * @implements {Store}
+ * @implements {SyncStore}
  */
 export class MemoryStore extends Map {
   /** @param {string} prefix */
   list_prefix(prefix) {
-    assert(typeof prefix === 'string', 'Prefix must be a string.');
     assert(
       prefix[prefix.length - 1] === '/',
       'Prefix must end with \'/\'.',
@@ -26,7 +25,6 @@ export class MemoryStore extends Map {
 
   /** @param {string} prefix */
   list_dir(prefix = '') {
-    assert(typeof prefix === 'string', 'Prefix must be a string.');
     if (prefix) {
       assert(
         prefix[prefix.length - 1] === '/',
