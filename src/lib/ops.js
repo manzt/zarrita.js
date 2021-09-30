@@ -1,15 +1,15 @@
 // @ts-check
 
 /** @typedef {import('../types').Slice} Slice */
-/** @typedef {import('../types').Dtype} Dtype */
+/** @typedef {import('../types').DataType} DataType*/
 /** @typedef {(null | number | Slice)[]} Selection */
 /**
- * @template {Dtype} D
- * @typedef {import('../types').NDArray<D>} NDArray
+ * @template {DataType} Dtype
+ * @typedef {import('../types').NDArray<Dtype>} NDArray
  */
 /**
- * @template {Dtype} D
- * @typedef {import('../types').TypedArray<D>} TypedArray
+ * @template {DataType} Dtype
+ * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
 
 /**
@@ -26,10 +26,10 @@ function indices_len(start, stop, step) {
 }
 
 /**
- * @template {Dtype} D
- * @param {NDArray<D>} out
+ * @template {DataType} Dtype
+ * @param {NDArray<Dtype>} out
  * @param {Selection} out_selection
- * @param {TypedArray<D>[0]} value
+ * @param {import('../types').Scalar<Dtype>} value
  */
 export function set_scalar(out, out_selection, value) {
   if (out_selection.length === 0) {
@@ -40,7 +40,7 @@ export function set_scalar(out, out_selection, value) {
   const [curr_stride, ...stride] = out.stride;
   const [out_len, ...shape] = out.shape;
   if (typeof slice === 'number') {
-    const data = /** @type {TypedArray<D>} */ (out.data.subarray(
+    const data = /** @type {TypedArray<Dtype>} */ (out.data.subarray(
       curr_stride * slice,
     ));
     set_scalar({ data, stride, shape }, slices, value);
@@ -64,7 +64,7 @@ export function set_scalar(out, out_selection, value) {
     return;
   }
   for (let i = 0; i < len; i++) {
-    const data = /** @type {TypedArray<D>} */ (out.data.subarray(
+    const data = /** @type {TypedArray<Dtype>} */ (out.data.subarray(
       curr_stride * (from + step * i),
     ));
     set_scalar({ data, stride, shape }, slices, value);
@@ -72,10 +72,10 @@ export function set_scalar(out, out_selection, value) {
 }
 
 /**
- * @template {Dtype} D
- * @param {NDArray<D>} out
+ * @template {DataType} Dtype
+ * @param {NDArray<Dtype>} out
  * @param {Selection} out_selection
- * @param {NDArray<D>} chunk
+ * @param {NDArray<Dtype>} chunk
  * @param {Selection} chunk_selection
  */
 export function set_from_chunk(out, out_selection, chunk, chunk_selection) {
@@ -94,7 +94,7 @@ export function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (typeof chunk_slice === 'number') {
     // chunk dimension is squeezed
     const chunk_view = {
-      data: /** @type {TypedArray<D>} */ (chunk.data.subarray(
+      data: /** @type {TypedArray<Dtype>} */ (chunk.data.subarray(
         chunk_stride * chunk_slice,
       )),
       shape: chunk_shape,
@@ -110,7 +110,7 @@ export function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (typeof out_slice === 'number') {
     // out dimension is squeezed
     const out_view = {
-      data: /** @type {TypedArray<D>} */ (out.data.subarray(
+      data: /** @type {TypedArray<Dtype>} */ (out.data.subarray(
         out_stride * out_slice,
       )),
       shape: out_shape,

@@ -13,7 +13,8 @@
     "./storage/fs": "./src/storage/fsstore.js"
   },
   "scripts": {
-    "test": "node ./test/index.test.js"
+    "test": "node ./test/index.test.js",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "numcodecs": "^0.2.2"

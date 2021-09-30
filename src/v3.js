@@ -27,18 +27,18 @@ export { ExplicitGroup, ImplicitGroup, registry, ZarrArray };
  * }} RootMetadata
  */
 /**
- * @template {import('./types').Dtype} D
+ * @template {import('./types').DataType} Dtype
  *
  * @typedef {{
  * 	shape: number[];
- * 	data_type: D;
+ * 	data_type: Dtype;
  * 	chunk_grid: {
  * 	  type: "regular";
  * 	  separator: "/" | ".";
  * 	  chunk_shape: number[];
  * 	};
  * 	chunk_memory_layout: "C";
- * 	fill_value: null | number;
+ * 	fill_value: null | import('./types').Scalar<Dtype>;
  * 	extensions: Record<string, any>[];
  * 	attributes: Record<string, any>;
  * 	compressor?: CodecMetadata;
@@ -119,9 +119,9 @@ export function group_meta_key(path, suffix) {
 }
 
 /**
- * @template {import('./types').Store} S
- * @param {S} store
- * @return {Promise<Hierarchy<S>>}
+ * @template {import('./types').Store} Store
+ * @param {Store} store
+ * @return {Promise<Hierarchy<Store>>}
  */
 export async function create_hierarchy(store) {
   // create entry point metadata document
@@ -145,9 +145,9 @@ export async function create_hierarchy(store) {
 }
 
 /**
- * @template {import('./types').Store} S
- * @param {S} store
- * @returns {Promise<Hierarchy<S>>}
+ * @template {import('./types').Store} Store
+ * @param {Store} store
+ * @returns {Promise<Hierarchy<Store>>}
  */
 export async function get_hierarchy(store) {
   // retrieve and parse entry point metadata document
@@ -202,16 +202,16 @@ export async function get_hierarchy(store) {
 }
 
 /**
- * @template {import('./types').Store} S
- * @typedef {import('./types').Hierarchy<S>} HierarchyProtocol
+ * @template {import('./types').Store} Store
+ * @typedef {import('./types').Hierarchy<Store>} HierarchyProtocol
  */
 
 /**
- * @template {import('./types').Store} S
- * @implements {HierarchyProtocol<S>}
+ * @template {import('./types').Store} Store
+ * @implements {HierarchyProtocol<Store>}
  */
 export class Hierarchy {
-  /** @param {{ store: S, meta_key_suffix: string }} props */
+  /** @param {{ store: Store, meta_key_suffix: string }} props */
   constructor({ store, meta_key_suffix }) {
     this.store = store;
     this.meta_key_suffix = meta_key_suffix;
@@ -231,8 +231,8 @@ export class Hierarchy {
 
   /**
    * @param {string} path
-   * @param {{ attrs?: Record<string, any>}} props
-   * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
+   * @param {{ attrs?: import('./types').Attrs }} props
+   * @returns {Promise<ExplicitGroup<Store, Hierarchy<Store>>>}
    */
   async create_group(path, props = {}) {
     const { attrs = {} } = props;
@@ -256,19 +256,14 @@ export class Hierarchy {
   }
 
   /**
-   * @template {import('./types').Dtype} D
-   *
+   * @template {import('./types').DataType} Dtype
    * @param {string} path
    * @param {{
-   *   shape: number | number[];
-   *   dtype: D;
-   *   chunk_shape: number | number[]
-   *   attrs?: Record<string, any>;
-   *   chunk_separator?: '/' | '.';
-   *   compressor?: import('./types').Codec;
-   *   fill_value?: null | number;
-   * }} props
-   * @returns {Promise<ZarrArray<D, S>>}
+   *   shape: number | number[],
+   *   chunk_shape: number | number[],
+   *   dtype: Dtype;
+   * } & Partial<Omit<import('./types').ArrayAttributes, 'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape'>>} props
+   * @returns {Promise<ZarrArray<Dtype, Store>>}
    */
   async create_array(path, props) {
     // sanity checks
@@ -283,7 +278,7 @@ export class Hierarchy {
       'shape and chunk_shape must have same number of dims.',
     );
 
-    /** @type {ArrayMetadata<D>} */
+    /** @type {ArrayMetadata<Dtype>} */
     const meta = {
       shape,
       data_type: dtype,
@@ -307,7 +302,6 @@ export class Hierarchy {
     const meta_key = array_meta_key(path, this.meta_key_suffix);
     await this.store.set(meta_key, meta_doc);
 
-    // @ts-ignore
     return new ZarrArray({
       store: this.store,
       path,
@@ -323,7 +317,7 @@ export class Hierarchy {
 
   /**
    * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').Dtype, S>>}
+   * @returns {Promise<ZarrArray<import('./types').DataType, Store>>}
    */
   async get_array(path) {
     path = normalize_path(path);
@@ -336,7 +330,7 @@ export class Hierarchy {
       throw new NodeNotFoundError(path);
     }
 
-    /** @type {ArrayMetadata<import('./types').Dtype>} */
+    /** @type {ArrayMetadata<import('./types').DataType>} */
     const meta = json_decode_object(meta_doc);
 
     // decode and check metadata
@@ -387,7 +381,7 @@ export class Hierarchy {
 
   /**
    * @param {string} path
-   * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
+   * @returns {Promise<ExplicitGroup<Store, Hierarchy<Store>>>}
    */
   async get_explicit_group(path) {
     path = normalize_path(path);
@@ -414,7 +408,7 @@ export class Hierarchy {
 
   /**
    * @param {string} path
-   * @returns {Promise<ImplicitGroup<S, Hierarchy<S>>>}
+   * @returns {Promise<ImplicitGroup<Store, Hierarchy<Store>>>}
    */
   async get_implicit_group(path) {
     path = normalize_path(path);
@@ -434,7 +428,7 @@ export class Hierarchy {
 
   /**
    * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').Dtype, S> | ExplicitGroup<S, Hierarchy<S>> | ImplicitGroup<S, Hierarchy<S>>>}
+   * @returns {Promise<ZarrArray<import('./types').DataType, Store> | ExplicitGroup<Store, Hierarchy<Store>> | ImplicitGroup<Store, Hierarchy<Store>>>}
    */
   async get(path) {
     try {
@@ -528,8 +522,9 @@ export class Hierarchy {
    */
   async get_children(path = '/') {
     path = normalize_path(path);
+
     /** @type {Map<string, string>} */
-    const children = new Map();
+    const children = new Map;
 
     // attempt to list directory
     const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;

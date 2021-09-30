@@ -2,9 +2,9 @@
 import { assert, KeyError } from './lib/errors.js';
 import { byte_swap_inplace, parse_dtype, should_byte_swap } from './lib/util.js';
 
-/** @template {import('./types').Store} S */
+/** @template {import('./types').Store} Store */
 export class Node {
-  /** @param {{ store: S, path: string }} props */
+  /** @param {{ store: Store, path: string }} props */
   constructor({ store, path }) {
     this.store = store;
     this.path = path;
@@ -16,12 +16,12 @@ export class Node {
 }
 
 /**
- * @template {import('./types').Store} S
- * @template {import('./types').Hierarchy<S>} H
- * @extends {Node<S>}
+ * @template {import('./types').Store} Store
+ * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @extends {Node<Store>}
  */
 export class Group extends Node {
-  /** @param {{ store: S, path: string, owner: H }} props */
+  /** @param {{ store: Store, path: string, owner: Hierarchy }} props */
   constructor(props) {
     super(props);
     this.owner = props.owner;
@@ -74,7 +74,7 @@ export class Group extends Node {
 
   /**
    * @param {string} path
-   * @param {Parameters<H['create_array']>[1]} props
+   * @param {Parameters<Hierarchy['create_array']>[1]} props
    */
   create_array(path, props) {
     path = this._dereference_path(path);
@@ -101,12 +101,12 @@ export class Group extends Node {
 }
 
 /**
- * @template {import('./types').Store} S
- * @template {import('./types').Hierarchy<S>} H
- * @extends {Group<S, H>}
+ * @template {import('./types').Store} Store
+ * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @extends {Group<Store, Hierarchy>}
  */
 export class ExplicitGroup extends Group {
-  /** @param {{ store: S, path: string, owner: H, attrs?: Record<string, any> }} props */
+  /** @param {{ store: Store, path: string, owner: Hierarchy, attrs?: Record<string, any> }} props */
   constructor(props) {
     super(props);
     this.attrs = props.attrs || {};
@@ -114,19 +114,19 @@ export class ExplicitGroup extends Group {
 }
 
 /**
- * @template {import('./types').Store} S
- * @template {import('./types').Hierarchy<S>} H
- * @extends {Group<S, H>}
+ * @template {import('./types').Store} Store
+ * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @extends {Group<Store, Hierarchy>}
  */
 export class ImplicitGroup extends Group {}
 
 /**
- * @template {import('./types').Dtype} D
- * @template {import('./types').Store} S
- * @extends {Node<S>}
+ * @template {import('./types').DataType} Dtype
+ * @template {import('./types').Store} Store
+ * @extends {Node<Store>}
  */
 export class ZarrArray extends Node {
-  /** @param {import('./types').ArrayProps<D, S>} props */
+  /** @param {import('./types').ArrayAttributes<Dtype, Store>} props */
   constructor(props) {
     super(props);
     this.shape = props.shape;
@@ -145,7 +145,7 @@ export class ZarrArray extends Node {
   /**
    * @template {null | (number | import('./types').Slice | null)[]} S
    * @param {S} selection
-   * @returns {S extends null ? Promise<import('./types').NDArray<D>> : S[0] extends null | import('./types').Slice ? Promise<import('./types').NDArray<D>> : Promise<import('./types').NDArray<D> | import('./types').TypedArray<D>[0]>}
+   * @returns {S extends null ? Promise<import('./types').NDArray<Dtype>> : S[0] extends null | import('./types').Slice ? Promise<import('./types').NDArray<Dtype>> : Promise<import('./types').NDArray<Dtype> | import('./types').TypedArray<Dtype>[0]>}
    */
   get(selection) {
     throw new Error('Not implemented');
@@ -153,7 +153,7 @@ export class ZarrArray extends Node {
 
   /**
    * @param {null | (number | import('./types').Slice | null)[]} selection
-   * @param {import('./types').TypedArray<D>[0] | import('./types').NDArray<D>} value
+   * @param {import('./types').TypedArray<Dtype>[0] | import('./types').NDArray<Dtype>} value
    * @returns {Promise<void>}
    */
   set(selection, value) {
@@ -172,7 +172,7 @@ export class ZarrArray extends Node {
 
   /**
    * @param {Uint8Array} bytes
-   * @returns {Promise<import('./types').TypedArray<D>>}
+   * @returns {Promise<import('./types').TypedArray<Dtype>>}
    */
   async _decode_chunk(bytes) {
     // decompress
@@ -189,7 +189,7 @@ export class ZarrArray extends Node {
     return data;
   }
 
-  /** @param {import('./types').TypedArray<D>} data */
+  /** @param {import('./types').TypedArray<Dtype>} data */
   async _encode_chunk(data) {
     if (should_byte_swap(parse_dtype(this.dtype).endianness)) {
       byte_swap_inplace(data);
@@ -203,7 +203,7 @@ export class ZarrArray extends Node {
 
   /**
    * @param {number[]} chunk_coords
-   * @returns {Promise<{ data: import('./types').TypedArray<D>, shape: number[] }>}
+   * @returns {Promise<{ data: import('./types').TypedArray<Dtype>, shape: number[] }>}
    */
   async get_chunk(chunk_coords) {
     const chunk_key = this._chunk_key(chunk_coords);

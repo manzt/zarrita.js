@@ -3,29 +3,33 @@ import { assert, IndexError, KeyError } from './errors.js';
 import { set_from_chunk, set_scalar } from './ops.js';
 import { parse_dtype } from './util.js';
 
-/** @typedef {import('../types').Dtype} Dtype */
+/** @typedef {import('../types').DataType} DataType */
 /** @typedef {import('../types').Store} Store */
+/**
+ * @template {DataType} Dtype
+ * @typedef {import('../types').TypedArray<Dtype>} TypedArray
+ */
 /** @typedef {import('../types').Slice} Slice */
 /**
- * @template {Dtype} D
- * @typedef {import('../types').TypedArray<D>} TypedArray
+ * @template {DataType} Dtype
+ * @typedef {import('../types').Scalar<Dtype>} Scalar
  */
 /**
- * @template {Dtype} D
- * @typedef {import('../types').NDArray<D>} NDArray
+ * @template {DataType} Dtype
+ * @typedef {import('../types').NDArray<Dtype>} NDArray
  */
 /**
- * @template {Dtype} D
+ * @template {DataType} Dtype
  * @template {Store} S
- * @typedef {import('../hierarchy').ZarrArray<D, S>} ZarrArray
+ * @typedef {import('../hierarchy').ZarrArray<Dtype, S>} ZarrArray
  */
 
 /**
- * @template {Dtype} D
+ * @template {DataType} Dtype
  *
- * @this {ZarrArray<D, Store>}
+ * @this {ZarrArray<Dtype, Store>}
  * @param {BasicIndexer} indexer
- * @returns {Promise<NDArray<D> | TypedArray<D>[0]>}
+ * @returns {Promise<NDArray<Dtype> | Scalar<Dtype>>}
  */
 export async function get_selection(indexer) {
   // Setup output array
@@ -64,11 +68,11 @@ export async function get_selection(indexer) {
 
 /**
  * @function
- * @template {Dtype} D
- * @this {ZarrArray<D, Store>}
+ * @template {DataType} Dtype
+ * @this {ZarrArray<Dtype, Store>}
  * @param {number[]} chunk_coords
  * @param {(number | Slice)[]} chunk_selection
- * @param {NDArray<D>} out
+ * @param {NDArray<Dtype>} out
  * @param {(null | number | Slice)[]} out_selection
  */
 async function chunk_getitem(
@@ -88,11 +92,11 @@ async function chunk_getitem(
 }
 
 /**
- * @template {Dtype} D
+ * @template {DataType} Dtype
  *
- * @this {ZarrArray<D, unknown>}
+ * @this {ZarrArray<Dtype, unknown>}
  * @param {BasicIndexer} indexer
- * @param {NDArray<D>['data'][0] | NDArray<D> | Omit<NDArray<D>, 'stride'>} value
+ * @param {Scalar<Dtype> | NDArray<Dtype> | Omit<NDArray<Dtype>, 'stride'>} value
  */
 export async function set_selection(indexer, value) {
   // We iterate over all chunks which overlap the selection and thus contain data
@@ -127,12 +131,12 @@ export async function set_selection(indexer, value) {
 }
 
 /**
- * @template {Dtype} D
- * @this {ZarrArray<D, Store>}
+ * @template {DataType} Dtype
+ * @this {ZarrArray<Dtype, Store>}
  * @param {number[]} chunk_coords
  * @param {(number | Slice)[]} chunk_selection
- * @param {TypedArray<D>[0] | NDArray<D>} value
- * @param {(number | Slice)[]} out_selection
+ * @param {Scalar<Dtype> | NDArray<Dtype>} value
+ * @param {(null | number | Slice)[]} out_selection
  */
 async function chunk_setitem(
   chunk_coords,
@@ -147,7 +151,7 @@ async function chunk_setitem(
 
   const { ctr } = parse_dtype(this.dtype);
 
-  /** @type {TypedArray<D>} */
+  /** @type {TypedArray<Dtype>} */
   let cdata;
 
   if (is_total_slice(chunk_selection, this.chunk_shape)) {
@@ -158,7 +162,7 @@ async function chunk_setitem(
     if (typeof value === 'object') {
       // Otherwise data just contiguous TypedArray
       const chunk = {
-        data: /** @type {TypedArray<D>} */ (new ctr(chunk_size)),
+        data: /** @type {TypedArray<Dtype>} */ (new ctr(chunk_size)),
         shape: this.chunk_shape,
         stride: chunk_stride,
       };
@@ -166,11 +170,11 @@ async function chunk_setitem(
       set_from_chunk(chunk, full_selection, value, out_selection);
       cdata = chunk.data;
     } else {
-      cdata = /** @type {TypedArray<D>} */ (new ctr(chunk_size).fill(value));
+      cdata = /** @type {TypedArray<Dtype>} */ (new ctr(chunk_size).fill(value));
     }
   } else {
     // partially replace the contents of this chunk
-    /** @type {NDArray<D>} */
+    /** @type {NDArray<Dtype>} */
     let chunk;
     try {
       // decode previous chunk from store
@@ -181,7 +185,7 @@ async function chunk_setitem(
         throw err;
       }
       chunk = {
-        data: /** @type {TypedArray<D>} */ (new ctr(chunk_size)),
+        data: /** @type {TypedArray<Dtype>} */ (new ctr(chunk_size)),
         shape: this.chunk_shape,
         stride: chunk_stride,
       };

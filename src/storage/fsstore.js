@@ -5,8 +5,8 @@ import * as path from 'path';
 import { assert } from '../lib/errors.js';
 
 /**
- * @typedef {import('../types').Store} Store
- * @implements {Store}
+ * @typedef {import('../types').AsyncStore} AsyncStore
+ * @implements {AsyncStore}
  */
 export default class FileSystemStore {
   /** @param {string} fp */
@@ -24,6 +24,12 @@ export default class FileSystemStore {
         if (err.code === 'ENOENT') return undefined;
         throw err;
       });
+  }
+
+  /** @param {string} key */
+  has(key) {
+    const fp = path.join(this.root, key);
+    return fs.promises.access(fp).then(_ => true).catch(_ => false)
   }
 
   /**
@@ -64,6 +70,7 @@ export default class FileSystemStore {
     }
   }
 
+  /** @param {string} prefix */
   async list_dir(prefix = '') {
     assert(typeof prefix === 'string', 'Prefix must be a string.');
     if (prefix) {
