@@ -40,6 +40,51 @@ export function byte_swap_inplace(src) {
   }
 }
 
+/**
+ * @template T
+ * @param {T | T[]} maybe_arr
+ * @return {T[]}
+ */
+export function ensure_array(maybe_arr) {
+  return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
+}
+
+/** @type {Set<import('../types').Dtype>} */
+const DTYPE_STRS = new Set([
+  '|i1',
+  '|u1',
+  '<i2',
+  '<i4',
+  '>i2',
+  '>i4',
+  '<u2',
+  '<u4',
+  '>u2',
+  '>u4',
+  '<f4',
+  '<f8',
+  '>f4',
+  '>f8',
+]);
+
+/**
+ * @template {string} D
+ *
+ * @param {D} dtype
+ * @returns {D extends import('../types').Dtype ? D : never}
+ */
+export function ensure_dtype(dtype) {
+  if (!DTYPE_STRS.has(/** @type {any} */ (dtype))) {
+    throw new TypeError(`Invalid dtype, got: ${dtype}`);
+  }
+  return /** @type {any} */ (dtype);
+}
+
+/** @param {string} path */
+export function normalize_path(path) {
+  return path[0] !== '/' ? `/${path}` : path;
+}
+
 /** @typedef {typeof DTYPES} DtypeMapping */
 const DTYPES = {
   u1: Uint8Array,
@@ -59,7 +104,7 @@ const DTYPES = {
  * @returns {import('../types').ParsedDtype<D>}
  */
 export function parse_dtype(dtype) {
-  const endianness = /** @type {import('../types').Endianness<D> */ (dtype[0]);
+  const endianness = /** @type {import('../types').Endianness<D>} */ (dtype[0]);
   const key = /** @type {import('../types').MappingKey<D>} */ (dtype.slice(1));
   const ctr = DTYPES[key];
   return {

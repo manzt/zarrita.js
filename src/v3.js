@@ -7,11 +7,16 @@ import {
   NodeNotFoundError,
   NotImplementedError,
 } from './lib/errors.js';
-import { json_decode_object, json_encode_object } from './lib/util.js';
-import * as checks from './lib/validation.js';
+import {
+  ensure_array,
+  ensure_dtype,
+  json_decode_object,
+  json_encode_object,
+  normalize_path,
+} from './lib/util.js';
 
 export { slice } from './lib/indexing.js';
-export { registry, ExplicitGroup, ImplicitGroup, ZarrArray };
+export { ExplicitGroup, ImplicitGroup, registry, ZarrArray };
 
 /**
  * @typedef {{
@@ -232,7 +237,7 @@ export class Hierarchy {
   async create_group(path, props = {}) {
     const { attrs = {} } = props;
     // sanity checks
-    path = checks.check_path(path);
+    path = normalize_path(path);
 
     /** @type {GroupMetadata} */
     const meta = { extensions: [], attributes: attrs };
@@ -267,11 +272,16 @@ export class Hierarchy {
    */
   async create_array(path, props) {
     // sanity checks
-    path = checks.check_path(path);
-    const shape = checks.check_shape(props.shape);
-    const dtype = checks.check_dtype(props.dtype);
-    const chunk_shape = checks.check_chunk_shape(props.chunk_shape, shape);
+    path = normalize_path(path);
+    const shape = ensure_array(props.shape);
+    const dtype = ensure_dtype(props.dtype);
+    const chunk_shape = ensure_array(props.chunk_shape);
     const compressor = props.compressor;
+
+    assert(
+      shape.length === chunk_shape.length,
+      'shape and chunk_shape must have same number of dims.',
+    );
 
     /** @type {ArrayMetadata<D>} */
     const meta = {
@@ -316,7 +326,7 @@ export class Hierarchy {
    * @returns {Promise<ZarrArray<import('./types').Dtype, S>>}
    */
   async get_array(path) {
-    path = checks.check_path(path);
+    path = normalize_path(path);
     // retrieve and parse array metadata document
     const meta_key = array_meta_key(path, this.meta_key_suffix);
 
@@ -340,14 +350,12 @@ export class Hierarchy {
       attributes: attrs,
     } = meta;
 
-    checks.check_shape(chunk_grid.chunk_shape);
     if (chunk_grid.type !== 'regular') {
       throw new NotImplementedError(
         `Only support for "regular" chunk_grids, got ${chunk_grid.type}.`,
       );
     }
 
-    checks.check_chunk_shape(chunk_grid.chunk_shape, shape);
     if (chunk_memory_layout !== 'C') {
       throw new NotImplementedError(
         `Only support for "C" order chunk_memory_layout, got ${chunk_memory_layout}.`,
@@ -365,8 +373,8 @@ export class Hierarchy {
     return new ZarrArray({
       store: this.store,
       path,
-      shape: checks.check_shape(shape),
-      dtype: checks.check_dtype(dtype),
+      shape: shape,
+      dtype: ensure_dtype(dtype),
       chunk_shape: chunk_grid.chunk_shape,
       chunk_separator: chunk_grid.separator,
       compressor: meta.compressor
@@ -382,7 +390,7 @@ export class Hierarchy {
    * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
    */
   async get_explicit_group(path) {
-    path = checks.check_path(path);
+    path = normalize_path(path);
 
     // retrieve and parse group metadata document
     const meta_key = group_meta_key(path, this.meta_key_suffix);
@@ -409,7 +417,7 @@ export class Hierarchy {
    * @returns {Promise<ImplicitGroup<S, Hierarchy<S>>>}
    */
   async get_implicit_group(path) {
-    path = checks.check_path(path);
+    path = normalize_path(path);
 
     // attempt to list directory
     const key_prefix = path === '/' ? 'meta/root/' : `meta/root${path}/`;
@@ -519,7 +527,7 @@ export class Hierarchy {
    * @returns {Promise<Map<string, string>>}
    */
   async get_children(path = '/') {
-    path = checks.check_path(path);
+    path = normalize_path(path);
     /** @type {Map<string, string>} */
     const children = new Map();
 
