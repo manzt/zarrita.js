@@ -6,10 +6,12 @@
     "type": "git",
     "url": "https://github.com/manzt/zarrita.js.git"
   },
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.js",
-    "./core": "./src/hierarchy.js",
-    "./storage/memory": "./src/storage/memory.js",
+    "./v2": "./src/v2.js",
+    "./v3": "./src/v3.js",
+    "./storage/mem": "./src/storage/memory.js",
     "./storage/fs": "./src/storage/fsstore.js"
   },
   "scripts": {
