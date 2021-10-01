@@ -153,8 +153,7 @@ export function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
     } else {
       for (let i = 0; i < len; i++) {
-        out.data[out_stride * (from + step * i)] =
-          chunk.data[chunk_stride * (cfrom + cstep * i)];
+        out.data[out_stride * (from + step * i)] = chunk.data[chunk_stride * (cfrom + cstep * i)];
       }
     }
     return;

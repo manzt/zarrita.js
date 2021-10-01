@@ -17,12 +17,10 @@ export type DataType =
 type DataTypeMapping = import('./lib/util').DataTypeMapping;
 export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
   : never;
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends
-  `${infer _}${infer Key}` ? Key
+export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends `${infer _}${infer Key}` ? Key
   : never;
 
-export type TypedArrayConstructor<Dtype extends DataType> =
-  DataTypeMapping[DataTypeMappingKey<Dtype>];
+export type TypedArrayConstructor<Dtype extends DataType> = DataTypeMapping[DataTypeMappingKey<Dtype>];
 export type TypedArray<Dtype extends DataType> = InstanceType<
   TypedArrayConstructor<Dtype>
 >;
@@ -105,16 +103,14 @@ type ZarrArray<D extends DataType, S extends Store> = import('./hierarchy').Zarr
   D,
   S
 >;
-type ExplicitGroup<S extends Store, H extends Hierarchy<S>> =
-  import('./hierarchy').ExplicitGroup<
-    S,
-    H
-  >;
-type ImplicitGroup<S extends Store, H extends Hierarchy<S>> =
-  import('./hierarchy').ImplicitGroup<
-    S,
-    H
-  >;
+type ExplicitGroup<S extends Store, H extends Hierarchy<S>> = import('./hierarchy').ExplicitGroup<
+  S,
+  H
+>;
+type ImplicitGroup<S extends Store, H extends Hierarchy<S>> = import('./hierarchy').ImplicitGroup<
+  S,
+  H
+>;
 
 export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   // read-only
@@ -126,7 +122,9 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   >;
   get_array(path: string): Promise<ZarrArray<DataType, Store>>;
   get_group(path: string): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
-  get_implicit_group(path: string): Promise<ImplicitGroup<Store, Hierarchy<Store>>>;
+  get_implicit_group(
+    path: string,
+  ): Promise<ImplicitGroup<Store, Hierarchy<Store>>>;
   get_children(path?: string): Promise<Map<string, string>>;
 
   // write

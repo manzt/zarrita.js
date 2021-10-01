@@ -1,19 +1,8 @@
 // @ts-check
 import { ExplicitGroup, ImplicitGroup, ZarrArray } from './hierarchy.js';
 import { registry } from './registry.js';
-import {
-  assert,
-  KeyError,
-  NodeNotFoundError,
-  NotImplementedError,
-} from './lib/errors.js';
-import {
-  ensure_array,
-  ensure_dtype,
-  json_decode_object,
-  json_encode_object,
-  normalize_path,
-} from './lib/util.js';
+import { assert, KeyError, NodeNotFoundError, NotImplementedError } from './lib/errors.js';
+import { ensure_array, ensure_dtype, json_decode_object, json_encode_object, normalize_path } from './lib/util.js';
 
 /**
  * @typedef {{
@@ -256,7 +245,12 @@ export class Hierarchy {
     const meta_key = group_meta_key(path, this.meta_key_suffix);
     await this.store.set(meta_key, meta_doc);
 
-    return new ExplicitGroup({ store: this.store, owner: this, path, attrs });
+    return new ExplicitGroup({
+      store: this.store,
+      owner: this,
+      path,
+      attrs,
+    });
   }
 
   /**
@@ -366,9 +360,7 @@ export class Hierarchy {
       dtype: ensure_dtype(dtype),
       chunk_shape: chunk_grid.chunk_shape,
       chunk_key: chunk_key(path, chunk_grid.separator),
-      compressor: meta.compressor
-        ? await decode_codec_metadata(meta.compressor)
-        : undefined,
+      compressor: meta.compressor ? await decode_codec_metadata(meta.compressor) : undefined,
       fill_value,
       attrs,
     });

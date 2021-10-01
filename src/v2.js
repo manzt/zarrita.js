@@ -176,7 +176,10 @@ export class Hierarchy {
     await this.store.set(meta_key, meta_doc);
 
     if (props.attrs) {
-      await this.store.set(attrs_key(path), json_encode_object(props.attrs));
+      await this.store.set(
+        attrs_key(path),
+        json_encode_object(props.attrs),
+      );
     }
 
     return new ZarrArray({
@@ -215,9 +218,7 @@ export class Hierarchy {
       dtype: meta.dtype,
       chunk_shape: meta.chunks,
       chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
-      compressor: meta.compressor
-        ? await decode_codec_metadata(meta.compressor)
-        : undefined,
+      compressor: meta.compressor ? await decode_codec_metadata(meta.compressor) : undefined,
       fill_value: meta.fill_value,
       attrs: () => get_attrs(this.store, path),
     });

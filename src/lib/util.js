@@ -111,9 +111,12 @@ export function parse_dtype(dtype) {
   const endianness = /** @type {import('../types').Endianness<Dtype>} */ (dtype[0]);
 
   // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-  const key =
-    /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
+  const key = /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
   const ctr = DTYPES[key];
+
+  if (!ctr) {
+    throw new Error(`missing dtype! got ${dtype}.`);
+  }
 
   // we should be able to use the constructor directly, but TypeScript's built-in TypedArray
   // types return a union of TypedArrays rather than the instance type. The `ParsedDataType`
@@ -123,4 +126,95 @@ export function parse_dtype(dtype) {
     /** @type {any} */ x,
   ) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
   return { endianness, ctr, create };
+}
+
+/**
+ * python-like range generator
+ * @param {number} start
+ * @param {number=} stop
+ * @param {number=} step
+ */
+export function* range(start, stop, step = 1) {
+  if (stop == undefined) {
+    stop = start;
+    start = 0;
+  }
+  for (let i = start; i < stop; i += step) {
+    yield i;
+  }
+}
+
+/**
+ * python-like itertools.product generator
+ * https://gist.github.com/cybercase/db7dde901d7070c98c48
+ *
+ * @template {Array<Iterable<any>>} T
+ * @param {T} iterables
+ * @returns {IterableIterator<{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never}>}
+ */
+export function* product(...iterables) {
+  if (iterables.length === 0) {
+    return;
+  }
+  // make a list of iterators from the iterables
+  const iterators = iterables.map((it) => it[Symbol.iterator]());
+  const results = iterators.map((it) => it.next());
+  if (results.some((r) => r.done)) {
+    throw new Error('Input contains an empty iterator.');
+  }
+  for (let i = 0;;) {
+    if (results[i].done) {
+      // reset the current iterator
+      iterators[i] = iterables[i][Symbol.iterator]();
+      results[i] = iterators[i].next();
+      // advance, and exit if we've reached the end
+      if (++i >= iterators.length) {
+        return;
+      }
+    } else {
+      yield /** @type {any} */ (results.map(({ value }) => value));
+      i = 0;
+    }
+    results[i] = iterators[i].next();
+  }
+}
+
+/**
+ * Compute strides for 'C' ordered ndarray from shape
+ *
+ * @param {number[]} shape
+ */
+export function get_strides(shape) {
+  const ndim = shape.length;
+  /** @type {number[]} */
+  const strides = Array(ndim);
+  let step = 1; // init step
+  for (let i = ndim - 1; i >= 0; i--) {
+    strides[i] = step;
+    step *= shape[i];
+  }
+  return strides;
+}
+
+/**
+ * @param {number | null} start
+ * @param {(number | null)=} stop
+ * @param {(number | null)=} step
+ * @return {import('../types').Slice}
+ */
+export function slice(start, stop, step = null) {
+  if (stop === undefined) {
+    stop = start;
+    start = null;
+  }
+  /** @type {(length: number) => import('../types').Indices} */
+  const indices = (length) => {
+    const istep = step ?? 1;
+    let start_ix = start ?? (istep < 0 ? length - 1 : 0);
+    let end_ix = stop ?? (istep < 0 ? -1 : length);
+    if (start_ix < 0) start_ix += length;
+    if (end_ix < 0) end_ix += length;
+    return [start_ix, end_ix, istep];
+  };
+  return { start, stop, step, indices, kind: 'slice' };
 }
