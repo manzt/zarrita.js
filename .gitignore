@@ -2,3 +2,4 @@ node_modules/
 *.zr3/
 src/**/*.d.ts
 !src/types.d.ts
+data/

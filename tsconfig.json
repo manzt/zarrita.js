@@ -13,5 +13,6 @@
     "paths": {
       "zarrita": ["./src", "./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*"]
 }

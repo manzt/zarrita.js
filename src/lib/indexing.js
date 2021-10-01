@@ -232,7 +232,6 @@ export class BasicIndexer {
     ) => sixr.nitems);
   }
 
-  /** @returns {IterableIterator<ChunkDimProjection>} */
   *[Symbol.iterator]() {
     for (const dim_projections of product(...this.dim_indexers)) {
       const chunk_coords = dim_projections.map((p) => p.dim_chunk_ix);
