@@ -15,9 +15,6 @@ import {
   normalize_path,
 } from './lib/util.js';
 
-export { slice } from './lib/indexing.js';
-export { ExplicitGroup, ImplicitGroup, registry, ZarrArray };
-
 /**
  * @typedef {{
  * 	zarr_format: string;
@@ -59,7 +56,7 @@ export { ExplicitGroup, ImplicitGroup, registry, ZarrArray };
 
 
 /** @param {import('numcodecs').Codec} codec */
-export function encode_codec_metadata(codec) {
+function encode_codec_metadata(codec) {
   // only support gzip for now
   const supported_codecs = new Set('gzip');
   // @ts-ignore
@@ -78,7 +75,7 @@ export function encode_codec_metadata(codec) {
 }
 
 /** @param {CodecMetadata} meta */
-export async function decode_codec_metadata(meta) {
+async function decode_codec_metadata(meta) {
   // only support gzip for now
   if (meta.codec !== 'https://purl.org/zarr/spec/codec/gzip/1.0') {
     throw new NotImplementedError(
@@ -98,7 +95,7 @@ export async function decode_codec_metadata(meta) {
  * @param {string} path
  * @param {string} suffix
  */
-export function array_meta_key(path, suffix) {
+function array_meta_key(path, suffix) {
   if (path === '/') {
     // special case root path
     return 'meta/root.array' + suffix;
@@ -110,7 +107,7 @@ export function array_meta_key(path, suffix) {
  * @param {string} path
  * @param {string} suffix
  */
-export function group_meta_key(path, suffix) {
+function group_meta_key(path, suffix) {
   if (path === '/') {
     // special case root path
     return 'meta/root.group' + suffix;

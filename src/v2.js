@@ -11,9 +11,6 @@ import {
   // normalize_path,
 } from './lib/util.js';
 
-export { slice } from './lib/indexing.js';
-export { ExplicitGroup, registry, ZarrArray };
-
 /** @param {import('numcodecs').Codec} codec */
 function encode_codec_metadata(codec) {
   // @ts-ignore
@@ -136,7 +133,12 @@ export class Hierarchy {
       await this.store.set(attrs_key(path), json_encode_object(attrs));
     }
 
-    return new ExplicitGroup({ store: this.store, owner: this, path, attrs: attrs ?? {} });
+    return new ExplicitGroup({
+      store: this.store,
+      owner: this,
+      path,
+      attrs: attrs ?? {},
+    });
   }
 
   /**

@@ -171,24 +171,6 @@ export class ZarrArray extends Node {
   }
 
   /**
-   * @template {null | (number | import('./types').Slice | null)[]} S
-   * @param {S} selection
-   * @returns {S extends null ? Promise<import('./types').NDArray<Dtype>> : S[0] extends null | import('./types').Slice ? Promise<import('./types').NDArray<Dtype>> : Promise<import('./types').NDArray<Dtype> | import('./types').TypedArray<Dtype>[0]>}
-   */
-  get(selection) {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @param {null | (number | import('./types').Slice | null)[]} selection
-   * @param {import('./types').TypedArray<Dtype>[0] | import('./types').NDArray<Dtype>} value
-   * @returns {Promise<void>}
-   */
-  set(selection, value) {
-    throw new Error('Not implemented');
-  }
-
-  /**
    * @param {Uint8Array} bytes
    * @returns {Promise<import('./types').TypedArray<Dtype>>}
    */
@@ -229,5 +211,17 @@ export class ZarrArray extends Node {
     if (!buffer) throw new KeyError(chunk_key);
     const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
+  }
+
+  /**
+   * @template {unknown[]} A
+   * @template {unknown} V
+   *
+   * @param {(...args: A) => V} func
+   * @param {A} args
+   * @returns {V}
+   */
+  do(func, ...args) {
+    return func.call(this, ...args);
   }
 }
