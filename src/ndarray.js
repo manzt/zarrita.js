@@ -16,6 +16,30 @@ import { register as registerSet } from './lib/set.js';
  * @typedef {import('./types').Setter<Dtype, NdArray>} Setter
  */
 
+/**
+ * @template {DataType} Dtype
+ * @type {Setter<Dtype, ndarray.NdArray<TypedArray<Dtype>>>}
+ */
+const setter = {
+  prepare: ndarray,
+  set_scalar(target, selection, value) {
+    const view = get_view(target, selection);
+    for (const d of shape_product(view.shape)) {
+      view.set(...d, value);
+    }
+  },
+  set_from_chunk(target, target_selection, chunk, chunk_selection) {
+    const target_view = get_view(target, target_selection);
+    const chunk_view = get_view(chunk, chunk_selection);
+    for (const d of shape_product(chunk_view.shape)) {
+      target_view.set(...d, chunk_view.get(...d));
+    }
+  },
+};
+
+export const set = registerSet(setter);
+export const get = registerGet(setter);
+
 /** @param {number[]} shape */
 function shape_product(shape) {
   return product(...shape.map((x) => [...range(x)]));
@@ -64,27 +88,3 @@ function get_view(arr, sel) {
 
   return arr.lo(...lo).hi(...hi).step(...step).pick(...pick);
 }
-
-/**
- * @template {DataType} Dtype
- * @type {Setter<Dtype, ndarray.NdArray<TypedArray<Dtype>>>}
- */
-const setter = {
-  prepare: ndarray,
-  set_scalar(target, selection, value) {
-    const view = get_view(target, selection);
-    for (const d of shape_product(view.shape)) {
-      view.set(...d, value);
-    }
-  },
-  set_from_chunk(target, target_selection, chunk, chunk_selection) {
-    const target_view = get_view(target, target_selection);
-    const chunk_view = get_view(chunk, chunk_selection);
-    for (const d of shape_product(chunk_view.shape)) {
-      target_view.set(...d, chunk_view.get(...d));
-    }
-  },
-};
-
-export const set = registerSet(setter);
-export const get = registerGet(setter);
