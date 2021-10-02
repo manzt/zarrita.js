@@ -224,7 +224,9 @@ export class BasicIndexer {
         });
       }
       throw new IndexError(
-        `unsupported selection item for basic indexing; expected integer or slice, got ${JSON.stringify(dim_sel)}`,
+        `unsupported selection item for basic indexing; expected integer or slice, got ${
+          JSON.stringify(dim_sel)
+        }`,
       );
     });
     this.shape = this.dim_indexers.filter((ixr) => !(ixr instanceof IntDimIndexer)).map((

@@ -17,22 +17,19 @@ export type DataType =
 type DataTypeMapping = import('./lib/util').DataTypeMapping;
 export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
   : never;
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends `${infer _}${infer Key}` ? Key
+export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends `${infer _}${infer Key}`
+  ? Key
   : never;
 
-export type TypedArrayConstructor<Dtype extends DataType> = DataTypeMapping[DataTypeMappingKey<Dtype>];
+export type TypedArrayConstructor<Dtype extends DataType> =
+  DataTypeMapping[DataTypeMappingKey<Dtype>];
 export type TypedArray<Dtype extends DataType> = InstanceType<
   TypedArrayConstructor<Dtype>
 >;
 export type Scalar<Dtype extends DataType> = TypedArray<Dtype>[0];
-export type NDArray<
-  Dtype extends DataType,
-  Shape extends number[] = number[],
-  Stride extends number[] = number[],
-> = {
+export type NDArray<Dtype extends DataType> = {
   data: TypedArray<Dtype>;
-  shape: Shape;
-  stride: Stride;
+  shape: number[];
 };
 
 export type ParsedDataType<Dtype extends DataType> = {
@@ -112,6 +109,8 @@ type ImplicitGroup<S extends Store, H extends Hierarchy<S>> = import('./hierarch
   H
 >;
 
+export type ArraySelection = null | (number | null | Slice)[];
+
 export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   // read-only
   has(path: string): Promise<boolean>;
@@ -139,3 +138,14 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
     props: Omit<ArrayAttributes<Dtype>, 'path' | 'store'>,
   ): Promise<ZarrArray<Dtype, Store>>;
 }
+
+export type Setter<Dtype extends DataType, Container extends NDArray<Dtype>> = {
+  prepare(data: TypedArray<Dtype>, shape: number[]): Container;
+  set_scalar(target: Container, selection: (null | Slice | number)[], value: Scalar<Dtype>): void;
+  set_from_chunk(
+    target: Container,
+    target_selection: (null | Slice | number)[],
+    chunk: Container,
+    chunk_selection: (null | Slice | number)[],
+  ): void;
+};

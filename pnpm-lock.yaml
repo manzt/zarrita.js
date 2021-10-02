@@ -1,11 +1,15 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@types/ndarray': ^1.0.10
   '@types/node': ^16.10.2
+  ndarray: ^1.0.19
   numcodecs: ^0.2.2
   zora: ^5.0.0
 
 dependencies:
+  '@types/ndarray': 1.0.10
+  ndarray: 1.0.19
   numcodecs: 0.2.2
 
 devDependencies:
@@ -14,9 +18,28 @@ devDependencies:
 
 packages:
 
+  /@types/ndarray/1.0.10:
+    resolution: {integrity: sha512-UMQxmWA9V0hHqMntIItRVVc6sHmut9E4tBIv811EBPucuyMbAG70KgEdrhnEoD5L3BrLTpnWiCSxQA1HnXfXbw==}
+    dev: false
+
   /@types/node/16.10.2:
     resolution: {integrity: sha512-zCclL4/rx+W5SQTzFs9wyvvyCwoK9QtBpratqz2IYJ3O8Umrn0m3nsTv0wQBk9sRGpvUe9CwPDrQFB10f1FIjQ==}
     dev: true
+
+  /iota-array/1.0.0:
+    resolution: {integrity: sha1-ge9X/l0FgUzVjCSDYyqZwwoOgIc=}
+    dev: false
+
+  /is-buffer/1.1.6:
+    resolution: {integrity: sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==}
+    dev: false
+
+  /ndarray/1.0.19:
+    resolution: {integrity: sha512-B4JHA4vdyZU30ELBw3g7/p9bZupyew5a7tX1Y/gGeF2hafrPaQZhgrGQfsvgfYbgdFZjYwuEcnaobeM/WMW+HQ==}
+    dependencies:
+      iota-array: 1.0.0
+      is-buffer: 1.1.6
+    dev: false
 
   /numcodecs/0.2.2:
     resolution: {integrity: sha512-Y5K8mv80yb4MgVpcElBkUeMZqeE4TrovxRit/dTZvoRl6YkB6WEjY+fiUjGCblITnt3T3fmrDg8yRWu0gOLjhQ==}

@@ -8,6 +8,7 @@
     "noImplicitAny": true,
     "declaration": true,
     "importsNotUsedAsValues": "error",
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {

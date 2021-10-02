@@ -1,35 +1,35 @@
 // @ts-check
-import { assert, KeyError } from './lib/errors.js';
-import { get_strides, parse_dtype, slice } from './lib/util.js';
-import { set_from_chunk, set_scalar } from './lib/ops.js';
-import { BasicIndexer, is_total_slice } from './lib/indexing.js';
+import { assert, KeyError } from './errors.js';
+import { get_strides, parse_dtype, slice } from './util.js';
+import { set_from_chunk, set_scalar } from './ops.js';
+import { BasicIndexer, is_total_slice } from './indexing.js';
 
-/** @typedef {import('./types').DataType} DataType */
+/** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').ArraySelection} ArraySelection */
 /**
  * @template {DataType} Dtype
- * @typedef {import('./types').TypedArray<Dtype>} TypedArray
+ * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
-/** @typedef {import('./types').Slice} Slice */
+/** @typedef {import('../types').Slice} Slice */
 /**
  * @template {DataType} Dtype
- * @typedef {import('./types').Scalar<Dtype>} Scalar
- */
-/**
- * @template {DataType} Dtype
- * @typedef {import('./types').NDArray<Dtype>} NDArray
+ * @typedef {import('../types').Scalar<Dtype>} Scalar
  */
 /**
  * @template {DataType} Dtype
- * @typedef {import('./hierarchy').ZarrArray<Dtype, import('./types').Store>} ZarrArray
+ * @typedef {import('../types').NDArray<Dtype>} NDArray
+ */
+/**
+ * @template {DataType} Dtype
+ * @typedef {import('../hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
  */
 
 /**
- * @template {import('./types').DataType} Dtype
- * @template {import('./types').Store} Store
- * @this {import('./hierarchy').ZarrArray<Dtype, Store>}
+ * @template {DataType} Dtype
+ * @this {ZarrArray<Dtype>}
  *
- * @param {null | (number | import('./types').Slice | null)[]} selection
- * @param {import('./types').TypedArray<Dtype>[0] | import('./types').NDArray<Dtype>} value
+ * @param {ArraySelection} selection
+ * @param {NDArray<Dtype> | Scalar<Dtype>} value
  * @returns {Promise<void>}
  */
 export function set(selection, value) {
@@ -39,10 +39,10 @@ export function set(selection, value) {
 
 /**
  * @template {DataType} Dtype
- *
  * @this {ZarrArray<Dtype>}
+ *
  * @param {BasicIndexer} indexer
- * @param {Scalar<Dtype> | NDArray<Dtype> | Omit<NDArray<Dtype>, 'stride'>} value
+ * @param {NDArray<Dtype> | Scalar<Dtype>} value
  */
 async function set_selection(indexer, value) {
   // We iterate over all chunks which overlap the selection and thus contain data

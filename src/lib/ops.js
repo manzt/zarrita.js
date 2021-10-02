@@ -5,7 +5,7 @@
 /** @typedef {(null | number | Slice)[]} Selection */
 /**
  * @template {DataType} Dtype
- * @typedef {import('../types').NDArray<Dtype>} NDArray
+ * @typedef {{ stride: number[] } & import('../types').NDArray<Dtype>} NDArray
  */
 /**
  * @template {DataType} Dtype

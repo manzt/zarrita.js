@@ -2,7 +2,13 @@
 import { ExplicitGroup, ImplicitGroup, ZarrArray } from './hierarchy.js';
 import { registry } from './registry.js';
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from './lib/errors.js';
-import { ensure_array, ensure_dtype, json_decode_object, json_encode_object, normalize_path } from './lib/util.js';
+import {
+  ensure_array,
+  ensure_dtype,
+  json_decode_object,
+  json_encode_object,
+  normalize_path,
+} from './lib/util.js';
 
 /**
  * @typedef {{

@@ -19,6 +19,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/ndarray": "^1.0.10",
+    "ndarray": "^1.0.19",
     "numcodecs": "^0.2.2"
   },
   "devDependencies": {
