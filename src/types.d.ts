@@ -27,7 +27,7 @@ export type TypedArray<Dtype extends DataType> = InstanceType<
   TypedArrayConstructor<Dtype>
 >;
 export type Scalar<Dtype extends DataType> = TypedArray<Dtype>[0];
-export type NDArray<Dtype extends DataType> = {
+export type NdArrayLike<Dtype extends DataType> = {
   data: TypedArray<Dtype>;
   shape: number[];
 };
@@ -96,56 +96,43 @@ export type CreateArrayProps<Dtype extends DataType = DataType> =
     >
   >;
 
-type ZarrArray<D extends DataType, S extends Store> = import('./hierarchy').ZarrArray<
-  D,
-  S
->;
-type ExplicitGroup<S extends Store, H extends Hierarchy<S>> = import('./hierarchy').ExplicitGroup<
-  S,
-  H
->;
-type ImplicitGroup<S extends Store, H extends Hierarchy<S>> = import('./hierarchy').ImplicitGroup<
-  S,
-  H
->;
-
 export type ArraySelection = null | (number | null | Slice)[];
 
 export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   // read-only
   has(path: string): Promise<boolean>;
   get(path: string): Promise<
-    | ZarrArray<DataType, Store>
-    | ExplicitGroup<Store, Hierarchy<Store>>
-    | ImplicitGroup<Store, Hierarchy<Store>>
+    | import('./hierarchy').ZarrArray<DataType, Store>
+    | import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>
+    | import('./hierarchy').ImplicitGroup<Store, Hierarchy<Store>>
   >;
-  get_array(path: string): Promise<ZarrArray<DataType, Store>>;
-  get_group(path: string): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
+  get_array(path: string): Promise<import('./hierarchy').ZarrArray<DataType, Store>>;
+  get_group(path: string): Promise<import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
   get_implicit_group(
     path: string,
-  ): Promise<ImplicitGroup<Store, Hierarchy<Store>>>;
+  ): Promise<import('./hierarchy').ImplicitGroup<Store, Hierarchy<Store>>>;
   get_children(path?: string): Promise<Map<string, string>>;
 
   // write
   create_group(
     path: string,
     props?: { attrs?: Attrs },
-  ): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
+  ): Promise<import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
   create_array<
     Dtype extends DataType,
   >(
     path: string,
     props: Omit<ArrayAttributes<Dtype>, 'path' | 'store'>,
-  ): Promise<ZarrArray<Dtype, Store>>;
+  ): Promise<import('./hierarchy').ZarrArray<Dtype, Store>>;
 }
 
-export type Setter<Dtype extends DataType, Container extends NDArray<Dtype>> = {
-  prepare(data: TypedArray<Dtype>, shape: number[]): Container;
-  set_scalar(target: Container, selection: (null | Slice | number)[], value: Scalar<Dtype>): void;
+export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> = {
+  prepare(data: TypedArray<Dtype>, shape: number[]): NdArray;
+  set_scalar(target: NdArray, selection: (null | Slice | number)[], value: Scalar<Dtype>): void;
   set_from_chunk(
-    target: Container,
+    target: NdArray,
     target_selection: (null | Slice | number)[],
-    chunk: Container,
+    chunk: NdArray,
     chunk_selection: (null | Slice | number)[],
   ): void;
 };

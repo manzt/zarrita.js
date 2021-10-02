@@ -1,13 +1,20 @@
 // @ts-check
 import ndarray from 'ndarray';
 import { product, range } from './lib/util.js';
+import { register as registerGet } from './lib/get.js';
+import { register as registerSet } from './lib/set.js';
 
 /** @typedef {import('./types').DataType} DataType */
+/** @typedef {import('./types').Slice} Slice */
 /**
  * @template {DataType} Dtype
  * @typedef {import('./types').TypedArray<Dtype>} TypedArray
  */
-/** @typedef {import('./types').Slice} Slice */
+/**
+ * @template {DataType} Dtype
+ * @template {import('./types').NdArrayLike<Dtype>} NdArray
+ * @typedef {import('./types').Setter<Dtype, NdArray>} Setter
+ */
 
 /** @param {number[]} shape */
 function shape_product(shape) {
@@ -60,9 +67,9 @@ function get_view(arr, sel) {
 
 /**
  * @template {DataType} Dtype
- * @type {import('./types').Setter<Dtype, ndarray.NdArray<TypedArray<Dtype>>>}
+ * @type {Setter<Dtype, ndarray.NdArray<TypedArray<Dtype>>>}
  */
-export const setter = {
+const setter = {
   prepare: ndarray,
   set_scalar(target, selection, value) {
     const view = get_view(target, selection);
@@ -78,3 +85,6 @@ export const setter = {
     }
   },
 };
+
+export const set = registerSet(setter);
+export const get = registerGet(setter);

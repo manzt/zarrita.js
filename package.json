@@ -9,8 +9,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.js",
-    "./v2": "./src/v2.js",
-    "./v3": "./src/v3.js",
+    "./ndarray": "./src/ndarray.js",
     "./storage/mem": "./src/storage/memory.js",
     "./storage/fs": "./src/storage/fsstore.js"
   },

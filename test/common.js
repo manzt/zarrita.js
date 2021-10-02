@@ -12,6 +12,7 @@ import {
   get,
   set,
 } from 'zarrita';
+import ndarray from 'ndarray';
 import GZip from 'numcodecs/gzip';
 
 // add dynamic codec to registry
@@ -286,13 +287,13 @@ export function run_test_suite({ name, setup }) {
       expected.fill(42);
       t.deepEqual((await a.do(get, null)).data, expected, 'should entirely fill with 42.');
 
-      let arr = { data: new Int32Array([...Array(10).keys()]), shape: [10] };
+      let arr = ndarray(new Int32Array([...Array(10).keys()]), [10]);
       expected.set(arr.data);
       await a.do(set, [0, null], arr);
       res = await a.do(get, null);
       t.deepEqual(res.data, expected, 'should fill first row with arange.');
 
-      arr = { data: new Int32Array([...Array(50).keys()]), shape: [5, 10] };
+      arr = ndarray(new Int32Array([...Array(50).keys()]), [5, 10])
       await a.do(set, null, arr);
       t.deepEqual((await a.do(get, null)).data, arr.data, 'should fill entire with arange.');
 

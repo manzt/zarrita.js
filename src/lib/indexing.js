@@ -36,37 +36,6 @@ function check_selection_length(selection, shape) {
 }
 
 /**
- * @param {(null | number | Slice)[]} item
- * @param {number[]} shape
- * @returns {boolean}
- */
-export function is_total_slice(item, shape) {
-  for (const [i, s] of item.entries()) {
-    if (typeof s === 'number') {
-      return false; // can't be a full slice, return early.
-    }
-
-    if (s === null) {
-      continue; // complete slice
-    }
-
-    if (s.start === null && s.stop === null && s.step === null) {
-      continue; // null slice
-    }
-
-    const dim_len = shape[i];
-    const [start, stop, step] = s.indices(dim_len);
-    if (stop - start === dim_len && step === 1) {
-      continue; // explicit complete slice
-    }
-
-    return false;
-  }
-
-  return true;
-}
-
-/**
  * @param {number} dim_sel
  * @param {number} dim_len
  */

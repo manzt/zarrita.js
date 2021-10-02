@@ -180,23 +180,6 @@ export function* product(...iterables) {
 }
 
 /**
- * Compute strides for 'C' ordered ndarray from shape
- *
- * @param {number[]} shape
- */
-export function get_strides(shape) {
-  const ndim = shape.length;
-  /** @type {number[]} */
-  const strides = Array(ndim);
-  let step = 1; // init step
-  for (let i = ndim - 1; i >= 0; i--) {
-    strides[i] = step;
-    step *= shape[i];
-  }
-  return strides;
-}
-
-/**
  * @param {number | null} start
  * @param {(number | null)=} stop
  * @param {(number | null)=} step

@@ -2,18 +2,9 @@
 import { KeyError } from './errors.js';
 import { BasicIndexer } from './indexing.js';
 import { parse_dtype } from './util.js';
-import { setter } from '../ndarray.js';
 
 /** @typedef {import('../types').DataType} DataType */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
-/**
- * @template {DataType} Dtype
- * @typedef {import('../types').Scalar<Dtype>} Scalar
- */
-/**
- * @template {DataType} Dtype
- * @typedef {import('../types').NDArray<Dtype>} NDArray
- */
 /**
  * @template {DataType} Dtype
  * @typedef {import('../hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
@@ -21,30 +12,33 @@ import { setter } from '../ndarray.js';
 
 /**
  * @template {DataType} Dtype
- * @this {ZarrArray<Dtype>}
- *
- * @template {ArraySelection} Sel
- * @param {Sel} selection
+ * @template {import('../types').NdArrayLike<Dtype>} NdArray
+ * @param {import('../types').Setter<Dtype, NdArray>} setter
  */
-export function get(selection) {
-  return get_selection(this, selection, setter);
-}
-
-function register(func, setter) {
-
+export function register(setter) {
+  /**
+   * @template {DataType} Dtype
+   * @this {ZarrArray<Dtype>}
+   *
+   * @template {ArraySelection} Sel
+   * @param {Sel} selection
+   */
+  return function (selection) {
+    return get(setter, this, selection);
+  };
 }
 
 /**
  * @template {DataType} Dtype
- * @template {NDArray<Dtype>} Container
+ * @template {import('../types').NdArrayLike<Dtype>} NdArray
  * @template {ArraySelection} Sel
  *
+ * @param {import('../types').Setter<Dtype, NdArray>} setter
  * @param {ZarrArray<Dtype>} arr
  * @param {Sel} selection
- * @param {import('../types').Setter<Dtype, Container>} setter
- * @returns {Promise<Container | Scalar<Dtype>>}
+ * @returns {Promise<NdArray | import('../types').Scalar<Dtype>>}
  */
-async function get_selection(arr, selection, setter) {
+async function get(setter, arr, selection) {
   const indexer = new BasicIndexer({ selection, shape: arr.shape, chunk_shape: arr.chunk_shape });
   // Setup output array
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);

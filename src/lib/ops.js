@@ -1,17 +1,48 @@
 // @ts-check
+import { register as registerGet } from './get.js';
+import { register as registerSet } from './set.js';
 
 /** @typedef {import('../types').Slice} Slice */
 /** @typedef {import('../types').DataType} DataType*/
 /** @typedef {(null | number | Slice)[]} Selection */
 /**
  * @template {DataType} Dtype
- * @typedef {{ stride: number[] } & import('../types').NDArray<Dtype>} NDArray
+ * @typedef {{ stride: number[] } & import('../types').NdArrayLike<Dtype>} NdArray
  */
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
 
+/**
+ * @template {DataType} Dtype
+ * @type {import('../types').Setter<Dtype, NdArray<Dtype>>}
+ */
+const setter = {
+  prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+  set_scalar,
+  set_from_chunk,
+};
+
+export const get = registerGet(setter);
+export const set = registerSet(setter);
+
+/**
+ * Compute strides for 'C' ordered ndarray from shape
+ *
+ * @param {number[]} shape
+ */
+function get_strides(shape) {
+  const ndim = shape.length;
+  /** @type {number[]} */
+  const strides = Array(ndim);
+  let step = 1; // init step
+  for (let i = ndim - 1; i >= 0; i--) {
+    strides[i] = step;
+    step *= shape[i];
+  }
+  return strides;
+}
 /**
  * @param {number} start
  * @param {number} stop
@@ -27,11 +58,11 @@ function indices_len(start, stop, step) {
 
 /**
  * @template {DataType} Dtype
- * @param {NDArray<Dtype>} out
+ * @param {NdArray<Dtype>} out
  * @param {Selection} out_selection
  * @param {import('../types').Scalar<Dtype>} value
  */
-export function set_scalar(out, out_selection, value) {
+function set_scalar(out, out_selection, value) {
   if (out_selection.length === 0) {
     out.data[0] = value;
     return;
@@ -73,12 +104,12 @@ export function set_scalar(out, out_selection, value) {
 
 /**
  * @template {DataType} Dtype
- * @param {NDArray<Dtype>} out
+ * @param {NdArray<Dtype>} out
  * @param {Selection} out_selection
- * @param {NDArray<Dtype>} chunk
+ * @param {NdArray<Dtype>} chunk
  * @param {Selection} chunk_selection
  */
-export function set_from_chunk(out, out_selection, chunk, chunk_selection) {
+function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (chunk_selection.length === 0) {
     // Case when last chunk dim is squeezed
     out.data.set(chunk.data.subarray(0, out.data.length));
