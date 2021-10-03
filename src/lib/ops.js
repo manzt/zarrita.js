@@ -15,12 +15,25 @@ import { register as registerSet } from './set.js';
 
 /**
  * @template {DataType} Dtype
- * @type {import('../types').Setter<Dtype, NdArray<Dtype>>}
+ * @type {import('../types').Setter<Dtype, NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>>}
  */
 const setter = {
   prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
-  set_scalar,
-  set_from_chunk,
+  set_scalar(out, out_selection, value) {
+    return set_scalar(
+      'stride' in out ? out : { data: out.data, stride: get_strides(out.shape) },
+      out_selection,
+      value,
+    );
+  },
+  set_from_chunk(out, out_selection, chunk, chunk_selection) {
+    return set_from_chunk(
+      'stride' in out ? out : { data: out.data, stride: get_strides(out.shape) },
+      out_selection,
+      'stride' in chunk ? chunk : { data: chunk.data, stride: get_strides(chunk.shape) },
+      chunk_selection,
+    );
+  },
 };
 
 export const get = registerGet(setter);
