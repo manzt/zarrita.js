@@ -1,5 +1,5 @@
 // @ts-check
-import { ExplicitGroup, ImplicitGroup, ZarrArray } from './hierarchy.js';
+import { ExplicitGroup, ImplicitGroup, ZarrArray } from './lib/hierarchy.js';
 import { registry } from './lib/codec-registry.js';
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from './lib/errors.js';
 import {

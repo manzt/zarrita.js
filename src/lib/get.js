@@ -7,7 +7,7 @@ import { parse_dtype } from './util.js';
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 /**
  * @template {DataType} Dtype
- * @typedef {import('../hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
+ * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
  */
 
 /**

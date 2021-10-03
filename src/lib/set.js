@@ -21,7 +21,7 @@ import { BasicIndexer } from './indexing.js';
  */
 /**
  * @template {DataType} Dtype
- * @typedef {import('../hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
+ * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
  */
 
 /**

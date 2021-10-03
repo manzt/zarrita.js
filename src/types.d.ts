@@ -102,28 +102,28 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   // read-only
   has(path: string): Promise<boolean>;
   get(path: string): Promise<
-    | import('./hierarchy').ZarrArray<DataType, Store>
-    | import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>
-    | import('./hierarchy').ImplicitGroup<Store, Hierarchy<Store>>
+    | import('./lib/hierarchy').ZarrArray<DataType, Store>
+    | import('./lib/hierarchy').ExplicitGroup<Store, Hierarchy<Store>>
+    | import('./lib/hierarchy').ImplicitGroup<Store, Hierarchy<Store>>
   >;
-  get_array(path: string): Promise<import('./hierarchy').ZarrArray<DataType, Store>>;
-  get_group(path: string): Promise<import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
+  get_array(path: string): Promise<import('./lib/hierarchy').ZarrArray<DataType, Store>>;
+  get_group(path: string): Promise<import('./lib/hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
   get_implicit_group(
     path: string,
-  ): Promise<import('./hierarchy').ImplicitGroup<Store, Hierarchy<Store>>>;
+  ): Promise<import('./lib/hierarchy').ImplicitGroup<Store, Hierarchy<Store>>>;
   get_children(path?: string): Promise<Map<string, string>>;
 
   // write
   create_group(
     path: string,
     props?: { attrs?: Attrs },
-  ): Promise<import('./hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
+  ): Promise<import('./lib/hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
   create_array<
     Dtype extends DataType,
   >(
     path: string,
     props: Omit<ArrayAttributes<Dtype>, 'path' | 'store'>,
-  ): Promise<import('./hierarchy').ZarrArray<Dtype, Store>>;
+  ): Promise<import('./lib/hierarchy').ZarrArray<Dtype, Store>>;
 }
 
 export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> = {

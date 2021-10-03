@@ -1,8 +1,8 @@
 // @ts-check
-import { assert, KeyError } from './lib/errors.js';
-import { byte_swap_inplace, parse_dtype, should_byte_swap } from './lib/util.js';
+import { assert, KeyError } from './errors.js';
+import { byte_swap_inplace, parse_dtype, should_byte_swap } from './util.js';
 
-/** @template {import('./types').Store} Store */
+/** @template {import('../types').Store} Store */
 export class Node {
   /** @param {{ store: Store, path: string }} props */
   constructor({ store, path }) {
@@ -16,8 +16,8 @@ export class Node {
 }
 
 /**
- * @template {import('./types').Store} Store
- * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @template {import('../types').Store} Store
+ * @template {import('../types').Hierarchy<Store>} Hierarchy
  * @extends {Node<Store>}
  */
 export class Group extends Node {
@@ -101,8 +101,8 @@ export class Group extends Node {
 }
 
 /**
- * @template {import('./types').Store} Store
- * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @template {import('../types').Store} Store
+ * @template {import('../types').Hierarchy<Store>} Hierarchy
  * @extends {Group<Store, Hierarchy>}
  */
 export class ExplicitGroup extends Group {
@@ -110,14 +110,14 @@ export class ExplicitGroup extends Group {
    *    store: Store,
    *    path: string,
    *    owner: Hierarchy,
-   *    attrs: import('./types').Attrs | (() => Promise<import('./types').Attrs>),
+   *    attrs: import('../types').Attrs | (() => Promise<import('../types').Attrs>),
    * }} props */
   constructor(props) {
     super(props);
     this._attrs = props.attrs || {};
   }
 
-  /** @returns {Promise<import('./types').Attrs>} */
+  /** @returns {Promise<import('../types').Attrs>} */
   get attrs() {
     if (typeof this._attrs === 'object') {
       return Promise.resolve(this._attrs);
@@ -130,19 +130,19 @@ export class ExplicitGroup extends Group {
 }
 
 /**
- * @template {import('./types').Store} Store
- * @template {import('./types').Hierarchy<Store>} Hierarchy
+ * @template {import('../types').Store} Store
+ * @template {import('../types').Hierarchy<Store>} Hierarchy
  * @extends {Group<Store, Hierarchy>}
  */
 export class ImplicitGroup extends Group {}
 
 /**
- * @template {import('./types').DataType} Dtype
- * @template {import('./types').Store} Store
+ * @template {import('../types').DataType} Dtype
+ * @template {import('../types').Store} Store
  * @extends {Node<Store>}
  */
 export class ZarrArray extends Node {
-  /** @param {import('./types').ArrayAttributes<Dtype, Store>} props */
+  /** @param {import('../types').ArrayAttributes<Dtype, Store>} props */
   constructor(props) {
     super(props);
     this.shape = props.shape;
@@ -172,7 +172,7 @@ export class ZarrArray extends Node {
 
   /**
    * @param {Uint8Array} bytes
-   * @returns {Promise<import('./types').TypedArray<Dtype>>}
+   * @returns {Promise<import('../types').TypedArray<Dtype>>}
    */
   async _decode_chunk(bytes) {
     // decompress
@@ -189,7 +189,7 @@ export class ZarrArray extends Node {
     return data;
   }
 
-  /** @param {import('./types').TypedArray<Dtype>} data */
+  /** @param {import('../types').TypedArray<Dtype>} data */
   async _encode_chunk(data) {
     if (should_byte_swap(parse_dtype(this.dtype).endianness)) {
       byte_swap_inplace(data);
@@ -203,7 +203,7 @@ export class ZarrArray extends Node {
 
   /**
    * @param {number[]} chunk_coords
-   * @returns {Promise<{ data: import('./types').TypedArray<Dtype>, shape: number[] }>}
+   * @returns {Promise<{ data: import('../types').TypedArray<Dtype>, shape: number[] }>}
    */
   async get_chunk(chunk_coords) {
     const chunk_key = this.chunk_key(chunk_coords);
