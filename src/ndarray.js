@@ -1,6 +1,7 @@
 // @ts-check
 import ndarray from 'ndarray';
-import { product, range } from './lib/util.js';
+import ops from 'ndarray-ops';
+
 import { register as registerGet } from './lib/get.js';
 import { register as registerSet } from './lib/set.js';
 
@@ -23,27 +24,18 @@ import { register as registerSet } from './lib/set.js';
 const setter = {
   prepare: ndarray,
   set_scalar(target, selection, value) {
-    const view = get_view(target, selection);
-    for (const d of shape_product(view.shape)) {
-      view.set(...d, value);
-    }
+    ops.assigns(view(target, selection), value);
   },
   set_from_chunk(target, target_selection, chunk, chunk_selection) {
-    const target_view = get_view(target, target_selection);
-    const chunk_view = get_view(chunk, chunk_selection);
-    for (const d of shape_product(chunk_view.shape)) {
-      target_view.set(...d, chunk_view.get(...d));
-    }
+    ops.assign(
+      view(target, target_selection),
+      view(chunk, chunk_selection),
+    );
   },
 };
 
 export const set = registerSet(setter);
 export const get = registerGet(setter);
-
-/** @param {number[]} shape */
-function shape_product(shape) {
-  return product(...shape.map((x) => [...range(x)]));
-}
 
 /**
  * Convert zarrita selection to ndarray view.
@@ -52,7 +44,7 @@ function shape_product(shape) {
  * @param {ndarray.NdArray<TypedArray<Dtype>>} arr
  * @param {(null | Slice | number)[]} sel
  */
-function get_view(arr, sel) {
+function view(arr, sel) {
   /** @type {number[]} */
   const lo = [],
     /** @type {number[]} */
@@ -86,5 +78,5 @@ function get_view(arr, sel) {
     arr = ndarray(arr.data, arr.shape.filter((_, i) => sel[i] !== null));
   }
 
-  return arr.lo(...lo).hi(...hi).step(...step).pick(...pick);
+  return arr.hi(...hi).lo(...lo).step(...step).pick(...pick);
 }

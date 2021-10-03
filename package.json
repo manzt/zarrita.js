@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@types/ndarray": "^1.0.10",
+    "@types/ndarray-ops": "^1.2.1",
     "ndarray": "^1.0.19",
+    "ndarray-ops": "^1.2.2",
     "numcodecs": "^0.2.2"
   },
   "devDependencies": {
