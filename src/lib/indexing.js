@@ -3,6 +3,7 @@ import { IndexError } from './errors.js';
 import { product, range, slice } from './util.js';
 
 /** @typedef {import('../types').Slice} Slice */
+/** @typedef {import('../types').Indices} Indices */
 
 /**
  * @param {(number | Slice)[]} selection
@@ -53,7 +54,7 @@ function normalize_integer_selection(dim_sel, dim_len) {
   return dim_sel;
 }
 
-/** @typedef {{ dim_chunk_ix: number, dim_chunk_sel: number | Slice, dim_out_sel: number | Slice | null }} ChunkDimProjection */
+/** @typedef {{ dim_chunk_ix: number, dim_chunk_sel: number, dim_out_sel: null }} IntChunkDimProjection */
 
 class IntDimIndexer {
   /** @param {{ dim_sel: number, dim_len: number, dim_chunk_len: number }} props */
@@ -67,15 +68,16 @@ class IntDimIndexer {
     this.nitems = 1;
   }
 
-  /** @returns {IterableIterator<ChunkDimProjection>} */
+  /** @returns {IterableIterator<IntChunkDimProjection>} */
   *[Symbol.iterator]() {
     const dim_chunk_ix = Math.floor(this.dim_sel / this.dim_chunk_len);
     const dim_offset = dim_chunk_ix * this.dim_chunk_len;
     const dim_chunk_sel = this.dim_sel - dim_offset;
-    const dim_out_sel = null;
-    yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
+    yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel: null };
   }
 }
+
+/** @typedef {{ dim_chunk_ix: number, dim_chunk_sel: Indices, dim_out_sel: Indices }} SliceChunkDimProjection */
 
 class SliceDimIndexer {
   /** @param {{ dim_sel: Slice, dim_len: number, dim_chunk_len: number }} props */
@@ -96,7 +98,7 @@ class SliceDimIndexer {
     this.nchunks = Math.ceil(this.dim_len / this.dim_chunk_len);
   }
 
-  /** @returns {IterableIterator<ChunkDimProjection>} */
+  /** @returns {IterableIterator<SliceChunkDimProjection>} */
   *[Symbol.iterator]() {
     // figure out the range of chunks we need to visit
     const dim_chunk_ix_from = Math.floor(this.start / this.dim_chunk_len);
@@ -129,19 +131,14 @@ class SliceDimIndexer {
       // otherwise selection ends after current chunk.
       const dim_chunk_sel_stop = this.stop > dim_limit ? dim_chunk_len : this.stop - dim_offset;
 
-      const dim_chunk_sel = slice(
-        dim_chunk_sel_start,
-        dim_chunk_sel_stop,
-        this.step,
-      );
+      /** @type {Indices} */
+      const dim_chunk_sel = [dim_chunk_sel_start, dim_chunk_sel_stop, this.step];
       const dim_chunk_nitems = Math.ceil(
         (dim_chunk_sel_stop - dim_chunk_sel_start) / this.step,
       );
-      const dim_out_sel = slice(
-        dim_out_offset,
-        dim_out_offset + dim_chunk_nitems,
-        1,
-      );
+
+      /** @type {Indices} */
+      const dim_out_sel = [dim_out_offset, dim_out_offset + dim_chunk_nitems, 1];
       yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
     }
   }
@@ -164,7 +161,7 @@ function normalize_selection(selection, shape) {
   return normalized;
 }
 
-/** @typedef {{ chunk_coords: number[], chunk_selection: (number | Slice)[], out_selection: (number | Slice) [] }} ChunkProjection */
+/** @typedef {{ chunk_coords: number[], chunk_selection: (number | Indices)[], out_selection: Indices[] }} ChunkProjection */
 
 export class BasicIndexer {
   /**
@@ -178,6 +175,7 @@ export class BasicIndexer {
     // setup per-dimension indexers
     this.dim_indexers = normalize_selection(selection, shape).map((dim_sel, i) => {
       return new (typeof dim_sel === 'number' ? IntDimIndexer : SliceDimIndexer)({
+        // ts inference not strong enough to know correct chunk
         dim_sel: /** @type {any} */ (dim_sel),
         dim_len: shape[i],
         dim_chunk_len: chunk_shape[i],
@@ -188,7 +186,7 @@ export class BasicIndexer {
       .map((sixr) => sixr.nitems);
   }
 
-  /** @returns {Generator<ChunkProjection>} */
+  /** @returns {IterableIterator<ChunkProjection>} */
   *[Symbol.iterator]() {
     for (const dim_projections of product(...this.dim_indexers)) {
       const chunk_coords = dim_projections.map((p) => p.dim_chunk_ix);
@@ -196,7 +194,7 @@ export class BasicIndexer {
       const out_selection = dim_projections
         .map((p) => p.dim_out_sel)
         // need to filter squeezed dims in output
-        .filter(/** @type {(s: number | Slice | null) => s is number | Slice} */ (s) => s !== null);
+        .filter(/** @type {(s: Indices | null) => s is Indices} */ (s) => s !== null);
       yield { chunk_coords, chunk_selection, out_selection };
     }
   }

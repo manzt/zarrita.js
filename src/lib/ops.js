@@ -2,7 +2,7 @@
 import { register as registerGet } from './get.js';
 import { register as registerSet } from './set.js';
 
-/** @typedef {import('../types').Slice} Slice */
+/** @typedef {import('../types').Indices} Indices */
 /** @typedef {import('../types').DataType} DataType*/
 /**
  * @template {DataType} Dtype
@@ -57,8 +57,8 @@ function indices_len(start, stop, step) {
 
 /**
  * @template {DataType} Dtype
- * @param {NdArray<Dtype>} out
- * @param {(number | Slice)[]} out_selection
+ * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
+ * @param {(number | Indices)[]} out_selection
  * @param {import('../types').Scalar<Dtype>} value
  */
 function set_scalar(out, out_selection, value) {
@@ -68,15 +68,14 @@ function set_scalar(out, out_selection, value) {
   }
   const [slice, ...slices] = out_selection;
   const [curr_stride, ...stride] = out.stride;
-  const [out_len, ...shape] = out.shape;
   if (typeof slice === 'number') {
     const data = /** @type {TypedArray<Dtype>} */ (out.data.subarray(
       curr_stride * slice,
     ));
-    set_scalar({ data, stride, shape }, slices, value);
+    set_scalar({ data, stride }, slices, value);
     return;
   }
-  const [from, to, step] = slice.indices(out_len);
+  const [from, to, step] = slice;
   const len = indices_len(from, to, step);
   if (slices.length === 0) {
     if (step === 1 && curr_stride === 1) {
@@ -92,16 +91,16 @@ function set_scalar(out, out_selection, value) {
     const data = /** @type {TypedArray<Dtype>} */ (out.data.subarray(
       curr_stride * (from + step * i),
     ));
-    set_scalar({ data, stride, shape }, slices, value);
+    set_scalar({ data, stride }, slices, value);
   }
 }
 
 /**
  * @template {DataType} Dtype
- * @param {NdArray<Dtype>} out
- * @param {(number | Slice)[]} out_selection
- * @param {NdArray<Dtype>} chunk
- * @param {(number | Slice)[]} chunk_selection
+ * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
+ * @param {(number | Indices)[]} out_selection
+ * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} chunk
+ * @param {(number | Indices)[]} chunk_selection
  */
 function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (chunk_selection.length === 0) {
@@ -114,7 +113,6 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   const [chunk_slice, ...chunk_slices] = chunk_selection;
 
   const [chunk_stride = 1, ...chunk_strides] = chunk.stride;
-  const [chunk_len = chunk.data.length, ...chunk_shape] = chunk.shape;
 
   if (typeof chunk_slice === 'number') {
     // chunk dimension is squeezed
@@ -122,7 +120,6 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       data: /** @type {TypedArray<Dtype>} */ (chunk.data.subarray(
         chunk_stride * chunk_slice,
       )),
-      shape: chunk_shape,
       stride: chunk_strides,
     };
     set_from_chunk(out, out_selection, chunk_view, chunk_slices);
@@ -130,7 +127,6 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   }
 
   const [out_stride = 1, ...out_strides] = out.stride;
-  const [out_len = out.data.length, ...out_shape] = out.shape;
 
   if (typeof out_slice === 'number') {
     // out dimension is squeezed
@@ -138,15 +134,14 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       data: /** @type {TypedArray<Dtype>} */ (out.data.subarray(
         out_stride * out_slice,
       )),
-      shape: out_shape,
       stride: out_strides,
     };
     set_from_chunk(out_view, out_slices, chunk, chunk_selection);
     return;
   }
 
-  const [from, to, step] = out_slice.indices(out_len); // only need len of out slice since chunk subset
-  const [cfrom, _cto, cstep] = chunk_slice.indices(chunk_len);
+  const [from, to, step] = out_slice; // only need len of out slice since chunk subset
+  const [cfrom, _cto, cstep] = chunk_slice;
 
   const len = indices_len(from, to, step);
   if (out_slices.length === 0 && chunk_slices.length === 0) {
@@ -164,12 +159,10 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   for (let i = 0; i < len; i++) {
     const out_view = {
       data: out.data.subarray(out_stride * (from + i * step)),
-      shape: out_shape,
       stride: out_strides,
     };
     const chunk_view = {
       data: chunk.data.subarray(chunk_stride * (cfrom + i * cstep)),
-      shape: chunk_shape,
       stride: chunk_strides,
     };
     set_from_chunk(out_view, out_slices, chunk_view, chunk_slices);

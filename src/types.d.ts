@@ -128,11 +128,11 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 
 export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> = {
   prepare(data: TypedArray<Dtype>, shape: number[]): NdArray;
-  set_scalar(target: NdArray, selection: (Slice | number)[], value: Scalar<Dtype>): void;
+  set_scalar(target: NdArray, selection: (Indices | number)[], value: Scalar<Dtype>): void;
   set_from_chunk(
     target: NdArray,
-    target_selection: (Slice | number)[],
+    target_selection: (Indices | number)[],
     chunk: NdArray,
-    chunk_selection: (Slice | number)[],
+    chunk_selection: (Indices | number)[],
   ): void;
 };

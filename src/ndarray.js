@@ -6,7 +6,7 @@ import { register as registerGet } from './lib/get.js';
 import { register as registerSet } from './lib/set.js';
 
 /** @typedef {import('./types').DataType} DataType */
-/** @typedef {import('./types').Slice} Slice */
+/** @typedef {import('./types').Indices} Indices */
 /**
  * @template {DataType} Dtype
  * @typedef {import('./types').TypedArray<Dtype>} TypedArray
@@ -42,7 +42,7 @@ export const get = registerGet(setter);
  *
  * @template {DataType} Dtype
  * @param {ndarray.NdArray<TypedArray<Dtype>>} arr
- * @param {(Slice | number)[]} sel
+ * @param {(Indices | number)[]} sel
  */
 function view(arr, sel) {
   /** @type {number[]} */
@@ -62,10 +62,9 @@ function view(arr, sel) {
       pick.push(s);
       return;
     }
-    const [from, to, st] = s.indices(arr.shape[i]);
-    lo.push(from);
-    hi.push(to);
-    step.push(st);
+    lo.push(s[0]);
+    hi.push(s[1]);
+    step.push(s[2]);
     pick.push(null);
   });
 

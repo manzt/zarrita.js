@@ -66,5 +66,5 @@ async function get(setter, arr, selection) {
   }
 
   // If the final out shape is empty, we just return a scalar.
-  return indexer.shape.length === 0 ? out.data[0] : setter.prepare(out.data, indexer.shape);
+  return indexer.shape.length === 0 ? out.data[0] : out;
 }

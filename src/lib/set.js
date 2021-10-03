@@ -6,6 +6,7 @@ import { BasicIndexer } from './indexing.js';
 /** @typedef {import('../types').DataType} DataType */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 /** @typedef {import('../types').Slice} Slice */
+/** @typedef {import('../types').Indices} Indices */
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').TypedArray<Dtype>} TypedArray
@@ -79,8 +80,7 @@ async function set(setter, arr, selection, value) {
       if (typeof value === 'object') {
         // Otherwise data just contiguous TypedArray
         const chunk = setter.prepare(create(chunk_size), arr.chunk_shape);
-        const full_selection = arr.chunk_shape.map(() => slice(null));
-        setter.set_from_chunk(chunk, full_selection, value, out_selection);
+        setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
         cdata = chunk.data;
       } else {
         cdata = /** @type {TypedArray<Dtype>} */ (create(chunk_size).fill(value));
@@ -116,34 +116,17 @@ async function set(setter, arr, selection, value) {
 }
 
 /**
- * @param {(null | number | Slice)[]} items
+ * @param {(number | Indices)[]} selection
  * @param {number[]} shape
- * @returns {boolean}
+ * @returns {selection is Indices[]}
  */
-function is_total_slice(items, shape) {
-  for (let i = 0; i < items.length; i++) {
-    const s = items[i];
-
-    if (typeof s === 'number') {
-      return false; // can't be a full slice, return early.
-    }
-
-    if (s === null) {
-      continue; // complete slice
-    }
-
-    if (s.start === null && s.stop === null && s.step === null) {
-      continue; // null slice
-    }
-
-    const dim_len = shape[i];
-    const [start, stop, step] = s.indices(dim_len);
-    if (stop - start === dim_len && step === 1) {
-      continue; // explicit complete slice
-    }
-
-    return false;
-  }
-
-  return true;
+function is_total_slice(selection, shape) {
+  // all items are Indices and every slice is complete
+  return selection.every((s, i) => {
+    // can't be a full selection
+    if (typeof s === 'number') return false;
+    // explicit complete slice
+    const [start, stop, step] = s;
+    return stop - start === shape[i] && step === 1;
+  });
 }
