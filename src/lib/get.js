@@ -44,7 +44,7 @@ async function get(setter, arr, selection) {
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);
   const out = setter.prepare(
     parse_dtype(arr.dtype).create(outsize),
-    indexer.dim_indexers.map((ixr) => ixr.nitems), // un-squeezed shape
+    indexer.shape,
   );
 
   // iterator over chunks

@@ -142,7 +142,6 @@ class SliceDimIndexer {
         dim_out_offset + dim_chunk_nitems,
         1,
       );
-      // ChunkDimProjection
       yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
     }
   }
@@ -165,49 +164,39 @@ function normalize_selection(selection, shape) {
   return normalized;
 }
 
+/** @typedef {{ chunk_coords: number[], chunk_selection: (number | Slice)[], out_selection: (number | Slice) [] }} ChunkProjection */
+
 export class BasicIndexer {
   /**
    * @param {{
-   *  selection: null | (null | number | Slice)[];
-   *  shape: number[];
-   *  chunk_shape: number[];
+   *    selection: null | (null | number | Slice)[];
+   *    shape: number[];
+   *    chunk_shape: number[];
    *  }} props
    */
   constructor({ selection, shape, chunk_shape }) {
-    // handle normalize selection
-    selection = normalize_selection(selection, shape);
-
     // setup per-dimension indexers
-    this.dim_indexers = selection.map((dim_sel, i) => {
-      if (typeof dim_sel === 'number') {
-        return new IntDimIndexer({
-          dim_sel,
-          dim_len: shape[i],
-          dim_chunk_len: chunk_shape[i],
-        });
-      } else if (dim_sel?.kind === 'slice') {
-        return new SliceDimIndexer({
-          dim_sel,
-          dim_len: shape[i],
-          dim_chunk_len: chunk_shape[i],
-        });
-      }
-      throw new IndexError(
-        `unsupported selection item for basic indexing; expected integer or slice, got ${
-          JSON.stringify(dim_sel)
-        }`,
-      );
+    this.dim_indexers = normalize_selection(selection, shape).map((dim_sel, i) => {
+      return new (typeof dim_sel === 'number' ? IntDimIndexer : SliceDimIndexer)({
+        dim_sel: /** @type {any} */ (dim_sel),
+        dim_len: shape[i],
+        dim_chunk_len: chunk_shape[i],
+      });
     });
-    this.shape = this.dim_indexers.filter((ixr) => !(ixr instanceof IntDimIndexer)).map((
-      sixr,
-    ) => sixr.nitems);
+    this.shape = this.dim_indexers
+      .filter((ixr) => ixr instanceof SliceDimIndexer)
+      .map((sixr) => sixr.nitems);
   }
 
+  /** @returns {Generator<ChunkProjection>} */
   *[Symbol.iterator]() {
     for (const dim_projections of product(...this.dim_indexers)) {
       const chunk_coords = dim_projections.map((p) => p.dim_chunk_ix);
       const chunk_selection = dim_projections.map((p) => p.dim_chunk_sel);
-      const out_selection = dim_projections.map((p) => p.dim_out_sel);
+      const out_selection = dim_projections
+        .map((p) => p.dim_out_sel)
+        // need to filter squeezed dims in output
+        .filter(/** @type {(s: number | Slice | null) => s is number | Slice} */ (s) => s !== null);
       yield { chunk_coords, chunk_selection, out_selection };
     }
   }

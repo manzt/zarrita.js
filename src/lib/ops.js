@@ -4,7 +4,6 @@ import { register as registerSet } from './set.js';
 
 /** @typedef {import('../types').Slice} Slice */
 /** @typedef {import('../types').DataType} DataType*/
-/** @typedef {(null | number | Slice)[]} Selection */
 /**
  * @template {DataType} Dtype
  * @typedef {{ stride: number[] } & import('../types').NdArrayLike<Dtype>} NdArray
@@ -59,7 +58,7 @@ function indices_len(start, stop, step) {
 /**
  * @template {DataType} Dtype
  * @param {NdArray<Dtype>} out
- * @param {Selection} out_selection
+ * @param {(number | Slice)[]} out_selection
  * @param {import('../types').Scalar<Dtype>} value
  */
 function set_scalar(out, out_selection, value) {
@@ -75,11 +74,6 @@ function set_scalar(out, out_selection, value) {
       curr_stride * slice,
     ));
     set_scalar({ data, stride, shape }, slices, value);
-    return;
-  }
-  if (slice === null) {
-    // squeeze dimension
-    set_scalar({ data: out.data, shape, stride }, slices, value);
     return;
   }
   const [from, to, step] = slice.indices(out_len);
@@ -105,9 +99,9 @@ function set_scalar(out, out_selection, value) {
 /**
  * @template {DataType} Dtype
  * @param {NdArray<Dtype>} out
- * @param {Selection} out_selection
+ * @param {(number | Slice)[]} out_selection
  * @param {NdArray<Dtype>} chunk
- * @param {Selection} chunk_selection
+ * @param {(number | Slice)[]} chunk_selection
  */
 function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (chunk_selection.length === 0) {
@@ -148,28 +142,6 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       stride: out_strides,
     };
     set_from_chunk(out_view, out_slices, chunk, chunk_selection);
-    return;
-  }
-
-  if (out_slice === null) {
-    // squeeze dimension
-    const out_view = {
-      data: out.data,
-      shape: out_shape,
-      stride: out_strides,
-    };
-    set_from_chunk(out_view, out_slices, chunk, chunk_selection);
-    return;
-  }
-
-  if (chunk_slice === null) {
-    // squeeze dimension
-    const chunk_view = {
-      data: chunk.data,
-      shape: chunk_shape,
-      stride: chunk_strides,
-    };
-    set_from_chunk(out, out_selection, chunk_view, chunk_slices);
     return;
   }
 

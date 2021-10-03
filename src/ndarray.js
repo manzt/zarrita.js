@@ -42,7 +42,7 @@ export const get = registerGet(setter);
  *
  * @template {DataType} Dtype
  * @param {ndarray.NdArray<TypedArray<Dtype>>} arr
- * @param {(null | Slice | number)[]} sel
+ * @param {(Slice | number)[]} sel
  */
 function view(arr, sel) {
   /** @type {number[]} */
@@ -54,12 +54,7 @@ function view(arr, sel) {
     /** @type {(number | null)[]} */
     pick = [];
 
-  let squeezed = false;
   sel.forEach((s, i) => {
-    if (s === null) {
-      squeezed = true;
-      return;
-    }
     if (typeof s === 'number') {
       lo.push(0);
       hi.push(arr.shape[i]);
@@ -73,10 +68,6 @@ function view(arr, sel) {
     step.push(st);
     pick.push(null);
   });
-
-  if (squeezed) {
-    arr = ndarray(arr.data, arr.shape.filter((_, i) => sel[i] !== null));
-  }
 
   return arr.hi(...hi).lo(...lo).step(...step).pick(...pick);
 }
