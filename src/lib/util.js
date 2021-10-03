@@ -201,3 +201,16 @@ export function slice(start, stop, step = null) {
   };
   return { start, stop, step, indices, kind: 'slice' };
 }
+
+/**
+ * Built-in "queue" for awaiting promises.
+ * @returns {import('../types').ChunkQueue}
+ */
+export function create_queue() {
+  /** @type {Promise<void>[]} */
+  const promises = [];
+  return {
+    add: (fn) => promises.push(fn()),
+    onIdle: () => Promise.all(promises),
+  };
+}

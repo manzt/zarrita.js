@@ -107,7 +107,9 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
     | import('./lib/hierarchy').ImplicitGroup<Store, Hierarchy<Store>>
   >;
   get_array(path: string): Promise<import('./lib/hierarchy').ZarrArray<DataType, Store>>;
-  get_group(path: string): Promise<import('./lib/hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
+  get_group(
+    path: string,
+  ): Promise<import('./lib/hierarchy').ExplicitGroup<Store, Hierarchy<Store>>>;
   get_implicit_group(
     path: string,
   ): Promise<import('./lib/hierarchy').ImplicitGroup<Store, Hierarchy<Store>>>;
@@ -136,3 +138,16 @@ export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> =
     chunk_selection: (Indices | number)[],
   ): void;
 };
+
+// Compatible with https://github.com/sindresorhus/p-queue
+export type ChunkQueue = {
+  add(fn: () => Promise<void>): void;
+  onIdle(): Promise<void[]>;
+};
+
+export type Options = {
+  create_queue?: () => ChunkQueue;
+};
+
+export type GetOptions = Options;
+export type SetOptions = Options;

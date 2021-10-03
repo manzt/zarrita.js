@@ -1,6 +1,6 @@
 // @ts-check
 import { KeyError } from './errors.js';
-import { parse_dtype, slice } from './util.js';
+import { create_queue, parse_dtype } from './util.js';
 import { BasicIndexer } from './indexing.js';
 
 /** @typedef {import('../types').DataType} DataType */
@@ -37,9 +37,10 @@ export function register(setter) {
    * @template {ArraySelection} Sel
    * @param {Sel} selection
    * @param {Scalar<Dtype> | NdArray} value
+   * @param {import('../types').SetOptions} opts
    */
-  return function (selection, value) {
-    return set(setter, this, selection, value);
+  return function (selection, value, opts = {}) {
+    return set(setter, this, selection, value, opts);
   };
 }
 
@@ -51,9 +52,10 @@ export function register(setter) {
  * @param {ZarrArray<Dtype>} arr
  * @param {ArraySelection} selection
  * @param {Scalar<Dtype> | NdArray} value
+ * @param {import('../types').SetOptions} opts
  * @returns {Promise<void>}
  */
-async function set(setter, arr, selection, value) {
+async function set(setter, arr, selection, value, opts) {
   const indexer = new BasicIndexer({ selection, shape: arr.shape, chunk_shape: arr.chunk_shape });
 
   // We iterate over all chunks which overlap the selection and thus contain data
@@ -62,57 +64,63 @@ async function set(setter, arr, selection, value) {
 
   const chunk_size = arr.chunk_shape.reduce((a, b) => a * b, 1);
   const { create } = parse_dtype(arr.dtype);
+  const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
   // N.B., it is an important optimisation that we only visit chunks which overlap
   // the selection. This minimises the number of iterations in the main for loop.
   for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
-    // obtain key for chunk storage
-    const chunk_key = arr.chunk_key(chunk_coords);
+    queue.add(async () => {
+      // obtain key for chunk storage
+      const chunk_key = arr.chunk_key(chunk_coords);
 
-    /** @type {TypedArray<Dtype>} */
-    let cdata;
+      /** @type {TypedArray<Dtype>} */
+      let cdata;
 
-    if (is_total_slice(chunk_selection, arr.chunk_shape)) {
-      // totally replace chunk
+      if (is_total_slice(chunk_selection, arr.chunk_shape)) {
+        // totally replace chunk
 
-      // optimization: we are completely replacing the chunk, so no need
-      // to access the exisiting chunk data
-      if (typeof value === 'object') {
-        // Otherwise data just contiguous TypedArray
-        const chunk = setter.prepare(create(chunk_size), arr.chunk_shape);
-        setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
+        // optimization: we are completely replacing the chunk, so no need
+        // to access the exisiting chunk data
+        if (typeof value === 'object') {
+          // Otherwise data just contiguous TypedArray
+          const chunk = setter.prepare(create(chunk_size), arr.chunk_shape);
+          setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
+          cdata = chunk.data;
+        } else {
+          cdata = /** @type {TypedArray<Dtype>} */ (create(chunk_size).fill(value));
+        }
+      } else {
+        // partially replace the contents of this chunk
+        /** @type {NdArray} */
+        const chunk = await arr.get_chunk(chunk_coords)
+          .then(({ data, shape }) => setter.prepare(data, shape))
+          .catch((err) => {
+            if (!(err instanceof KeyError)) throw err;
+            const empty = create(chunk_size);
+            return setter.prepare(
+              arr.fill_value
+                ? /** @type {TypedArray<Dtype>} */ (empty.fill(arr.fill_value))
+                : empty,
+              arr.chunk_shape,
+            );
+          });
+
+        // Modify chunk data
+        if (typeof value === 'object') {
+          setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
+        } else {
+          setter.set_scalar(chunk, chunk_selection, value);
+        }
+
         cdata = chunk.data;
-      } else {
-        cdata = /** @type {TypedArray<Dtype>} */ (create(chunk_size).fill(value));
       }
-    } else {
-      // partially replace the contents of this chunk
-      /** @type {NdArray} */
-      const chunk = await arr.get_chunk(chunk_coords)
-        .then(({ data, shape }) => setter.prepare(data, shape))
-        .catch((err) => {
-          if (!(err instanceof KeyError)) throw err;
-          const empty = create(chunk_size);
-          return setter.prepare(
-            arr.fill_value ? /** @type {TypedArray<Dtype>} */ (empty.fill(arr.fill_value)) : empty,
-            arr.chunk_shape,
-          );
-        });
-
-      // Modify chunk data
-      if (typeof value === 'object') {
-        setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
-      } else {
-        setter.set_scalar(chunk, chunk_selection, value);
-      }
-
-      cdata = chunk.data;
-    }
-    // encode chunk
-    const encoded_chunk_data = await arr._encode_chunk(cdata);
-    // store
-    await arr.store.set(chunk_key, encoded_chunk_data);
+      // encode chunk
+      const encoded_chunk_data = await arr._encode_chunk(cdata);
+      // store
+      await arr.store.set(chunk_key, encoded_chunk_data);
+    });
   }
+  await queue.onIdle();
 }
 
 /**
