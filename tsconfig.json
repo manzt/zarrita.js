@@ -1,16 +1,19 @@
-
 {
-    "include": ["src"],
-    "compilerOptions": {
-      "module": "esnext",
-      "target": "esnext",
-      "baseUrl": "./",
-      "paths": {},
-      "strict": true,
-      "skipLibCheck": true,
-      "noImplicitAny": true,
-      "declaration": true,
-      "importsNotUsedAsValues": "error",
-      "allowSyntheticDefaultImports": true,
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
+    "strict": true,
+    "strictNullChecks": true,
+    "allowJs": true,
+    "noImplicitAny": true,
+    "declaration": true,
+    "importsNotUsedAsValues": "error",
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "zarrita": ["./src", "./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*"]
+}

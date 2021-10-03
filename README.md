@@ -11,23 +11,22 @@ or the browser (`/storage/httpstore`).
 #### Usage (Node):
 
 ```javascript
-import { create_hierarchy, slice, registry } from 'zarrita';
-import FileSystemStore from 'zarrita/storage/fsstore';
+import { v3, slice, registry } from 'zarrita';
+import { MemoryStore } from 'zarrita/storage/mem';
 import GZip from 'numcodecs/gzip';
+
+import ndarray from 'ndarray';
+import { get, set } from 'zarrita/ndarray';
 
 // codec registry is empty by default, so must add codecs
 registry.set(GZip.codecId, () => GZip);
 
-// Clean slate
-import fs from 'fs';
-fs.rmdirSync('test.zr3', { recursive: true });
-
 // Create store
-const store = new FileSystemStore('test.zr3');
+const store = new MemoryStore();
 
 (async () => {
   // Create hierarchy
-  const h = await create_hierarchy(store);
+  const h = await v3.create_hierarchy(store);
 
   // Create Array
   await h.create_array('/arthur/dent', {
@@ -66,7 +65,7 @@ const store = new FileSystemStore('test.zr3');
   
   // Open an array
   const a = await h.get('/arthur/dent');
-  console.log(await a.get(null));
+  console.log(await a.do(get, null));
   // {
   //   data: Int32Array(50) [
   //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -78,8 +77,8 @@ const store = new FileSystemStore('test.zr3');
   //   shape: [ 5, 10 ],
   //   stride: [ 10, 1 ]
   // }
-  await a.set([0, null], 42);
-  console.log(await a.get(null));
+  await a.do(set, [0, null], 42);
+  console.log(await a.do(get, null));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -91,8 +90,8 @@ const store = new FileSystemStore('test.zr3');
   //   shape: [ 5, 10 ],
   //   stride: [ 10, 1 ]
   // }
-  await a.set([null, 3], 42);
-  console.log(await a.get(null));
+  await a.do(set, [null, 3], 42);
+  console.log(await a.do(get, null));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -106,8 +105,8 @@ const store = new FileSystemStore('test.zr3');
   // }
 
   // np.arange(50).reshape(5, 10);
-  await a.set(null, { data: new Int32Array([...Array(50).keys()]), shape: [5, 10] });
-  console.log(await a.get(null));
+  await a.do(set, null, ndarray(new Int32Array([...Array(50).keys()]), [5, 10]));
+  console.log(await a.do(get, null));
   // {
   //   data: Int32Array(50) [
   //      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
@@ -121,7 +120,7 @@ const store = new FileSystemStore('test.zr3');
   // }
   
   const selection = [slice(1,4), slice(2,7)];
-  console.log(await a.get(selection));
+  console.log(await a.do(get, selection));
   // {
   //   data: Int32Array(15) [
   //     12, 13, 14, 15, 16,

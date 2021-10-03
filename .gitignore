@@ -1,5 +1,5 @@
 node_modules/
-src/README.md
 *.zr3/
-src/**/*.js
 src/**/*.d.ts
+!src/types.d.ts
+data/
