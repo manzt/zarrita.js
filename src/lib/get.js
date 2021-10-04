@@ -31,6 +31,16 @@ export function register(setter) {
 
 /**
  * @template {DataType} Dtype
+ * @param {import('../types').TypedArray<Dtype>} arr
+ * @param {number} idx
+ * @returns {import('../types').Scalar<Dtype>} 
+ */
+const get_value = (arr, idx) => {
+	return '_bytes' in arr ? arr.get(idx) : arr[idx];
+}
+
+/**
+ * @template {DataType} Dtype
  * @template {import('../types').NdArrayLike<Dtype>} NdArray
  * @template {ArraySelection} Sel
  *
@@ -74,5 +84,5 @@ async function get(setter, arr, selection, opts) {
   await queue.onIdle();
 
   // If the final out shape is empty, we just return a scalar.
-  return indexer.shape.length === 0 ? out.data[0] : out;
+  return indexer.shape.length === 0 ? get_value(out.data, 0) : out;
 }
