@@ -1,3 +1,5 @@
+import { BoolArray } from './custom-arrays.js';
+
 // @ts-check
 const encoder = new TextEncoder();
 /** @param {Record<string, any>} o */
@@ -26,6 +28,7 @@ export const should_byte_swap = (endianness) => LITTLE_ENDIAN_OS && endianness =
 
 /** @param {import('../types').TypedArray<import('../types').DataType>} src */
 export function byte_swap_inplace(src) {
+  if (!('BYTES_PER_ELEMENT' in src)) return;
   const b = src.BYTES_PER_ELEMENT;
   const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
   const numFlips = b / 2;
@@ -51,6 +54,7 @@ export function ensure_array(maybe_arr) {
 
 /** @type {Set<import('../types').DataType>} */
 const DTYPE_STRS = new Set([
+  '|b1',
   '|i1',
   '|u1',
   '<i2',
@@ -91,6 +95,7 @@ export function normalize_path(path) {
 
 /** @typedef {typeof DTYPES} DataTypeMapping */
 const DTYPES = {
+  b1: BoolArray,
   u1: Uint8Array,
   i1: Int8Array,
   u2: Uint16Array,
