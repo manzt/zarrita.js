@@ -24,7 +24,8 @@ import { register as registerSet } from './lib/set.js';
 const setter = {
   prepare: ndarray,
   set_scalar(target, selection, value) {
-    ops.assigns(view(target, selection), value);
+    // types aren't correct for ops
+    ops.assigns(view(target, selection), /** @type {number} */ (value));
   },
   set_from_chunk(target, target_selection, chunk, chunk_selection) {
     ops.assign(

@@ -92,7 +92,11 @@ function set_scalar(out, out_selection, value) {
   const len = indices_len(from, to, step);
   if (slices.length === 0) {
     if (step === 1 && curr_stride === 1) {
-      out.data.fill(value, from, from + len);
+      /** @type {{ fill: (v: any, start: number, end: number) => void }} */ (out.data).fill(
+        value,
+        from,
+        from + len,
+      );
     } else {
       for (let i = 0; i < len; i++) {
         out.data[curr_stride * (from + step * i)] = value;
@@ -118,7 +122,9 @@ function set_scalar(out, out_selection, value) {
 function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (chunk_selection.length === 0) {
     // Case when last chunk dim is squeezed
-    out.data.set(chunk.data.subarray(0, out.data.length));
+    /** @type {{ set: (arr: any) => void }} */ (out.data).set(
+      chunk.data.subarray(0, out.data.length),
+    );
     return;
   }
   // Get current indicies and strides for both destination and source arrays
@@ -161,7 +167,10 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     if (
       step === 1 && cstep === 1 && out_stride === 1 && chunk_stride === 1
     ) {
-      out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
+      /** @type {{ set: (arr: any, start: number) => void }} */ (out.data).set(
+        chunk.data.subarray(cfrom, cfrom + len),
+        from,
+      );
     } else {
       for (let i = 0; i < len; i++) {
         out.data[out_stride * (from + step * i)] = chunk.data[chunk_stride * (cfrom + cstep * i)];

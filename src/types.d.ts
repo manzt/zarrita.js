@@ -1,14 +1,18 @@
 export type DataType =
   | '|i1'
-  | '|u1'
   | '<i2'
-  | '<i4'
   | '>i2'
+  | '<i4'
   | '>i4'
+  | '<i8'
+  | '>i8'
+  | '|u1'
   | '<u2'
-  | '<u4'
   | '>u2'
+  | '<u4'
   | '>u4'
+  | '<u8'
+  | '>u8'
   | '<f4'
   | '<f8'
   | '>f4'
@@ -34,9 +38,10 @@ export type NdArrayLike<Dtype extends DataType> = {
 
 export type ParsedDataType<Dtype extends DataType> = {
   endianness: Endianness<Dtype>;
-  ctr: TypedArrayConstructor<Dtype>;
-  // should be able to use constructor, but built-in types aren't very precise.
+  // Should be able to use constructor, but built-in types aren't very precise.
   create: (x: ArrayBuffer | number) => TypedArray<Dtype>;
+  // Should be able to use TypedArray<Dtype>['fill'], but type inference isn't strong enough.
+  fill: (arr: TypedArray<Dtype>, value: Scalar<Dtype>) => void;
 };
 
 export type Indices = [start: number, stop: number, step: number];
