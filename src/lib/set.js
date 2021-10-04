@@ -88,6 +88,7 @@ async function set(setter, arr, selection, value, opts) {
           cdata = chunk.data;
         } else {
           cdata = create(chunk_size);
+          fill(cdata, value);
         }
       } else {
         // partially replace the contents of this chunk
