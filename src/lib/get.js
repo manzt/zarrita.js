@@ -33,11 +33,11 @@ export function register(setter) {
  * @template {DataType} Dtype
  * @param {import('../types').TypedArray<Dtype>} arr
  * @param {number} idx
- * @returns {import('../types').Scalar<Dtype>} 
+ * @returns {import('../types').Scalar<Dtype>}
  */
 const get_value = (arr, idx) => {
-	return '_bytes' in arr ? arr.get(idx) : arr[idx];
-}
+  return '_bytes' in arr ? arr.get(idx) : arr[idx];
+};
 
 /**
  * @template {DataType} Dtype
