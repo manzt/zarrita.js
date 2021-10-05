@@ -1,7 +1,6 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@types/ndarray': ^1.0.10
   '@types/ndarray-ops': ^1.2.1
   '@types/node': ^16.10.2
   ndarray: ^1.0.19
@@ -10,7 +9,6 @@ specifiers:
   zora: ^5.0.0
 
 dependencies:
-  '@types/ndarray': 1.0.10
   '@types/ndarray-ops': 1.2.1
   ndarray: 1.0.19
   ndarray-ops: 1.2.2

@@ -63,7 +63,7 @@ async function set(setter, arr, selection, value, opts) {
   // necessary data from the value array and storing into the chunk array.
 
   const chunk_size = arr.chunk_shape.reduce((a, b) => a * b, 1);
-  const { create } = parse_dtype(arr.dtype);
+  const { create, fill } = parse_dtype(arr.dtype);
   const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
   // N.B., it is an important optimisation that we only visit chunks which overlap
@@ -87,7 +87,8 @@ async function set(setter, arr, selection, value, opts) {
           setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
           cdata = chunk.data;
         } else {
-          cdata = /** @type {TypedArray<Dtype>} */ (create(chunk_size).fill(value));
+          cdata = create(chunk_size);
+          fill(cdata, value);
         }
       } else {
         // partially replace the contents of this chunk
@@ -97,12 +98,8 @@ async function set(setter, arr, selection, value, opts) {
           .catch((err) => {
             if (!(err instanceof KeyError)) throw err;
             const empty = create(chunk_size);
-            return setter.prepare(
-              arr.fill_value
-                ? /** @type {TypedArray<Dtype>} */ (empty.fill(arr.fill_value))
-                : empty,
-              arr.chunk_shape,
-            );
+            if (arr.fill_value) fill(empty, arr.fill_value);
+            return setter.prepare(empty, arr.chunk_shape);
           });
 
         // Modify chunk data

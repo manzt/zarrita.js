@@ -55,16 +55,20 @@ const DTYPE_STRS = new Set([
   '|u1',
   '<i2',
   '<i4',
-  '>i2',
   '>i4',
+  '>i2',
   '<u2',
-  '<u4',
   '>u2',
+  '<u4',
   '>u4',
   '<f4',
-  '<f8',
   '>f4',
+  '<f8',
   '>f8',
+  '<i8',
+  '>i8',
+  '>u8',
+  '<u8',
 ]);
 
 /**
@@ -93,6 +97,8 @@ const DTYPES = {
   i2: Int16Array,
   u4: Uint32Array,
   i4: Int32Array,
+  i8: globalThis.BigInt64Array,
+  u8: globalThis.BigUint64Array,
   f4: Float32Array,
   f8: Float64Array,
 };
@@ -115,7 +121,7 @@ export function parse_dtype(dtype) {
   const ctr = DTYPES[key];
 
   if (!ctr) {
-    throw new Error(`missing dtype! got ${dtype}.`);
+    throw new Error(`dtype not supported either in zarrita or in browser! got ${dtype}.`);
   }
 
   // we should be able to use the constructor directly, but TypeScript's built-in TypedArray
@@ -125,7 +131,18 @@ export function parse_dtype(dtype) {
   const create = (
     /** @type {any} */ x,
   ) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
-  return { endianness, ctr, create };
+
+  // Fills a typed array in place. TypeScript doesn't expand generic types, so the compiler
+  // isn't aware that the Scalar<Dtype> is comptible with the TypedArray<Typefill method.
+  // We would need to introduce additional runtime checks to narrow types, which actually isn't necessary.
+  const fill = (
+    /** @type {import('../types').TypedArray<Dtype>} */ arr,
+    /** @type {import('../types').Scalar<Dtype>} */ value,
+  ) => {
+    // just ensures "fill" exists on the arr instance type, but ignores the signature
+    /** @type {{ fill: (...args: any[]) => any }} */ (arr).fill(value);
+  };
+  return { endianness, create, fill };
 }
 
 /**
