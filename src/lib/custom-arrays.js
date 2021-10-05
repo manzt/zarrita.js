@@ -37,24 +37,45 @@ export class BoolArray {
   }
 }
 
-export class ByteStringArray {
-  bytes = 1;
+/**
+ * @param {string} str
+ * @param {number} bytes
+ * @param {number} chars
+ */
+function encode_str(str, bytes, chars) {
+  const encoded = new TextEncoder().encode(str);
+  if (encoded.length > bytes * chars) {
+    throw new Error(`UTF-8 encoded string too large: ${str}`);
+  }
+  return encoded;
+}
 
+/**
+ * @template {number} Bytes
+ * @template {number} Chars
+ */
+export class StringArray {
   /**
    * @param {number | ArrayBuffer} x
-   * @param {number} chars
+   * @param {Bytes} bytes
+   * @param {Chars} chars
    */
-  constructor(x, chars) {
+  constructor(x, bytes, chars) {
     this.chars = chars;
+    this.bytes = bytes;
     if (typeof x === 'number') {
-      this.buffer = new ArrayBuffer(this.bytes * x * chars);
+      this._bytes = new Uint8Array(bytes * x * chars);
     } else {
-      this.buffer = x;
+      this._bytes = new Uint8Array(x);
     }
   }
 
+  get buffer() {
+    return this._bytes.buffer;
+  }
+
   get length() {
-    return this.buffer.byteLength / (this.bytes * this.chars);
+    return this._bytes.buffer.byteLength / (this.bytes * this.chars);
   }
 
   /** @param {number} idx */
@@ -72,17 +93,21 @@ export class ByteStringArray {
    * @param {string} value
    */
   set(idx, value) {
-    const encoded = new TextEncoder().encode(value);
-    if (encoded.length > this.bytes * this.chars) {
-      throw new Error(`UTF-8 encoded string too large: ${value}`);
-    }
-    const view = new DataView(
+    const view = new Uint8Array(
       this.buffer,
       this.bytes * this.chars * idx,
       this.bytes * this.chars,
     );
-    for (let i = 0; i < this.bytes * this.chars; i++) {
-      view.setUint8(i, encoded[i] ?? 0);
+    view.fill(0); // clear current
+    view.set(encode_str(value, this.bytes, this.chars));
+  }
+
+  /** @param {string} value */
+  fill(value) {
+    const encoded = encode_str(value, this.bytes, this.chars);
+    this._bytes.fill(0);
+    for (let i = 0; i < this.length; i++) {
+      this._bytes.set(encoded, i * this.bytes * this.chars);
     }
   }
 
@@ -91,6 +116,30 @@ export class ByteStringArray {
   }
 }
 
-export class UnicodeStringArray extends ByteStringArray {
-  bytes = 4;
+/**
+ * @template {number} Chars
+ * @extends {StringArray<1, Chars>}
+ */
+export class ByteStringArray extends StringArray {
+  /**
+   * @param {number | ArrayBuffer} x
+   * @param {Chars} chars
+   */
+  constructor(x, chars) {
+    super(x, 1, chars);
+  }
+}
+
+/**
+ * @template {number} Chars
+ * @extends {StringArray<4, Chars>}
+ */
+export class UnicodeStringArray extends StringArray {
+  /**
+   * @param {number | ArrayBuffer} x
+   * @param {Chars} chars
+   */
+  constructor(x, chars) {
+    super(x, 4, chars);
+  }
 }

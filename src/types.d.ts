@@ -17,17 +17,24 @@ export type DataType =
   | '<f4'
   | '<f8'
   | '>f4'
-  | '>f8';
+  | '>f8'
+  | StringDataType;
 
-export type Numeric = Exclude<DataType, '|b1'>;
+export type StringDataType =
+  | `<U${number}`
+  | `>U${number}`
+  | `|S${number}`;
+
+export type NumericDataType = Exclude<DataType, '|b1' | StringDataType>;
 
 type DataTypeMapping = import('./lib/util').DataTypeMapping;
 
 export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
   : never;
 
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends `${infer _}${infer Key}`
-  ? Key
+export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends
+  `${infer _}${infer T}${infer _}`
+  ? T extends 'U' | 'S' ? T : Dtype extends `${infer _}${infer Key}` ? Key : never
   : never;
 
 export type TypedArrayConstructor<Dtype extends DataType> =
@@ -165,3 +172,4 @@ export type Options = {
 
 export type GetOptions = Options;
 export type SetOptions = Options;
+

@@ -21,8 +21,8 @@ export const is = (arr, str) => {
  * @template {DataType} Dtype
  * @template {Store} S
  * @param {import('./hierarchy').ZarrArray<Dtype, S>} arr
- * @returns {arr is import('./hierarchy').ZarrArray<Exclude<Dtype, '|b1'>, S>}
+ * @returns {arr is import('./hierarchy').ZarrArray<Exclude<Dtype, import('../types').StringDataType | '|b1'>, S>}
  */
 export const is_numeric = (arr) => {
-  return arr.dtype !== '|b1';
+  return (arr.dtype !== '|b1' && !arr.dtype.includes('U') && !arr.dtype.includes('S'));
 };

@@ -36,7 +36,7 @@ export function register(setter) {
  * @returns {import('../types').Scalar<Dtype>}
  */
 const get_value = (arr, idx) => {
-  return '_bytes' in arr ? arr.get(idx) : arr[idx];
+  return 'get' in arr ? arr.get(idx) : arr[idx];
 };
 
 /**

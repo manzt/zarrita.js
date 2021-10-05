@@ -5,7 +5,9 @@ import { register as registerSet } from './set.js';
 import { BoolArray } from './custom-arrays.js';
 
 /** @typedef {import('../types').Indices} Indices */
-/** @typedef {import('../types').DataType} DataType*/
+/** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').StringDataType} StringDataType */
+
 /**
  * @template {DataType} Dtype
  * @typedef {{ stride: number[] } & import('../types').NdArrayLike<Dtype>} NdArray
@@ -47,7 +49,7 @@ const cast_scalar = (arr, value) => {
 };
 
 /**
- * @template {DataType} Dtype
+ * @template {Exclude<DataType, StringDataType>} Dtype
  * @type {import('../types').Setter<Dtype, NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>>}
  */
 const setter = {
@@ -102,7 +104,7 @@ function indices_len(start, stop, step) {
 }
 
 /**
- * @template {Exclude<DataType, '|b1'>} Dtype
+ * @template {Exclude<DataType, '|b1' | StringDataType>} Dtype
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
  * @param {(number | Indices)[]} out_selection
  * @param {import('../types').Scalar<Dtype>} value
@@ -146,7 +148,7 @@ function set_scalar(out, out_selection, value) {
 }
 
 /**
- * @template {Exclude<DataType, '|b1'>} Dtype
+ * @template {Exclude<DataType, '|b1' | StringDataType>} Dtype
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
  * @param {(number | Indices)[]} out_selection
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} chunk

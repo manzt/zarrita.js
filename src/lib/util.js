@@ -1,4 +1,4 @@
-import { BoolArray } from './custom-arrays.js';
+import { BoolArray, ByteStringArray, UnicodeStringArray } from './custom-arrays.js';
 
 // @ts-check
 const encoder = new TextEncoder();
@@ -95,7 +95,6 @@ export function normalize_path(path) {
 
 /** @typedef {typeof DTYPES} DataTypeMapping */
 const DTYPES = {
-  b1: BoolArray,
   u1: Uint8Array,
   i1: Int8Array,
   u2: Uint16Array,
@@ -106,7 +105,33 @@ const DTYPES = {
   u8: globalThis.BigUint64Array,
   f4: Float32Array,
   f8: Float64Array,
+  b1: BoolArray,
+  U: UnicodeStringArray,
+  S: ByteStringArray,
 };
+
+/**
+ * @template {import('../types').DataType} Dtype
+ * @param {Dtype} dtype
+ * @returns {(x: ArrayBuffer | number) => import('../types').TypedArray<Dtype>}
+ */
+function get_create(dtype) {
+  if (dtype[1] === 'U' || dtype[1] === 'S') {
+    const key = /** @type {'U' | 'S'} */ (dtype[1]);
+    const ctr = DTYPES[key];
+    const size = parseInt(dtype.slice(2));
+    return (x) => new ctr(x, size);
+  }
+  // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
+  const key = /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
+  const ctr = DTYPES[key];
+
+  if (!ctr) {
+    throw new Error(`dtype not supported either in zarrita or in browser! got ${dtype}.`);
+  }
+
+  return (x) => new ctr(x);
+}
 
 /**
  * @template {import('../types').DataType} Dtype
@@ -120,22 +145,11 @@ export function parse_dtype(dtype) {
 
   // can only be '<' | '>' | '|' for a valid `DataType`. Type inference returns 'string', so we need to cast.
   const endianness = /** @type {import('../types').Endianness<Dtype>} */ (dtype[0]);
-
-  // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-  const key = /** @type {import('../types').DataTypeMappingKey<Dtype>} */ (dtype.slice(1));
-  const ctr = DTYPES[key];
-
-  if (!ctr) {
-    throw new Error(`dtype not supported either in zarrita or in browser! got ${dtype}.`);
-  }
-
   // we should be able to use the constructor directly, but TypeScript's built-in TypedArray
   // types return a union of TypedArrays rather than the instance type. The `ParsedDataType`
   // signature will contrain any caller of `create` to call with `ArrayBuffer` or `number`, which
   // are valid overloads for all TypedArray constructors.
-  const create = (
-    /** @type {any} */ x,
-  ) => /** @type {import('../types').TypedArray<Dtype>} */ (new ctr(x));
+  const create = get_create(dtype);
 
   // Fills a typed array in place. TypeScript doesn't expand generic types, so the compiler
   // isn't aware that the Scalar<Dtype> is comptible with the TypedArray<Typefill method.
