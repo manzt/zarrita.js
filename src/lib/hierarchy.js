@@ -6,7 +6,9 @@ import { byte_swap_inplace, parse_dtype, should_byte_swap } from './util.js';
 export class Node {
   /** @param {{ store: Store, path: string }} props */
   constructor({ store, path }) {
+    /** @readonly */
     this.store = store;
+    /** @readonly */
     this.path = path;
   }
 
@@ -24,6 +26,7 @@ export class Group extends Node {
   /** @param {{ store: Store, path: string, owner: Hierarchy }} props */
   constructor(props) {
     super(props);
+    /** @readonly */
     this.owner = props.owner;
   }
 
@@ -145,11 +148,17 @@ export class ZarrArray extends Node {
   /** @param {import('../types').ArrayAttributes<Dtype, Store>} props */
   constructor(props) {
     super(props);
+    /** @readonly */
     this.shape = props.shape;
+    /** @readonly */
     this.dtype = props.dtype;
+    /** @readonly */
     this.chunk_shape = props.chunk_shape;
+    /** @readonly */
     this.compressor = props.compressor;
+    /** @readonly */
     this.fill_value = props.fill_value;
+    /** @readonly */
     this.chunk_key = props.chunk_key;
     this._attrs = props.attrs;
   }

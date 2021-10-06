@@ -172,4 +172,3 @@ export type Options = {
 
 export type GetOptions = Options;
 export type SetOptions = Options;
-
