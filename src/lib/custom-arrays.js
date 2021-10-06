@@ -85,7 +85,7 @@ export class StringArray {
       this.bytes * this.chars * idx,
       this.bytes * this.chars,
     );
-    return new TextDecoder().decode(view).replaceAll(/\x00/g, '');
+    return new TextDecoder().decode(view).replace(/\x00/g, '');
   }
 
   /**
