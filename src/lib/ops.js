@@ -2,8 +2,12 @@
 import { register as registerGet } from './get.js';
 import { register as registerSet } from './set.js';
 
+import { BoolArray } from './custom-arrays.js';
+
 /** @typedef {import('../types').Indices} Indices */
-/** @typedef {import('../types').DataType} DataType*/
+/** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').StringDataType} StringDataType */
+
 /**
  * @template {DataType} Dtype
  * @typedef {{ stride: number[] } & import('../types').NdArrayLike<Dtype>} NdArray
@@ -12,25 +16,56 @@ import { register as registerSet } from './set.js';
  * @template {DataType} Dtype
  * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
+/**
+ * @template {DataType} Dtype
+ * @typedef {import('../types').Scalar<Dtype>} Scalar
+ */
+
+/**
+ * Extracts underyling TypedArray to make filling setter functions compatible with
+ * higher-level arrays (e.g. BoolArray).
+ *
+ * @template {DataType} Dtype
+ * @param {NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>} arr
+ * @returns {any}
+ */
+const compat = (arr) => {
+  // ensure strides are computed
+  return {
+    data: arr.data instanceof BoolArray ? arr.data._bytes : arr.data,
+    stride: 'stride' in arr ? arr.stride : get_strides(arr.shape),
+  };
+};
 
 /**
  * @template {DataType} Dtype
+ * @param {{ data: TypedArray<Dtype> }} arr
+ * @param {Scalar<Dtype>} value
+ * @returns {any}
+ */
+const cast_scalar = (arr, value) => {
+  if (arr.data instanceof BoolArray) return value ? 1 : 0;
+  return value;
+};
+
+/**
+ * @template {Exclude<DataType, StringDataType>} Dtype
  * @type {import('../types').Setter<Dtype, NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>>}
  */
 const setter = {
   prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
   set_scalar(out, out_selection, value) {
     return set_scalar(
-      'stride' in out ? out : { data: out.data, stride: get_strides(out.shape) },
+      compat(out),
       out_selection,
-      value,
+      cast_scalar(out, value),
     );
   },
   set_from_chunk(out, out_selection, chunk, chunk_selection) {
     return set_from_chunk(
-      'stride' in out ? out : { data: out.data, stride: get_strides(out.shape) },
+      compat(out),
       out_selection,
-      'stride' in chunk ? chunk : { data: chunk.data, stride: get_strides(chunk.shape) },
+      compat(chunk),
       chunk_selection,
     );
   },
@@ -69,7 +104,7 @@ function indices_len(start, stop, step) {
 }
 
 /**
- * @template {DataType} Dtype
+ * @template {Exclude<DataType, '|b1' | StringDataType>} Dtype
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
  * @param {(number | Indices)[]} out_selection
  * @param {import('../types').Scalar<Dtype>} value
@@ -113,7 +148,7 @@ function set_scalar(out, out_selection, value) {
 }
 
 /**
- * @template {DataType} Dtype
+ * @template {Exclude<DataType, '|b1' | StringDataType>} Dtype
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} out
  * @param {(number | Indices)[]} out_selection
  * @param {Pick<NdArray<Dtype>, 'data' | 'stride'>} chunk

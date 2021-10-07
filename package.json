@@ -15,10 +15,9 @@
   },
   "scripts": {
     "test": "node ./test/index.test.js",
-    "type-check": "tsc --noEmit"
+    "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@types/ndarray-ops": "^1.2.1",
     "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2",
     "numcodecs": "^0.2.2"

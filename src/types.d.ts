@@ -1,4 +1,5 @@
 export type DataType =
+  | '|b1'
   | '|i1'
   | '<i2'
   | '>i2'
@@ -16,21 +17,36 @@ export type DataType =
   | '<f4'
   | '<f8'
   | '>f4'
-  | '>f8';
+  | '>f8'
+  | StringDataType;
+
+export type StringDataType =
+  | `<U${number}`
+  | `>U${number}`
+  | `|S${number}`;
+
+export type NumericDataType = Exclude<DataType, '|b1' | StringDataType>;
 
 type DataTypeMapping = import('./lib/util').DataTypeMapping;
+
 export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
   : never;
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends `${infer _}${infer Key}`
-  ? Key
+
+export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends
+  `${infer _}${infer T}${infer _}`
+  ? T extends 'U' | 'S' ? T : Dtype extends `${infer _}${infer Key}` ? Key : never
   : never;
 
 export type TypedArrayConstructor<Dtype extends DataType> =
   DataTypeMapping[DataTypeMappingKey<Dtype>];
+
 export type TypedArray<Dtype extends DataType> = InstanceType<
   TypedArrayConstructor<Dtype>
 >;
-export type Scalar<Dtype extends DataType> = TypedArray<Dtype>[0];
+
+// Hack to get scalar type since is not defined on any typed arrays.
+export type Scalar<Dtype extends DataType> = Parameters<TypedArray<Dtype>['fill']>[0];
+
 export type NdArrayLike<Dtype extends DataType> = {
   data: TypedArray<Dtype>;
   shape: number[];
