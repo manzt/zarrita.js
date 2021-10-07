@@ -1,6 +1,6 @@
 // @ts-check
 import { assert, KeyError } from './errors.js';
-import { byte_swap_inplace, parse_dtype, should_byte_swap } from './util.js';
+import { byte_swap_inplace, get_ctr, should_byte_swap } from './util.js';
 
 /** @template {import('../types').Store} Store */
 export class Node {
@@ -160,6 +160,11 @@ export class ZarrArray extends Node {
     this.fill_value = props.fill_value;
     /** @readonly */
     this.chunk_key = props.chunk_key;
+    /**
+     * @type {import('../types').TypedArrayConstructor<Dtype>}
+     * @readonly
+     */
+    this.TypedArray = get_ctr(props.dtype);
     this._attrs = props.attrs;
   }
 
@@ -188,19 +193,20 @@ export class ZarrArray extends Node {
     if (this.compressor) {
       bytes = await this.compressor.decode(bytes);
     }
-    // view as an NDArray with correct dtype & shape
-    const { endianness, create } = parse_dtype(this.dtype);
-    const data = create(bytes.buffer);
 
-    if (should_byte_swap(endianness)) {
+    const data =
+      /** @type {import('../types').TypedArray<Dtype>} */ (new this.TypedArray(bytes.buffer));
+
+    if (should_byte_swap(this.dtype)) {
       byte_swap_inplace(data);
     }
+
     return data;
   }
 
   /** @param {import('../types').TypedArray<Dtype>} data */
   async _encode_chunk(data) {
-    if (should_byte_swap(parse_dtype(this.dtype).endianness)) {
+    if (should_byte_swap(this.dtype)) {
       byte_swap_inplace(data);
     }
     let bytes = new Uint8Array(data.buffer);

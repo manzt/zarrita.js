@@ -1,7 +1,7 @@
 // @ts-check
 import { KeyError } from './errors.js';
 import { BasicIndexer } from './indexing.js';
-import { create_queue, parse_dtype } from './util.js';
+import { create_queue } from './util.js';
 
 /** @typedef {import('../types').DataType} DataType */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
@@ -56,7 +56,7 @@ async function get(setter, arr, selection, opts) {
   // Setup output array
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);
   const out = setter.prepare(
-    parse_dtype(arr.dtype).create(outsize),
+    /** @type {import('../types').TypedArray<Dtype>} */ (new arr.TypedArray(outsize)),
     indexer.shape,
   );
 
