@@ -4,7 +4,7 @@
 /** @typedef {import('../types').Store} Store */
 
 /**
- * @template {DataType | keyof DataTypeMapping} Str
+ * @template {DataType | keyof DataTypeMapping | `U${number}` | `S${number}`} Str
  * @template {DataType} D
  * @template {Store} S
  *
