@@ -1,48 +1,73 @@
 export type DataType =
-  | '|b1'
+  | NumericDataType
+  | BigIntDataType
+  | BinaryDataType
+  | StringDataType;
+
+export type NumericDataType =
   | '|i1'
   | '<i2'
   | '>i2'
   | '<i4'
   | '>i4'
-  | '<i8'
-  | '>i8'
   | '|u1'
   | '<u2'
   | '>u2'
   | '<u4'
   | '>u4'
-  | '<u8'
-  | '>u8'
   | '<f4'
   | '<f8'
   | '>f4'
-  | '>f8'
-  | StringDataType;
-
+  | '>f8';
+export type BinaryDataType = '|b1';
+export type BigIntDataType = '<u8' | '>u8' | '<i8' | '>i8';
 export type StringDataType =
   | `<U${number}`
   | `>U${number}`
   | `|S${number}`;
 
-export type NumericDataType = Exclude<DataType, '|b1' | StringDataType>;
+// TODO: Using this for sanity check, but really should move to formal compilation tests.
+type Parts<D extends DataType> = {
+  [Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
+};
 
 type DataTypeMapping = import('./lib/util').DataTypeMapping;
 
 export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
   : never;
 
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends
-  `${infer _}${infer T}${infer _}`
-  ? T extends 'U' | 'S' ? T : Dtype extends `${infer _}${infer Key}` ? Key : never
+interface ByteStringArrayConstructor<Chars extends number> {
+  new (x: number): import('./lib/custom-arrays').ByteStringArray<Chars>;
+  new (x: ArrayBuffer): import('./lib/custom-arrays').ByteStringArray<Chars>;
+}
+
+interface UnicodeStringArrayConstructor<Chars extends number> {
+  new (x: number): import('./lib/custom-arrays').UnicodeStringArray<Chars>;
+  new (x: ArrayBuffer): import('./lib/custom-arrays').UnicodeStringArray<Chars>;
+}
+
+// deno-fmt-ignore
+type BMap = {
+  [I in
+    1  |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |
+    11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+    21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+    31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 |
+    41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 |
+    51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60
+  as `${I}`]: I
+}
+
+type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString] : number;
+
+export type TypedArrayConstructor<D extends DataType> = D extends `${infer _}${infer Key}${infer B}`
+  ? Key extends 'S' ? ByteStringArrayConstructor<Bytes<B>>
+  : Key extends 'U' ? UnicodeStringArrayConstructor<Bytes<B>>
+  : `${Key}${B}` extends keyof DataTypeMapping ? DataTypeMapping[`${Key}${B}`]
+  : never
   : never;
 
-export type TypedArrayConstructor<Dtype extends DataType> =
-  DataTypeMapping[DataTypeMappingKey<Dtype>];
-
-export type TypedArray<Dtype extends DataType> = InstanceType<
-  TypedArrayConstructor<Dtype>
->;
+export type TypedArray<D extends DataType> = InstanceType<TypedArrayConstructor<D>>;
 
 // Hack to get scalar type since is not defined on any typed arrays.
 export type Scalar<Dtype extends DataType> = Parameters<TypedArray<Dtype>['fill']>[0];
@@ -69,23 +94,24 @@ export interface Slice {
   indices: (length: number) => Indices;
 }
 
-interface SyncStore extends Pick<Map<string, Uint8Array>, 'get' | 'delete' | 'has'> {
+interface SyncStore<O extends unknown = unknown> {
+  get(key: string, opts?: O): Uint8Array | undefined;
+  has(key: string): boolean;
   // Need overide Map to return SyncStore
-  set(key: string, value: Uint8Array): SyncStore;
+  set(key: string, value: Uint8Array): void;
+  delete(key: string): boolean;
   list_prefix(key: string): string[];
   list_dir(key: string): { contents: string[]; prefixes: string[] };
 }
 
 // Promisify return type of every function in SyncStore, override 'set' to return Promise<AsyncStore>
-type AsyncStore = {
-  [Key in keyof SyncStore]: (
-    ...args: Parameters<SyncStore[Key]>
-  ) => Key extends 'set' ? Promise<AsyncStore>
-    : Promise<ReturnType<SyncStore[Key]>>;
+type AsyncStore<O extends unknown = unknown> = {
+  [Key in keyof SyncStore<O>]: (
+    ...args: Parameters<SyncStore<O>[Key]>
+  ) => Promise<ReturnType<SyncStore<O>[Key]>>;
 };
 
 export type Store = SyncStore | AsyncStore;
-
 export type Attrs = Record<string, any>;
 
 export interface ArrayAttributes<
@@ -112,7 +138,7 @@ export type CreateArrayProps<Dtype extends DataType = DataType> =
   }
   & Partial<
     Omit<
-      ArrayAttributes,
+      ArrayAttributes<Dtype>,
       'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape' | 'chunk_key'
     >
   >;
@@ -166,9 +192,6 @@ export type ChunkQueue = {
   onIdle(): Promise<void[]>;
 };
 
-export type Options = {
-  create_queue?: () => ChunkQueue;
-};
-
+export type Options = { create_queue?: () => ChunkQueue };
 export type GetOptions = Options;
 export type SetOptions = Options;

@@ -40,7 +40,6 @@ export default class FileSystemStore {
     const fp = path.join(this.root, key);
     await fs.promises.mkdir(path.dirname(fp), { recursive: true });
     await fs.promises.writeFile(fp, value, null);
-    return this;
   }
 
   /** @param {string} key */
