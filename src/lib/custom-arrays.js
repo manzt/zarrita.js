@@ -27,13 +27,19 @@ export class BoolArray {
     this._bytes[idx] = value ? 1 : 0;
   }
 
-  /** @param {boolean} value */
-  fill(value) {
-    this._bytes.fill(value ? 1 : 0);
+  /**
+   * @param {boolean} value
+   * @param {number=} start
+   * @param {number=} end
+   */
+  fill(value, start, end) {
+    this._bytes.fill(value ? 1 : 0, start, end);
   }
 
-  array() {
-    return Array.from(this._bytes).map((b) => b === 1);
+  *[Symbol.iterator]() {
+    for (let i = 0; i < this.length; i++) {
+      yield this.get(i);
+    }
   }
 }
 
@@ -105,14 +111,15 @@ export class StringArray {
   /** @param {string} value */
   fill(value) {
     const encoded = encode_str(value, this.bytes, this.chars);
-    this._bytes.fill(0);
     for (let i = 0; i < this.length; i++) {
       this._bytes.set(encoded, i * this.bytes * this.chars);
     }
   }
 
-  array() {
-    return Array.from({ length: this.length }).map((_, idx) => this.get(idx));
+  *[Symbol.iterator]() {
+    for (let i = 0; i < this.length; i++) {
+      yield this.get(i);
+    }
   }
 }
 

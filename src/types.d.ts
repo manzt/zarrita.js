@@ -19,6 +19,7 @@ export type NumericDataType =
   | '<f8'
   | '>f4'
   | '>f8';
+
 export type BinaryDataType = '|b1';
 export type BigIntDataType = '<u8' | '>u8' | '<i8' | '>i8';
 export type StringDataType =
@@ -26,25 +27,7 @@ export type StringDataType =
   | `>U${number}`
   | `|S${number}`;
 
-// TODO: Using this for sanity check, but really should move to formal compilation tests.
-type Parts<D extends DataType> = {
-  [Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
-};
-
-type DataTypeMapping = import('./lib/util').DataTypeMapping;
-
-export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
-  : never;
-
-interface ByteStringArrayConstructor<Chars extends number> {
-  new (x: number): import('./lib/custom-arrays').ByteStringArray<Chars>;
-  new (x: ArrayBuffer): import('./lib/custom-arrays').ByteStringArray<Chars>;
-}
-
-interface UnicodeStringArrayConstructor<Chars extends number> {
-  new (x: number): import('./lib/custom-arrays').UnicodeStringArray<Chars>;
-  new (x: ArrayBuffer): import('./lib/custom-arrays').UnicodeStringArray<Chars>;
-}
+type WithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest : never;
 
 // deno-fmt-ignore
 type BMap = {
@@ -60,29 +43,59 @@ type BMap = {
 
 type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString] : number;
 
-export type TypedArrayConstructor<D extends DataType> = D extends `${infer _}${infer Key}${infer B}`
-  ? Key extends 'S' ? ByteStringArrayConstructor<Bytes<B>>
-  : Key extends 'U' ? UnicodeStringArrayConstructor<Bytes<B>>
-  : `${Key}${B}` extends keyof DataTypeMapping ? DataTypeMapping[`${Key}${B}`]
-  : never
+type _TypedArray<D extends DataType> = D extends '|i1' ? Int8Array
+  : D extends '<i2' | '>i2' ? Int16Array
+  : D extends '<i4' | '>i4' ? Int32Array
+  : D extends '<i8' | '>i8' ? BigInt64Array
+  : D extends '|u1' ? Uint8Array
+  : D extends '<u2' | '>u2' ? Uint16Array
+  : D extends '<u4' | '>u4' ? Uint32Array
+  : D extends '<u8' | '>u8' ? BigUint64Array
+  : D extends '<f4' | '>f4' ? Float32Array
+  : D extends '<f8' | '>f8' ? Float64Array
+  : D extends '|b1' ? import('./lib/custom-arrays').BoolArray
+  : D extends `|S${infer B}` ? import('./lib/custom-arrays').ByteStringArray<Bytes<B>>
+  : D extends `>U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
+  : D extends `<U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
   : never;
 
-export type TypedArray<D extends DataType> = InstanceType<TypedArrayConstructor<D>>;
+type TypedArray<D extends DataType> = Omit<_TypedArray<D>, 'fill' | 'subarray' | 'set'> & {
+  fill(value: Scalar<D>): void;
+  fill(value: Scalar<D>, start: number): void;
+  fill(value: Scalar<D>, start: number, end: number): void;
+
+  subarray(): TypedArray<D>;
+  subarray(begin: number): TypedArray<D>;
+  subarray(begin: number, end: number): TypedArray<D>;
+
+  set(array: ArrayLike<Scalar<D>>): void;
+  set(array: ArrayLike<Scalar<D>>, offset: number): void;
+  set(typedarray: TypedArray<D>): void;
+  set(typedarray: TypedArray<D>, offset: number): void;
+};
+
+type TypedArrayConstructor<D extends DataType> = {
+  new (length: number): TypedArray<D>;
+  new (array: ArrayLike<Scalar<D>> | ArrayBufferLike): TypedArray<D>;
+  // TODO: implement for Bool/Unicode arrays
+  // new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): TypedArray<D>
+  // new(elements: Iterable<Scalar<D>>): TypedArray<D>
+};
 
 // Hack to get scalar type since is not defined on any typed arrays.
-export type Scalar<Dtype extends DataType> = Parameters<TypedArray<Dtype>['fill']>[0];
+type Scalar<D extends DataType> = D extends '|b1' ? boolean
+  : D extends `${infer _}${'U' | 'S'}${infer _}` ? string
+  : D extends `${'<' | '>'}${'u' | 'i'}8` ? bigint
+  : number;
+
+// TODO: Using this for sanity check, but really should move to formal compilation tests.
+type Parts<D extends DataType> = {
+  [Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
+};
 
 export type NdArrayLike<Dtype extends DataType> = {
   data: TypedArray<Dtype>;
   shape: number[];
-};
-
-export type ParsedDataType<Dtype extends DataType> = {
-  endianness: Endianness<Dtype>;
-  // Should be able to use constructor, but built-in types aren't very precise.
-  create: (x: ArrayBuffer | number) => TypedArray<Dtype>;
-  // Should be able to use TypedArray<Dtype>['fill'], but type inference isn't strong enough.
-  fill: (arr: TypedArray<Dtype>, value: Scalar<Dtype>) => void;
 };
 
 export type Indices = [start: number, stop: number, step: number];

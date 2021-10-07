@@ -29,7 +29,7 @@ const LITTLE_ENDIAN_OS = system_is_little_endian();
 export const should_byte_swap = (dtype) => LITTLE_ENDIAN_OS && dtype[0] === '>';
 
 /** @param {import('../types').TypedArray<import('../types').DataType>} src */
-export function byte_swap_inplace(src) {
+export function byte_swap_inplace(/** @type {any} */ src) {
   if (!('BYTES_PER_ELEMENT' in src)) return;
   const b = src.BYTES_PER_ELEMENT;
   const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
@@ -54,29 +54,6 @@ export function ensure_array(maybe_arr) {
   return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
-/** @type {Set<import('../types').DataType>} */
-const DTYPE_STRS = new Set([
-  '|b1',
-  '|i1',
-  '|u1',
-  '<i2',
-  '<i4',
-  '>i4',
-  '>i2',
-  '<u2',
-  '>u2',
-  '<u4',
-  '>u4',
-  '<f4',
-  '>f4',
-  '<f8',
-  '>f8',
-  '<i8',
-  '>i8',
-  '>u8',
-  '<u8',
-]);
-
 /**
  * @template {string} D
  *
@@ -84,9 +61,7 @@ const DTYPE_STRS = new Set([
  * @returns {D extends import('../types').DataType ? D : never}
  */
 export function ensure_dtype(dtype) {
-  if (!DTYPE_STRS.has(/** @type {any} */ (dtype))) {
-    throw new TypeError(`Invalid dtype, got: ${dtype}`);
-  }
+  // TODO: validation
   return /** @type {any} */ (dtype);
 }
 
@@ -95,8 +70,7 @@ export function normalize_path(path) {
   return path[0] !== '/' ? `/${path}` : path;
 }
 
-/** @typedef {typeof DTYPES} DataTypeMapping */
-const DTYPES = {
+const constructors = {
   u1: Uint8Array,
   i1: Int8Array,
   u2: Uint16Array,
@@ -122,7 +96,7 @@ export function get_ctr(dtype) {
   if (dtype[1] === 'U' || dtype[1] === 'S') {
     const key = /** @type {'U' | 'S'} */ (dtype[1]);
     const size = parseInt(dtype.slice(2));
-    const ctr = class extends DTYPES[key] {
+    const ctr = class extends constructors[key] {
       constructor(/** @type {number|ArrayBuffer} */ x) {
         super(x, size);
       }
@@ -131,14 +105,14 @@ export function get_ctr(dtype) {
   }
 
   // get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-  const key = /** @type {keyof DTYPES} */ (dtype.slice(1));
-  const ctr = DTYPES[key];
+  const key = /** @type {Exclude<keyof constructors, 'U' | 'S'>} */ (dtype.slice(1));
+  const ctr = constructors[key];
 
   if (!ctr) {
     throw new Error(`dtype not supported either in zarrita or in browser! got ${dtype}.`);
   }
 
-  return /** @type {import('../types').TypedArrayConstructor<Dtype>} */ (ctr);
+  return /** @type {any} */ (ctr);
 }
 
 /**

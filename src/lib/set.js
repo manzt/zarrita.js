@@ -77,8 +77,7 @@ async function set(setter, arr, selection, value, opts) {
 
       if (is_total_slice(chunk_selection, arr.chunk_shape)) {
         // totally replace
-        cdata =
-          /** @type {import('../types').TypedArray<Dtype>} */ (new arr.TypedArray(chunk_size));
+        cdata = new arr.TypedArray(chunk_size);
         // optimization: we are completely replacing the chunk, so no need
         // to access the exisiting chunk data
         if (typeof value === 'object') {
@@ -86,7 +85,7 @@ async function set(setter, arr, selection, value, opts) {
           const chunk = setter.prepare(cdata, arr.chunk_shape);
           setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
         } else {
-          /** @type {{ fill: (...args: any[]) => void }} */ (cdata).fill(value);
+          cdata.fill(value);
         }
       } else {
         // partially replace the contents of this chunk
@@ -94,11 +93,8 @@ async function set(setter, arr, selection, value, opts) {
           .then(({ data }) => data)
           .catch((err) => {
             if (!(err instanceof KeyError)) throw err;
-            const empty =
-              /** @type {import('../types').TypedArray<Dtype>} */ (new arr.TypedArray(chunk_size));
-            if (arr.fill_value) {
-              /** @type {{ fill: (...args: any[]) => void }} */ (empty).fill(arr.fill_value);
-            }
+            const empty = new arr.TypedArray(chunk_size);
+            if (arr.fill_value) empty.fill(arr.fill_value);
             return empty;
           });
 
