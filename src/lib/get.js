@@ -4,23 +4,19 @@ import { BasicIndexer } from './indexing.js';
 import { create_queue } from './util.js';
 
 /** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').Store} Store */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
-/**
- * @template {DataType} Dtype
- * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
- */
 
 /**
- * @template {DataType} Dtype
- * @template {import('../types').NdArrayLike<Dtype>} NdArray
- * @param {import('../types').Setter<Dtype, NdArray>} setter
+ * @param {import('../types').Setter<Dtype, import('../types').NdArrayLike<Dtype>>} setter
  */
 export function register(setter) {
   /**
    * @template {DataType} Dtype
+   * @template {Store} S
    * @template {ArraySelection} Sel
    *
-   * @param {ZarrArray<Dtype>} arr
+   * @param {import('./hierarchy').ZarrArray<Dtype, S>} arr
    * @param {Sel} selection
    * @param {import('../types').Options} opts
    */
@@ -40,7 +36,7 @@ const get_value = (/** @type {any} */ arr, /** @type {number} */ idx) => {
  *
  * @param {import('../types').Setter<Dtype, NdArray>} setter
  * @param {import('../types').Setter<Dtype, NdArray>} setter
- * @param {ZarrArray<Dtype>} arr
+ * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
  * @param {Sel} selection
  * @param {import('../types').Options} opts
  * @returns {Promise<NdArray | import('../types').Scalar<Dtype>>}

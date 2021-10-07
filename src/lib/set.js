@@ -4,6 +4,7 @@ import { create_queue } from './util.js';
 import { BasicIndexer } from './indexing.js';
 
 /** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').Store} Store */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 /** @typedef {import('../types').Slice} Slice */
 /** @typedef {import('../types').Indices} Indices */
@@ -15,17 +16,8 @@ import { BasicIndexer } from './indexing.js';
  * @template {DataType} Dtype
  * @typedef {import('../types').Scalar<Dtype>} Scalar
  */
-/**
- * @template {DataType} Dtype
- * @typedef {import('../types').NdArrayLike<Dtype>} NdArrayLike
- */
-/**
- * @template {DataType} Dtype
- * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
- */
 
 /**
- * @template {DataType} Dtype
  * @template {import('../types').NdArrayLike<Dtype>} NdArray
  * @param {import('../types').Setter<Dtype, NdArray>} setter
  */
@@ -34,9 +26,9 @@ export function register(setter) {
    * @template {DataType} Dtype
    * @template {ArraySelection} Sel
    *
-   * @param {ZarrArray<Dtype>} arr
+   * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
    * @param {Sel} selection
-   * @param {Scalar<Dtype> | NdArray} value
+   * @param {Scalar<Dtype> | import('../types').NdArrayLike<Dtype>} value
    * @param {import('../types').SetOptions} opts
    */
   return function (arr, selection, value, opts = {}) {
@@ -46,12 +38,11 @@ export function register(setter) {
 
 /**
  * @template {DataType} Dtype
- * @template {NdArrayLike<Dtype>} NdArray
  *
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- * @param {ZarrArray<Dtype>} arr
+ * @param {import('../types').Setter<Dtype, import('../types').NdArrayLike<Dtype>>} setter
+ * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
  * @param {ArraySelection} selection
- * @param {Scalar<Dtype> | NdArray} value
+ * @param {Scalar<Dtype> | import('../types').NdArrayLike<Dtype>} value
  * @param {import('../types').SetOptions} opts
  * @returns {Promise<void>}
  */
