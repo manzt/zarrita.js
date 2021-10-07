@@ -18,14 +18,14 @@ import { create_queue, parse_dtype } from './util.js';
 export function register(setter) {
   /**
    * @template {DataType} Dtype
-   * @this {ZarrArray<Dtype>}
-   *
    * @template {ArraySelection} Sel
+   *
+   * @param {ZarrArray<Dtype>} arr
    * @param {Sel} selection
    * @param {import('../types').Options} opts
    */
-  return function (selection, opts = {}) {
-    return get(setter, this, selection, opts);
+  return function (arr, selection, opts = {}) {
+    return get(setter, arr, selection, opts);
   };
 }
 

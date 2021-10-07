@@ -221,16 +221,4 @@ export class ZarrArray extends Node {
     const data = await this._decode_chunk(buffer);
     return { data, shape: this.chunk_shape };
   }
-
-  /**
-   * @template {unknown[]} A
-   * @template {unknown} V
-   *
-   * @param {(...args: A) => V} func
-   * @param {A} args
-   * @returns {V}
-   */
-  do(func, ...args) {
-    return func.call(this, ...args);
-  }
 }

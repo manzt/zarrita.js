@@ -10,7 +10,7 @@ import {
   slice,
   ZarrArray,
 } from 'zarrita';
-import { get, set } from 'zarrita/ndarray';
+import { get, set } from 'zarrita';
 import ndarray from 'ndarray';
 import GZip from 'numcodecs/gzip';
 
@@ -262,54 +262,54 @@ export function run_test_suite({ name, setup }) {
 
     await t.test('Read and write array data', async (t) => {
       const a = await h.get_array('/arthur/dent');
-      let res = await a.do(get, [null, null]);
+      let res = await get(a, [null, null]);
       t.equal(res.shape, [5, 10], 'should have full shape [5, 10].');
       t.deepEqual(res.data, new Int32Array(50), 'should be empty typed array (size = 50).');
 
-      res = await a.do(get, null);
+      res = await get(a, null);
       t.equal(res.shape, [5, 10], 'should have full shape [5, 10].');
       t.deepEqual(res.data, new Int32Array(50), 'should be empty typed array (size = 50).');
 
-      await a.do(set, [0, null], 42);
+      await set(a, [0, null], 42);
       t.deepEqual(
-        (await a.do(get, null)).data,
+        (await get(a, null)).data,
         new Int32Array(50).fill(42, 0, 10),
         'should fill 42 in first row.',
       );
 
       const expected = new Int32Array(50).fill(42, 0, 10);
       [10, 20, 30, 40].forEach((i) => (expected[i] = 42));
-      await a.do(set, [null, 0], 42);
-      t.deepEqual((await a.do(get, null)).data, expected, 'should fill 42 in first row & col.');
+      await set(a, [null, 0], 42);
+      t.deepEqual((await get(a, null)).data, expected, 'should fill 42 in first row & col.');
 
-      await a.do(set, null, 42);
+      await set(a, null, 42);
       expected.fill(42);
-      t.deepEqual((await a.do(get, null)).data, expected, 'should entirely fill with 42.');
+      t.deepEqual((await get(a, null)).data, expected, 'should entirely fill with 42.');
 
       let arr = ndarray(new Int32Array([...Array(10).keys()]), [10]);
       expected.set(arr.data);
-      await a.do(set, [0, null], arr);
-      res = await a.do(get, null);
+      await set(a, [0, null], arr);
+      res = await get(a, null);
       t.deepEqual(res.data, expected, 'should fill first row with arange.');
 
       arr = ndarray(new Int32Array([...Array(50).keys()]), [5, 10])
-      await a.do(set, null, arr);
-      t.deepEqual((await a.do(get, null)).data, arr.data, 'should fill entire with arange.');
+      await set(a, null, arr);
+      t.deepEqual((await get(a, null)).data, arr.data, 'should fill entire with arange.');
 
       // Read array slices
-      res = await a.do(get, [null, 0]);
+      res = await get(a, [null, 0]);
       t.equal(res.shape, [5], 'should be vertical column');
       t.deepEqual(res.data, new Int32Array([0, 10, 20, 30, 40]), 'should be first column.');
 
-      res = await a.do(get, [null, 1]);
+      res = await get(a, [null, 1]);
       t.equal(res.shape, [5], 'should be vertical column');
       t.deepEqual(res.data, new Int32Array([1, 11, 21, 31, 41]), 'should be second column.');
 
-      res = await a.do(get, [0, null]);
+      res = await get(a, [0, null]);
       t.equal(res.shape, [10], 'should be first row.');
       t.deepEqual(res.data, new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), 'should be first row.');
 
-      res = await a.do(get, [1, null]);
+      res = await get(a, [1, null]);
       t.equal(res.shape, [10], 'should be second row.');
       t.deepEqual(
         res.data,
@@ -317,33 +317,33 @@ export function run_test_suite({ name, setup }) {
         'should be second row.',
       );
 
-      res = await a.do(get, [null, slice(0, 7)]);
+      res = await get(a, [null, slice(0, 7)]);
       t.equal(res.shape, [5, 7]);
       // prettier-ignore
       t.deepEqual(res.data, new Int32Array([0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46]));
 
-      res = await a.do(get, [slice(0, 3), null]);
+      res = await get(a, [slice(0, 3), null]);
       t.equal(res.shape, [3, 10]);
       // prettier-ignore
       t.deepEqual(res.data, new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, ]));
-      res = await a.do(get, [slice(0, 3), slice(0, 7)]);
+      res = await get(a, [slice(0, 3), slice(0, 7)]);
       t.equal(res.shape, [3, 7]);
       // prettier-ignore
       t.deepEqual( res.data, new Int32Array([0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 25, 26]));
 
-      res = await a.do(get, [slice(1, 4), slice(2, 7)]);
+      res = await get(a, [slice(1, 4), slice(2, 7)]);
       t.equal(res.shape, [3, 5]);
       // prettier-ignore
       t.deepEqual( res.data, new Int32Array([ 12, 13, 14, 15, 16, 22, 23, 24, 25, 26, 32, 33, 34, 35, 36, ]),);
 
       const b = await h.get_array('deep/thought');
-      res = await b.do(get, [slice(10)]);
+      res = await get(b, [slice(10)]);
       t.equal(res.shape, [10]);
       t.deepEqual(res.data, new Float64Array(10));
 
       expected.fill(1, 0, 5);
-      await b.do(set, [slice(5)], 1);
-      t.deepEqual((await b.do(get, [slice(10)])).data, new Float64Array(10).fill(1, 0, 5));
+      await set(b, [slice(5)], 1);
+      t.deepEqual((await get(b, [slice(10)])).data, new Float64Array(10).fill(1, 0, 5));
     });
   });
 }

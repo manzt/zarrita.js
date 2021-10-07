@@ -32,15 +32,15 @@ import { BasicIndexer } from './indexing.js';
 export function register(setter) {
   /**
    * @template {DataType} Dtype
-   * @this {ZarrArray<Dtype>}
-   *
    * @template {ArraySelection} Sel
+   *
+   * @param {ZarrArray<Dtype>} arr
    * @param {Sel} selection
    * @param {Scalar<Dtype> | NdArray} value
    * @param {import('../types').SetOptions} opts
    */
-  return function (selection, value, opts = {}) {
-    return set(setter, this, selection, value, opts);
+  return function (arr, selection, value, opts = {}) {
+    return set(setter, arr, selection, value, opts);
   };
 }
 
