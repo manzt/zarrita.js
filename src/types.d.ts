@@ -188,7 +188,7 @@ type BasicSetter<D extends DataType> = Setter<
   D,
   { data: TypedArray<D>; shape: number[]; stride?: number[] }
 >;
-// type NdArraySetter<D extends DataType> = Setter<D, import('ndarray').NdArray<TypedArray<D>>;
+type NdArraySetter<D extends DataType> = Setter<D, ndarray.NdArray<TypedArray<D>>>;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

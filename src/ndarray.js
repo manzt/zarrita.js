@@ -1,5 +1,6 @@
 // @ts-check
 import ndarray from 'ndarray';
+// @ts-ignore
 import ops from 'ndarray-ops';
 
 import { register as registerGet } from './lib/get.js';
@@ -16,17 +17,18 @@ const setter = {
   prepare: ndarray,
   /** @template {DataType} D*/
   set_scalar(
-    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ target,
+    /** @type {ndarray.NdArray<TypedArray<D>>} */ target,
     /** @type {(number | Indices)[]} */ selection,
     /** @type {import('./types').Scalar<D>} */ value,
   ) {
     // types aren't correct for ops
     ops.assigns(view(target, selection), /** @type {number} */ (value));
   },
+  /** @template {DataType} D*/
   set_from_chunk(
-    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ target,
+    /** @type {ndarray.NdArray<TypedArray<D>>} */ target,
     /** @type {(number | Indices)[]} */ target_selection,
-    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ chunk,
+    /** @type {ndarray.NdArray<TypedArray<D>>} */ chunk,
     /** @type {(number | Indices)[]} */ chunk_selection,
   ) {
     ops.assign(
@@ -36,8 +38,8 @@ const setter = {
   },
 };
 
-export const set = registerSet(setter);
-export const get = registerGet(setter);
+export const set = registerSet.ndarray(setter);
+export const get = registerGet.ndarray(setter);
 
 /**
  * Convert zarrita selection to ndarray view.
