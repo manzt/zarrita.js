@@ -1,63 +1,86 @@
 export type DataType =
-  | '|b1'
+  | NumericDataType
+  | BigIntDataType
+  | BinaryDataType
+  | StringDataType;
+
+export type NumericDataType =
   | '|i1'
   | '<i2'
   | '>i2'
   | '<i4'
   | '>i4'
-  | '<i8'
-  | '>i8'
   | '|u1'
   | '<u2'
   | '>u2'
   | '<u4'
   | '>u4'
-  | '<u8'
-  | '>u8'
   | '<f4'
   | '<f8'
   | '>f4'
-  | '>f8'
-  | StringDataType;
+  | '>f8';
 
+export type BinaryDataType = '|b1';
+export type BigIntDataType = '<u8' | '>u8' | '<i8' | '>i8';
 export type StringDataType =
   | `<U${number}`
   | `>U${number}`
   | `|S${number}`;
 
-export type NumericDataType = Exclude<DataType, '|b1' | StringDataType>;
+type WithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest : never;
 
-type DataTypeMapping = import('./lib/util').DataTypeMapping;
+// deno-fmt-ignore
+type BMap = {
+  [I in
+    1  |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |
+    11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+    21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+    31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 |
+    41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 |
+    51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60
+  as `${I}`]: I
+}
 
-export type Endianness<Dtype extends DataType> = Dtype extends `${infer E}${infer _}` ? E
+type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString] : number;
+
+type TypedArray<D extends DataType> = D extends '|i1' ? Int8Array
+  : D extends '<i2' | '>i2' ? Int16Array
+  : D extends '<i4' | '>i4' ? Int32Array
+  : D extends '<i8' | '>i8' ? BigInt64Array
+  : D extends '|u1' ? Uint8Array
+  : D extends '<u2' | '>u2' ? Uint16Array
+  : D extends '<u4' | '>u4' ? Uint32Array
+  : D extends '<u8' | '>u8' ? BigUint64Array
+  : D extends '<f4' | '>f4' ? Float32Array
+  : D extends '<f8' | '>f8' ? Float64Array
+  : D extends '|b1' ? import('./lib/custom-arrays').BoolArray
+  : D extends `|S${infer B}` ? import('./lib/custom-arrays').ByteStringArray<Bytes<B>>
+  : D extends `>U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
+  : D extends `<U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
   : never;
 
-export type DataTypeMappingKey<Dtype extends DataType> = Dtype extends
-  `${infer _}${infer T}${infer _}`
-  ? T extends 'U' | 'S' ? T : Dtype extends `${infer _}${infer Key}` ? Key : never
-  : never;
-
-export type TypedArrayConstructor<Dtype extends DataType> =
-  DataTypeMapping[DataTypeMappingKey<Dtype>];
-
-export type TypedArray<Dtype extends DataType> = InstanceType<
-  TypedArrayConstructor<Dtype>
->;
+type TypedArrayConstructor<D extends DataType> = {
+  new (length: number): TypedArray<D>;
+  new (array: ArrayLike<Scalar<D>> | ArrayBufferLike): TypedArray<D>;
+  // TODO: implement for Bool/Unicode arrays
+  // new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): TypedArray<D>
+  // new(elements: Iterable<Scalar<D>>): TypedArray<D>
+};
 
 // Hack to get scalar type since is not defined on any typed arrays.
-export type Scalar<Dtype extends DataType> = Parameters<TypedArray<Dtype>['fill']>[0];
+type Scalar<D extends DataType> = D extends '|b1' ? boolean
+  : D extends `${infer _}${'U' | 'S'}${infer _}` ? string
+  : D extends `${'<' | '>'}${'u' | 'i'}8` ? bigint
+  : number;
+
+// TODO: Using this for sanity check, but really should move to formal compilation tests.
+type Parts<D extends DataType> = {
+  [Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
+};
 
 export type NdArrayLike<Dtype extends DataType> = {
   data: TypedArray<Dtype>;
   shape: number[];
-};
-
-export type ParsedDataType<Dtype extends DataType> = {
-  endianness: Endianness<Dtype>;
-  // Should be able to use constructor, but built-in types aren't very precise.
-  create: (x: ArrayBuffer | number) => TypedArray<Dtype>;
-  // Should be able to use TypedArray<Dtype>['fill'], but type inference isn't strong enough.
-  fill: (arr: TypedArray<Dtype>, value: Scalar<Dtype>) => void;
 };
 
 export type Indices = [start: number, stop: number, step: number];
@@ -69,23 +92,24 @@ export interface Slice {
   indices: (length: number) => Indices;
 }
 
-interface SyncStore extends Pick<Map<string, Uint8Array>, 'get' | 'delete' | 'has'> {
+interface SyncStore<O extends unknown = unknown> {
+  get(key: string, opts?: O): Uint8Array | undefined;
+  has(key: string): boolean;
   // Need overide Map to return SyncStore
-  set(key: string, value: Uint8Array): SyncStore;
+  set(key: string, value: Uint8Array): void;
+  delete(key: string): boolean;
   list_prefix(key: string): string[];
   list_dir(key: string): { contents: string[]; prefixes: string[] };
 }
 
 // Promisify return type of every function in SyncStore, override 'set' to return Promise<AsyncStore>
-type AsyncStore = {
-  [Key in keyof SyncStore]: (
-    ...args: Parameters<SyncStore[Key]>
-  ) => Key extends 'set' ? Promise<AsyncStore>
-    : Promise<ReturnType<SyncStore[Key]>>;
+type AsyncStore<O extends unknown = unknown> = {
+  [Key in keyof SyncStore<O>]: (
+    ...args: Parameters<SyncStore<O>[Key]>
+  ) => Promise<ReturnType<SyncStore<O>[Key]>>;
 };
 
 export type Store = SyncStore | AsyncStore;
-
 export type Attrs = Record<string, any>;
 
 export interface ArrayAttributes<
@@ -112,7 +136,7 @@ export type CreateArrayProps<Dtype extends DataType = DataType> =
   }
   & Partial<
     Omit<
-      ArrayAttributes,
+      ArrayAttributes<Dtype>,
       'store' | 'path' | 'dtype' | 'shape' | 'chunk_shape' | 'chunk_key'
     >
   >;
@@ -149,16 +173,22 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   ): Promise<import('./lib/hierarchy').ZarrArray<Dtype, Store>>;
 }
 
-export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> = {
-  prepare(data: TypedArray<Dtype>, shape: number[]): NdArray;
-  set_scalar(target: NdArray, selection: (Indices | number)[], value: Scalar<Dtype>): void;
+export type Setter<D extends DataType, A extends NdArrayLike<D>> = {
+  prepare(data: TypedArray<D>, shape: number[]): A;
+  set_scalar(target: A, selection: (Indices | number)[], value: Scalar<D>): void;
   set_from_chunk(
-    target: NdArray,
+    target: A,
     target_selection: (Indices | number)[],
-    chunk: NdArray,
+    chunk: A,
     chunk_selection: (Indices | number)[],
   ): void;
 };
+
+type BasicSetter<D extends DataType> = Setter<
+  D,
+  { data: TypedArray<D>; shape: number[]; stride?: number[] }
+>;
+// type NdArraySetter<D extends DataType> = Setter<D, import('ndarray').NdArray<TypedArray<D>>;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {
@@ -166,9 +196,6 @@ export type ChunkQueue = {
   onIdle(): Promise<void[]>;
 };
 
-export type Options = {
-  create_queue?: () => ChunkQueue;
-};
-
+export type Options = { create_queue?: () => ChunkQueue };
 export type GetOptions = Options;
 export type SetOptions = Options;

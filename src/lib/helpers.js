@@ -1,10 +1,10 @@
 // @ts-check
 /** @typedef {import('../types').DataType} DataType */
-/** @typedef {import('../types').DataTypeMapping} DataTypeMapping */
+/** @typedef {import('../types').WithoutEndianness} WithoutEndianness */
 /** @typedef {import('../types').Store} Store */
 
 /**
- * @template {DataType | keyof DataTypeMapping | `U${number}` | `S${number}`} Str
+ * @template {DataType | WithoutEndianness } Str
  * @template {DataType} D
  * @template {Store} S
  *

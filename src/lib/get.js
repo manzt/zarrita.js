@@ -1,27 +1,21 @@
 // @ts-check
 import { KeyError } from './errors.js';
 import { BasicIndexer } from './indexing.js';
-import { create_queue, parse_dtype } from './util.js';
+import { create_queue } from './util.js';
 
 /** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').Store} Store */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
-/**
- * @template {DataType} Dtype
- * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
- */
 
 /**
- * @template {DataType} Dtype
- * @template {import('../types').NdArrayLike<Dtype>} NdArray
- * @param {import('../types').Setter<Dtype, NdArray>} setter
+ * @param {import('../types').BasicSetter<D>} setter
  */
 export function register(setter) {
   /**
-   * @template {DataType} Dtype
-   * @template {ArraySelection} Sel
+   * @template {DataType} D
    *
-   * @param {ZarrArray<Dtype>} arr
-   * @param {Sel} selection
+   * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+   * @param {ArraySelection} selection
    * @param {import('../types').Options} opts
    */
   return function (arr, selection, opts = {}) {
@@ -29,37 +23,25 @@ export function register(setter) {
   };
 }
 
-/**
- * @template {DataType} Dtype
- * @param {import('../types').TypedArray<Dtype>} arr
- * @param {number} idx
- * @returns {import('../types').Scalar<Dtype>}
- */
-const get_value = (arr, idx) => {
+const get_value = (/** @type {any} */ arr, /** @type {number} */ idx) => {
   return 'get' in arr ? arr.get(idx) : arr[idx];
 };
 
 /**
- * @template {DataType} Dtype
- * @template {import('../types').NdArrayLike<Dtype>} NdArray
- * @template {ArraySelection} Sel
+ * @template {DataType} D
+ * @template {import('../types').NdArrayLike<D>} A
  *
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- * @param {ZarrArray<Dtype>} arr
- * @param {Sel} selection
+ * @param {import('../types').Setter<D, A>} setter
+ * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+ * @param {ArraySelection} selection
  * @param {import('../types').Options} opts
- * @returns {Promise<NdArray | import('../types').Scalar<Dtype>>}
+ * @returns {Promise<A | import('../types').Scalar<D>>}
  */
 async function get(setter, arr, selection, opts) {
   const indexer = new BasicIndexer({ selection, shape: arr.shape, chunk_shape: arr.chunk_shape });
   // Setup output array
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);
-  const out = setter.prepare(
-    parse_dtype(arr.dtype).create(outsize),
-    indexer.shape,
-  );
-
+  const out = setter.prepare(new arr.TypedArray(outsize), indexer.shape);
   const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
   // iterator over chunks

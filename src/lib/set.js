@@ -1,42 +1,32 @@
 // @ts-check
 import { KeyError } from './errors.js';
-import { create_queue, parse_dtype } from './util.js';
+import { create_queue } from './util.js';
 import { BasicIndexer } from './indexing.js';
 
 /** @typedef {import('../types').DataType} DataType */
+/** @typedef {import('../types').Store} Store */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 /** @typedef {import('../types').Slice} Slice */
 /** @typedef {import('../types').Indices} Indices */
+
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
+
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').Scalar<Dtype>} Scalar
  */
-/**
- * @template {DataType} Dtype
- * @typedef {import('../types').NdArrayLike<Dtype>} NdArrayLike
- */
-/**
- * @template {DataType} Dtype
- * @typedef {import('./hierarchy').ZarrArray<Dtype, import('../types').Store>} ZarrArray
- */
 
-/**
- * @template {DataType} Dtype
- * @template {import('../types').NdArrayLike<Dtype>} NdArray
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- */
+/** @param {import('../types').BasicSetter<D>} setter */
 export function register(setter) {
   /**
-   * @template {DataType} Dtype
-   * @template {ArraySelection} Sel
+   * @template {DataType} D
    *
-   * @param {ZarrArray<Dtype>} arr
-   * @param {Sel} selection
-   * @param {Scalar<Dtype> | NdArray} value
+   * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+   * @param {ArraySelection} selection
+   * @param {Scalar<D> | ReturnType<import('../types').BasicSetter<D>['prepare']>} value
    * @param {import('../types').SetOptions} opts
    */
   return function (arr, selection, value, opts = {}) {
@@ -46,12 +36,12 @@ export function register(setter) {
 
 /**
  * @template {DataType} Dtype
- * @template {NdArrayLike<Dtype>} NdArray
+ * @template {import('../types').NdArrayLike<Dtype>} A
  *
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- * @param {ZarrArray<Dtype>} arr
+ * @param {import('../types').Setter<Dtype, A>} setter
+ * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
  * @param {ArraySelection} selection
- * @param {Scalar<Dtype> | NdArray} value
+ * @param {Scalar<Dtype> | A} value
  * @param {import('../types').SetOptions} opts
  * @returns {Promise<void>}
  */
@@ -63,7 +53,6 @@ async function set(setter, arr, selection, value, opts) {
   // necessary data from the value array and storing into the chunk array.
 
   const chunk_size = arr.chunk_shape.reduce((a, b) => a * b, 1);
-  const { create, fill } = parse_dtype(arr.dtype);
   const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
   // N.B., it is an important optimisation that we only visit chunks which overlap
@@ -77,30 +66,31 @@ async function set(setter, arr, selection, value, opts) {
       let cdata;
 
       if (is_total_slice(chunk_selection, arr.chunk_shape)) {
-        // totally replace chunk
-
+        // totally replace
+        cdata = new arr.TypedArray(chunk_size);
         // optimization: we are completely replacing the chunk, so no need
         // to access the exisiting chunk data
         if (typeof value === 'object') {
           // Otherwise data just contiguous TypedArray
-          const chunk = setter.prepare(create(chunk_size), arr.chunk_shape);
+          const chunk = setter.prepare(cdata, arr.chunk_shape);
           setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
-          cdata = chunk.data;
         } else {
-          cdata = create(chunk_size);
-          fill(cdata, value);
+          // @ts-ignore
+          cdata.fill(value);
         }
       } else {
         // partially replace the contents of this chunk
-        /** @type {NdArray} */
-        const chunk = await arr.get_chunk(chunk_coords)
-          .then(({ data, shape }) => setter.prepare(data, shape))
+        cdata = await arr.get_chunk(chunk_coords)
+          .then(({ data }) => data)
           .catch((err) => {
             if (!(err instanceof KeyError)) throw err;
-            const empty = create(chunk_size);
-            if (arr.fill_value) fill(empty, arr.fill_value);
-            return setter.prepare(empty, arr.chunk_shape);
+            const empty = new arr.TypedArray(chunk_size);
+            // @ts-ignore
+            if (arr.fill_value) empty.fill(arr.fill_value);
+            return empty;
           });
+
+        const chunk = setter.prepare(cdata, arr.chunk_shape);
 
         // Modify chunk data
         if (typeof value === 'object') {
@@ -108,8 +98,6 @@ async function set(setter, arr, selection, value, opts) {
         } else {
           setter.set_scalar(chunk, chunk_selection, value);
         }
-
-        cdata = chunk.data;
       }
       // encode chunk
       const encoded_chunk_data = await arr._encode_chunk(cdata);
