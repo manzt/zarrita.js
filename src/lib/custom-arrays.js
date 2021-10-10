@@ -27,13 +27,9 @@ export class BoolArray {
     this._bytes[idx] = value ? 1 : 0;
   }
 
-  /**
-   * @param {boolean} value
-   * @param {number=} start
-   * @param {number=} end
-   */
-  fill(value, start, end) {
-    this._bytes.fill(value ? 1 : 0, start, end);
+  /** @param {boolean} value */
+  fill(value) {
+    this._bytes.fill(value ? 1 : 0);
   }
 
   *[Symbol.iterator]() {
