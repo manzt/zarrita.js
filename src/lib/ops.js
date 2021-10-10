@@ -25,8 +25,8 @@ import { BoolArray } from './custom-arrays.js';
  * Extracts underyling TypedArray to make filling setter functions compatible with
  * higher-level arrays (e.g. BoolArray).
  *
- * @template {DataType} Dtype
- * @param {NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>} arr
+ * @template {DataType} D
+ * @param {import('../types').NdArrayLike<D> & { stride?: number[] }} arr
  * @returns {any}
  */
 const compat = (arr) => {
@@ -48,20 +48,27 @@ const cast_scalar = (arr, value) => {
   return value;
 };
 
-/**
- * @template {Exclude<DataType, StringDataType>} Dtype
- * @type {import('../types').Setter<Dtype, NdArray<Dtype> | Omit<NdArray<Dtype>, 'stride'>>}
- */
 const setter = {
-  prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
-  set_scalar(out, out_selection, value) {
-    return set_scalar(
-      compat(out),
-      out_selection,
-      cast_scalar(out, value),
-    );
+  /** @template {DataType} D */
+  prepare: (
+    /** @type {TypedArray<D>} */ data,
+    /** @type {number[]} shape */ shape,
+  ) => ({ data, shape, stride: get_strides(shape) }),
+  /** @template {DataType} D */
+  set_scalar(
+    /** @type {NdArray<D>} */ out,
+    /** @type {(Indices | number)[]} */ out_selection,
+    /** @type {Scalar<D>} */ value,
+  ) {
+    return set_scalar(compat(out), out_selection, cast_scalar(out, value));
   },
-  set_from_chunk(out, out_selection, chunk, chunk_selection) {
+  /** @template {DataType} D */
+  set_from_chunk(
+    /** @type {NdArray<D>} */ out,
+    /** @type {(Indices | number)[]} */ out_selection,
+    /** @type {NdArray<D>} */ chunk,
+    /** @type {(Indices | number)[]} */ chunk_selection,
+  ) {
     return set_from_chunk(
       compat(out),
       out_selection,
@@ -118,6 +125,7 @@ function set_scalar(out, out_selection, value) {
   const [curr_stride, ...stride] = out.stride;
   if (typeof slice === 'number') {
     const data = out.data.subarray(curr_stride * slice);
+    // @ts-ignore
     set_scalar({ data, stride }, slices, value);
     return;
   }
@@ -125,6 +133,7 @@ function set_scalar(out, out_selection, value) {
   const len = indices_len(from, to, step);
   if (slices.length === 0) {
     if (step === 1 && curr_stride === 1) {
+      // @ts-ignore
       out.data.fill(value, from, from + len);
     } else {
       for (let i = 0; i < len; i++) {
@@ -135,6 +144,7 @@ function set_scalar(out, out_selection, value) {
   }
   for (let i = 0; i < len; i++) {
     const data = out.data.subarray(curr_stride * (from + step * i));
+    // @ts-ignore
     set_scalar({ data, stride }, slices, value);
   }
 }
@@ -149,6 +159,7 @@ function set_scalar(out, out_selection, value) {
 function set_from_chunk(out, out_selection, chunk, chunk_selection) {
   if (chunk_selection.length === 0) {
     // Case when last chunk dim is squeezed
+    // @ts-ignore
     out.data.set(chunk.data.subarray(0, out.data.length));
     return;
   }
@@ -164,6 +175,7 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       data: chunk.data.subarray(chunk_stride * chunk_slice),
       stride: chunk_strides,
     };
+    // @ts-ignore
     set_from_chunk(out, out_selection, chunk_view, chunk_slices);
     return;
   }
@@ -176,6 +188,7 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
       data: out.data.subarray(out_stride * out_slice),
       stride: out_strides,
     };
+    // @ts-ignore
     set_from_chunk(out_view, out_slices, chunk, chunk_selection);
     return;
   }
@@ -188,6 +201,7 @@ function set_from_chunk(out, out_selection, chunk, chunk_selection) {
     if (
       step === 1 && cstep === 1 && out_stride === 1 && chunk_stride === 1
     ) {
+      // @ts-ignore
       out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
     } else {
       for (let i = 0; i < len; i++) {

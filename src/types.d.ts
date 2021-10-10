@@ -43,7 +43,7 @@ type BMap = {
 
 type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString] : number;
 
-type _TypedArray<D extends DataType> = D extends '|i1' ? Int8Array
+type TypedArray<D extends DataType> = D extends '|i1' ? Int8Array
   : D extends '<i2' | '>i2' ? Int16Array
   : D extends '<i4' | '>i4' ? Int32Array
   : D extends '<i8' | '>i8' ? BigInt64Array
@@ -58,21 +58,6 @@ type _TypedArray<D extends DataType> = D extends '|i1' ? Int8Array
   : D extends `>U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
   : D extends `<U${infer B}` ? import('./lib/custom-arrays').UnicodeStringArray<Bytes<B>>
   : never;
-
-type TypedArray<D extends DataType> = Omit<_TypedArray<D>, 'fill' | 'subarray' | 'set'> & {
-  fill(value: Scalar<D>): void;
-  fill(value: Scalar<D>, start: number): void;
-  fill(value: Scalar<D>, start: number, end: number): void;
-
-  subarray(): TypedArray<D>;
-  subarray(begin: number): TypedArray<D>;
-  subarray(begin: number, end: number): TypedArray<D>;
-
-  set(array: ArrayLike<Scalar<D>>): void;
-  set(array: ArrayLike<Scalar<D>>, offset: number): void;
-  set(typedarray: TypedArray<D>): void;
-  set(typedarray: TypedArray<D>, offset: number): void;
-};
 
 type TypedArrayConstructor<D extends DataType> = {
   new (length: number): TypedArray<D>;
@@ -188,16 +173,22 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
   ): Promise<import('./lib/hierarchy').ZarrArray<Dtype, Store>>;
 }
 
-export type Setter<Dtype extends DataType, NdArray extends NdArrayLike<Dtype>> = {
-  prepare(data: TypedArray<Dtype>, shape: number[]): NdArray;
-  set_scalar(target: NdArray, selection: (Indices | number)[], value: Scalar<Dtype>): void;
+export type Setter<D extends DataType, A extends NdArrayLike<D>> = {
+  prepare(data: TypedArray<D>, shape: number[]): A;
+  set_scalar(target: A, selection: (Indices | number)[], value: Scalar<D>): void;
   set_from_chunk(
-    target: NdArray,
+    target: A,
     target_selection: (Indices | number)[],
-    chunk: NdArray,
+    chunk: A,
     chunk_selection: (Indices | number)[],
   ): void;
 };
+
+type BasicSetter<D extends DataType> = Setter<
+  D,
+  { data: TypedArray<D>; shape: number[]; stride?: number[] }
+>;
+// type NdArraySetter<D extends DataType> = Setter<D, import('ndarray').NdArray<TypedArray<D>>;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

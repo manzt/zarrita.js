@@ -8,27 +8,25 @@ import { BasicIndexer } from './indexing.js';
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 /** @typedef {import('../types').Slice} Slice */
 /** @typedef {import('../types').Indices} Indices */
+
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').TypedArray<Dtype>} TypedArray
  */
+
 /**
  * @template {DataType} Dtype
  * @typedef {import('../types').Scalar<Dtype>} Scalar
  */
 
-/**
- * @template {import('../types').NdArrayLike<Dtype>} NdArray
- * @param {import('../types').Setter<Dtype, NdArray>} setter
- */
+/** @param {import('../types').BasicSetter<D>} setter */
 export function register(setter) {
   /**
-   * @template {DataType} Dtype
-   * @template {ArraySelection} Sel
+   * @template {DataType} D
    *
-   * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
-   * @param {Sel} selection
-   * @param {Scalar<Dtype> | import('../types').NdArrayLike<Dtype>} value
+   * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+   * @param {ArraySelection} selection
+   * @param {Scalar<D> | ReturnType<import('../types').BasicSetter<D>['prepare']>} value
    * @param {import('../types').SetOptions} opts
    */
   return function (arr, selection, value, opts = {}) {
@@ -38,11 +36,12 @@ export function register(setter) {
 
 /**
  * @template {DataType} Dtype
+ * @template {import('../types').NdArrayLike<Dtype>} A
  *
- * @param {import('../types').Setter<Dtype, import('../types').NdArrayLike<Dtype>>} setter
+ * @param {import('../types').Setter<Dtype, A>} setter
  * @param {import('./hierarchy').ZarrArray<Dtype, Store>} arr
  * @param {ArraySelection} selection
- * @param {Scalar<Dtype> | import('../types').NdArrayLike<Dtype>} value
+ * @param {Scalar<Dtype> | A} value
  * @param {import('../types').SetOptions} opts
  * @returns {Promise<void>}
  */
@@ -76,6 +75,7 @@ async function set(setter, arr, selection, value, opts) {
           const chunk = setter.prepare(cdata, arr.chunk_shape);
           setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
         } else {
+          // @ts-ignore
           cdata.fill(value);
         }
       } else {
@@ -85,6 +85,7 @@ async function set(setter, arr, selection, value, opts) {
           .catch((err) => {
             if (!(err instanceof KeyError)) throw err;
             const empty = new arr.TypedArray(chunk_size);
+            // @ts-ignore
             if (arr.fill_value) empty.fill(arr.fill_value);
             return empty;
           });

@@ -8,26 +8,27 @@ import { register as registerSet } from './lib/set.js';
 /** @typedef {import('./types').DataType} DataType */
 /** @typedef {import('./types').Indices} Indices */
 /**
- * @template {DataType} Dtype
- * @typedef {import('./types').TypedArray<Dtype>} TypedArray
- */
-/**
- * @template {DataType} Dtype
- * @template {import('./types').NdArrayLike<Dtype>} NdArray
- * @typedef {import('./types').Setter<Dtype, NdArray>} Setter
+ * @template {DataType} D
+ * @typedef {import('./types').TypedArray<D>} TypedArray
  */
 
-/**
- * @template {DataType} Dtype
- * @type {Setter<Dtype, ndarray.NdArray<TypedArray<Dtype>>>}
- */
 const setter = {
   prepare: ndarray,
-  set_scalar(target, selection, value) {
+  /** @template {DataType} D*/
+  set_scalar(
+    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ target,
+    /** @type {(number | Indices)[]} */ selection,
+    /** @type {import('./types').Scalar<D>} */ value,
+  ) {
     // types aren't correct for ops
     ops.assigns(view(target, selection), /** @type {number} */ (value));
   },
-  set_from_chunk(target, target_selection, chunk, chunk_selection) {
+  set_from_chunk(
+    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ target,
+    /** @type {(number | Indices)[]} */ target_selection,
+    /** @type {import('ndarray').NdArray<TypedArray<D>>} */ chunk,
+    /** @type {(number | Indices)[]} */ chunk_selection,
+  ) {
     ops.assign(
       view(target, target_selection),
       view(chunk, chunk_selection),
