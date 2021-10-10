@@ -37,7 +37,7 @@ const get_value = (/** @type {any} */ arr, /** @type {number} */ idx) => {
  * @param {import('../types').Options} opts
  * @returns {Promise<A | import('../types').Scalar<D>>}
  */
-export async function get(setter, arr, selection, opts) {
+async function get(setter, arr, selection, opts) {
   const indexer = new BasicIndexer({ selection, shape: arr.shape, chunk_shape: arr.chunk_shape });
   // Setup output array
   const outsize = indexer.shape.reduce((a, b) => a * b, 1);
