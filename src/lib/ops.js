@@ -78,8 +78,8 @@ const setter = {
   },
 };
 
-export const get = registerGet(setter);
-export const set = registerSet(setter);
+export const get = registerGet.basic(setter);
+export const set = registerSet.basic(setter);
 
 /**
  * Compute strides for 'C' ordered ndarray from shape

@@ -7,21 +7,34 @@ import { create_queue } from './util.js';
 /** @typedef {import('../types').Store} Store */
 /** @typedef {import('../types').ArraySelection} ArraySelection */
 
-/**
- * @param {import('../types').BasicSetter<D>} setter
- */
-export function register(setter) {
-  /**
-   * @template {DataType} D
-   *
-   * @param {import('./hierarchy').ZarrArray<D, Store>} arr
-   * @param {ArraySelection} selection
-   * @param {import('../types').Options} opts
-   */
-  return function (arr, selection, opts = {}) {
-    return get(setter, arr, selection, opts);
-  };
-}
+export const register = {
+  /** @param {import('../types').BasicSetter<D>} setter */
+  basic(setter) {
+    /**
+     * @template {DataType} D
+     *
+     * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+     * @param {ArraySelection} selection
+     * @param {import('../types').GetOptions} opts
+     */
+    return function (arr, selection, opts = {}) {
+      return get(setter, arr, selection, opts);
+    };
+  },
+  /** @param {import('../types').NdArraySetter<D>} setter */
+  ndarray(setter) {
+    /**
+     * @template {DataType} D
+     *
+     * @param {import('./hierarchy').ZarrArray<D, Store>} arr
+     * @param {ArraySelection} selection
+     * @param {import('../types').GetOptions} opts
+     */
+    return function (arr, selection, opts = {}) {
+      return get(setter, arr, selection, opts);
+    };
+  },
+};
 
 const get_value = (/** @type {any} */ arr, /** @type {number} */ idx) => {
   return 'get' in arr ? arr.get(idx) : arr[idx];
