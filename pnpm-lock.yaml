@@ -1,6 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@types/ndarray': ^1.0.11
   '@types/node': ^16.10.2
   ndarray: ^1.0.19
   ndarray-ops: ^1.2.2
@@ -8,6 +9,7 @@ specifiers:
   zora: ^5.0.0
 
 dependencies:
+  '@types/ndarray': 1.0.11
   ndarray: 1.0.19
   ndarray-ops: 1.2.2
   numcodecs: 0.2.2
@@ -17,6 +19,10 @@ devDependencies:
   zora: 5.0.0
 
 packages:
+
+  /@types/ndarray/1.0.11:
+    resolution: {integrity: sha512-hOZVTN24zDHwCHaW7mF9n1vHJt83fZhNZ0YYRBwQGhA96yBWWDPTDDlqJatagHIOJB0a4xoNkNc+t/Cxd+6qUA==}
+    dev: false
 
   /@types/node/16.10.2:
     resolution: {integrity: sha512-zCclL4/rx+W5SQTzFs9wyvvyCwoK9QtBpratqz2IYJ3O8Umrn0m3nsTv0wQBk9sRGpvUe9CwPDrQFB10f1FIjQ==}

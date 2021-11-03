@@ -10,7 +10,7 @@ import {
   slice,
   ZarrArray,
 } from 'zarrita';
-import { get, set } from 'zarrita';
+import { get, set } from 'zarrita/ndarray';
 import ndarray from 'ndarray';
 import GZip from 'numcodecs/gzip';
 
