@@ -65,7 +65,7 @@ const store = new MemoryStore();
   
   // Open an array
   const a = await h.get('/arthur/dent');
-  console.log(await a.do(get, null));
+  console.log(await get(a, null));
   // {
   //   data: Int32Array(50) [
   //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -77,8 +77,8 @@ const store = new MemoryStore();
   //   shape: [ 5, 10 ],
   //   stride: [ 10, 1 ]
   // }
-  await a.do(set, [0, null], 42);
-  console.log(await a.do(get, null));
+  await set(a, [0, null], 42);
+  console.log(await get(a, null));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -90,8 +90,8 @@ const store = new MemoryStore();
   //   shape: [ 5, 10 ],
   //   stride: [ 10, 1 ]
   // }
-  await a.do(set, [null, 3], 42);
-  console.log(await a.do(get, null));
+  await set(a, [null, 3], 42);
+  console.log(await get(a, null));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -105,8 +105,8 @@ const store = new MemoryStore();
   // }
 
   // np.arange(50).reshape(5, 10);
-  await a.do(set, null, ndarray(new Int32Array([...Array(50).keys()]), [5, 10]));
-  console.log(await a.do(get, null));
+  await set(a, null, ndarray(new Int32Array([...Array(50).keys()]), [5, 10]));
+  console.log(await get(a, null));
   // {
   //   data: Int32Array(50) [
   //      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
@@ -120,7 +120,7 @@ const store = new MemoryStore();
   // }
   
   const selection = [slice(1,4), slice(2,7)];
-  console.log(await a.do(get, selection));
+  console.log(await get(a, selection));
   // {
   //   data: Int32Array(15) [
   //     12, 13, 14, 15, 16,
@@ -167,27 +167,6 @@ test.zr3
 For now, the browser-specific store `HTTPStore` uses the [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
 API and is *read-only*. An example reading from a remote server in the browser can be 
 found [here](https://observablehq.com/d/7156b4838eed011d).
-
-#### Compatibility with `ndarray`
-
-Zarrita.js has no dependencies other than `numcodecs.js` (for decoding compressed arrays). The 
-`ZarrArray.get` and `ZarrArray.get_chunk` methods return an simple object with `data`, `shape`,
-and `stride` properties. This is to avoid bundling an extra dependency, and enable compatilbility
-with other array libraries. Similarly, setting a `ZarrArray` expects an object with these properties,
-which means you can set a slice of a `ZarrArray` using `ndarray`.
-
-
-```javascript
-import ndarray from 'ndarray';
-
-const selection = [slice(1,4), slice(2,7)];
-const { data, shape, stride } = await a.get(selection);
-const arr = ndarray(data, shape, stride);
-
-/* perform some array operations */
-await a.set(selection, arr); // set using ndarray!
-```
-
 
 #### Development
 
