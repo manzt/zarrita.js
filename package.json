@@ -11,7 +11,8 @@
     ".": "./src/index.js",
     "./ndarray": "./src/ndarray.js",
     "./storage/mem": "./src/storage/memory.js",
-    "./storage/fs": "./src/storage/fsstore.js"
+    "./storage/fs": "./src/storage/fsstore.js",
+    "./storage/http": "./src/storage/httpstore.js"
   },
   "scripts": {
     "test": "node ./test/index.test.js",
