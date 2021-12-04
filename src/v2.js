@@ -19,9 +19,10 @@ function encode_codec_metadata(codec) {
 
 /**
  * @param {any} config
- * @returns {Promise<import('numcodecs').Codec>}
+ * @returns {Promise<import('numcodecs').Codec | undefined>}
  */
-async function decode_codec_metadata(config) {
+async function get_codec(config) {
+  if (!config) return;
   const importer = registry.get(config.id);
   if (!importer) throw new Error('missing codec' + config.id);
   const ctr = await importer();
@@ -94,6 +95,29 @@ export const create_hierarchy = (store) => new Hierarchy({ store });
  * @returns {Hierarchy<S>}
  */
 export const get_hierarchy = (store) => new Hierarchy({ store });
+
+/**
+ * @template {import('./types').Store} S
+ * @template {import('./types').DataType} Dtype
+ * @param {S} store
+ * @param {string} path
+ * @param {ArrayMetadata<Dtype>} meta
+ * @param {Record<string, any>=} attrs
+ * @returns {Promise<ZarrArray<Dtype, S>>}
+ */
+export const from_meta = async (store, path, meta, attrs) => {
+    return new ZarrArray({
+      store: store,
+      path,
+      shape: meta.shape,
+      dtype: meta.dtype,
+      chunk_shape: meta.chunks,
+      chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
+      compressor: await get_codec(meta.compressor),
+      fill_value: meta.fill_value,
+      attrs: attrs ?? (() => get_attrs(store, path))
+    });
+}
 
 /**
  * @template {import('./types').Store} S
@@ -211,17 +235,7 @@ export class Hierarchy {
     /** @type {ArrayMetadata<import('./types').DataType>} */
     const meta = json_decode_object(meta_doc);
 
-    return new ZarrArray({
-      store: this.store,
-      path,
-      shape: meta.shape,
-      dtype: meta.dtype,
-      chunk_shape: meta.chunks,
-      chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
-      compressor: meta.compressor ? await decode_codec_metadata(meta.compressor) : undefined,
-      fill_value: meta.fill_value,
-      attrs: () => get_attrs(this.store, path),
-    });
+    return from_meta(this.store, path, meta);
   }
 
   /**
@@ -300,3 +314,4 @@ export class Hierarchy {
     throw new Error('Implicit group not implemented for v2.');
   }
 }
+

@@ -4,3 +4,5 @@ src/**/*.d.ts
 !src/types.d.ts
 !src/missing-types.d.ts
 data/
+types/
+*.tgz
