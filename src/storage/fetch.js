@@ -1,11 +1,7 @@
-// @ts-check
-/** @typedef {import('../types').AsyncStore} Store */
+import ReadOnlyStore from './readonly.js';
 
-/**
- * @template {string} Url
- * @implements {Store}
- */
-class FetchStore {
+/** @template {string} Url */
+class FetchStore extends ReadOnlyStore {
   /** @param {Url} url */
   constructor(url) {
     this.url = url.endsWith('/') ? url.slice(0, -1) : url;
@@ -33,31 +29,6 @@ class FetchStore {
   /** @param {string} key */
   has(key) {
     return this.get(key).then((res) => res !== undefined);
-  }
-
-  /**
-   * @param {string} _key
-   * @param {Uint8Array} _value
-   * @return {never}
-   */
-  set(_key, _value) {
-    throw new Error('HTTPStore is read-only.');
-  }
-
-  /**
-   * @param {string} _key
-   * @returns {never}
-   */
-  delete(_key) {
-    throw new Error('HTTPStore is read-only.');
-  }
-
-  list_prefix() {
-    return Promise.resolve([]);
-  }
-
-  list_dir() {
-    return Promise.resolve({ contents: [], prefixes: [] });
   }
 }
 

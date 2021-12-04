@@ -2,27 +2,43 @@
   "name": "zarrita",
   "type": "module",
   "license": "MIT",
-  "version": "0.2.0-beta",
+  "version": "0.2.0-beta.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/manzt/zarrita.js.git"
   },
   "types": "./types/index.d.ts",
   "sideEffects": false,
-  "exports": {
-    ".": "./src/index.js",
-    "./v2": "./src/v2.js",
-    "./v3": "./src/v3.js",
-    "./ndarray": "./src/ndarray.js",
-    "./storage/mem": "./src/storage/memory.js",
-    "./storage/fs": "./src/storage/fs.js",
-    "./storage/fetch": "./src/storage/fetch.js"
-  },
-  "files": ["src/", "types/"],
   "scripts": {
     "test": "node ./test/index.test.js",
     "check": "tsc --noEmit",
     "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
+  },
+  "files": [
+    "src/",
+    "types/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./v2": {
+      "types": "./types/v2.d.ts",
+      "import": "./src/v2.js"
+    },
+    "./v3": {
+      "types": "./types/v3.d.ts",
+      "import": "./src/v3.js"
+    },
+    "./ndarray": {
+      "types": "./types/ndarray.d.ts",
+      "import": "./src/ndarray.js"
+    },
+    "./storage/*": {
+      "types": "./types/storage/*",
+      "import": "./src/storage/*"
+    }
   },
   "dependencies": {
     "@types/ndarray": "^1.0.11",
