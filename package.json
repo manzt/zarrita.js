@@ -36,8 +36,8 @@
       "import": "./src/ndarray.js"
     },
     "./storage/*": {
-      "types": "./types/storage/*",
-      "import": "./src/storage/*"
+      "types": "./types/storage/*.d.ts",
+      "import": "./src/storage/*.js"
     }
   },
   "dependencies": {

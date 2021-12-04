@@ -4,6 +4,7 @@ import ReadOnlyStore from './readonly.js';
 class FetchStore extends ReadOnlyStore {
   /** @param {Url} url */
   constructor(url) {
+    super();
     this.url = url.endsWith('/') ? url.slice(0, -1) : url;
   }
 
