@@ -7,7 +7,6 @@
     "type": "git",
     "url": "https://github.com/manzt/zarrita.js.git"
   },
-  "types": "./types/index.d.ts",
   "sideEffects": false,
   "scripts": {
     "test": "node ./test/index.test.js",
@@ -19,25 +18,15 @@
     "types/"
   ],
   "exports": {
-    ".": {
-      "types": "./types/index.d.ts",
-      "import": "./src/index.js"
-    },
-    "./v2": {
-      "types": "./types/v2.d.ts",
-      "import": "./src/v2.js"
-    },
-    "./v3": {
-      "types": "./types/v3.d.ts",
-      "import": "./src/v3.js"
-    },
-    "./ndarray": {
-      "types": "./types/ndarray.d.ts",
-      "import": "./src/ndarray.js"
-    },
-    "./storage/*": {
-      "types": "./types/storage/*.d.ts",
-      "import": "./src/storage/*.js"
+    ".": "./src/index.js",
+    "./v2": "./src/v2.js",
+    "./v3": "./src/v3.js",
+    "./ndarray": "./src/ndarray.js",
+    "./storage/*": "./src/storage/*.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["types/*"]
     }
   },
   "dependencies": {
