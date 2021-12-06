@@ -8,7 +8,7 @@ import { assert } from '../lib/errors.js';
  * @typedef {import('../types').AsyncStore} AsyncStore
  * @implements {AsyncStore}
  */
-export default class FileSystemStore {
+class FileSystemStore {
   /** @param {string} fp */
   constructor(fp) {
     this.root = fp;
@@ -116,3 +116,5 @@ async function* walk(dir) {
     }
   }
 }
+
+export default FileSystemStore;

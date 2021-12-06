@@ -2,21 +2,32 @@
   "name": "zarrita",
   "type": "module",
   "license": "MIT",
+  "version": "0.2.0-beta.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/manzt/zarrita.js.git"
   },
   "sideEffects": false,
-  "exports": {
-    ".": "./src/index.js",
-    "./ndarray": "./src/ndarray.js",
-    "./storage/mem": "./src/storage/memory.js",
-    "./storage/fs": "./src/storage/fsstore.js",
-    "./storage/http": "./src/storage/httpstore.js"
-  },
   "scripts": {
     "test": "node ./test/index.test.js",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
+  },
+  "files": [
+    "src/",
+    "types/"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./v2": "./src/v2.js",
+    "./v3": "./src/v3.js",
+    "./ndarray": "./src/ndarray.js",
+    "./storage/*": "./src/storage/*.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["types/*"]
+    }
   },
   "dependencies": {
     "@types/ndarray": "^1.0.11",

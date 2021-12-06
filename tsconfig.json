@@ -7,6 +7,7 @@
     "allowJs": true,
     "noImplicitAny": true,
     "declaration": true,
+    "declarationDir": "./types",
     "importsNotUsedAsValues": "error",
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
