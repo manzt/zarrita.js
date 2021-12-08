@@ -1,35 +1,26 @@
-// @ts-check
 import ndarray from 'ndarray';
 // @ts-ignore
 import ops from 'ndarray-ops';
 
-import { register as registerGet } from './lib/get.js';
-import { register as registerSet } from './lib/set.js';
+import { register as registerGet } from './lib/get';
+import { register as registerSet } from './lib/set';
 
-/** @typedef {import('./types').DataType} DataType */
-/** @typedef {import('./types').Indices} Indices */
-/**
- * @template {DataType} D
- * @typedef {import('./types').TypedArray<D>} TypedArray
- */
+import type { DataType, Indices, TypedArray, Scalar } from './types';
 
 const setter = {
   prepare: ndarray,
-  /** @template {DataType} D*/
-  set_scalar(
-    /** @type {ndarray.NdArray<TypedArray<D>>} */ target,
-    /** @type {(number | Indices)[]} */ selection,
-    /** @type {import('./types').Scalar<D>} */ value,
+  set_scalar<D extends DataType>(
+    target: ndarray.NdArray<TypedArray<D>>,
+    selection: (number | Indices)[],
+    value: Scalar<D>,
   ) {
-    // types aren't correct for ops
-    ops.assigns(view(target, selection), /** @type {number} */ (value));
+    ops.assigns(view(target, selection), value)
   },
-  /** @template {DataType} D*/
-  set_from_chunk(
-    /** @type {ndarray.NdArray<TypedArray<D>>} */ target,
-    /** @type {(number | Indices)[]} */ target_selection,
-    /** @type {ndarray.NdArray<TypedArray<D>>} */ chunk,
-    /** @type {(number | Indices)[]} */ chunk_selection,
+  set_from_chunk<D extends DataType>(
+    target: ndarray.NdArray<TypedArray<D>>,
+    target_selection: (number | Indices)[],
+    chunk: ndarray.NdArray<TypedArray<D>>,
+    chunk_selection: (number | Indices)[],
   ) {
     ops.assign(
       view(target, target_selection),
@@ -41,22 +32,12 @@ const setter = {
 export const set = registerSet.ndarray(setter);
 export const get = registerGet.ndarray(setter);
 
-/**
- * Convert zarrita selection to ndarray view.
- *
- * @template {DataType} Dtype
- * @param {ndarray.NdArray<TypedArray<Dtype>>} arr
- * @param {(Indices | number)[]} sel
- */
-function view(arr, sel) {
-  /** @type {number[]} */
-  const lo = [],
-    /** @type {number[]} */
-    hi = [],
-    /** @type {number[]} */
-    step = [],
-    /** @type {(number | null)[]} */
-    pick = [];
+/** Convert zarrita selection to ndarray view. */
+function view<D extends DataType>(arr: ndarray.NdArray<TypedArray<D>>, sel: (number | Indices)[]) {
+  const lo: number[] = [];
+  const hi: number[] = [];
+  const step: number[] = [];
+  const pick: (number | null)[] = [];
 
   sel.forEach((s, i) => {
     if (typeof s === 'number') {

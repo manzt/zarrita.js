@@ -1,317 +1,270 @@
-// @ts-check
-
-import { ExplicitGroup, ZarrArray } from './lib/hierarchy.js';
-import { registry } from './lib/codec-registry.js';
-import { KeyError, NodeNotFoundError } from './lib/errors.js';
+import { ExplicitGroup, ZarrArray } from './lib/hierarchy';
+import { registry } from './lib/codec-registry';
+import { KeyError, NodeNotFoundError } from './lib/errors';
 import {
-  ensure_array,
-  ensure_dtype,
-  json_decode_object,
-  json_encode_object,
-  // normalize_path,
-} from './lib/util.js';
+	ensure_array,
+	ensure_dtype,
+	json_decode_object,
+	json_encode_object,
+} from './lib/util';
 
-/** @param {import('numcodecs').Codec} codec */
-function encode_codec_metadata(codec) {
-  // @ts-ignore
-  return { id: codec.constructor.codecId, ...codec };
+import type { DataType, Store, Attrs,  Hierarchy as HierarchyProtocol } from './types';
+import type { Codec } from 'numcodecs';
+
+function encode_codec_metadata(codec: Codec) {
+	// @ts-ignore
+	return { id: codec.constructor.codecId, ...codec };
 }
 
-/**
- * @param {any} config
- * @returns {Promise<import('numcodecs').Codec | undefined>}
- */
-async function get_codec(config) {
-  if (!config) return;
-  const importer = registry.get(config.id);
-  if (!importer) throw new Error('missing codec' + config.id);
-  const ctr = await importer();
-  return ctr.fromConfig(config);
+async function get_codec(config: Record<string, any> | null | undefined): Promise<Codec | undefined> {
+	if (!config) return;
+	const importer = registry.get(config.id);
+	if (!importer) throw new Error('missing codec' + config.id);
+	const ctr = await importer();
+	return ctr.fromConfig(config);
 }
 
-/**
- * @template {import('./types').DataType} Dtype
- *
- * @typedef {{
- * 	zarr_format: 2;
- * 	shape: number[];
- * 	chunks: number[];
- * 	dtype: Dtype;
- * 	compressor: null | Record<string, any>;
- * 	fill_value: import('./types').Scalar<Dtype> | null;
- * 	order: 'C' | 'F',
- * 	filters: null | Record<string, any>[];
- * 	dimension_separator?: '.' | '/'
- * }} ArrayMetadata
- */
+interface ArrayMetadata<Dtype extends DataType> {
+	zarr_format: 2;
+	shape: number[];
+	chunks: number[];
+	dtype: Dtype;
+	compressor: null | Record<string, any>;
+	fill_value: import('./types').Scalar<Dtype> | null;
+	order: 'C' | 'F',
+	filters: null | Record<string, any>[];
+	dimension_separator?: '.' | '/'
+}
 
-/** @typedef {{ zarr_format: 2 }} GroupMetadata */
+interface GroupMetadata {
+	zarr_format: 2,
+}
 
-/** @param {string} path */
-const key_prefix = (path) => path.length > 1 ? path + '/' : '';
+type KeyPrefix<S extends string> = S extends "" ? S : `${S}/`;
 
-/** @param {string} path */
-const array_meta_key = (path) => key_prefix(path) + '.zarray';
+function key_prefix<S extends string>(path: S): KeyPrefix<S> {
+	return path.length > 1 ? path + '/' : '' as any;
+}
 
-/** @param {string} path */
-const group_meta_key = (path) => key_prefix(path) + '.zgroup';
+function meta_key<S extends string, N extends string>(path: S, name: N): `${KeyPrefix<S>}${N}` {
+	return key_prefix(path) + name as any;
+}
 
-/** @param {string} path */
-const attrs_key = (path) => key_prefix(path) + '.zattrs';
+const array_meta_key = <S extends string>(path: S) => meta_key(path, ".zarray");
+const group_meta_key = <S extends string>(path: S) => meta_key(path, ".zgroup");
+const attrs_key = <S extends string>(path: S) => meta_key(path, ".zattrs");
 
-/**
- * @param {import('./types').Store} store
- * @param {string} path
- * @returns {Promise<import('./types').Attrs>}
- */
-const get_attrs = async (store, path) => {
-  const attrs = await store.get(attrs_key(path));
-  return attrs ? json_decode_object(attrs) : {};
+const get_attrs = async (store: Store, path: string): Promise<Attrs> => {
+	const attrs = await store.get(attrs_key(path));
+	return attrs ? json_decode_object(attrs) : {};
 };
 
-/**
- * @param {string} path
- * @param {'.' | '/'} chunk_separator
- * @returns {(chunk_coords: number[]) => string}
- */
-const chunk_key = (path, chunk_separator) => {
-  const prefix = key_prefix(path);
-  return (chunk_coords) => {
-    const chunk_identifier = chunk_coords.join(chunk_separator);
-    const chunk_key = prefix + chunk_identifier;
-    return chunk_key;
-  };
+const chunk_key = (path: string, chunk_separator: '.' | '/'): ((chunk_coords: number[]) => string) => {
+	const prefix = key_prefix(path);
+	return (chunk_coords) => {
+		const chunk_identifier = chunk_coords.join(chunk_separator);
+		const chunk_key = prefix + chunk_identifier;
+		return chunk_key;
+	};
 };
-/**
- * @template {import('./types').Store} S
- * @param {S} store
- * @return {Hierarchy<S>}
- */
-export const create_hierarchy = (store) => new Hierarchy({ store });
 
-/**
- * @template {import('./types').Store} S
- * @param {S} store
- * @returns {Hierarchy<S>}
- */
-export const get_hierarchy = (store) => new Hierarchy({ store });
+export const create_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
 
-/**
- * @template {import('./types').Store} S
- * @template {import('./types').DataType} Dtype
- * @param {S} store
- * @param {string} path
- * @param {ArrayMetadata<Dtype>} meta
- * @param {Record<string, any>=} attrs
- * @returns {Promise<ZarrArray<Dtype, S>>}
- */
-export const from_meta = async (store, path, meta, attrs) => {
-    return new ZarrArray({
-      store: store,
-      path,
-      shape: meta.shape,
-      dtype: meta.dtype,
-      chunk_shape: meta.chunks,
-      chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
-      compressor: await get_codec(meta.compressor),
-      fill_value: meta.fill_value,
-      attrs: attrs ?? (() => get_attrs(store, path))
-    });
+export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
+
+export const from_meta = async <S extends Store, D extends DataType>(store: S, path: string, meta: ArrayMetadata<D>, attrs?: Record<string, any>) => {
+	return new ZarrArray({
+		store: store,
+		path,
+		shape: meta.shape,
+		dtype: meta.dtype,
+		chunk_shape: meta.chunks,
+		chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
+		compressor: await get_codec(meta.compressor),
+		fill_value: meta.fill_value,
+		attrs: attrs ?? (() => get_attrs(store, path))
+	});
 }
 
-/**
- * @template {import('./types').Store} S
- * @typedef {import('./types').Hierarchy<S>} HierarchyProtocol
- */
+export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
+	public store: S;
+	constructor({ store }: { store: S }) {
+		this.store = store;
+	}
 
-/**
- * @template {import('./types').Store} S
- * @implements {HierarchyProtocol<S>}
- */
-export class Hierarchy {
-  /** @param {{ store: S }} props */
-  constructor({ store }) {
-    this.store = store;
-  }
+	get root() {
+		return this.get('/');
+	}
 
-  get root() {
-    return this.get('/');
-  }
+	async create_group(path: string, props: { attrs?: Attrs } = {}): Promise<ExplicitGroup<S, Hierarchy<S>> {
+		const { attrs } = props;
+		// sanity checks
+		// path = normalize_path(path);
 
-  /**
-   * @param {string} path
-   * @param {{ attrs?: Record<string, any> }} props
-   * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
-   */
-  async create_group(path, props = {}) {
-    const { attrs } = props;
-    // sanity checks
-    // path = normalize_path(path);
+		// serialise and store metadata document
+		const meta_doc = json_encode_object({ zarr_format: 2 });
+		const meta_key = group_meta_key(path);
+		await this.store.set(meta_key, meta_doc);
 
-    // serialise and store metadata document
-    const meta_doc = json_encode_object({ zarr_format: 2 });
-    const meta_key = group_meta_key(path);
-    await this.store.set(meta_key, meta_doc);
+		if (attrs) {
+			await this.store.set(attrs_key(path), json_encode_object(attrs));
+		}
 
-    if (attrs) {
-      await this.store.set(attrs_key(path), json_encode_object(attrs));
-    }
+		return new ExplicitGroup({
+			store: this.store,
+			owner: this,
+			path,
+			attrs: attrs ?? {},
+		});
+	}
 
-    return new ExplicitGroup({
-      store: this.store,
-      owner: this,
-      path,
-      attrs: attrs ?? {},
-    });
-  }
+	/**
+	 * @template {import('./types').DataType} Dtype
+	 *
+	 * @param {string} path
+	 * @param {import('./types').CreateArrayProps<Dtype>} props
+	 * @returns {Promise<ZarrArray<Dtype, S>>}
+	 */
+	async create_array(path, props) {
+		// sanity checks
+		// path = normalize_path(path);
+		const shape = ensure_array(props.shape);
+		const dtype = ensure_dtype(props.dtype);
+		const chunk_shape = ensure_array(props.chunk_shape);
+		const compressor = props.compressor;
+		const chunk_separator = props.chunk_separator ?? '.';
 
-  /**
-   * @template {import('./types').DataType} Dtype
-   *
-   * @param {string} path
-   * @param {import('./types').CreateArrayProps<Dtype>} props
-   * @returns {Promise<ZarrArray<Dtype, S>>}
-   */
-  async create_array(path, props) {
-    // sanity checks
-    // path = normalize_path(path);
-    const shape = ensure_array(props.shape);
-    const dtype = ensure_dtype(props.dtype);
-    const chunk_shape = ensure_array(props.chunk_shape);
-    const compressor = props.compressor;
-    const chunk_separator = props.chunk_separator ?? '.';
+		/** @type {ArrayMetadata<Dtype>} */
+		const meta = {
+			zarr_format: 2,
+			shape,
+			dtype,
+			chunks: chunk_shape,
+			dimension_separator: chunk_separator,
+			order: 'C',
+			fill_value: props.fill_value ?? null,
+			filters: [],
+			compressor: compressor ? encode_codec_metadata(compressor) : null,
+		};
 
-    /** @type {ArrayMetadata<Dtype>} */
-    const meta = {
-      zarr_format: 2,
-      shape,
-      dtype,
-      chunks: chunk_shape,
-      dimension_separator: chunk_separator,
-      order: 'C',
-      fill_value: props.fill_value ?? null,
-      filters: [],
-      compressor: compressor ? encode_codec_metadata(compressor) : null,
-    };
+		// serialise and store metadata document
+		const meta_doc = json_encode_object(meta);
+		const meta_key = array_meta_key(path);
+		await this.store.set(meta_key, meta_doc);
 
-    // serialise and store metadata document
-    const meta_doc = json_encode_object(meta);
-    const meta_key = array_meta_key(path);
-    await this.store.set(meta_key, meta_doc);
+		if (props.attrs) {
+			await this.store.set(
+				attrs_key(path),
+				json_encode_object(props.attrs),
+			);
+		}
 
-    if (props.attrs) {
-      await this.store.set(
-        attrs_key(path),
-        json_encode_object(props.attrs),
-      );
-    }
+		return new ZarrArray({
+			store: this.store,
+			path,
+			shape: meta.shape,
+			dtype: dtype,
+			chunk_shape: meta.chunks,
+			chunk_key: chunk_key(path, chunk_separator),
+			compressor: compressor,
+			fill_value: meta.fill_value,
+			attrs: props.attrs ?? {},
+		});
+	}
 
-    return new ZarrArray({
-      store: this.store,
-      path,
-      shape: meta.shape,
-      dtype: dtype,
-      chunk_shape: meta.chunks,
-      chunk_key: chunk_key(path, chunk_separator),
-      compressor: compressor,
-      fill_value: meta.fill_value,
-      attrs: props.attrs ?? {},
-    });
-  }
+	/**
+	 * @param {string} path
+	 * @returns {Promise<ZarrArray<import('./types').DataType, S>>}
+	 */
+	async get_array(path) {
+		// path = normalize_path(path);
+		const meta_key = array_meta_key(path);
+		const meta_doc = await this.store.get(meta_key);
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').DataType, S>>}
-   */
-  async get_array(path) {
-    // path = normalize_path(path);
-    const meta_key = array_meta_key(path);
-    const meta_doc = await this.store.get(meta_key);
+		if (!meta_doc) {
+			throw new NodeNotFoundError(path);
+		}
 
-    if (!meta_doc) {
-      throw new NodeNotFoundError(path);
-    }
+		/** @type {ArrayMetadata<import('./types').DataType>} */
+		const meta = json_decode_object(meta_doc);
 
-    /** @type {ArrayMetadata<import('./types').DataType>} */
-    const meta = json_decode_object(meta_doc);
+		return from_meta(this.store, path, meta);
+	}
 
-    return from_meta(this.store, path, meta);
-  }
+	/**
+	 * @param {string} path
+	 * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
+	 */
+	async get_group(path) {
+		// path = normalize_path(path);
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ExplicitGroup<S, Hierarchy<S>>>}
-   */
-  async get_group(path) {
-    // path = normalize_path(path);
+		const meta_key = group_meta_key(path);
+		const meta_doc = await this.store.get(meta_key);
 
-    const meta_key = group_meta_key(path);
-    const meta_doc = await this.store.get(meta_key);
+		if (!meta_doc) {
+			throw new NodeNotFoundError(path);
+		}
 
-    if (!meta_doc) {
-      throw new NodeNotFoundError(path);
-    }
+		// instantiate explicit group
+		return new ExplicitGroup({
+			store: this.store,
+			owner: this,
+			path,
+			attrs: () => get_attrs(this.store, path),
+		});
+	}
 
-    // instantiate explicit group
-    return new ExplicitGroup({
-      store: this.store,
-      owner: this,
-      path,
-      attrs: () => get_attrs(this.store, path),
-    });
-  }
+	/**
+	 * @param {string} path
+	 * @returns {Promise<ZarrArray<import('./types').DataType, S> | ExplicitGroup<S, Hierarchy<S>>>}
+	 */
+	async get(path) {
+		try {
+			return await this.get_array(path);
+		} catch (err) {
+			if (!(err instanceof NodeNotFoundError)) {
+				throw err;
+			}
+		}
+		// try explicit group
+		try {
+			return await this.get_group(path);
+		} catch (err) {
+			if (!(err instanceof NodeNotFoundError)) {
+				throw err;
+			}
+		}
+		throw new KeyError(path);
+	}
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ZarrArray<import('./types').DataType, S> | ExplicitGroup<S, Hierarchy<S>>>}
-   */
-  async get(path) {
-    try {
-      return await this.get_array(path);
-    } catch (err) {
-      if (!(err instanceof NodeNotFoundError)) {
-        throw err;
-      }
-    }
-    // try explicit group
-    try {
-      return await this.get_group(path);
-    } catch (err) {
-      if (!(err instanceof NodeNotFoundError)) {
-        throw err;
-      }
-    }
-    throw new KeyError(path);
-  }
+	/**
+	 * @param {string} path
+	 * @returns {Promise<boolean>}
+	 */
+	async has(path) {
+		try {
+			await this.get(path);
+			return true;
+		} catch (err) {
+			if (err instanceof NodeNotFoundError) {
+				return false;
+			}
+			throw err;
+		}
+	}
 
-  /**
-   * @param {string} path
-   * @returns {Promise<boolean>}
-   */
-  async has(path) {
-    try {
-      await this.get(path);
-      return true;
-    } catch (err) {
-      if (err instanceof NodeNotFoundError) {
-        return false;
-      }
-      throw err;
-    }
-  }
+	/** @param {string} _path */
+	async get_children(_path) {
+		console.warn('get_children not implemented for v2.');
+		return new Map();
+	}
 
-  /** @param {string} _path */
-  async get_children(_path) {
-    console.warn('get_children not implemented for v2.');
-    return new Map();
-  }
-
-  /**
-   * @param {string} _path
-   * @returns {never}
-   */
-  get_implicit_group(_path) {
-    throw new Error('Implicit group not implemented for v2.');
-  }
+	/**
+	 * @param {string} _path
+	 * @returns {never}
+	 */
+	get_implicit_group(_path) {
+		throw new Error('Implicit group not implemented for v2.');
+	}
 }
 

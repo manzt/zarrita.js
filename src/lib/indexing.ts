@@ -1,7 +1,7 @@
-import { IndexError } from './errors';
-import { product, range, slice } from './util';
+import { IndexError } from "./errors";
+import { product, range, slice } from "./util";
 
-import type { Slice, Indices } from '../types';
+import type { Indices, Slice } from "../types";
 
 function err_too_many_indices(selection: (number | Slice)[], shape: number[]) {
 	throw new IndexError(
@@ -16,7 +16,7 @@ function err_boundscheck(dim_len: number) {
 }
 
 function err_negative_step() {
-	throw new IndexError('only slices with step >= 1 are supported');
+	throw new IndexError("only slices with step >= 1 are supported");
 }
 
 function check_selection_length(selection: (number | Slice)[], shape: number[]) {
@@ -144,7 +144,9 @@ class SliceDimIndexer {
 			}
 			// selection starts within current chunk if true,
 			// otherwise selection ends after current chunk.
-			const dim_chunk_sel_stop = this.stop > dim_limit ? dim_chunk_len : this.stop - dim_offset;
+			const dim_chunk_sel_stop = this.stop > dim_limit
+				? dim_chunk_len
+				: this.stop - dim_offset;
 
 			const dim_chunk_sel: Indices = [dim_chunk_sel_start, dim_chunk_sel_stop, this.step];
 			const dim_chunk_nitems = Math.ceil(
@@ -157,7 +159,10 @@ class SliceDimIndexer {
 	}
 }
 
-function normalize_selection(selection: null | (Slice | null | number)[], shape: number[]): (number | Slice)[] {
+function normalize_selection(
+	selection: null | (Slice | null | number)[],
+	shape: number[],
+): (number | Slice)[] {
 	let normalized: (number | Slice)[] = [];
 	if (selection === null) {
 		normalized = shape.map((_) => slice(null));
@@ -187,7 +192,7 @@ export class BasicIndexer {
 	constructor({ selection, shape, chunk_shape }: BasicIndexerProps) {
 		// setup per-dimension indexers
 		this.dim_indexers = normalize_selection(selection, shape).map((dim_sel, i) => {
-			return new (typeof dim_sel === 'number' ? IntDimIndexer : SliceDimIndexer)({
+			return new (typeof dim_sel === "number" ? IntDimIndexer : SliceDimIndexer)({
 				// ts inference not strong enough to know correct chunk
 				dim_sel: dim_sel as any,
 				dim_len: shape[i],

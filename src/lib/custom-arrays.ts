@@ -1,10 +1,10 @@
 export class BoolArray {
 	private _bytes: Uint8Array;
 
-	constructor(size: number)
-	constructor(buffer: ArrayBuffer)
+	constructor(size: number);
+	constructor(buffer: ArrayBuffer);
 	constructor(x: number | ArrayBuffer) {
-		if (typeof x === 'number') {
+		if (typeof x === "number") {
 			this._bytes = new Uint8Array(x);
 		} else {
 			this._bytes = new Uint8Array(x);
@@ -49,10 +49,10 @@ function encode_str(str: string, bytes: number, chars: number) {
 export class StringArray<Bytes extends number, Chars extends number> {
 	private _bytes: Uint8Array;
 
-	constructor(size: number, bytes: Bytes, chars: Chars)
-	constructor(buffer: ArrayBuffer, bytes: Bytes, chars: Chars)
+	constructor(size: number, bytes: Bytes, chars: Chars);
+	constructor(buffer: ArrayBuffer, bytes: Bytes, chars: Chars);
 	constructor(x: number | ArrayBuffer, public bytes: Bytes, public chars: Chars) {
-		if (typeof x === 'number') {
+		if (typeof x === "number") {
 			this._bytes = new Uint8Array(bytes * x * chars);
 		} else {
 			this._bytes = new Uint8Array(x);
@@ -73,7 +73,7 @@ export class StringArray<Bytes extends number, Chars extends number> {
 			this.bytes * this.chars * idx,
 			this.bytes * this.chars,
 		);
-		return new TextDecoder().decode(view).replace(/\x00/g, '');
+		return new TextDecoder().decode(view).replace(/\x00/g, "");
 	}
 
 	set(idx: number, value: string): void {
@@ -101,16 +101,16 @@ export class StringArray<Bytes extends number, Chars extends number> {
 }
 
 export class ByteStringArray<Chars extends number> extends StringArray<1, Chars> {
-	constructor(buffer: ArrayBuffer, chars: Chars)
-	constructor(size: number, chars: Chars)
+	constructor(buffer: ArrayBuffer, chars: Chars);
+	constructor(size: number, chars: Chars);
 	constructor(x: number | ArrayBuffer, chars: Chars) {
 		super(x as any, 1, chars);
 	}
 }
 
 export class UnicodeStringArray<Chars extends number> extends StringArray<4, Chars> {
-	constructor(buffer: ArrayBuffer, chars: Chars)
-	constructor(size: number, chars: Chars)
+	constructor(buffer: ArrayBuffer, chars: Chars);
+	constructor(size: number, chars: Chars);
 	constructor(x: number | ArrayBuffer, chars: Chars) {
 		super(x as any, 4, chars);
 	}

@@ -1,6 +1,17 @@
-import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from './custom-arrays';
+import {
+	BoolArray,
+	ByteStringArray as _ByteStringArray,
+	UnicodeStringArray as _UnicodeStringArray,
+} from "./custom-arrays";
 
-import type { DataType, TypedArray, TypedArrayConstructor, Slice, Indices, ChunkQueue } from '../types';
+import type {
+	ChunkQueue,
+	DataType,
+	Indices,
+	Slice,
+	TypedArray,
+	TypedArrayConstructor,
+} from "../types";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -20,10 +31,10 @@ function system_is_little_endian(): boolean {
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
-export const should_byte_swap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === '>';
+export const should_byte_swap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
 
 export function byte_swap_inplace(src: TypedArray<DataType>) {
-	if (!('BYTES_PER_ELEMENT' in src)) return;
+	if (!("BYTES_PER_ELEMENT" in src)) return;
 	const b = src.BYTES_PER_ELEMENT;
 	const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
 	const numFlips = b / 2;
@@ -42,13 +53,17 @@ export function ensure_array<T>(maybe_arr: T | T[]): T[] {
 	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
-export function ensure_dtype<Str extends string>(dtype: Str): Str extends DataType ? Str : never {
+export function ensure_dtype<Str extends string>(
+	dtype: Str,
+): Str extends DataType ? Str : never {
 	// TODO: validation
 	return dtype as any;
 }
 
-export function normalize_path<Path extends string>(path: Path): Path extends `/${infer _}` ? Path : `/${Path}` {
-	return path[0] !== '/' ? `/${path}` : path as any;
+export function normalize_path<Path extends string>(
+	path: Path,
+): Path extends `/${infer _}` ? Path : `/${Path}` {
+	return path[0] !== "/" ? `/${path}` : path as any;
 }
 
 const constructors = {
@@ -68,31 +83,31 @@ const constructors = {
 };
 
 export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> {
-
-	const second = dtype[1] as DataType extends `${infer _}${infer T}${infer _}` ? T : never;
+	const second = dtype[1] as DataType extends `${infer _}${infer T}${infer _}` ? T
+		: never;
 
 	// dynamically create typed array, use named class so logging is nice
-	if (second === 'U') {
+	if (second === "U") {
 		const size = parseInt(dtype.slice(2));
 		return class UnicodeStringArray extends _UnicodeStringArray<typeof size> {
 			constructor(x: ArrayBuffer | number) {
-				super(x as any, size)
+				super(x as any, size);
 			}
 		} as TypedArrayConstructor<D>;
 	}
 
 	// dynamically create typed array, use named class so logging is nice
-	if (second === 'S') {
+	if (second === "S") {
 		const size = parseInt(dtype.slice(2));
 		return class ByteStringArray extends _ByteStringArray<typeof size> {
 			constructor(x: ArrayBuffer | number) {
-				super(x as any, size)
+				super(x as any, size);
 			}
 		} as TypedArrayConstructor<D>;
 	}
 
 	// get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-	const key = dtype.slice(1) as Exclude<keyof typeof constructors, 'U' | 'S'>
+	const key = dtype.slice(1) as Exclude<keyof typeof constructors, "U" | "S">;
 	const ctr = constructors[key];
 
 	if (!ctr) {
@@ -116,7 +131,9 @@ export function* range(start: number, stop?: number, step = 1): Generator<number
  * python-like itertools.product generator
  * https://gist.github.com/cybercase/db7dde901d7070c98c48
  */
-export function* product<T extends Array<Iterable<any>>>(...iterables: T): IterableIterator<{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never}> {
+export function* product<T extends Array<Iterable<any>>>(
+	...iterables: T
+): IterableIterator<{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never }> {
 	if (iterables.length === 0) {
 		return;
 	}
@@ -124,9 +141,9 @@ export function* product<T extends Array<Iterable<any>>>(...iterables: T): Itera
 	const iterators = iterables.map((it) => it[Symbol.iterator]());
 	const results = iterators.map((it) => it.next());
 	if (results.some((r) => r.done)) {
-		throw new Error('Input contains an empty iterator.');
+		throw new Error("Input contains an empty iterator.");
 	}
-	for (let i = 0; ;) {
+	for (let i = 0;;) {
 		if (results[i].done) {
 			// reset the current iterator
 			iterators[i] = iterables[i][Symbol.iterator]();
@@ -146,7 +163,11 @@ export function* product<T extends Array<Iterable<any>>>(...iterables: T): Itera
 export function slice(end: number | null): Slice;
 export function slice(start: number, end: number | null): Slice;
 export function slice(start: number, end: number | null, step: number | null): Slice;
-export function slice(start: number | null, stop?: number | null, step: number| null = null): Slice {
+export function slice(
+	start: number | null,
+	stop?: number | null,
+	step: number | null = null,
+): Slice {
 	if (stop === undefined) {
 		stop = start;
 		start = null;
@@ -159,7 +180,7 @@ export function slice(start: number | null, stop?: number | null, step: number| 
 		if (end_ix < 0) end_ix += length;
 		return [start_ix, end_ix, istep];
 	};
-	return { start, stop, step, indices, kind: 'slice' };
+	return { start, stop, step, indices, kind: "slice" };
 }
 
 /** Built-in "queue" for awaiting promises. */
