@@ -18,7 +18,7 @@ export function json_encode_object(o: Record<string, any>): Uint8Array {
 	return new TextEncoder().encode(str);
 }
 
-export function json_decode_object(bytes: Uint8Array): string {
+export function json_decode_object(bytes: Uint8Array) {
 	const str = new TextDecoder().decode(bytes);
 	return JSON.parse(str);
 }
