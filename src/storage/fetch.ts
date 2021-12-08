@@ -1,36 +1,33 @@
-import ReadOnlyStore from './readonly.js';
+import ReadOnlyStore from "./readonly";
 
-/** @template {string} Url */
-class FetchStore extends ReadOnlyStore {
-  /** @param {Url} url */
-  constructor(url) {
-    super();
-    this.url = url.endsWith('/') ? url.slice(0, -1) : url;
-  }
+class FetchStore extends ReadOnlyStore<RequestInit> {
+	href: string;
 
-  /** @param {string} key */
-  _path(key) {
-    return `${this.url}/${key.startsWith('/') ? key.slice(1) : key}`;
-  }
+	constructor(url: URL)
+	constructor(href: string)
+	constructor(url: string | URL) {
+		super();
+		let href = typeof url === "string" ? url : url.href;
+		this.href = href.endsWith("/") ? href.slice(0, -1) : href;
+	}
 
-  /**
-   * @param {string} key
-   * @returns {Promise<Uint8Array | undefined>}
-   */
-  async get(key) {
-    const path = this._path(key);
-    const res = await fetch(path);
-    if (res.status === 404 || res.status === 403) {
-      return undefined;
-    }
-    const value = await res.arrayBuffer();
-    return new Uint8Array(value);
-  }
+	_path(key: string) {
+		return `${this.href}/${key.startsWith("/") ? key.slice(1) : key}`;
+	}
 
-  /** @param {string} key */
-  has(key) {
-    return this.get(key).then((res) => res !== undefined);
-  }
+	async get(key: string, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
+		const path = this._path(key);
+		const res = await fetch(path, opts);
+		if (res.status === 404 || res.status === 403) {
+			return undefined;
+		}
+		const value = await res.arrayBuffer();
+		return new Uint8Array(value);
+	}
+
+	has(key: string): Promise<boolean> {
+		return this.get(key).then((res) => res !== undefined);
+	}
 }
 
 export default FetchStore;

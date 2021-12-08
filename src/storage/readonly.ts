@@ -1,33 +1,22 @@
-// @ts-check
-/** @typedef {import('../types').AsyncStore} Store */
+import type { AsyncStore } from "../types";
 
-/** @implements {Omit<Store, 'get' | 'has'>} */
-class ReadOnlyStore {
+class ReadOnlyStore<Opts extends unknown = unknown> implements Omit<AsyncStore<Opts>, 'get' | 'has'> {
 
-  /**
-   * @param {string} _key
-   * @param {Uint8Array} _value
-   * @return {never}
-   */
-  set(_key, _value) {
-    throw new Error('Store is read-only.');
-  }
+	set(_key: string, _value: Uint8Array): never {
+		throw new Error("Store is read-only.");
+	}
 
-  /**
-   * @param {string} _key
-   * @returns {never}
-   */
-  delete(_key) {
-    throw new Error('Store is read-only.');
-  }
+	delete(_key: string): never {
+		throw new Error("Store is read-only.");
+	}
 
-  list_prefix() {
-    return Promise.resolve([]);
-  }
+	list_prefix() {
+		return Promise.resolve([]);
+	}
 
-  list_dir() {
-    return Promise.resolve({ contents: [], prefixes: [] });
-  }
+	list_dir() {
+		return Promise.resolve({ contents: [], prefixes: [] });
+	}
 }
 
 export default ReadOnlyStore;
