@@ -9,24 +9,25 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "node ./test/index.test.js",
+    "test": "tsm ./test/index.test.js",
     "check": "tsc --noEmit",
     "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
   },
   "files": [
-    "src/",
-    "types/"
+    "dist/"
   ],
   "exports": {
-    ".": "./src/index.js",
-    "./v2": "./src/v2.js",
-    "./v3": "./src/v3.js",
-    "./ndarray": "./src/ndarray.js",
-    "./storage/*": "./src/storage/*.js"
+    ".": "./dist/index.mjs",
+    "./v2": "./dist/v2.mjs",
+    "./v3": "./dist/v3.mjs",
+    "./ndarray": "./dist/ndarray.mjs",
+    "./storage/*": "./dist/storage/*.mjs"
   },
   "typesVersions": {
     "*": {
-      "*": ["types/*"]
+      "*": [
+        "dist/*"
+      ]
     }
   },
   "dependencies": {
@@ -37,6 +38,8 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
+    "tsm": "^2.2.1",
+    "typescript": "^4.5.2",
     "zora": "^5.0.0"
   }
 }
