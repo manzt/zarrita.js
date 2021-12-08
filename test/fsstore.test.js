@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import FileSystemStore from '../src/storage/fs';
+import FileSystemStore from 'zarrita/storage/fs';
 import { run_test_suite } from './common.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

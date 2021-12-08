@@ -13,7 +13,7 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "zarrita": ["./src", "./src/*"]
+      "zarrita": ["./dist", "./dist/*"]
     }
   },
   "include": ["src/**/*"]

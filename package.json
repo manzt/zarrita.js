@@ -9,7 +9,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "tsm ./test/index.test.js",
+    "test": "mkdist && node ./test/index.test.js",
     "check": "tsc --noEmit",
     "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
   },
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
-    "tsm": "^2.2.1",
+    "mkdist": "^0.3.5",
     "typescript": "^4.5.2",
     "zora": "^5.0.0"
   }

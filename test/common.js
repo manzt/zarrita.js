@@ -9,8 +9,8 @@ import {
   registry,
   slice,
   ZarrArray,
-} from '../src/index';
-import { get, set } from '../src/ndarray';
+} from 'zarrita';
+import { get, set } from 'zarrita/ndarray';
 import ndarray from 'ndarray';
 import GZip from 'numcodecs/gzip';
 
