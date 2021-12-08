@@ -1,230 +1,181 @@
-// @ts-check
-import { assert, KeyError } from './errors.js';
-import { byte_swap_inplace, get_ctr, should_byte_swap } from './util.js';
+import { assert, KeyError } from './errors';
+import { byte_swap_inplace, get_ctr, should_byte_swap } from './util';
 
-/** @template {import('../types').Store} Store */
-export class Node {
-  /** @param {{ store: Store, path: string }} props */
-  constructor({ store, path }) {
-    /** @readonly */
-    this.store = store;
-    /** @readonly */
-    this.path = path;
-  }
+import type { Store, Hierarchy, Attrs, ArrayAttributes, DataType, Scalar, TypedArrayConstructor, TypedArray } from '../types';
+import type { Codec } from 'numcodecs';
 
-  get name() {
-    return this.path.split('/').pop() ?? '';
-  }
+export class Node<S extends Store>{
+	readonly store: S;
+	readonly path: string;
+	constructor({ store, path }: { store: S, path: string }) {
+		this.store = store;
+		this.path = path;
+	}
+
+	get name() {
+		return this.path.split('/').pop() ?? '';
+	}
 }
 
-/**
- * @template {import('../types').Store} Store
- * @template {import('../types').Hierarchy<Store>} Hierarchy
- * @extends {Node<Store>}
- */
-export class Group extends Node {
-  /** @param {{ store: Store, path: string, owner: Hierarchy }} props */
-  constructor(props) {
-    super(props);
-    /** @readonly */
-    this.owner = props.owner;
-  }
+export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
+	readonly owner: H;
+	constructor(props: { store: S, path: string, owner: H }) {
+		super(props);
+		this.owner = props.owner;
+	}
 
-  async get_children() {
-    return this.owner.get_children(this.path);
-  }
+	async get_children() {
+		return this.owner.get_children(this.path);
+	}
 
-  /**
-   * @param {string} path
-   * @returns {string}
-   */
-  _dereference_path(path) {
-    if (path[0] !== '/') {
-      // treat as relative path
-      if (this.path === '/') {
-        // special case root group
-        path = '/' + path;
-      } else {
-        path = this.path + '/' + path;
-      }
-    }
-    if (path.length > 1) {
-      assert(path[path.length - 1] !== '/', 'Path must end with \'/\'.');
-    }
-    return path;
-  }
+	_dereference_path(path: string): string {
+		if (path[0] !== '/') {
+			// treat as relative path
+			if (this.path === '/') {
+				// special case root group
+				path = '/' + path;
+			} else {
+				path = this.path + '/' + path;
+			}
+		}
+		if (path.length > 1) {
+			assert(path[path.length - 1] !== '/', 'Path must end with \'/\'.');
+		}
+		return path;
+	}
 
-  /** @param {string} path */
-  get(path) {
-    path = this._dereference_path(path);
-    return this.owner.get(path);
-  }
+	get(path: string) {
+		path = this._dereference_path(path);
+		return this.owner.get(path);
+	}
 
-  /** @param {string} path */
-  has(path) {
-    path = this._dereference_path(path);
-    return this.owner.has(path);
-  }
+	has(path: string) {
+		path = this._dereference_path(path);
+		return this.owner.has(path);
+	}
 
-  /**
-   * @param {string} path
-   * @param {{ attrs?: Record<string, any> }} props
-   */
-  create_group(path, props = {}) {
-    path = this._dereference_path(path);
-    return this.owner.create_group(path, props);
-  }
+	create_group(path: string, props: { attrs?: Attrs } = {}) {
+		path = this._dereference_path(path);
+		return this.owner.create_group(path, props);
+	}
 
-  /**
-   * @param {string} path
-   * @param {Parameters<Hierarchy['create_array']>[1]} props
-   */
-  create_array(path, props) {
-    path = this._dereference_path(path);
-    return this.owner.create_array(path, props);
-  }
+	create_array(path: string, props: Parameters<H['create_array']>[1]) {
+		path = this._dereference_path(path);
+		return this.owner.create_array(path, props);
+	}
 
-  /** @param {string} path */
-  get_array(path) {
-    path = this._dereference_path(path);
-    return this.owner.get_array(path);
-  }
+	get_array(path: string) {
+		path = this._dereference_path(path);
+		return this.owner.get_array(path);
+	}
 
-  /** @param {string} path */
-  get_group(path) {
-    path = this._dereference_path(path);
-    return this.owner.get_group(path);
-  }
+	get_group(path: string) {
+		path = this._dereference_path(path);
+		return this.owner.get_group(path);
+	}
 
-  /** @param {string} path */
-  get_implicit_group(path) {
-    path = this._dereference_path(path);
-    return this.owner.get_implicit_group(path);
-  }
+	get_implicit_group(path: string) {
+		path = this._dereference_path(path);
+		return this.owner.get_implicit_group(path);
+	}
 }
 
-/**
- * @template {import('../types').Store} Store
- * @template {import('../types').Hierarchy<Store>} Hierarchy
- * @extends {Group<Store, Hierarchy>}
- */
-export class ExplicitGroup extends Group {
-  /** @param {{
-   *    store: Store,
-   *    path: string,
-   *    owner: Hierarchy,
-   *    attrs: import('../types').Attrs | (() => Promise<import('../types').Attrs>),
-   * }} props */
-  constructor(props) {
-    super(props);
-    this._attrs = props.attrs || {};
-  }
-
-  /** @returns {Promise<import('../types').Attrs>} */
-  get attrs() {
-    if (typeof this._attrs === 'object') {
-      return Promise.resolve(this._attrs);
-    }
-    return this._attrs().then((attrs) => {
-      this._attrs = attrs;
-      return attrs;
-    });
-  }
+interface ExplicitGroupProps<S extends Store, H extends Hierarchy<S>> {
+	store: S,
+	path: string,
+	owner: H,
+	attrs: Attrs | (() => Promise<Attrs>)
 }
 
-/**
- * @template {import('../types').Store} Store
- * @template {import('../types').Hierarchy<Store>} Hierarchy
- * @extends {Group<Store, Hierarchy>}
- */
-export class ImplicitGroup extends Group {}
+export class ExplicitGroup<S extends Store, H extends Hierarchy<S>> extends Group<S, H> {
+	private _attrs: Attrs | (() => Promise<Attrs>);
 
-/**
- * @template {import('../types').DataType} Dtype
- * @template {import('../types').Store} Store
- * @extends {Node<Store>}
- */
-export class ZarrArray extends Node {
-  /** @param {import('../types').ArrayAttributes<Dtype, Store>} props */
-  constructor(props) {
-    super(props);
-    /** @readonly */
-    this.shape = props.shape;
-    /** @readonly */
-    this.dtype = props.dtype;
-    /** @readonly */
-    this.chunk_shape = props.chunk_shape;
-    /** @readonly */
-    this.compressor = props.compressor;
-    /** @readonly */
-    this.fill_value = props.fill_value;
-    /** @readonly */
-    this.chunk_key = props.chunk_key;
-    /**
-     * @type {import('../types').TypedArrayConstructor<Dtype>}
-     * @readonly
-     */
-    this.TypedArray = get_ctr(props.dtype);
-    this._attrs = props.attrs;
-  }
+	constructor(props: ExplicitGroupProps<S, H>) {
+		super(props);
+		this._attrs = props.attrs || {};
+	}
 
-  /** @returns {Promise<Record<string, any>>} */
-  get attrs() {
-    if (typeof this._attrs === 'object') {
-      return Promise.resolve(this._attrs);
-    }
-    return this._attrs().then((attrs) => {
-      // cache the result
-      this._attrs = attrs;
-      return attrs;
-    });
-  }
+	get attrs(): Promise<Attrs> {
+		if (typeof this._attrs === 'object') {
+			return Promise.resolve(this._attrs);
+		}
+		return this._attrs().then((attrs) => {
+			this._attrs = attrs;
+			return attrs;
+		});
+	}
+}
 
-  get ndim() {
-    return this.shape.length;
-  }
+export class ImplicitGroup<S extends Store, H extends Hierarchy<S>> extends Group<S, H> { }
 
-  /**
-   * @param {Uint8Array} bytes
-   * @returns {Promise<import('../types').TypedArray<Dtype>>}
-   */
-  async _decode_chunk(bytes) {
-    // decompress
-    if (this.compressor) {
-      bytes = await this.compressor.decode(bytes);
-    }
+export class ZarrArray<D extends DataType, S extends Store> extends Node<S> {
+	readonly shape: number[];
+	readonly dtype: D;
+	readonly chunk_shape: number[]
+	readonly compressor?: Codec;
+	readonly fill_value: Scalar<D> | null;
+	readonly chunk_key: ArrayAttributes<D, S>['chunk_key'];
+	readonly TypedArray: TypedArrayConstructor<D>;
+	private _attrs: Attrs | (() => Promise<Attrs>);
 
-    const data =
-      /** @type {import('../types').TypedArray<Dtype>} */ (new this.TypedArray(bytes.buffer));
+	constructor(props: ArrayAttributes<D, S>) {
+		super(props);
+		this.shape = props.shape;
+		this.dtype = props.dtype;
+		this.chunk_shape = props.chunk_shape;
+		this.compressor = props.compressor;
+		this.fill_value = props.fill_value;
+		this.chunk_key = props.chunk_key;
+		this.TypedArray = get_ctr(props.dtype);
+		this._attrs = props.attrs;
+	}
 
-    if (should_byte_swap(this.dtype)) {
-      byte_swap_inplace(data);
-    }
+	get attrs() {
+		if (typeof this._attrs === 'object') {
+			return Promise.resolve(this._attrs);
+		}
+		return this._attrs().then((attrs) => {
+			// cache the result
+			this._attrs = attrs;
+			return attrs;
+		});
+	}
 
-    return data;
-  }
+	get ndim() {
+		return this.shape.length;
+	}
 
-  /** @param {import('../types').TypedArray<Dtype>} data */
-  async _encode_chunk(data) {
-    if (should_byte_swap(this.dtype)) {
-      byte_swap_inplace(data);
-    }
-    let bytes = new Uint8Array(data.buffer);
-    if (this.compressor) {
-      bytes = await this.compressor.encode(bytes);
-    }
-    return bytes;
-  }
+	async _decode_chunk(bytes: Uint8Array): Promise<TypedArray<D>> {
 
-  /**
-   * @param {number[]} chunk_coords
-   * @returns {Promise<{ data: import('../types').TypedArray<Dtype>, shape: number[] }>}
-   */
-  async get_chunk(chunk_coords) {
-    const chunk_key = this.chunk_key(chunk_coords);
-    const buffer = await this.store.get(chunk_key);
-    if (!buffer) throw new KeyError(chunk_key);
-    const data = await this._decode_chunk(buffer);
-    return { data, shape: this.chunk_shape };
-  }
+		if (this.compressor) {
+			bytes = await this.compressor.decode(bytes);
+		}
+
+		const data = new this.TypedArray(bytes.buffer);
+
+		if (should_byte_swap(this.dtype)) {
+			byte_swap_inplace(data);
+		}
+
+		return data;
+	}
+
+	async _encode_chunk(data: TypedArray<D>): Promise<Uint8Array> {
+		if (should_byte_swap(this.dtype)) {
+			byte_swap_inplace(data);
+		}
+		let bytes = new Uint8Array(data.buffer);
+		if (this.compressor) {
+			bytes = await this.compressor.encode(bytes);
+		}
+		return bytes;
+	}
+
+	async get_chunk(chunk_coords: number[]): Promise<{ data: TypedArray<D>, shape: number[] }> {
+		const chunk_key = this.chunk_key(chunk_coords);
+		const buffer = await this.store.get(chunk_key);
+		if (!buffer) throw new KeyError(chunk_key);
+		const data = await this._decode_chunk(buffer);
+		return { data, shape: this.chunk_shape };
+	}
 }

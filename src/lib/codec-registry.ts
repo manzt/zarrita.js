@@ -1,8 +1,6 @@
-// @ts-check
+import type { Codec } from 'numcodecs';
 
-/** @typedef {import('numcodecs').Codec} Codec */
-/** @typedef {<Config extends Record<string, any>=Record<string, any>>(config: Config) => Codec} FromConfig */
-/** @typedef {() => Promise<{ fromConfig: FromConfig }> | { fromConfig: FromConfig }} CodecImporter */
+type Config = Record<string, any>;
+type CodecImporter = () => Promise<{ fromConfig: (config: Config) => Codec }>;
 
-/** @type {Map<string, CodecImporter>} */
-export const registry = new Map();
+export const registry: Map<string, CodecImporter> = new Map;
