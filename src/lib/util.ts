@@ -1,8 +1,4 @@
-import {
-	BoolArray,
-	ByteStringArray as _ByteStringArray,
-	UnicodeStringArray as _UnicodeStringArray,
-} from "./custom-arrays";
+import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays";
 
 import type {
 	ChunkQueue,

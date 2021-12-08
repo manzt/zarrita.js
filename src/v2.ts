@@ -1,12 +1,7 @@
 import { ExplicitGroup, ZarrArray } from './lib/hierarchy';
 import { registry } from './lib/codec-registry';
 import { KeyError, NodeNotFoundError } from './lib/errors';
-import {
-	ensure_array,
-	ensure_dtype,
-	json_decode_object,
-	json_encode_object,
-} from './lib/util';
+import { ensure_array, ensure_dtype, json_decode_object, json_encode_object } from './lib/util';
 
 import type { DataType, Store, Attrs,  Hierarchy as HierarchyProtocol, CreateArrayProps } from './types';
 import type { Codec } from 'numcodecs';
