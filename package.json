@@ -11,7 +11,8 @@
   "scripts": {
     "test": "mkdist && node ./test/index.test.js",
     "check": "tsc --noEmit",
-    "prepack": "mkdist --declaration"
+    "prepack": "mkdist --declaration",
+    "fmt":  "deno fmt --options-use-tabs --options-line-width 90 src test"
   },
   "files": [
     "dist/"

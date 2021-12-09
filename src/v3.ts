@@ -1,10 +1,18 @@
 import { ExplicitGroup, ImplicitGroup, ZarrArray } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
-import { assert, KeyError, NodeNotFoundError, NotImplementedError, } from "./lib/errors";
+import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
+// deno-fmt-ignore
 import { ensure_array, ensure_dtype, json_decode_object, json_encode_object, normalize_path } from "./lib/util";
 
-import type { DataType, Scalar, Attrs, Store, Hierarchy as HierarchyProtocol, CreateArrayProps } from "./types";
-import type { Codec } from 'numcodecs';
+import type {
+	Attrs,
+	CreateArrayProps,
+	DataType,
+	Hierarchy as HierarchyProtocol,
+	Scalar,
+	Store,
+} from "./types";
+import type { Codec } from "numcodecs";
 
 interface RootMetadata {
 	zarr_format: string;
@@ -37,7 +45,6 @@ interface GroupMetadata {
 	attributes: Attrs;
 	extensions: Record<string, any>[];
 }
-
 
 function encode_codec_metadata(codec: Codec): CodecMetadata {
 	// only support gzip for now
@@ -89,7 +96,7 @@ function group_meta_key(path: string, suffix: string) {
 	return `meta/root${path}.group` + suffix;
 }
 
-const chunk_key = (path: string, chunk_separator: '.' | '/') =>
+const chunk_key = (path: string, chunk_separator: "." | "/") =>
 	(chunk_coords: number[]): string => {
 		const chunk_identifier = "c" + chunk_coords.join(chunk_separator);
 		const chunk_key = `data/root${path}/${chunk_identifier}`;
@@ -146,7 +153,7 @@ export async function get_hierarchy<S extends Store>(store: S): Promise<Hierarch
 	// check metadata encoding
 	if (
 		meta.metadata_encoding !==
-		"https://purl.org/zarr/spec/protocol/core/3.0"
+			"https://purl.org/zarr/spec/protocol/core/3.0"
 	) {
 		throw new NotImplementedError(
 			`No support for metadata encoding, got ${meta.metadata_encoding}.`,
@@ -171,7 +178,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	store: S;
 	meta_key_suffix: string;
 
-	constructor({ store, meta_key_suffix }: { store: S, meta_key_suffix: string }) {
+	constructor({ store, meta_key_suffix }: { store: S; meta_key_suffix: string }) {
 		this.store = store;
 		this.meta_key_suffix = meta_key_suffix;
 	}
@@ -188,7 +195,10 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return ".group" + this.meta_key_suffix;
 	}
 
-	async create_group(path: string, props: { attrs?: Attrs } = {}): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	async create_group(
+		path: string,
+		props: { attrs?: Attrs } = {},
+	): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		const { attrs = {} } = props;
 		// sanity checks
 		path = normalize_path(path);
@@ -208,7 +218,10 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async create_array<D extends DataType>(path: string, props: CreateArrayProps<D>): Promise<ZarrArray<D, S>> {
+	async create_array<D extends DataType>(
+		path: string,
+		props: CreateArrayProps<D>,
+	): Promise<ZarrArray<D, S>> {
 		// sanity checks
 		path = normalize_path(path);
 		const shape = ensure_array(props.shape);
@@ -350,7 +363,9 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async get(path: string): Promise<
-		ZarrArray<DataType, S> | ExplicitGroup<S, Hierarchy<S>> | ImplicitGroup<S, Hierarchy<S>>
+		| ZarrArray<DataType, S>
+		| ExplicitGroup<S, Hierarchy<S>>
+		| ImplicitGroup<S, Hierarchy<S>>
 	> {
 		try {
 			return await this.get_array(path);
@@ -392,7 +407,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async get_nodes(): Promise<Map<string, string>> {
-		const nodes: Map<string, string> = new Map;
+		const nodes: Map<string, string> = new Map();
 		const result = await this.store.list_prefix("meta/");
 
 		const lookup = (key: string) => {
@@ -433,7 +448,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	async get_children(path = "/"): Promise<Map<string, string>> {
 		path = normalize_path(path);
 
-		const children: Map<string, string> = new Map;
+		const children: Map<string, string> = new Map();
 
 		// attempt to list directory
 		const key_prefix = path === "/" ? "meta/root/" : `meta/root${path}/`;

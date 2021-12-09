@@ -1,20 +1,29 @@
-import { ExplicitGroup, ZarrArray } from './lib/hierarchy';
-import { registry } from './lib/codec-registry';
-import { KeyError, NodeNotFoundError } from './lib/errors';
-import { ensure_array, ensure_dtype, json_decode_object, json_encode_object } from './lib/util';
+import { ExplicitGroup, ZarrArray } from "./lib/hierarchy";
+import { registry } from "./lib/codec-registry";
+import { KeyError, NodeNotFoundError } from "./lib/errors";
+// deno-fmt-ignore
+import { ensure_array, ensure_dtype, json_decode_object, json_encode_object } from "./lib/util";
 
-import type { DataType, Store, Attrs,  Hierarchy as HierarchyProtocol, CreateArrayProps } from './types';
-import type { Codec } from 'numcodecs';
+import type {
+	Attrs,
+	CreateArrayProps,
+	DataType,
+	Hierarchy as HierarchyProtocol,
+	Store,
+} from "./types";
+import type { Codec } from "numcodecs";
 
 function encode_codec_metadata(codec: Codec) {
 	// @ts-ignore
 	return { id: codec.constructor.codecId, ...codec };
 }
 
-async function get_codec(config: Record<string, any> | null | undefined): Promise<Codec | undefined> {
+async function get_codec(
+	config: Record<string, any> | null | undefined,
+): Promise<Codec | undefined> {
 	if (!config) return;
 	const importer = registry.get(config.id);
-	if (!importer) throw new Error('missing codec' + config.id);
+	if (!importer) throw new Error("missing codec" + config.id);
 	const ctr = await importer();
 	return ctr.fromConfig(config);
 }
@@ -25,23 +34,26 @@ interface ArrayMetadata<Dtype extends DataType> {
 	chunks: number[];
 	dtype: Dtype;
 	compressor: null | Record<string, any>;
-	fill_value: import('./types').Scalar<Dtype> | null;
-	order: 'C' | 'F',
+	fill_value: import("./types").Scalar<Dtype> | null;
+	order: "C" | "F";
 	filters: null | Record<string, any>[];
-	dimension_separator?: '.' | '/'
+	dimension_separator?: "." | "/";
 }
 
 interface GroupMetadata {
-	zarr_format: 2,
+	zarr_format: 2;
 }
 
 type KeyPrefix<S extends string> = S extends "" ? S : `${S}/`;
 
 function key_prefix<S extends string>(path: S): KeyPrefix<S> {
-	return path.length > 1 ? path + '/' : '' as any;
+	return path.length > 1 ? path + "/" : "" as any;
 }
 
-function meta_key<S extends string, N extends string>(path: S, name: N): `${KeyPrefix<S>}${N}` {
+function meta_key<S extends string, N extends string>(
+	path: S,
+	name: N,
+): `${KeyPrefix<S>}${N}` {
 	return key_prefix(path) + name as any;
 }
 
@@ -54,7 +66,10 @@ const get_attrs = async (store: Store, path: string): Promise<Attrs> => {
 	return attrs ? json_decode_object(attrs) : {};
 };
 
-const chunk_key = (path: string, chunk_separator: '.' | '/'): ((chunk_coords: number[]) => string) => {
+const chunk_key = (
+	path: string,
+	chunk_separator: "." | "/",
+): ((chunk_coords: number[]) => string) => {
 	const prefix = key_prefix(path);
 	return (chunk_coords) => {
 		const chunk_identifier = chunk_coords.join(chunk_separator);
@@ -67,19 +82,24 @@ export const create_hierarchy = <S extends Store>(store: S) => new Hierarchy({ s
 
 export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
 
-export const from_meta = async <S extends Store, D extends DataType>(store: S, path: string, meta: ArrayMetadata<D>, attrs?: Record<string, any>) => {
+export const from_meta = async <S extends Store, D extends DataType>(
+	store: S,
+	path: string,
+	meta: ArrayMetadata<D>,
+	attrs?: Record<string, any>,
+) => {
 	return new ZarrArray({
 		store: store,
 		path,
 		shape: meta.shape,
 		dtype: meta.dtype,
 		chunk_shape: meta.chunks,
-		chunk_key: chunk_key(path, meta.dimension_separator ?? '.'),
+		chunk_key: chunk_key(path, meta.dimension_separator ?? "."),
 		compressor: await get_codec(meta.compressor),
 		fill_value: meta.fill_value,
-		attrs: attrs ?? (() => get_attrs(store, path))
+		attrs: attrs ?? (() => get_attrs(store, path)),
 	});
-}
+};
 
 export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	public store: S;
@@ -88,10 +108,13 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	get root() {
-		return this.get('/');
+		return this.get("/");
 	}
 
-	async create_group(path: string, props: { attrs?: Attrs } = {}): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	async create_group(
+		path: string,
+		props: { attrs?: Attrs } = {},
+	): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		const { attrs } = props;
 		// sanity checks
 		// path = normalize_path(path);
@@ -113,14 +136,17 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async create_array<D extends DataType>(path: string, props: CreateArrayProps<D>): Promise<ZarrArray<D, S>> {
+	async create_array<D extends DataType>(
+		path: string,
+		props: CreateArrayProps<D>,
+	): Promise<ZarrArray<D, S>> {
 		// sanity checks
 		// path = normalize_path(path);
 		const shape = ensure_array(props.shape);
 		const dtype = ensure_dtype(props.dtype);
 		const chunk_shape = ensure_array(props.chunk_shape);
 		const compressor = props.compressor;
-		const chunk_separator = props.chunk_separator ?? '.';
+		const chunk_separator = props.chunk_separator ?? ".";
 
 		const meta: ArrayMetadata<D> = {
 			zarr_format: 2,
@@ -128,7 +154,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 			dtype,
 			chunks: chunk_shape,
 			dimension_separator: chunk_separator,
-			order: 'C',
+			order: "C",
 			fill_value: props.fill_value ?? null,
 			filters: [],
 			compressor: compressor ? encode_codec_metadata(compressor) : null,
@@ -226,12 +252,11 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async get_children(_path: string): Promise<Map<string, string>> {
-		console.warn('get_children not implemented for v2.');
-		return new Map;
+		console.warn("get_children not implemented for v2.");
+		return new Map();
 	}
 
 	get_implicit_group(_path: string): never {
-		throw new Error('Implicit group not implemented for v2.');
+		throw new Error("Implicit group not implemented for v2.");
 	}
 }
-

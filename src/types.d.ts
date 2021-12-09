@@ -93,8 +93,8 @@ export interface Slice {
 	indices: (length: number) => Indices;
 }
 
-interface SyncStore<O extends unknown = unknown> {
-	get(key: string, opts?: O): Uint8Array | undefined;
+interface SyncStore<GetOptions = any> {
+	get(key: string, opts?: GetOptions): Uint8Array | undefined;
 	has(key: string): boolean;
 	// Need overide Map to return SyncStore
 	set(key: string, value: Uint8Array): void;
@@ -104,10 +104,10 @@ interface SyncStore<O extends unknown = unknown> {
 }
 
 // Promisify return type of every function in SyncStore, override 'set' to return Promise<AsyncStore>
-type AsyncStore<O extends unknown = unknown> = {
-	[Key in keyof SyncStore<O>]: (
-		...args: Parameters<SyncStore<O>[Key]>
-	) => Promise<ReturnType<SyncStore<O>[Key]>>;
+type AsyncStore<GetOptions = any> = {
+	[Key in keyof SyncStore<GetOptions>]: (
+		...args: Parameters<SyncStore<GetOptions>[Key]>
+	) => Promise<ReturnType<SyncStore<GetOptions>[Key]>>;
 };
 
 export type Store = SyncStore | AsyncStore;

@@ -2,8 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { assert } from "../lib/errors";
 
-import type { AsyncStore } from '../types';
-
+import type { AsyncStore } from "../types";
 
 class FileSystemStore implements AsyncStore {
 	constructor(public root: string) {}

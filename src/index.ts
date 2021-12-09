@@ -4,6 +4,6 @@ export * as v3 from "./v3";
 export { get, set } from "./lib/ops";
 export { slice } from "./lib/util";
 export { registry } from "./lib/codec-registry";
-export { is, is_numeric } from "./lib/helpers";
+// export { is, is_numeric } from "./lib/helpers";
 export { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
 export { ExplicitGroup, Group, ImplicitGroup, ZarrArray } from "./lib/hierarchy";

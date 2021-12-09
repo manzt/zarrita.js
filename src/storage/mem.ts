@@ -3,7 +3,6 @@ import { assert } from "../lib/errors";
 import type { SyncStore } from "../types";
 
 export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
-
 	list_prefix(prefix: string) {
 		assert(
 			prefix[prefix.length - 1] === "/",
@@ -27,7 +26,7 @@ export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
 		}
 
 		const contents = [];
-		const prefixes: Set<string> = new Set;
+		const prefixes: Set<string> = new Set();
 
 		for (const path of super.keys()) {
 			if (path.includes(prefix)) {

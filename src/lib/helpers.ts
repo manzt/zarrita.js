@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { DataType, NumericDataType, Store, WithoutEndianness } from "../types";
 import type { ZarrArray } from "./hierarchy";
 

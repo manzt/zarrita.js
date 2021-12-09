@@ -3,8 +3,8 @@ import ReadOnlyStore from "./readonly";
 class FetchStore extends ReadOnlyStore<RequestInit> {
 	href: string;
 
-	constructor(url: URL)
-	constructor(href: string)
+	constructor(url: URL);
+	constructor(href: string);
 	constructor(url: string | URL) {
 		super();
 		let href = typeof url === "string" ? url : url.href;
