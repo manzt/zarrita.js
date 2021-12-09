@@ -11,7 +11,7 @@
   "scripts": {
     "test": "mkdist && node ./test/index.test.js",
     "check": "tsc --noEmit",
-    "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
+    "prepack": "mkdist --declaration"
   },
   "files": [
     "dist/"
