@@ -9,24 +9,26 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "node ./test/index.test.js",
+    "test": "mkdist && node ./test/index.test.js",
     "check": "tsc --noEmit",
-    "prepare": "tsc --emitDeclarationOnly && cp ./src/types.d.ts ./types/types.d.ts"
+    "prepack": "mkdist --declaration",
+    "fmt":  "deno fmt --options-use-tabs --options-line-width 90 src test"
   },
   "files": [
-    "src/",
-    "types/"
+    "dist/"
   ],
   "exports": {
-    ".": "./src/index.js",
-    "./v2": "./src/v2.js",
-    "./v3": "./src/v3.js",
-    "./ndarray": "./src/ndarray.js",
-    "./storage/*": "./src/storage/*.js"
+    ".": "./dist/index.mjs",
+    "./v2": "./dist/v2.mjs",
+    "./v3": "./dist/v3.mjs",
+    "./ndarray": "./dist/ndarray.mjs",
+    "./storage/*": "./dist/storage/*.mjs"
   },
   "typesVersions": {
     "*": {
-      "*": ["types/*"]
+      "*": [
+        "dist/*"
+      ]
     }
   },
   "dependencies": {
@@ -37,6 +39,8 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
+    "mkdist": "^0.3.5",
+    "typescript": "^4.5.2",
     "zora": "^5.0.0"
   }
 }
