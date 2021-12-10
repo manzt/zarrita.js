@@ -1,7 +1,7 @@
 import { assert } from "../lib/errors";
 import type { SyncStore } from "../types";
 
-export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
+class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
 	list_prefix(prefix: string) {
 		assert(
 			prefix[prefix.length - 1] === "/",
@@ -44,3 +44,5 @@ export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
 		return { contents, prefixes: [...prefixes] };
 	}
 }
+
+export default MemoryStore;

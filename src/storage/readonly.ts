@@ -1,6 +1,6 @@
 import type { AsyncStore } from "../types";
 
-class ReadOnlyStore<Opts = any> implements AsyncStore<Opts> {
+class ReadonlyStore<Opts = any> implements AsyncStore<Opts> {
 	get(_key: string, _opts?: Opts): Promise<Uint8Array | undefined> {
 		throw new Error("`get` must be implemented by sub-class");
 	}
@@ -26,4 +26,4 @@ class ReadOnlyStore<Opts = any> implements AsyncStore<Opts> {
 	}
 }
 
-export default ReadOnlyStore;
+export default ReadonlyStore;
