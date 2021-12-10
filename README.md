@@ -1,18 +1,15 @@
-**Here be dragons (in JavaScript)**. Zarrita.js is a minimal, exploratory implementation of the Zarr version 3.0 core protocol.
-This repo is meant to mirror [`zarrita`](https://github.com/alimanfoo/zarrita), the python implementation.
-The test suite in `test/index.test.js` mirrors the doctest from `zarrita`, and tests both the default 
-`MemoryStore` and Node.js-specific `FileSystemStore` (located in `./src/storage/fsstore.js`).
+**Here be dragons**. Zarrita.js is a minimal, exploratory implementation of the Zarr
+version 2.0 _and_ version 3.0 protocol. It is implemented in TypeScript and utilizes
+[templates literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
+to provide rich data-type information from zarr metadata.
 
-The top-level package export and `/core` submodule are pure JS and will run in both modern Node 
-and browser environments. Each `/storage` entrypoint is specific to either Node (`/storage/fsstore`)
-or the browser (`/storage/httpstore`). 
-
-
-#### Usage (Node):
+#### Usage:
 
 ```javascript
 import { v3, slice, registry } from 'zarrita';
-import { MemoryStore } from 'zarrita/storage/mem';
+import MemoryStore from 'zarrita/storage/mem';
+// import FileSystemStore from 'zarrita/storage/fs'; (Node)
+// import FetchStore from 'zarrita/storage/fetch'; (Browser)
 import GZip from 'numcodecs/gzip';
 
 import ndarray from 'ndarray';
@@ -162,14 +159,14 @@ test.zr3
 12 directories, 10 files
 ```
 
-#### Usage (Browser):
-
-For now, the browser-specific store `HTTPStore` uses the [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
-API and is *read-only*. An example reading from a remote server in the browser can be 
-found [here](https://observablehq.com/d/7156b4838eed011d).
-
 #### Development
 
+This library uses the [`pnpm`](https://pnpm.io/) package manager.
+
 ```bash
-$ npm install && npm test
+$ pnpm install && pnpm test
 ```
+
+Tests are run directly on the ESM module (contents of `dist/`), which is generated when
+running `pnpm test` thanks to [`mkdist`](https://github.com/unjs/mkdist), a simple
+file-to-file transpiler.
