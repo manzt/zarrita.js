@@ -1,5 +1,4 @@
 import { assert } from "../lib/errors";
-
 import type { SyncStore } from "../types";
 
 export class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
