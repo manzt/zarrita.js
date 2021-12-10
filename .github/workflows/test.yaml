@@ -3,16 +3,16 @@ name: Node.js CI
 on: [push]
 
 jobs:
-  runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-  steps:
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6.23.6
 
-  - uses: actions/checkout@v2
-  - uses: pnpm/action-setup@v2.0.1
-    with:
-      version: 6.23.6
-
-  - run: pnpm install
-  - run: pnpm test
-    env:
-      CI: true
+      - run: pnpm install
+      - run: pnpm test
+        env:
+          CI: true
