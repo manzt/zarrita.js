@@ -103,7 +103,9 @@ const chunk_key = (path: string, chunk_separator: "." | "/") =>
 		return chunk_key;
 	};
 
-export async function create_hierarchy<S extends Store>(store: S): Promise<Hierarchy<S>> {
+export async function create_hierarchy<S extends Store>(
+	store: S,
+): Promise<Hierarchy<S>> {
 	// create entry point metadata document
 	const meta_key_suffix = ".json";
 
@@ -123,7 +125,9 @@ export async function create_hierarchy<S extends Store>(store: S): Promise<Hiera
 	return new Hierarchy({ store, meta_key_suffix });
 }
 
-export async function get_hierarchy<S extends Store>(store: S): Promise<Hierarchy<S>> {
+export async function get_hierarchy<S extends Store>(
+	store: S,
+): Promise<Hierarchy<S>> {
 	// retrieve and parse entry point metadata document
 	const meta_key = "zarr.json";
 	const meta_doc = await store.get(meta_key);

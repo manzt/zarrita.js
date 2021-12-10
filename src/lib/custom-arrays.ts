@@ -3,12 +3,8 @@ export class BoolArray {
 
 	constructor(size: number);
 	constructor(buffer: ArrayBuffer);
-	constructor(x: number | ArrayBuffer) {
-		if (typeof x === "number") {
-			this._bytes = new Uint8Array(x);
-		} else {
-			this._bytes = new Uint8Array(x);
-		}
+	constructor(x: any) {
+		this._bytes = new Uint8Array(x);
 	}
 
 	get buffer(): ArrayBuffer {

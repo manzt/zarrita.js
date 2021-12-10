@@ -1,3 +1,7 @@
+import type { ExplicitGroup, ImplicitGroup, ZarrArray } from "./lib/hierarchy";
+import type { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
+import type ndarray from "ndarray";
+
 export type DataType =
 	| NumericDataType
 	| BigIntDataType
@@ -27,7 +31,7 @@ export type StringDataType =
 	| `>U${number}`
 	| `|S${number}`;
 
-type WithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest : never;
+export type WithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest : never;
 
 // deno-fmt-ignore
 type BMap = {
@@ -42,9 +46,10 @@ type BMap = {
   as `${I}`]: I
 }
 
-type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString] : number;
+export type Bytes<BString extends string> = BString extends keyof BMap ? BMap[BString]
+	: number;
 
-type TypedArray<D extends DataType> = D extends "|i1" ? Int8Array
+export type TypedArray<D extends DataType> = D extends "|i1" ? Int8Array
 	: D extends "<i2" | ">i2" ? Int16Array
 	: D extends "<i4" | ">i4" ? Int32Array
 	: D extends "<i8" | ">i8" ? BigInt64Array
@@ -54,13 +59,13 @@ type TypedArray<D extends DataType> = D extends "|i1" ? Int8Array
 	: D extends "<u8" | ">u8" ? BigUint64Array
 	: D extends "<f4" | ">f4" ? Float32Array
 	: D extends "<f8" | ">f8" ? Float64Array
-	: D extends "|b1" ? import("./lib/custom-arrays").BoolArray
-	: D extends `|S${infer B}` ? import("./lib/custom-arrays").ByteStringArray<Bytes<B>>
-	: D extends `>U${infer B}` ? import("./lib/custom-arrays").UnicodeStringArray<Bytes<B>>
-	: D extends `<U${infer B}` ? import("./lib/custom-arrays").UnicodeStringArray<Bytes<B>>
+	: D extends "|b1" ? BoolArray
+	: D extends `|S${infer B}` ? ByteStringArray<Bytes<B>>
+	: D extends `>U${infer B}` ? UnicodeStringArray<Bytes<B>>
+	: D extends `<U${infer B}` ? UnicodeStringArray<Bytes<B>>
 	: never;
 
-type TypedArrayConstructor<D extends DataType> = {
+export type TypedArrayConstructor<D extends DataType> = {
 	new (length: number): TypedArray<D>;
 	new (array: ArrayLike<Scalar<D>> | ArrayBufferLike): TypedArray<D>;
 	// TODO: implement for Bool/Unicode arrays
@@ -69,7 +74,7 @@ type TypedArrayConstructor<D extends DataType> = {
 };
 
 // Hack to get scalar type since is not defined on any typed arrays.
-type Scalar<D extends DataType> = D extends "|b1" ? boolean
+export type Scalar<D extends DataType> = D extends "|b1" ? boolean
 	: D extends `${infer _}${"U" | "S"}${infer _}` ? string
 	: D extends `${"<" | ">"}${"u" | "i"}8` ? bigint
 	: number;
@@ -93,7 +98,7 @@ export interface Slice {
 	indices: (length: number) => Indices;
 }
 
-interface SyncStore<GetOptions = any> {
+export interface SyncStore<GetOptions = any> {
 	get(key: string, opts?: GetOptions): Uint8Array | undefined;
 	has(key: string): boolean;
 	// Need overide Map to return SyncStore
@@ -104,7 +109,7 @@ interface SyncStore<GetOptions = any> {
 }
 
 // Promisify return type of every function in SyncStore, override 'set' to return Promise<AsyncStore>
-type AsyncStore<GetOptions = any> = {
+export type AsyncStore<GetOptions = any> = {
 	[Key in keyof SyncStore<GetOptions>]: (
 		...args: Parameters<SyncStore<GetOptions>[Key]>
 	) => Promise<ReturnType<SyncStore<GetOptions>[Key]>>;
@@ -148,30 +153,32 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 	// read-only
 	has(path: string): Promise<boolean>;
 	get(path: string): Promise<
-		| import("./lib/hierarchy").ZarrArray<DataType, Store>
-		| import("./lib/hierarchy").ExplicitGroup<Store, Hierarchy<Store>>
-		| import("./lib/hierarchy").ImplicitGroup<Store, Hierarchy<Store>>
+		| ZarrArray<DataType, Store>
+		| ExplicitGroup<Store, Hierarchy<Store>>
+		| ImplicitGroup<Store, Hierarchy<Store>>
 	>;
-	get_array(path: string): Promise<import("./lib/hierarchy").ZarrArray<DataType, Store>>;
+	get_array(
+		path: string,
+	): Promise<ZarrArray<DataType, Store>>;
 	get_group(
 		path: string,
-	): Promise<import("./lib/hierarchy").ExplicitGroup<Store, Hierarchy<Store>>>;
+	): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
 	get_implicit_group(
 		path: string,
-	): Promise<import("./lib/hierarchy").ImplicitGroup<Store, Hierarchy<Store>>>;
+	): Promise<ImplicitGroup<Store, Hierarchy<Store>>>;
 	get_children(path?: string): Promise<Map<string, string>>;
 
 	// write
 	create_group(
 		path: string,
 		props?: { attrs?: Attrs },
-	): Promise<import("./lib/hierarchy").ExplicitGroup<Store, Hierarchy<Store>>>;
+	): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
 	create_array<
 		Dtype extends DataType,
 	>(
 		path: string,
 		props: Omit<ArrayAttributes<Dtype>, "path" | "store">,
-	): Promise<import("./lib/hierarchy").ZarrArray<Dtype, Store>>;
+	): Promise<ZarrArray<Dtype, Store>>;
 }
 
 export type Setter<D extends DataType, A extends NdArrayLike<D>> = {
@@ -185,15 +192,12 @@ export type Setter<D extends DataType, A extends NdArrayLike<D>> = {
 	): void;
 };
 
-type BasicSetter<D extends DataType> = Setter<
+export type BasicSetter<D extends DataType> = Setter<
 	D,
 	{ data: TypedArray<D>; shape: number[]; stride?: number[] }
 >;
 
-type NdArraySetter<D extends DataType> = Setter<
-	D,
-	import("ndarray").NdArray<TypedArray<D>>
->;
+export type NdArraySetter<D extends DataType> = Setter<D, ndarray.NdArray<TypedArray<D>>>;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

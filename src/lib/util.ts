@@ -108,7 +108,9 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	const ctr = constructors[key];
 
 	if (!ctr) {
-		throw new Error(`dtype not supported either in zarrita or in browser! got ${dtype}.`);
+		throw new Error(
+			`dtype not supported either in zarrita or in browser! got ${dtype}.`,
+		);
 	}
 
 	return ctr as TypedArrayConstructor<D>;

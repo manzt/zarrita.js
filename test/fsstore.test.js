@@ -12,7 +12,9 @@ const config = {
 	name: "FileSystemStore",
 	setup: async () => {
 		const file_path = path.resolve(__dirname, "test.zr3");
-		if (fs.existsSync(file_path)) await fs.promises.rm(file_path, { recursive: true });
+		if (fs.existsSync(file_path)) {
+			await fs.promises.rm(file_path, { recursive: true });
+		}
 		return {
 			store: new FileSystemStore(file_path),
 			get_json: async (/** @type {string} */ key) => {

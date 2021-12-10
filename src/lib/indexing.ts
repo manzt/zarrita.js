@@ -148,12 +148,20 @@ class SliceDimIndexer {
 				? dim_chunk_len
 				: this.stop - dim_offset;
 
-			const dim_chunk_sel: Indices = [dim_chunk_sel_start, dim_chunk_sel_stop, this.step];
+			const dim_chunk_sel: Indices = [
+				dim_chunk_sel_start,
+				dim_chunk_sel_stop,
+				this.step,
+			];
 			const dim_chunk_nitems = Math.ceil(
 				(dim_chunk_sel_stop - dim_chunk_sel_start) / this.step,
 			);
 
-			const dim_out_sel: Indices = [dim_out_offset, dim_out_offset + dim_chunk_nitems, 1];
+			const dim_out_sel: Indices = [
+				dim_out_offset,
+				dim_out_offset + dim_chunk_nitems,
+				1,
+			];
 			yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
 		}
 	}

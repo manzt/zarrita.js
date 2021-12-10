@@ -4,7 +4,9 @@ import type { ZarrArray } from "./hierarchy";
 
 // TODO: don't currently work...
 
-type Expand<Str extends DataType | WithoutEndianness> = Str | `${">" | "<" | "|"}${Str}`;
+type Expand<Str extends DataType | WithoutEndianness> =
+	| Str
+	| `${">" | "<" | "|"}${Str}`;
 
 export function is<
 	Str extends DataType | WithoutEndianness,
@@ -20,5 +22,6 @@ export function is<
 export function is_numeric<
 	S extends Store,
 >(arr: ZarrArray<any, S>): arr is ZarrArray<NumericDataType, S> {
-	return (arr.dtype !== "|b1" && !arr.dtype.includes("U") && !arr.dtype.includes("S"));
+	return (arr.dtype !== "|b1" && !arr.dtype.includes("U") &&
+		!arr.dtype.includes("S"));
 }

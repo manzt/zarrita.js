@@ -34,7 +34,10 @@ export const register = {
 	},
 };
 
-const get_value = <D extends DataType>(arr: TypedArray<D>, idx: number): Scalar<D> => {
+const get_value = <D extends DataType>(
+	arr: TypedArray<D>,
+	idx: number,
+): Scalar<D> => {
 	return "get" in arr ? arr.get(idx) : arr[idx] as any;
 };
 

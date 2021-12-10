@@ -35,7 +35,11 @@ export function run_test_suite({ name, setup }) {
 				"https://purl.org/zarr/spec/protocol/core/3.0",
 				"correct metadata_encoding.",
 			);
-			t.equal(m.metadata_key_suffix, ".json", "should have meta suffix of .json.");
+			t.equal(
+				m.metadata_key_suffix,
+				".json",
+				"should have meta suffix of .json.",
+			);
 			t.equal(m.extensions, [], "should have no extensions.");
 		});
 
@@ -53,7 +57,11 @@ export function run_test_suite({ name, setup }) {
 			t.equal(a.shape, [5, 10], "should have shape: [5, 10].");
 			t.equal(a.dtype, "<i4", "should have dtype <i4.");
 			t.equal(a.chunk_shape, [2, 5], "should have chunk_shape [2, 5].");
-			t.equal((await a.attrs).question, "life", 'should have question attrs of "life"');
+			t.equal(
+				(await a.attrs).question,
+				"life",
+				'should have question attrs of "life"',
+			);
 			t.equal((await a.attrs).answer, 42, "should have answer attrs of 42");
 		});
 
@@ -62,8 +70,16 @@ export function run_test_suite({ name, setup }) {
 			t.equal(m.shape, [5, 10], "should have shape [5, 10].");
 			t.equal(m.data_type, "<i4", "should have dtype <i4.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");
-			t.equal(m.chunk_grid.chunk_shape, [2, 5], "should have chunk_shape [2, 5].");
-			t.equal(m.chunk_grid.separator, "/", 'should have chunk separator of "/".');
+			t.equal(
+				m.chunk_grid.chunk_shape,
+				[2, 5],
+				"should have chunk_shape [2, 5].",
+			);
+			t.equal(
+				m.chunk_grid.separator,
+				"/",
+				'should have chunk separator of "/".',
+			);
 			t.equal(m.chunk_memory_layout, "C", 'should have "C" memory layout.');
 			t.equal(m.fill_value, null, "should have null fill_value.");
 			t.equal(m.extensions, [], "should not have extensions.");
@@ -72,7 +88,11 @@ export function run_test_suite({ name, setup }) {
 				"life",
 				'should have attributes of question be "life".',
 			);
-			t.equal(m.attributes.answer, 42, "should have attributes of answer be 42.");
+			t.equal(
+				m.attributes.answer,
+				42,
+				"should have attributes of answer be 42.",
+			);
 			t.equal(
 				m.compressor.codec,
 				"https://purl.org/zarr/spec/codec/gzip/1.0",
@@ -106,7 +126,11 @@ export function run_test_suite({ name, setup }) {
 			t.equal(m.data_type, ">f8", "should have dtype >f8.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");
 			t.equal(m.chunk_grid.chunk_shape, [42], "should have chunk_shape [42].");
-			t.equal(m.chunk_grid.separator, "/", 'should have chunk separator of "/".');
+			t.equal(
+				m.chunk_grid.separator,
+				"/",
+				'should have chunk separator of "/".',
+			);
 			t.equal(m.chunk_memory_layout, "C", 'should have "C" memory layout.');
 			t.equal(m.fill_value, null, "should have null fill_value.");
 			t.equal(m.extensions, [], "should not have extensions.");
@@ -122,7 +146,11 @@ export function run_test_suite({ name, setup }) {
 			t.equal(g.name, "mcmillan", "should have name mcmillan.");
 			const attrs = await g.attrs;
 			t.equal(attrs.heart, "gold", "should have heart of gold.");
-			t.equal(attrs.improbability, "infinite", "should have inifinite improbability.");
+			t.equal(
+				attrs.improbability,
+				"infinite",
+				"should have inifinite improbability.",
+			);
 		});
 
 		await t.test("Create nodes via groups", async (t) => {
@@ -149,12 +177,18 @@ export function run_test_suite({ name, setup }) {
 			t.equal(a.shape, [5, 10], "should have shape: [5, 10].");
 			t.equal(a.dtype, "<i4", "should have dtype <i4.");
 			t.equal(a.chunk_shape, [2, 5], "should have chunk_shape [2, 5].");
-			t.equal((await a.attrs).question, "life", 'should have question attrs of "life"');
+			t.equal(
+				(await a.attrs).question,
+				"life",
+				'should have question attrs of "life"',
+			);
 			t.equal((await a.attrs).answer, 42, "should have answer attrs of 42");
 		});
 
 		await t.test("Access an explicit group", async (t) => {
-			const g = /** @type {ExplicitGroup<any, any>} */ (await h.get("/tricia/mcmillan"));
+			const g = /** @type {ExplicitGroup<any, any>} */ (await h.get(
+				"/tricia/mcmillan",
+			));
 			const attrs = await g.attrs;
 			t.equal(attrs.heart, "gold", "should have attrs heart of gold.");
 			t.equal(
@@ -190,10 +224,26 @@ export function run_test_suite({ name, setup }) {
 
 		await t.test("Explore hierarchy top-down", async (t) => {
 			let res = await h.get_children("/");
-			t.equal(res.get("arthur"), "implicit_group", "arthur should be implicit_group.");
-			t.equal(res.get("deep"), "implicit_group", "deep should be implicit_group.");
-			t.equal(res.get("marvin"), "explicit_group", "marvin should be explicit group.");
-			t.equal(res.get("tricia"), "implicit_group", "tricia should be implicit group.");
+			t.equal(
+				res.get("arthur"),
+				"implicit_group",
+				"arthur should be implicit_group.",
+			);
+			t.equal(
+				res.get("deep"),
+				"implicit_group",
+				"deep should be implicit_group.",
+			);
+			t.equal(
+				res.get("marvin"),
+				"explicit_group",
+				"marvin should be explicit group.",
+			);
+			t.equal(
+				res.get("tricia"),
+				"implicit_group",
+				"tricia should be implicit group.",
+			);
 
 			res = await h.get_children("/tricia");
 			t.equal(
@@ -209,10 +259,26 @@ export function run_test_suite({ name, setup }) {
 
 		await t.test("Alternate way to explore hierarchy", async (t) => {
 			let res = await h.get_children();
-			t.equal(res.get("arthur"), "implicit_group", "arthur should be implicit_group.");
-			t.equal(res.get("deep"), "implicit_group", "deep should be implicit_group.");
-			t.equal(res.get("marvin"), "explicit_group", "marvin should be explicit group.");
-			t.equal(res.get("tricia"), "implicit_group", "tricia should be implicit group.");
+			t.equal(
+				res.get("arthur"),
+				"implicit_group",
+				"arthur should be implicit_group.",
+			);
+			t.equal(
+				res.get("deep"),
+				"implicit_group",
+				"deep should be implicit_group.",
+			);
+			t.equal(
+				res.get("marvin"),
+				"explicit_group",
+				"marvin should be explicit group.",
+			);
+			t.equal(
+				res.get("tricia"),
+				"implicit_group",
+				"tricia should be implicit group.",
+			);
 
 			res = await (await h.get_implicit_group("tricia")).get_children();
 			t.equal(
@@ -234,18 +300,46 @@ export function run_test_suite({ name, setup }) {
 		await t.test("View the whole hierarchy in one go", async (t) => {
 			const n = await h.get_nodes();
 			t.equal(n.get("/"), "implicit_group", '"/" should be implicit_group.');
-			t.equal(n.get("/arthur"), "implicit_group", '"/arthur" should be implicit_group.');
-			t.equal(n.get("/arthur/dent"), "array", '"/arthur/dent" should be array.');
-			t.equal(n.get("/deep"), "implicit_group", '"/deep" should be implicit_group.');
-			t.equal(n.get("/deep/thought"), "array", '"/deep/thought" should be array.');
-			t.equal(n.get("/marvin"), "explicit_group", '"/marvin" should be explicit_group.');
-			t.equal(n.get("/marvin/android"), "array", '"/marvin/android" should be array.');
+			t.equal(
+				n.get("/arthur"),
+				"implicit_group",
+				'"/arthur" should be implicit_group.',
+			);
+			t.equal(
+				n.get("/arthur/dent"),
+				"array",
+				'"/arthur/dent" should be array.',
+			);
+			t.equal(
+				n.get("/deep"),
+				"implicit_group",
+				'"/deep" should be implicit_group.',
+			);
+			t.equal(
+				n.get("/deep/thought"),
+				"array",
+				'"/deep/thought" should be array.',
+			);
+			t.equal(
+				n.get("/marvin"),
+				"explicit_group",
+				'"/marvin" should be explicit_group.',
+			);
+			t.equal(
+				n.get("/marvin/android"),
+				"array",
+				'"/marvin/android" should be array.',
+			);
 			t.equal(
 				n.get("/marvin/paranoid"),
 				"explicit_group",
 				'"/marvin/paranoid" should be explicit_group.',
 			);
-			t.equal(n.get("/tricia"), "implicit_group", '"/tricia" should be implicit_group.');
+			t.equal(
+				n.get("/tricia"),
+				"implicit_group",
+				'"/tricia" should be implicit_group.',
+			);
 			t.equal(
 				n.get("/tricia/mcmillan"),
 				"explicit_group",
@@ -258,7 +352,10 @@ export function run_test_suite({ name, setup }) {
 			t.ok(await h.has("/arthur"), 'should have "/arthur".');
 			t.ok(await h.has("/arthur/dent"), 'should have "/arthur/dent".');
 			t.notOk(await h.has("/zaphod"), 'should not have "/zaphod".');
-			t.notOk(await h.has("/zaphod/beeblebrox"), 'should not have "/zaphod/beeblebrox".');
+			t.notOk(
+				await h.has("/zaphod/beeblebrox"),
+				'should not have "/zaphod/beeblebrox".',
+			);
 			t.ok(await h.has("/tricia"), 'should have "/tricia".');
 			t.ok(await h.has("/tricia/mcmillan"), 'should have "/tricia/mcmillan".');
 		});
@@ -272,7 +369,10 @@ export function run_test_suite({ name, setup }) {
 			t.ok(await g.has("dent"), 'arthur should have "dent".');
 			let ig = await h.get_implicit_group("tricia");
 			t.ok(await ig.has("mcmillan"), 'tricia should have "mcmillan".');
-			t.notOk(await ig.has("beeblebrox"), 'tricia should not have "breeblebox".');
+			t.notOk(
+				await ig.has("beeblebrox"),
+				'tricia should not have "breeblebox".',
+			);
 		});
 
 		await t.test("Read and write array data", async (t) => {
@@ -311,7 +411,11 @@ export function run_test_suite({ name, setup }) {
 
 			await set(a, null, 42);
 			expected.fill(42);
-			t.deepEqual((await get(a, null)).data, expected, "should entirely fill with 42.");
+			t.deepEqual(
+				(await get(a, null)).data,
+				expected,
+				"should entirely fill with 42.",
+			);
 
 			let arr = ndarray(new Int32Array([...Array(10).keys()]), [10]);
 			expected.set(arr.data);
@@ -321,7 +425,11 @@ export function run_test_suite({ name, setup }) {
 
 			arr = ndarray(new Int32Array([...Array(50).keys()]), [5, 10]);
 			await set(a, null, arr);
-			t.deepEqual((await get(a, null)).data, arr.data, "should fill entire with arange.");
+			t.deepEqual(
+				(await get(a, null)).data,
+				arr.data,
+				"should fill entire with arange.",
+			);
 
 			// Read array slices
 			res = await get(a, [null, 0]);
@@ -473,7 +581,23 @@ export function run_test_suite({ name, setup }) {
 			// prettier-ignore
 			t.deepEqual(
 				res.data,
-				new Int32Array([12, 13, 14, 15, 16, 22, 23, 24, 25, 26, 32, 33, 34, 35, 36]),
+				new Int32Array([
+					12,
+					13,
+					14,
+					15,
+					16,
+					22,
+					23,
+					24,
+					25,
+					26,
+					32,
+					33,
+					34,
+					35,
+					36,
+				]),
 			);
 
 			const b = await h.get_array("deep/thought");
@@ -483,7 +607,10 @@ export function run_test_suite({ name, setup }) {
 
 			expected.fill(1, 0, 5);
 			await set(b, [slice(5)], 1);
-			t.deepEqual((await get(b, [slice(10)])).data, new Float64Array(10).fill(1, 0, 5));
+			t.deepEqual(
+				(await get(b, [slice(10)])).data,
+				new Float64Array(10).fill(1, 0, 5),
+			);
 		});
 	});
 }

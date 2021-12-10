@@ -17,7 +17,9 @@ type NdArray<D extends DataType> = {
 	stride: number[];
 } & NdArrayLike<D>;
 
-const compat = <D extends DataType>(arr: NdArrayLike<D> & { stride?: number[] }): any => {
+const compat = <D extends DataType>(
+	arr: NdArrayLike<D> & { stride?: number[] },
+): any => {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
@@ -25,7 +27,10 @@ const compat = <D extends DataType>(arr: NdArrayLike<D> & { stride?: number[] })
 	};
 };
 
-const cast_scalar = <D extends DataType>(arr: NdArrayLike<D>, value: Scalar<D>): any => {
+const cast_scalar = <D extends DataType>(
+	arr: NdArrayLike<D>,
+	value: Scalar<D>,
+): any => {
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value;
 };
