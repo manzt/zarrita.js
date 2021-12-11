@@ -5,11 +5,12 @@ import { KeyError, NodeNotFoundError } from "./lib/errors";
 import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
+	AbsolutePath,
 	Attrs,
+	ChunkKey,
+	CreateArrayProps,
 	DataType,
 	Hierarchy as HierarchyProtocol,
-	AbsolutePath,
-	CreateArrayProps,
 	Store,
 } from "./types";
 import type { Codec } from "numcodecs";
@@ -45,39 +46,29 @@ interface GroupMetadata {
 	zarr_format: 2;
 }
 
-type KeyPrefix<S extends string> = S extends "" ? S : `${S}/`;
-
-function key_prefix<S extends string>(path: S): KeyPrefix<S> {
-	return path.length > 1 ? path + "/" : "" as any;
+function key_prefix<Path extends AbsolutePath>(
+	path: Path,
+): Path extends "/" ? "/" : `${Path}/` {
+	// @ts-ignore
+	return path === "/" ? path : `${path}/`;
 }
 
-function meta_key<S extends string, N extends string>(
-	path: S,
-	name: N,
-): `${KeyPrefix<S>}${N}` {
-	return key_prefix(path) + name as any;
-}
+const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as const;
+const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
+const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
-const array_meta_key = <S extends string>(path: S) => meta_key(path, ".zarray");
-const group_meta_key = <S extends string>(path: S) => meta_key(path, ".zgroup");
-const attrs_key = <S extends string>(path: S) => meta_key(path, ".zattrs");
-
-const get_attrs = async (store: Store, path: string): Promise<Attrs> => {
+const get_attrs = async (store: Store, path: AbsolutePath): Promise<Attrs> => {
 	const attrs = await store.get(attrs_key(path));
 	return attrs ? json_decode_object(attrs) : {};
 };
 
-const chunk_key = (
-	path: string,
-	chunk_separator: "." | "/",
-): ((chunk_coords: number[]) => string) => {
+function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
 	const prefix = key_prefix(path);
 	return (chunk_coords) => {
 		const chunk_identifier = chunk_coords.join(chunk_separator);
-		const chunk_key = prefix + chunk_identifier;
-		return chunk_key;
+		return `${prefix}${chunk_identifier}`;
 	};
-};
+}
 
 export const create_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
 

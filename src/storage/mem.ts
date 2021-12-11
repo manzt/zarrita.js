@@ -1,7 +1,7 @@
-import type { KeyPrefix, SyncStore } from "../types";
+import type { PrefixPath, RootPath, SyncStore } from "../types";
 
 class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
-	list_prefix<Prefix extends KeyPrefix>(prefix: Prefix) {
+	list_prefix(prefix: RootPath | PrefixPath) {
 		const items = [];
 		for (const path of super.keys()) {
 			if (path.startsWith(prefix)) {
@@ -11,8 +11,7 @@ class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
 		return items;
 	}
 
-	list_dir<Prefix extends KeyPrefix>(key?: Prefix) {
-		const prefix = key ?? "";
+	list_dir(prefix: RootPath | PrefixPath = "/") {
 		const contents = [];
 		const prefixes: Set<string> = new Set();
 

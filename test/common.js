@@ -11,10 +11,16 @@ import GZip from "numcodecs/gzip";
 // @ts-ignore
 registry.set("gzip", () => GZip);
 
-/** @param {{ name: string, setup: () => Promise<{ store: any, get_json: any }> }} props */
+/** @param {Uint8Array} bytes */
+function json(bytes) {
+	const str = new TextDecoder().decode(bytes);
+	return JSON.parse(str);
+}
+
+/** @param {{ name: string, setup: () => Promise<any> }} props */
 export function run_test_suite({ name, setup }) {
 	test(`Zarrita test suite: ${name}.`, async (t) => {
-		const { store, get_json } = await setup();
+		const store = await setup();
 		const h = await v3.create_hierarchy(store);
 
 		await t.test("Create a hierarchy", async (t) => {
@@ -23,7 +29,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Check root json", async (t) => {
-			const m = await get_json("zarr.json");
+			const m = json(await store.get("/zarr.json"));
 			t.equal(Object.keys(m).length, 4, "should have 4 keys.");
 			t.equal(
 				m.zarr_format,
@@ -66,7 +72,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Verify /arthur/dent metadata", async (t) => {
-			const m = await get_json("meta/root/arthur/dent.array.json");
+			const m = json(await store.get("/meta/root/arthur/dent.array.json"));
 			t.equal(m.shape, [5, 10], "should have shape [5, 10].");
 			t.equal(m.data_type, "<i4", "should have dtype <i4.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");
@@ -121,7 +127,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Verify /deep/thought metadata", async (t) => {
-			const m = await get_json("meta/root/deep/thought.array.json");
+			const m = json(await store.get("/meta/root/deep/thought.array.json"));
 			t.equal(m.shape, [7500000], "should have shape [7500000].");
 			t.equal(m.data_type, ">f8", "should have dtype >f8.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");

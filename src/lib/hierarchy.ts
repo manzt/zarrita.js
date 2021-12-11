@@ -2,14 +2,14 @@ import { KeyError } from "./errors";
 import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
 
 import type {
-	Store,
+	AbsolutePath,
 	Attrs,
 	DataType,
 	Hierarchy,
 	Scalar,
+	Store,
 	TypedArray,
 	TypedArrayConstructor,
-	AbsolutePath
 } from "../types";
 import type { Codec } from "numcodecs";
 
@@ -113,7 +113,7 @@ export interface ZarrArrayProps<D extends DataType, S extends Store> {
 	dtype: D;
 	fill_value: Scalar<D> | null;
 	attrs: Attrs | (() => Promise<Attrs>);
-	chunk_key: (chunk_coords: number[]) => string;
+	chunk_key: (chunk_coords: number[]) => AbsolutePath;
 	compressor?: import("numcodecs").Codec;
 }
 

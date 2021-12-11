@@ -1,23 +1,26 @@
 import ReadOnlyStore from "./readonly";
+import type { AbsolutePath } from "../types";
 
-class FetchStore extends ReadOnlyStore<RequestInit> {
-	href: string;
+function resolve(root: string | URL, path: AbsolutePath): URL {
+	const base = typeof root === "string" ? new URL(root) : root;
+	if (!base.pathname.endsWith("/")) {
+		// ensure trailing slash so that base is resolved as _directory_
+		base.pathname += "/";
+	}
+	const resolved = new URL(path.slice(1), base);
+	// copy search params to new URL
+	resolved.search = base.search;
+	return resolved;
+}
 
-	constructor(url: URL);
-	constructor(href: string);
-	constructor(url: string | URL) {
+class FetchStore<Url extends string | URL> extends ReadOnlyStore<RequestInit> {
+	constructor(public url: Url) {
 		super();
-		let href = typeof url === "string" ? url : url.href;
-		this.href = href.endsWith("/") ? href.slice(0, -1) : href;
 	}
 
-	_path(key: string) {
-		return `${this.href}/${key.startsWith("/") ? key.slice(1) : key}`;
-	}
-
-	async get(key: string, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
-		const path = this._path(key);
-		const res = await fetch(path, opts);
+	async get(key: AbsolutePath, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
+		const { href } = resolve(this.url, key);
+		const res = await fetch(href, opts);
 		if (res.status === 404 || res.status === 403) {
 			return undefined;
 		}
@@ -25,7 +28,8 @@ class FetchStore extends ReadOnlyStore<RequestInit> {
 		return new Uint8Array(value);
 	}
 
-	has(key: string): Promise<boolean> {
+	has(key: AbsolutePath): Promise<boolean> {
+		// TODO: make parameter, use HEAD request if possible.
 		return this.get(key).then((res) => res !== undefined);
 	}
 }

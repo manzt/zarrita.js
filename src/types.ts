@@ -20,28 +20,28 @@ export interface Slice {
 }
 
 export type AbsolutePath<Rest extends string = string> = `/${Rest}`;
-export type KeyPrefix = `${any}/`;
+export type RootPath = AbsolutePath<"">;
+export type PrefixPath = AbsolutePath<`${string}/`>;
+export type ChunkKey = (chunk_coord: number[]) => AbsolutePath;
 
 export interface SyncStore<GetOptions = any> {
-	get(key: string, opts?: GetOptions): Uint8Array | undefined;
-	has(key: string): boolean;
+	get(key: AbsolutePath, opts?: GetOptions): Uint8Array | undefined;
+	has(key: AbsolutePath): boolean;
 	// Need overide Map to return SyncStore
-	set(key: string, value: Uint8Array): void;
-	delete(key: string): boolean;
-	list_prefix<Prefix extends KeyPrefix>(key: Prefix): string[];
-	list_dir<Prefix extends KeyPrefix>(
-		key?: Prefix,
-	): { contents: string[]; prefixes: string[] };
+	set(key: AbsolutePath, value: Uint8Array): void;
+	delete(key: AbsolutePath): boolean;
+	list_prefix(key: RootPath | PrefixPath): string[];
+	list_dir(key?: RootPath | PrefixPath): { contents: string[]; prefixes: string[] };
 }
 
 export interface AsyncStore<GetOptions = any> {
-	get(key: string, opts?: GetOptions): Promise<Uint8Array | undefined>;
-	has(key: string): Promise<boolean>;
-	set(key: string, value: Uint8Array): Promise<void>;
-	delete(key: string): Promise<boolean>;
-	list_prefix<Prefix extends KeyPrefix>(key: Prefix): Promise<string[]>;
-	list_dir<Prefix extends KeyPrefix>(
-		key?: Prefix,
+	get(key: AbsolutePath, opts?: GetOptions): Promise<Uint8Array | undefined>;
+	has(key: AbsolutePath): Promise<boolean>;
+	set(key: AbsolutePath, value: Uint8Array): Promise<void>;
+	delete(key: AbsolutePath): Promise<boolean>;
+	list_prefix(key: RootPath | PrefixPath): Promise<string[]>;
+	list_dir(
+		key?: RootPath | PrefixPath,
 	): Promise<{ contents: string[]; prefixes: string[] }>;
 }
 
@@ -86,13 +86,13 @@ type RequiredArrayProps<D extends DataType> = {
 	shape: number[];
 	chunk_shape: number[];
 	dtype: D;
-}
+};
 
 export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps<D> {
-	compressor?: import('numcodecs').Codec;
+	compressor?: import("numcodecs").Codec;
 	chunk_separator?: "." | "/";
 	fill_value?: Scalar<D>;
-	filters?: import('numcodecs').Codec[];
+	filters?: import("numcodecs").Codec[];
 	attrs?: Attrs;
 }
 
@@ -123,5 +123,3 @@ export type ChunkQueue = {
 export type Options = { create_queue?: () => ChunkQueue };
 export type GetOptions = Options;
 export type SetOptions = Options;
-
-
