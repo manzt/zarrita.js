@@ -1,12 +1,7 @@
-import { assert } from "../lib/errors";
-import type { SyncStore } from "../types";
+import type { KeyPrefix, SyncStore } from "../types";
 
 class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
-	list_prefix(prefix: string) {
-		assert(
-			prefix[prefix.length - 1] === "/",
-			"Prefix must end with '/'.",
-		);
+	list_prefix<Prefix extends KeyPrefix>(prefix: Prefix) {
 		const items = [];
 		for (const path of super.keys()) {
 			if (path.startsWith(prefix)) {
@@ -16,14 +11,8 @@ class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
 		return items;
 	}
 
-	list_dir(prefix = "") {
-		if (prefix) {
-			assert(
-				prefix[prefix.length - 1] === "/",
-				"Prefix must end with '/'",
-			);
-		}
-
+	list_dir<Prefix extends KeyPrefix>(key?: Prefix) {
+		const prefix = key ?? "";
 		const contents = [];
 		const prefixes: Set<string> = new Set();
 

@@ -354,7 +354,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		path = normalize_path(path);
 
 		// attempt to list directory
-		const key_prefix = path === "/" ? "meta/root/" : `meta/root${path}/`;
+		const key_prefix = path === "/" ? "meta/root/" : `meta/root${path}/` as const;
 		const result = await this.store.list_dir(key_prefix);
 
 		const { contents, prefixes } = result;
@@ -455,7 +455,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		const children: Map<string, string> = new Map();
 
 		// attempt to list directory
-		const key_prefix = path === "/" ? "meta/root/" : `meta/root${path}/`;
+		const key_prefix = path === "/" ? "meta/root/" : `meta/root${path}/` as const;
 		const result = await this.store.list_dir(key_prefix);
 
 		// find explicit children

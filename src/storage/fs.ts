@@ -1,8 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { assert } from "../lib/errors";
 
-import type { AsyncStore } from "../types";
+import type { AsyncStore, KeyPrefix } from "../types";
 
 class FileSystemStore implements AsyncStore {
 	constructor(public root: string) {}
@@ -35,12 +34,7 @@ class FileSystemStore implements AsyncStore {
 		return true;
 	}
 
-	async list_prefix(prefix: string) {
-		assert(typeof prefix === "string", "Prefix must be a string.");
-		assert(
-			prefix[prefix.length - 1] === "/",
-			"Prefix must end with '/'.",
-		);
+	async list_prefix<Prefix extends KeyPrefix>(prefix: Prefix) {
 		const fp = path.join(this.root, prefix);
 		try {
 			const items = [];
@@ -54,15 +48,8 @@ class FileSystemStore implements AsyncStore {
 		}
 	}
 
-	async list_dir(prefix = "") {
-		assert(typeof prefix === "string", "Prefix must be a string.");
-		if (prefix) {
-			assert(
-				prefix[prefix.length - 1] === "/",
-				"Prefix must end with '/'",
-			);
-		}
-
+	async list_dir<Prefix extends KeyPrefix>(key?: Prefix) {
+		const prefix = key ?? "";
 		const contents: string[] = [];
 		const prefixes: string[] = []; // could have redundant keys
 

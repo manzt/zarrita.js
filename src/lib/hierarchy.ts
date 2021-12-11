@@ -1,4 +1,4 @@
-import { assert, KeyError } from "./errors";
+import { KeyError } from "./errors";
 import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
 
 import type {
@@ -6,6 +6,7 @@ import type {
 	Attrs,
 	DataType,
 	Hierarchy,
+	KeyPrefix,
 	Scalar,
 	Store,
 	TypedArray,
@@ -14,12 +15,7 @@ import type {
 import type { Codec } from "numcodecs";
 
 export class Node<S extends Store> {
-	readonly store: S;
-	readonly path: string;
-	constructor({ store, path }: { store: S; path: string }) {
-		this.store = store;
-		this.path = path;
-	}
+	constructor(public readonly store: S, public readonly path: string) {}
 
 	get name() {
 		return this.path.split("/").pop() ?? "";
@@ -29,7 +25,7 @@ export class Node<S extends Store> {
 export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 	readonly owner: H;
 	constructor(props: { store: S; path: string; owner: H }) {
-		super(props);
+		super(props.store, props.path);
 		this.owner = props.owner;
 	}
 
@@ -37,55 +33,48 @@ export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 		return this.owner.get_children(this.path);
 	}
 
-	_dereference_path(path: string): string {
+	_deref<Path extends KeyPrefix>(path: Path): `/${KeyPrefix}` {
 		if (path[0] !== "/") {
 			// treat as relative path
 			if (this.path === "/") {
 				// special case root group
-				path = "/" + path;
+				path = `/${path}` as Path;
 			} else {
-				path = this.path + "/" + path;
+				path = `${this.path}/${path}` as Path;
 			}
 		}
-		if (path.length > 1) {
-			assert(path[path.length - 1] !== "/", "Path must end with '/'.");
-		}
-		return path;
+		return path as `/${KeyPrefix}`;
 	}
 
-	get(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get(path);
+	get<Path extends KeyPrefix>(path: Path) {
+		return this.owner.get(this._deref(path));
 	}
 
-	has(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.has(path);
+	has<Path extends KeyPrefix>(path: Path) {
+		return this.owner.has(this._deref(path));
 	}
 
-	create_group(path: string, props: { attrs?: Attrs } = {}) {
-		path = this._dereference_path(path);
-		return this.owner.create_group(path, props);
+	create_group<Path extends KeyPrefix>(path: Path, props: { attrs?: Attrs } = {}) {
+		return this.owner.create_group(this._deref(path), props);
 	}
 
-	create_array(path: string, props: Parameters<H["create_array"]>[1]) {
-		path = this._dereference_path(path);
-		return this.owner.create_array(path, props);
+	create_array<Path extends KeyPrefix>(
+		path: Path,
+		props: Parameters<H["create_array"]>[1],
+	) {
+		return this.owner.create_array(this._deref(path), props);
 	}
 
-	get_array(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_array(path);
+	get_array<Path extends KeyPrefix>(path: Path) {
+		return this.owner.get_array(this._deref(path));
 	}
 
-	get_group(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_group(path);
+	get_group<Path extends KeyPrefix>(path: Path) {
+		return this.owner.get_group(this._deref(path));
 	}
 
-	get_implicit_group(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_implicit_group(path);
+	get_implicit_group<Path extends KeyPrefix>(path: Path) {
+		return this.owner.get_implicit_group(this._deref(path));
 	}
 }
 
@@ -128,7 +117,7 @@ export class ZarrArray<D extends DataType, S extends Store> extends Node<S> {
 	private _attrs: Attrs | (() => Promise<Attrs>);
 
 	constructor(props: ArrayAttributes<D, S>) {
-		super(props);
+		super(props.store, props.path);
 		this.shape = props.shape;
 		this.dtype = props.dtype;
 		this.chunk_shape = props.chunk_shape;

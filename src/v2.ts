@@ -120,7 +120,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		// path = normalize_path(path);
 
 		// serialise and store metadata document
-		const meta_doc = json_encode_object({ zarr_format: 2 });
+		const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
 		const meta_key = group_meta_key(path);
 		await this.store.set(meta_key, meta_doc);
 
