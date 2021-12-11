@@ -2,13 +2,13 @@ import { ExplicitGroup, ZarrArray } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { KeyError, NodeNotFoundError } from "./lib/errors";
 // deno-fmt-ignore
-import { ensure_array, ensure_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
 	Attrs,
-	CreateArrayProps,
 	DataType,
 	Hierarchy as HierarchyProtocol,
+	CreateArrayProps,
 	Store,
 } from "./types";
 import type { Codec } from "numcodecs";
@@ -140,11 +140,9 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		path: string,
 		props: CreateArrayProps<D>,
 	): Promise<ZarrArray<D, S>> {
-		// sanity checks
-		// path = normalize_path(path);
-		const shape = ensure_array(props.shape);
-		const dtype = ensure_dtype(props.dtype);
-		const chunk_shape = ensure_array(props.chunk_shape);
+		const shape = props.shape;
+		const dtype = props.dtype;
+		const chunk_shape = props.chunk_shape;
 		const compressor = props.compressor;
 		const chunk_separator = props.chunk_separator ?? ".";
 

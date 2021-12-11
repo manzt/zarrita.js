@@ -107,9 +107,9 @@ export function run_test_suite({ name, setup }) {
 
 		await t.test("Create an array with no compressor", async (t) => {
 			const a = await h.create_array("/deep/thought", {
-				shape: 7500000,
+				shape: [7500000],
 				dtype: ">f8",
-				chunk_shape: 42,
+				chunk_shape: [42],
 			});
 			t.equal(a.path, "/deep/thought", "should have path /deep/thought.");
 			t.equal(a.name, "thought", "should have name thought.");

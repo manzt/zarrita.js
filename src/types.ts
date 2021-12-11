@@ -47,36 +47,8 @@ export interface AsyncStore<GetOptions = any> {
 export type Store = SyncStore | AsyncStore;
 export type Attrs = Record<string, any>;
 
-export interface ArrayAttributes<
-	Dtype extends DataType = DataType,
-	Store extends SyncStore | AsyncStore = SyncStore | AsyncStore,
-> {
-	store: Store;
-	shape: number[];
-	path: string;
-	chunk_shape: number[];
-	dtype: Dtype;
-	fill_value: Scalar<Dtype> | null;
-	attrs: Attrs | (() => Promise<Attrs>);
-	chunk_key: (chunk_coords: number[]) => string;
-	compressor?: import("numcodecs").Codec;
-}
-
-export type CreateArrayProps<Dtype extends DataType = DataType> =
-	& {
-		shape: number | number[];
-		chunk_shape: number | number[];
-		dtype: Dtype;
-		chunk_separator?: "." | "/";
-	}
-	& Partial<
-		Omit<
-			ArrayAttributes<Dtype>,
-			"store" | "path" | "dtype" | "shape" | "chunk_shape" | "chunk_key"
-		>
-	>;
-
 export type ArraySelection = null | (number | null | Slice)[];
+
 
 export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 	// read-only
@@ -106,8 +78,22 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 		Dtype extends DataType,
 	>(
 		path: string,
-		props: Omit<ArrayAttributes<Dtype>, "path" | "store">,
+		props: CreateArrayProps<Dtype>,
 	): Promise<ZarrArray<Dtype, Store>>;
+}
+
+type RequiredArrayProps<D extends DataType> = {
+	shape: number[];
+	chunk_shape: number[];
+	dtype: D;
+}
+
+export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps<D> {
+	compressor?: import('numcodecs').Codec;
+	chunk_separator?: "." | "/";
+	fill_value?: Scalar<D>;
+	filters?: import('numcodecs').Codec[];
+	attrs?: Attrs;
 }
 
 export type Setter<D extends DataType, A extends NdArrayLike<D>> = {

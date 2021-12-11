@@ -2,13 +2,13 @@ import { ExplicitGroup, ImplicitGroup, ZarrArray } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
 // deno-fmt-ignore
-import { ensure_array, ensure_dtype, json_decode_object, json_encode_object, normalize_path } from "./lib/util";
+import { json_decode_object, json_encode_object, normalize_path } from "./lib/util";
 
 import type {
 	Attrs,
-	CreateArrayProps,
 	DataType,
 	Hierarchy as HierarchyProtocol,
+	CreateArrayProps,
 	Scalar,
 	Store,
 } from "./types";
@@ -157,7 +157,7 @@ export async function get_hierarchy<S extends Store>(
 	// check metadata encoding
 	if (
 		meta.metadata_encoding !==
-			"https://purl.org/zarr/spec/protocol/core/3.0"
+		"https://purl.org/zarr/spec/protocol/core/3.0"
 	) {
 		throw new NotImplementedError(
 			`No support for metadata encoding, got ${meta.metadata_encoding}.`,
@@ -224,13 +224,13 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 
 	async create_array<D extends DataType>(
 		path: string,
-		props: CreateArrayProps<D>,
+		props: Omit<CreateArrayProps<D>, 'filters'>,
 	): Promise<ZarrArray<D, S>> {
 		// sanity checks
 		path = normalize_path(path);
-		const shape = ensure_array(props.shape);
-		const dtype = ensure_dtype(props.dtype);
-		const chunk_shape = ensure_array(props.chunk_shape);
+		const shape = props.shape;
+		const dtype = props.dtype;
+		const chunk_shape = props.chunk_shape;
 		const compressor = props.compressor;
 
 		const meta: ArrayMetadata<D> = {
@@ -317,7 +317,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 			store: this.store,
 			path,
 			shape: shape,
-			dtype: ensure_dtype(dtype),
+			dtype: dtype,
 			chunk_shape: chunk_grid.chunk_shape,
 			chunk_key: chunk_key(path, chunk_grid.separator),
 			compressor: meta.compressor

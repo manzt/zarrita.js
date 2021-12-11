@@ -2,13 +2,12 @@ import { KeyError } from "./errors";
 import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
 
 import type {
-	ArrayAttributes,
+	Store,
 	Attrs,
 	DataType,
 	Hierarchy,
 	KeyPrefix,
 	Scalar,
-	Store,
 	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
@@ -106,17 +105,29 @@ export class ExplicitGroup<S extends Store, H extends Hierarchy<S>> extends Grou
 
 export class ImplicitGroup<S extends Store, H extends Hierarchy<S>> extends Group<S, H> {}
 
+export interface ZarrArrayProps<D extends DataType, S extends Store> {
+	store: S;
+	shape: number[];
+	path: string;
+	chunk_shape: number[];
+	dtype: D;
+	fill_value: Scalar<D> | null;
+	attrs: Attrs | (() => Promise<Attrs>);
+	chunk_key: (chunk_coords: number[]) => string;
+	compressor?: import("numcodecs").Codec;
+}
+
 export class ZarrArray<D extends DataType, S extends Store> extends Node<S> {
 	readonly shape: number[];
 	readonly dtype: D;
 	readonly chunk_shape: number[];
 	readonly compressor?: Codec;
 	readonly fill_value: Scalar<D> | null;
-	readonly chunk_key: ArrayAttributes<D, S>["chunk_key"];
+	readonly chunk_key: ZarrArrayProps<D, S>["chunk_key"];
 	readonly TypedArray: TypedArrayConstructor<D>;
 	private _attrs: Attrs | (() => Promise<Attrs>);
 
-	constructor(props: ArrayAttributes<D, S>) {
+	constructor(props: ZarrArrayProps<D, S>) {
 		super(props.store, props.path);
 		this.shape = props.shape;
 		this.dtype = props.dtype;
