@@ -195,10 +195,10 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return ".group" + this.meta_key_suffix;
 	}
 
-	async create_group(
-		path: AbsolutePath,
+	async create_group<Path extends AbsolutePath>(
+		path: Path,
 		props: { attrs?: Attrs } = {},
-	): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	): Promise<ExplicitGroup<S, Hierarchy<S>, Path>> {
 		const { attrs = {} } = props;
 
 		const meta: GroupMetadata = { extensions: [], attributes: attrs };
@@ -216,10 +216,10 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async create_array<D extends DataType>(
-		path: AbsolutePath,
+	async create_array<Path extends AbsolutePath, D extends DataType>(
+		path: Path,
 		props: Omit<CreateArrayProps<D>, "filters">,
-	): Promise<ZarrArray<D, S>> {
+	): Promise<ZarrArray<D, S, Path>> {
 		const shape = props.shape;
 		const dtype = props.dtype;
 		const chunk_shape = props.chunk_shape;
@@ -261,7 +261,9 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get_array(path: AbsolutePath): Promise<ZarrArray<DataType, S>> {
+	async get_array<Path extends AbsolutePath>(
+		path: Path,
+	): Promise<ZarrArray<DataType, S, Path>> {
 		const key = meta_key(path, this.meta_key_suffix, "array");
 		const meta_doc = await this.store.get(key);
 
@@ -317,7 +319,9 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get_group(path: AbsolutePath): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	async get_group<Path extends AbsolutePath>(
+		path: Path,
+	): Promise<ExplicitGroup<S, Hierarchy<S>, Path>> {
 		// retrieve and parse group metadata document
 		const key = meta_key(path, this.meta_key_suffix, "group");
 		const meta_doc = await this.store.get(key);
@@ -337,9 +341,13 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get_implicit_group(path: AbsolutePath): Promise<ImplicitGroup<S, Hierarchy<S>>> {
+	async get_implicit_group<Path extends AbsolutePath>(
+		path: Path,
+	): Promise<ImplicitGroup<S, Hierarchy<S>, Path>> {
 		// attempt to list directory
-		const key_prefix = path === "/" ? "/meta/root/" : `/meta/root${path}/` as const;
+		const key_prefix = (path as any) === "/"
+			? "/meta/root/"
+			: `/meta/root${path}/` as const;
 		const result = await this.store.list_dir(key_prefix);
 
 		const { contents, prefixes } = result;
@@ -351,10 +359,10 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return new ImplicitGroup({ store: this.store, path, owner: this });
 	}
 
-	async get(path: AbsolutePath): Promise<
-		| ZarrArray<DataType, S>
-		| ExplicitGroup<S, Hierarchy<S>>
-		| ImplicitGroup<S, Hierarchy<S>>
+	async get<Path extends AbsolutePath>(path: Path): Promise<
+		| ZarrArray<DataType, S, Path>
+		| ExplicitGroup<S, Hierarchy<S>, Path>
+		| ImplicitGroup<S, Hierarchy<S>, Path>
 	> {
 		try {
 			return await this.get_array(path);

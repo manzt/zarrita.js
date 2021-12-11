@@ -3,6 +3,7 @@ import { BasicIndexer } from "./indexing";
 import { create_queue } from "./util";
 import type { ZarrArray } from "./hierarchy";
 import type {
+	AbsolutePath,
 	ArraySelection,
 	BasicSetter,
 	DataType,
