@@ -1,14 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { assert } from "../lib/errors";
 
-import type { AsyncStore } from "../types";
+import type { AbsolutePath, AsyncStore, PrefixPath, RootPath } from "../types";
 
 class FileSystemStore implements AsyncStore {
 	constructor(public root: string) {}
 
-	get(key: string): Promise<Uint8Array | undefined> {
-		const fp = path.join(this.root, key);
+	get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+		const fp = path.join(this.root, key.slice(1));
 		return fs.promises.readFile(fp)
 			.then((buf) => new Uint8Array(buf.buffer))
 			.catch((err) => {
@@ -18,30 +17,25 @@ class FileSystemStore implements AsyncStore {
 			});
 	}
 
-	has(key: string): Promise<boolean> {
-		const fp = path.join(this.root, key);
+	has(key: AbsolutePath): Promise<boolean> {
+		const fp = path.join(this.root, key.slice(1));
 		return fs.promises.access(fp).then(() => true).catch(() => false);
 	}
 
-	async set(key: string, value: Uint8Array): Promise<void> {
-		const fp = path.join(this.root, key);
+	async set(key: AbsolutePath, value: Uint8Array): Promise<void> {
+		const fp = path.join(this.root, key.slice(1));
 		await fs.promises.mkdir(path.dirname(fp), { recursive: true });
 		await fs.promises.writeFile(fp, value, null);
 	}
 
-	async delete(key: string): Promise<boolean> {
-		const fp = path.join(this.root, key);
+	async delete(key: AbsolutePath): Promise<boolean> {
+		const fp = path.join(this.root, key.slice(1));
 		await fs.promises.unlink(fp);
 		return true;
 	}
 
-	async list_prefix(prefix: string) {
-		assert(typeof prefix === "string", "Prefix must be a string.");
-		assert(
-			prefix[prefix.length - 1] === "/",
-			"Prefix must end with '/'.",
-		);
-		const fp = path.join(this.root, prefix);
+	async list_prefix(prefix: RootPath | PrefixPath) {
+		const fp = path.join(this.root, prefix.slice(1));
 		try {
 			const items = [];
 			for await (const file of walk(fp)) {
@@ -54,19 +48,11 @@ class FileSystemStore implements AsyncStore {
 		}
 	}
 
-	async list_dir(prefix = "") {
-		assert(typeof prefix === "string", "Prefix must be a string.");
-		if (prefix) {
-			assert(
-				prefix[prefix.length - 1] === "/",
-				"Prefix must end with '/'",
-			);
-		}
-
+	async list_dir(prefix: RootPath | PrefixPath = "/") {
 		const contents: string[] = [];
 		const prefixes: string[] = []; // could have redundant keys
 
-		const fp = path.join(this.root, prefix);
+		const fp = path.join(this.root, prefix.slice(1));
 		try {
 			const dir = await fs.promises.readdir(fp, { withFileTypes: true });
 			dir.forEach((d) => {

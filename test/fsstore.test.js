@@ -15,15 +15,7 @@ const config = {
 		if (fs.existsSync(file_path)) {
 			await fs.promises.rm(file_path, { recursive: true });
 		}
-		return {
-			store: new FileSystemStore(file_path),
-			get_json: async (/** @type {string} */ key) => {
-				const blob = await fs.promises.readFile(file_path + "/" + key, {
-					encoding: "utf-8",
-				});
-				return JSON.parse(blob);
-			},
-		};
+		return new FileSystemStore(file_path);
 	},
 };
 

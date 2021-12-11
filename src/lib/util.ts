@@ -50,19 +50,6 @@ export function ensure_array<T>(maybe_arr: T | T[]): T[] {
 	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
-export function ensure_dtype<Str extends string>(
-	dtype: Str,
-): Str extends DataType ? Str : never {
-	// TODO: validation
-	return dtype as any;
-}
-
-export function normalize_path<Path extends string>(
-	path: Path,
-): Path extends `/${infer _}` ? Path : `/${Path}` {
-	return path[0] !== "/" ? `/${path}` : path as any;
-}
-
 const constructors = {
 	u1: Uint8Array,
 	i1: Int8Array,

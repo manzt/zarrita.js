@@ -3,15 +3,8 @@ import { register as registerSet } from "./set";
 
 import { BoolArray } from "./custom-arrays";
 
-import type {
-	BinaryDataType,
-	DataType,
-	Indices,
-	NdArrayLike,
-	Scalar,
-	StringDataType,
-	TypedArray,
-} from "../types";
+import type { Indices, NdArrayLike } from "../types";
+import type { Bool, DataType, Scalar, StringDataType, TypedArray } from "../dtypes";
 
 type NdArray<D extends DataType> = {
 	stride: number[];
@@ -87,7 +80,7 @@ function indices_len(start: number, stop: number, step: number) {
 }
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
-type SupportedDataType = Exclude<DataType, BinaryDataType | StringDataType>;
+type SupportedDataType = Exclude<DataType, Bool | StringDataType>;
 
 function set_scalar<D extends SupportedDataType>(
 	out: Pick<NdArray<D>, "data" | "stride">,

@@ -2,10 +2,12 @@ import { ExplicitGroup, ZarrArray } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { KeyError, NodeNotFoundError } from "./lib/errors";
 // deno-fmt-ignore
-import { ensure_array, ensure_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
+	AbsolutePath,
 	Attrs,
+	ChunkKey,
 	CreateArrayProps,
 	DataType,
 	Hierarchy as HierarchyProtocol,
@@ -44,39 +46,29 @@ interface GroupMetadata {
 	zarr_format: 2;
 }
 
-type KeyPrefix<S extends string> = S extends "" ? S : `${S}/`;
-
-function key_prefix<S extends string>(path: S): KeyPrefix<S> {
-	return path.length > 1 ? path + "/" : "" as any;
+function key_prefix<Path extends AbsolutePath>(
+	path: Path,
+): Path extends "/" ? "/" : `${Path}/` {
+	// @ts-ignore
+	return path === "/" ? path : `${path}/`;
 }
 
-function meta_key<S extends string, N extends string>(
-	path: S,
-	name: N,
-): `${KeyPrefix<S>}${N}` {
-	return key_prefix(path) + name as any;
-}
+const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as const;
+const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
+const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
-const array_meta_key = <S extends string>(path: S) => meta_key(path, ".zarray");
-const group_meta_key = <S extends string>(path: S) => meta_key(path, ".zgroup");
-const attrs_key = <S extends string>(path: S) => meta_key(path, ".zattrs");
-
-const get_attrs = async (store: Store, path: string): Promise<Attrs> => {
+const get_attrs = async (store: Store, path: AbsolutePath): Promise<Attrs> => {
 	const attrs = await store.get(attrs_key(path));
 	return attrs ? json_decode_object(attrs) : {};
 };
 
-const chunk_key = (
-	path: string,
-	chunk_separator: "." | "/",
-): ((chunk_coords: number[]) => string) => {
+function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
 	const prefix = key_prefix(path);
 	return (chunk_coords) => {
 		const chunk_identifier = chunk_coords.join(chunk_separator);
-		const chunk_key = prefix + chunk_identifier;
-		return chunk_key;
+		return `${prefix}${chunk_identifier}`;
 	};
-};
+}
 
 export const create_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
 
@@ -84,7 +76,7 @@ export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ stor
 
 export const from_meta = async <S extends Store, D extends DataType>(
 	store: S,
-	path: string,
+	path: AbsolutePath,
 	meta: ArrayMetadata<D>,
 	attrs?: Record<string, any>,
 ) => {
@@ -112,7 +104,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async create_group(
-		path: string,
+		path: AbsolutePath,
 		props: { attrs?: Attrs } = {},
 	): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		const { attrs } = props;
@@ -120,7 +112,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		// path = normalize_path(path);
 
 		// serialise and store metadata document
-		const meta_doc = json_encode_object({ zarr_format: 2 });
+		const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
 		const meta_key = group_meta_key(path);
 		await this.store.set(meta_key, meta_doc);
 
@@ -137,14 +129,12 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async create_array<D extends DataType>(
-		path: string,
+		path: AbsolutePath,
 		props: CreateArrayProps<D>,
 	): Promise<ZarrArray<D, S>> {
-		// sanity checks
-		// path = normalize_path(path);
-		const shape = ensure_array(props.shape);
-		const dtype = ensure_dtype(props.dtype);
-		const chunk_shape = ensure_array(props.chunk_shape);
+		const shape = props.shape;
+		const dtype = props.dtype;
+		const chunk_shape = props.chunk_shape;
 		const compressor = props.compressor;
 		const chunk_separator = props.chunk_separator ?? ".";
 
@@ -185,7 +175,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get_array(path: string): Promise<ZarrArray<DataType, S>> {
+	async get_array(path: AbsolutePath): Promise<ZarrArray<DataType, S>> {
 		// path = normalize_path(path);
 		const meta_key = array_meta_key(path);
 		const meta_doc = await this.store.get(meta_key);
@@ -199,7 +189,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return from_meta(this.store, path, meta);
 	}
 
-	async get_group(path: string): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	async get_group(path: AbsolutePath): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		// path = normalize_path(path);
 
 		const meta_key = group_meta_key(path);
@@ -218,7 +208,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get(path: string): Promise<
+	async get(path: AbsolutePath): Promise<
 		ZarrArray<DataType, S> | ExplicitGroup<S, Hierarchy<S>>
 	> {
 		try {
@@ -239,7 +229,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		throw new KeyError(path);
 	}
 
-	async has(path: string): Promise<boolean> {
+	async has(path: AbsolutePath): Promise<boolean> {
 		try {
 			await this.get(path);
 			return true;
@@ -251,12 +241,12 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		}
 	}
 
-	async get_children(_path: string): Promise<Map<string, string>> {
+	async get_children(_path: AbsolutePath): Promise<Map<string, string>> {
 		console.warn("get_children not implemented for v2.");
 		return new Map();
 	}
 
-	get_implicit_group(_path: string): never {
+	get_implicit_group(_path: AbsolutePath): never {
 		throw new Error("Implicit group not implemented for v2.");
 	}
 }

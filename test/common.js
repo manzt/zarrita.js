@@ -11,10 +11,16 @@ import GZip from "numcodecs/gzip";
 // @ts-ignore
 registry.set("gzip", () => GZip);
 
-/** @param {{ name: string, setup: () => Promise<{ store: any, get_json: any }> }} props */
+/** @param {Uint8Array} bytes */
+function json(bytes) {
+	const str = new TextDecoder().decode(bytes);
+	return JSON.parse(str);
+}
+
+/** @param {{ name: string, setup: () => Promise<any> }} props */
 export function run_test_suite({ name, setup }) {
 	test(`Zarrita test suite: ${name}.`, async (t) => {
-		const { store, get_json } = await setup();
+		const store = await setup();
 		const h = await v3.create_hierarchy(store);
 
 		await t.test("Create a hierarchy", async (t) => {
@@ -23,7 +29,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Check root json", async (t) => {
-			const m = await get_json("zarr.json");
+			const m = json(await store.get("/zarr.json"));
 			t.equal(Object.keys(m).length, 4, "should have 4 keys.");
 			t.equal(
 				m.zarr_format,
@@ -66,7 +72,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Verify /arthur/dent metadata", async (t) => {
-			const m = await get_json("meta/root/arthur/dent.array.json");
+			const m = json(await store.get("/meta/root/arthur/dent.array.json"));
 			t.equal(m.shape, [5, 10], "should have shape [5, 10].");
 			t.equal(m.data_type, "<i4", "should have dtype <i4.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");
@@ -107,9 +113,9 @@ export function run_test_suite({ name, setup }) {
 
 		await t.test("Create an array with no compressor", async (t) => {
 			const a = await h.create_array("/deep/thought", {
-				shape: 7500000,
+				shape: [7500000],
 				dtype: ">f8",
-				chunk_shape: 42,
+				chunk_shape: [42],
 			});
 			t.equal(a.path, "/deep/thought", "should have path /deep/thought.");
 			t.equal(a.name, "thought", "should have name thought.");
@@ -121,7 +127,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Verify /deep/thought metadata", async (t) => {
-			const m = await get_json("meta/root/deep/thought.array.json");
+			const m = json(await store.get("/meta/root/deep/thought.array.json"));
 			t.equal(m.shape, [7500000], "should have shape [7500000].");
 			t.equal(m.data_type, ">f8", "should have dtype >f8.");
 			t.equal(m.chunk_grid.type, "regular", "chunk_grid should be regular.");
@@ -154,7 +160,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Create nodes via groups", async (t) => {
-			const marvin = await h.create_group("marvin");
+			const marvin = await h.create_group("/marvin");
 			const paranoid = await marvin.create_group("paranoid");
 			const android = await marvin.create_array("android", {
 				shape: [42, 42],
@@ -214,12 +220,7 @@ export function run_test_suite({ name, setup }) {
 			t.ok((await h.get("/")) instanceof ImplicitGroup);
 			t.ok((await h.root) instanceof ImplicitGroup);
 			t.ok((await h.get("/arthur")) instanceof ImplicitGroup);
-			t.ok((await h.get("arthur")) instanceof ImplicitGroup);
 			t.ok((await h.get("/tricia/mcmillan")) instanceof ExplicitGroup);
-			t.ok(
-				(await h.get_implicit_group("tricia").then((t) => t.get("mcmillan"))) instanceof
-					ExplicitGroup,
-			);
 		});
 
 		await t.test("Explore hierarchy top-down", async (t) => {
@@ -280,7 +281,7 @@ export function run_test_suite({ name, setup }) {
 				"tricia should be implicit group.",
 			);
 
-			res = await (await h.get_implicit_group("tricia")).get_children();
+			res = await (await h.get_implicit_group("/tricia")).get_children();
 			t.equal(
 				res.get("mcmillan"),
 				"explicit_group",
@@ -288,12 +289,12 @@ export function run_test_suite({ name, setup }) {
 			);
 
 			// @ts-ignore
-			res = await h.get("tricia").then((n) => n.get("mcmillan")).then((n) =>
+			res = await h.get("/tricia").then((n) => n.get("mcmillan")).then((n) =>
 				n.get_children()
 			);
 
 			// @ts-ignore
-			res = await h.get("arthur").then((n) => n.get_children());
+			res = await h.get("/arthur").then((n) => n.get_children());
 			t.equal(res.get("dent"), "array", "dent should be an array.");
 		});
 
@@ -365,9 +366,9 @@ export function run_test_suite({ name, setup }) {
 			t.ok(await root.has("arthur"), 'root should have "arthur".');
 			t.ok(await root.has("tricia"), 'root should have "tricia".');
 			t.notOk(await root.has("zaphod"), 'root should not have "zaphod".');
-			let g = await h.get_implicit_group("arthur");
+			let g = await h.get_implicit_group("/arthur");
 			t.ok(await g.has("dent"), 'arthur should have "dent".');
-			let ig = await h.get_implicit_group("tricia");
+			let ig = await h.get_implicit_group("/tricia");
 			t.ok(await ig.has("mcmillan"), 'tricia should have "mcmillan".');
 			t.notOk(
 				await ig.has("beeblebrox"),
@@ -466,141 +467,44 @@ export function run_test_suite({ name, setup }) {
 
 			res = await get(a, [null, slice(0, 7)]);
 			t.equal(res.shape, [5, 7]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-					30,
-					31,
-					32,
-					33,
-					34,
-					35,
-					36,
-					40,
-					41,
-					42,
-					43,
-					44,
-					45,
-					46,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([ 
+				 0,  1,  2,  3,  4,
+				 5,  6, 10, 11, 12,
+				13, 14, 15, 16, 20,
+				21, 22, 23, 24, 25,
+				26, 30, 31, 32, 33,
+				34, 35, 36, 40, 41,
+				42, 43, 44, 45, 46,
+			]));
 
 			res = await get(a, [slice(0, 3), null]);
 			t.equal(res.shape, [3, 10]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					7,
-					8,
-					9,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					17,
-					18,
-					19,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-					27,
-					28,
-					29,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([
+				 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+				20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+			]));
 			res = await get(a, [slice(0, 3), slice(0, 7)]);
 			t.equal(res.shape, [3, 7]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([
+				 0,  1,  2,  3,  4,  5,  6,
+				10, 11, 12, 13, 14, 15, 16,
+				20, 21, 22, 23, 24, 25, 26,
+			]));
 
 			res = await get(a, [slice(1, 4), slice(2, 7)]);
 			t.equal(res.shape, [3, 5]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					12,
-					13,
-					14,
-					15,
-					16,
-					22,
-					23,
-					24,
-					25,
-					26,
-					32,
-					33,
-					34,
-					35,
-					36,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual( res.data, new Int32Array([
+				12, 13, 14, 15, 16,
+				22, 23, 24, 25, 26,
+				32, 33, 34, 35, 36,
+			]));
 
-			const b = await h.get_array("deep/thought");
+			const b = await h.get_array("/deep/thought");
 			res = await get(b, [slice(10)]);
 			t.equal(res.shape, [10]);
 			t.deepEqual(res.data, new Float64Array(10));

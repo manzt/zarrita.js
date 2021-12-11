@@ -1,8 +1,8 @@
-import { assert, KeyError } from "./errors";
+import { KeyError } from "./errors";
 import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
 
 import type {
-	ArrayAttributes,
+	AbsolutePath,
 	Attrs,
 	DataType,
 	Hierarchy,
@@ -14,12 +14,7 @@ import type {
 import type { Codec } from "numcodecs";
 
 export class Node<S extends Store> {
-	readonly store: S;
-	readonly path: string;
-	constructor({ store, path }: { store: S; path: string }) {
-		this.store = store;
-		this.path = path;
-	}
+	constructor(public readonly store: S, public readonly path: AbsolutePath) {}
 
 	get name() {
 		return this.path.split("/").pop() ?? "";
@@ -28,8 +23,8 @@ export class Node<S extends Store> {
 
 export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 	readonly owner: H;
-	constructor(props: { store: S; path: string; owner: H }) {
-		super(props);
+	constructor(props: { store: S; path: AbsolutePath; owner: H }) {
+		super(props.store, props.path);
 		this.owner = props.owner;
 	}
 
@@ -37,61 +32,54 @@ export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 		return this.owner.get_children(this.path);
 	}
 
-	_dereference_path(path: string): string {
+	_deref(path: string): AbsolutePath {
 		if (path[0] !== "/") {
 			// treat as relative path
 			if (this.path === "/") {
 				// special case root group
-				path = "/" + path;
+				path = `/${path}`;
 			} else {
-				path = this.path + "/" + path;
+				path = `${this.path}/${path}`;
 			}
 		}
-		if (path.length > 1) {
-			assert(path[path.length - 1] !== "/", "Path must end with '/'.");
-		}
-		return path;
+		return path as AbsolutePath;
 	}
 
 	get(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get(path);
+		return this.owner.get(this._deref(path));
 	}
 
 	has(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.has(path);
+		return this.owner.has(this._deref(path));
 	}
 
 	create_group(path: string, props: { attrs?: Attrs } = {}) {
-		path = this._dereference_path(path);
-		return this.owner.create_group(path, props);
+		return this.owner.create_group(this._deref(path), props);
 	}
 
-	create_array(path: string, props: Parameters<H["create_array"]>[1]) {
-		path = this._dereference_path(path);
-		return this.owner.create_array(path, props);
+	create_array(
+		path: string,
+		props: Parameters<H["create_array"]>[1],
+	) {
+		return this.owner.create_array(this._deref(path), props);
 	}
 
 	get_array(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_array(path);
+		return this.owner.get_array(this._deref(path));
 	}
 
 	get_group(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_group(path);
+		return this.owner.get_group(this._deref(path));
 	}
 
 	get_implicit_group(path: string) {
-		path = this._dereference_path(path);
-		return this.owner.get_implicit_group(path);
+		return this.owner.get_implicit_group(this._deref(path));
 	}
 }
 
 interface ExplicitGroupProps<S extends Store, H extends Hierarchy<S>> {
 	store: S;
-	path: string;
+	path: AbsolutePath;
 	owner: H;
 	attrs: Attrs | (() => Promise<Attrs>);
 }
@@ -117,18 +105,30 @@ export class ExplicitGroup<S extends Store, H extends Hierarchy<S>> extends Grou
 
 export class ImplicitGroup<S extends Store, H extends Hierarchy<S>> extends Group<S, H> {}
 
+export interface ZarrArrayProps<D extends DataType, S extends Store> {
+	store: S;
+	shape: number[];
+	path: AbsolutePath;
+	chunk_shape: number[];
+	dtype: D;
+	fill_value: Scalar<D> | null;
+	attrs: Attrs | (() => Promise<Attrs>);
+	chunk_key: (chunk_coords: number[]) => AbsolutePath;
+	compressor?: import("numcodecs").Codec;
+}
+
 export class ZarrArray<D extends DataType, S extends Store> extends Node<S> {
 	readonly shape: number[];
 	readonly dtype: D;
 	readonly chunk_shape: number[];
 	readonly compressor?: Codec;
 	readonly fill_value: Scalar<D> | null;
-	readonly chunk_key: ArrayAttributes<D, S>["chunk_key"];
+	readonly chunk_key: ZarrArrayProps<D, S>["chunk_key"];
 	readonly TypedArray: TypedArrayConstructor<D>;
 	private _attrs: Attrs | (() => Promise<Attrs>);
 
-	constructor(props: ArrayAttributes<D, S>) {
-		super(props);
+	constructor(props: ZarrArrayProps<D, S>) {
+		super(props.store, props.path);
 		this.shape = props.shape;
 		this.dtype = props.dtype;
 		this.chunk_shape = props.chunk_shape;
