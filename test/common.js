@@ -154,7 +154,7 @@ export function run_test_suite({ name, setup }) {
 		});
 
 		await t.test("Create nodes via groups", async (t) => {
-			const marvin = await h.create_group("marvin");
+			const marvin = await h.create_group("/marvin");
 			const paranoid = await marvin.create_group("paranoid");
 			const android = await marvin.create_array("android", {
 				shape: [42, 42],
@@ -214,12 +214,7 @@ export function run_test_suite({ name, setup }) {
 			t.ok((await h.get("/")) instanceof ImplicitGroup);
 			t.ok((await h.root) instanceof ImplicitGroup);
 			t.ok((await h.get("/arthur")) instanceof ImplicitGroup);
-			t.ok((await h.get("arthur")) instanceof ImplicitGroup);
 			t.ok((await h.get("/tricia/mcmillan")) instanceof ExplicitGroup);
-			t.ok(
-				(await h.get_implicit_group("tricia").then((t) => t.get("mcmillan"))) instanceof
-					ExplicitGroup,
-			);
 		});
 
 		await t.test("Explore hierarchy top-down", async (t) => {
@@ -280,7 +275,7 @@ export function run_test_suite({ name, setup }) {
 				"tricia should be implicit group.",
 			);
 
-			res = await (await h.get_implicit_group("tricia")).get_children();
+			res = await (await h.get_implicit_group("/tricia")).get_children();
 			t.equal(
 				res.get("mcmillan"),
 				"explicit_group",
@@ -288,12 +283,12 @@ export function run_test_suite({ name, setup }) {
 			);
 
 			// @ts-ignore
-			res = await h.get("tricia").then((n) => n.get("mcmillan")).then((n) =>
+			res = await h.get("/tricia").then((n) => n.get("mcmillan")).then((n) =>
 				n.get_children()
 			);
 
 			// @ts-ignore
-			res = await h.get("arthur").then((n) => n.get_children());
+			res = await h.get("/arthur").then((n) => n.get_children());
 			t.equal(res.get("dent"), "array", "dent should be an array.");
 		});
 
@@ -365,9 +360,9 @@ export function run_test_suite({ name, setup }) {
 			t.ok(await root.has("arthur"), 'root should have "arthur".');
 			t.ok(await root.has("tricia"), 'root should have "tricia".');
 			t.notOk(await root.has("zaphod"), 'root should not have "zaphod".');
-			let g = await h.get_implicit_group("arthur");
+			let g = await h.get_implicit_group("/arthur");
 			t.ok(await g.has("dent"), 'arthur should have "dent".');
-			let ig = await h.get_implicit_group("tricia");
+			let ig = await h.get_implicit_group("/tricia");
 			t.ok(await ig.has("mcmillan"), 'tricia should have "mcmillan".');
 			t.notOk(
 				await ig.has("beeblebrox"),
@@ -466,141 +461,44 @@ export function run_test_suite({ name, setup }) {
 
 			res = await get(a, [null, slice(0, 7)]);
 			t.equal(res.shape, [5, 7]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-					30,
-					31,
-					32,
-					33,
-					34,
-					35,
-					36,
-					40,
-					41,
-					42,
-					43,
-					44,
-					45,
-					46,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([ 
+				 0,  1,  2,  3,  4,
+				 5,  6, 10, 11, 12,
+				13, 14, 15, 16, 20,
+				21, 22, 23, 24, 25,
+				26, 30, 31, 32, 33,
+				34, 35, 36, 40, 41,
+				42, 43, 44, 45, 46,
+			]));
 
 			res = await get(a, [slice(0, 3), null]);
 			t.equal(res.shape, [3, 10]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					7,
-					8,
-					9,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					17,
-					18,
-					19,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-					27,
-					28,
-					29,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([
+				 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+				20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+			]));
 			res = await get(a, [slice(0, 3), slice(0, 7)]);
 			t.equal(res.shape, [3, 7]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					0,
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					10,
-					11,
-					12,
-					13,
-					14,
-					15,
-					16,
-					20,
-					21,
-					22,
-					23,
-					24,
-					25,
-					26,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual(res.data, new Int32Array([
+				 0,  1,  2,  3,  4,  5,  6,
+				10, 11, 12, 13, 14, 15, 16,
+				20, 21, 22, 23, 24, 25, 26,
+			]));
 
 			res = await get(a, [slice(1, 4), slice(2, 7)]);
 			t.equal(res.shape, [3, 5]);
-			// prettier-ignore
-			t.deepEqual(
-				res.data,
-				new Int32Array([
-					12,
-					13,
-					14,
-					15,
-					16,
-					22,
-					23,
-					24,
-					25,
-					26,
-					32,
-					33,
-					34,
-					35,
-					36,
-				]),
-			);
+			// deno-fmt-ignore
+			t.deepEqual( res.data, new Int32Array([
+				12, 13, 14, 15, 16,
+				22, 23, 24, 25, 26,
+				32, 33, 34, 35, 36,
+			]));
 
-			const b = await h.get_array("deep/thought");
+			const b = await h.get_array("/deep/thought");
 			res = await get(b, [slice(10)]);
 			t.equal(res.shape, [10]);
 			t.deepEqual(res.data, new Float64Array(10));

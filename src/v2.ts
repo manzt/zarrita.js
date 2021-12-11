@@ -8,6 +8,7 @@ import type {
 	Attrs,
 	DataType,
 	Hierarchy as HierarchyProtocol,
+	AbsolutePath,
 	CreateArrayProps,
 	Store,
 } from "./types";
@@ -84,7 +85,7 @@ export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ stor
 
 export const from_meta = async <S extends Store, D extends DataType>(
 	store: S,
-	path: string,
+	path: AbsolutePath,
 	meta: ArrayMetadata<D>,
 	attrs?: Record<string, any>,
 ) => {
@@ -112,7 +113,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async create_group(
-		path: string,
+		path: AbsolutePath,
 		props: { attrs?: Attrs } = {},
 	): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		const { attrs } = props;
@@ -137,7 +138,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 	}
 
 	async create_array<D extends DataType>(
-		path: string,
+		path: AbsolutePath,
 		props: CreateArrayProps<D>,
 	): Promise<ZarrArray<D, S>> {
 		const shape = props.shape;
@@ -183,7 +184,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get_array(path: string): Promise<ZarrArray<DataType, S>> {
+	async get_array(path: AbsolutePath): Promise<ZarrArray<DataType, S>> {
 		// path = normalize_path(path);
 		const meta_key = array_meta_key(path);
 		const meta_doc = await this.store.get(meta_key);
@@ -197,7 +198,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return from_meta(this.store, path, meta);
 	}
 
-	async get_group(path: string): Promise<ExplicitGroup<S, Hierarchy<S>>> {
+	async get_group(path: AbsolutePath): Promise<ExplicitGroup<S, Hierarchy<S>>> {
 		// path = normalize_path(path);
 
 		const meta_key = group_meta_key(path);
@@ -216,7 +217,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		});
 	}
 
-	async get(path: string): Promise<
+	async get(path: AbsolutePath): Promise<
 		ZarrArray<DataType, S> | ExplicitGroup<S, Hierarchy<S>>
 	> {
 		try {
@@ -237,7 +238,7 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		throw new KeyError(path);
 	}
 
-	async has(path: string): Promise<boolean> {
+	async has(path: AbsolutePath): Promise<boolean> {
 		try {
 			await this.get(path);
 			return true;
@@ -249,12 +250,12 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		}
 	}
 
-	async get_children(_path: string): Promise<Map<string, string>> {
+	async get_children(_path: AbsolutePath): Promise<Map<string, string>> {
 		console.warn("get_children not implemented for v2.");
 		return new Map();
 	}
 
-	get_implicit_group(_path: string): never {
+	get_implicit_group(_path: AbsolutePath): never {
 		throw new Error("Implicit group not implemented for v2.");
 	}
 }

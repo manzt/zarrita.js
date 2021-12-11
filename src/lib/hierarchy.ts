@@ -6,15 +6,15 @@ import type {
 	Attrs,
 	DataType,
 	Hierarchy,
-	KeyPrefix,
 	Scalar,
 	TypedArray,
 	TypedArrayConstructor,
+	AbsolutePath
 } from "../types";
 import type { Codec } from "numcodecs";
 
 export class Node<S extends Store> {
-	constructor(public readonly store: S, public readonly path: string) {}
+	constructor(public readonly store: S, public readonly path: AbsolutePath) {}
 
 	get name() {
 		return this.path.split("/").pop() ?? "";
@@ -23,7 +23,7 @@ export class Node<S extends Store> {
 
 export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 	readonly owner: H;
-	constructor(props: { store: S; path: string; owner: H }) {
+	constructor(props: { store: S; path: AbsolutePath; owner: H }) {
 		super(props.store, props.path);
 		this.owner = props.owner;
 	}
@@ -32,54 +32,54 @@ export class Group<S extends Store, H extends Hierarchy<S>> extends Node<S> {
 		return this.owner.get_children(this.path);
 	}
 
-	_deref<Path extends KeyPrefix>(path: Path): `/${KeyPrefix}` {
+	_deref(path: string): AbsolutePath {
 		if (path[0] !== "/") {
 			// treat as relative path
 			if (this.path === "/") {
 				// special case root group
-				path = `/${path}` as Path;
+				path = `/${path}`;
 			} else {
-				path = `${this.path}/${path}` as Path;
+				path = `${this.path}/${path}`;
 			}
 		}
-		return path as `/${KeyPrefix}`;
+		return path as AbsolutePath;
 	}
 
-	get<Path extends KeyPrefix>(path: Path) {
+	get(path: string) {
 		return this.owner.get(this._deref(path));
 	}
 
-	has<Path extends KeyPrefix>(path: Path) {
+	has(path: string) {
 		return this.owner.has(this._deref(path));
 	}
 
-	create_group<Path extends KeyPrefix>(path: Path, props: { attrs?: Attrs } = {}) {
+	create_group(path: string, props: { attrs?: Attrs } = {}) {
 		return this.owner.create_group(this._deref(path), props);
 	}
 
-	create_array<Path extends KeyPrefix>(
-		path: Path,
+	create_array(
+		path: string,
 		props: Parameters<H["create_array"]>[1],
 	) {
 		return this.owner.create_array(this._deref(path), props);
 	}
 
-	get_array<Path extends KeyPrefix>(path: Path) {
+	get_array(path: string) {
 		return this.owner.get_array(this._deref(path));
 	}
 
-	get_group<Path extends KeyPrefix>(path: Path) {
+	get_group(path: string) {
 		return this.owner.get_group(this._deref(path));
 	}
 
-	get_implicit_group<Path extends KeyPrefix>(path: Path) {
+	get_implicit_group(path: string) {
 		return this.owner.get_implicit_group(this._deref(path));
 	}
 }
 
 interface ExplicitGroupProps<S extends Store, H extends Hierarchy<S>> {
 	store: S;
-	path: string;
+	path: AbsolutePath;
 	owner: H;
 	attrs: Attrs | (() => Promise<Attrs>);
 }
@@ -108,7 +108,7 @@ export class ImplicitGroup<S extends Store, H extends Hierarchy<S>> extends Grou
 export interface ZarrArrayProps<D extends DataType, S extends Store> {
 	store: S;
 	shape: number[];
-	path: string;
+	path: AbsolutePath;
 	chunk_shape: number[];
 	dtype: D;
 	fill_value: Scalar<D> | null;

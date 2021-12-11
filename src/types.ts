@@ -19,6 +19,7 @@ export interface Slice {
 	indices: (length: number) => Indices;
 }
 
+export type AbsolutePath<Rest extends string = string> = `/${Rest}`;
 export type KeyPrefix = `${any}/`;
 
 export interface SyncStore<GetOptions = any> {
@@ -49,35 +50,34 @@ export type Attrs = Record<string, any>;
 
 export type ArraySelection = null | (number | null | Slice)[];
 
-
 export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 	// read-only
 	has(path: string): Promise<boolean>;
-	get(path: string): Promise<
+	get(path: AbsolutePath): Promise<
 		| ZarrArray<DataType, Store>
 		| ExplicitGroup<Store, Hierarchy<Store>>
 		| ImplicitGroup<Store, Hierarchy<Store>>
 	>;
 	get_array(
-		path: string,
+		path: AbsolutePath,
 	): Promise<ZarrArray<DataType, Store>>;
 	get_group(
-		path: string,
+		path: AbsolutePath,
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
 	get_implicit_group(
-		path: string,
+		path: AbsolutePath,
 	): Promise<ImplicitGroup<Store, Hierarchy<Store>>>;
-	get_children(path?: string): Promise<Map<string, string>>;
+	get_children(path?: AbsolutePath): Promise<Map<string, string>>;
 
 	// write
 	create_group(
-		path: string,
+		path: AbsolutePath,
 		props?: { attrs?: Attrs },
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>>>;
 	create_array<
 		Dtype extends DataType,
 	>(
-		path: string,
+		path: AbsolutePath,
 		props: CreateArrayProps<Dtype>,
 	): Promise<ZarrArray<Dtype, Store>>;
 }
@@ -123,3 +123,5 @@ export type ChunkQueue = {
 export type Options = { create_queue?: () => ChunkQueue };
 export type GetOptions = Options;
 export type SetOptions = Options;
+
+
