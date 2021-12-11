@@ -13,8 +13,8 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
-class FetchStore<Url extends string | URL> extends ReadOnlyStore<RequestInit> {
-	constructor(public url: Url) {
+class FetchStore extends ReadOnlyStore<RequestInit> {
+	constructor(public url: string | URL) {
 		super();
 	}
 
