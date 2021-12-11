@@ -29,32 +29,45 @@ export interface ListDirResult {
 	prefixes: string[];
 }
 
-export interface SyncStore<GetOptions = any> {
-	get(key: AbsolutePath, opts?: GetOptions): Uint8Array | undefined;
-	has(key: AbsolutePath): boolean;
-	set(key: AbsolutePath, value: Uint8Array): void;
-	delete(key: AbsolutePath): boolean;
-	list_prefix(key: RootPath | PrefixPath): string[];
-	list_dir(key?: RootPath | PrefixPath): ListDirResult;
+export interface ReadableSyncStore<GetOpts = any> {
+	get(key: AbsolutePath, opts?: GetOpts): Uint8Array | undefined;
+	has: (key: AbsolutePath) => boolean;
+	list_prefix?: (key: RootPath | PrefixPath) => string[];
+	list_dir?: (key?: RootPath | PrefixPath) => ListDirResult;
 }
 
-export interface AsyncStore<GetOptions = any> {
-	get(key: AbsolutePath, opts?: GetOptions): Promise<Uint8Array | undefined>;
-	has(key: AbsolutePath): Promise<boolean>;
-	set(key: AbsolutePath, value: Uint8Array): Promise<void>;
-	delete(key: AbsolutePath): Promise<boolean>;
-	list_prefix(key: RootPath | PrefixPath): Promise<string[]>;
-	list_dir(key?: RootPath | PrefixPath): Promise<ListDirResult>;
+export interface WriteableSyncStore {
+	set: (key: AbsolutePath, value: Uint8Array) => void;
+	delete: (key: AbsolutePath) => boolean;
 }
+
+export interface ReadableAsyncStore<GetOpts = any> {
+	get(key: AbsolutePath, opts?: GetOpts): Promise<Uint8Array | undefined>;
+	has: (key: AbsolutePath) => Promise<boolean>;
+	list_prefix?: (key: RootPath | PrefixPath) => Promise<string[]>;
+	list_dir?: (key?: RootPath | PrefixPath) => Promise<ListDirResult>;
+}
+
+export interface WriteableAsyncStore {
+	set: (key: AbsolutePath, value: Uint8Array) => Promise<void>;
+	delete: (key: AbsolutePath) => Promise<boolean>;
+}
+
+export type SyncStore<Opts = any> = ReadableSyncStore<Opts> & WriteableSyncStore;
+export type AsyncStore<Opts = any> = ReadableAsyncStore<Opts> & WriteableAsyncStore;
+export type ReadableStore<Opts = any> =
+	| ReadableSyncStore<Opts>
+	| ReadableAsyncStore<Opts>;
+export type WriteableStore = WriteableSyncStore | WriteableAsyncStore;
 
 export type Store = SyncStore | AsyncStore;
 export type Attrs = Record<string, any>;
 
 export type ArraySelection = null | (number | null | Slice)[];
 
-export interface Hierarchy<Store extends SyncStore | AsyncStore> {
+export interface Hierarchy<Store extends ReadableStore | AsyncStore | SyncStore> {
 	// read-only
-	has(path: string): Promise<boolean>;
+	has(path: AbsolutePath): Promise<boolean>;
 	get<Path extends AbsolutePath>(path: Path): Promise<
 		| ZarrArray<DataType, Store, Path>
 		| ExplicitGroup<Store, Hierarchy<Store>, Path>
@@ -75,14 +88,15 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props?: { attrs?: Attrs },
-	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
+	): Store extends WriteableStore ? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never;
 	create_array<
 		Path extends AbsolutePath,
 		Dtype extends DataType,
 	>(
 		path: Path,
 		props: CreateArrayProps<Dtype>,
-	): Promise<ZarrArray<Dtype, Store, Path>>;
+	): Store extends WriteableStore ? Promise<ZarrArray<Dtype, Store, Path>> : never;
 }
 
 type RequiredArrayProps<D extends DataType> = {

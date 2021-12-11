@@ -1,6 +1,6 @@
 import { ExplicitGroup, ZarrArray } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
-import { KeyError, NodeNotFoundError } from "./lib/errors";
+import { assert, KeyError, NodeNotFoundError } from "./lib/errors";
 // deno-fmt-ignore
 import { json_decode_object, json_encode_object } from "./lib/util";
 
@@ -10,8 +10,10 @@ import type {
 	ChunkKey,
 	CreateArrayProps,
 	DataType,
-	Hierarchy as HierarchyProtocol,
+	Hierarchy as _Hierarchy,
+	ReadableStore,
 	Store,
+	WriteableStore,
 } from "./types";
 import type { Codec } from "numcodecs";
 
@@ -57,10 +59,82 @@ const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as c
 const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
 const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
-const get_attrs = async (store: Store, path: AbsolutePath): Promise<Attrs> => {
+const get_attrs = async (store: ReadableStore, path: AbsolutePath): Promise<Attrs> => {
 	const attrs = await store.get(attrs_key(path));
 	return attrs ? json_decode_object(attrs) : {};
 };
+
+async function create_group<
+	S extends Store,
+	H extends Hierarchy<S>,
+	Path extends AbsolutePath,
+>(owner: H, path: Path, attrs?: Attrs) {
+	const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
+	const meta_key = group_meta_key(path);
+
+	await owner.store.set(meta_key, meta_doc);
+
+	if (attrs) {
+		await owner.store.set(
+			attrs_key(path),
+			json_encode_object(attrs),
+		);
+	}
+
+	return new ExplicitGroup({ store: owner.store, owner, path, attrs: attrs ?? {} });
+}
+
+async function create_array<
+	S extends Store,
+	Path extends AbsolutePath,
+	D extends DataType,
+>(
+	store: S,
+	path: Path,
+	props: CreateArrayProps<D>,
+) {
+	const shape = props.shape;
+	const dtype = props.dtype;
+	const chunk_shape = props.chunk_shape;
+	const compressor = props.compressor;
+	const chunk_separator = props.chunk_separator ?? ".";
+
+	const meta: ArrayMetadata<D> = {
+		zarr_format: 2,
+		shape,
+		dtype,
+		chunks: chunk_shape,
+		dimension_separator: chunk_separator,
+		order: "C",
+		fill_value: props.fill_value ?? null,
+		filters: [],
+		compressor: compressor ? encode_codec_metadata(compressor) : null,
+	};
+
+	// serialise and store metadata document
+	const meta_doc = json_encode_object(meta);
+	const meta_key = array_meta_key(path);
+	await store.set(meta_key, meta_doc);
+
+	if (props.attrs) {
+		await store.set(
+			attrs_key(path),
+			json_encode_object(props.attrs),
+		);
+	}
+
+	return new ZarrArray({
+		store,
+		path,
+		shape: meta.shape,
+		dtype: dtype,
+		chunk_shape: meta.chunks,
+		chunk_key: chunk_key(path, chunk_separator),
+		compressor: compressor,
+		fill_value: meta.fill_value,
+		attrs: props.attrs ?? {},
+	});
+}
 
 function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
 	const prefix = key_prefix(path);
@@ -76,7 +150,7 @@ export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ stor
 
 export const from_meta = async <
 	P extends AbsolutePath,
-	S extends Store,
+	S extends Store | ReadableStore,
 	D extends DataType,
 >(
 	store: S,
@@ -97,7 +171,7 @@ export const from_meta = async <
 	});
 };
 
-export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
+export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S> {
 	public store: S;
 	constructor({ store }: { store: S }) {
 		this.store = store;
@@ -107,76 +181,20 @@ export class Hierarchy<S extends Store> implements HierarchyProtocol<S> {
 		return this.get("/");
 	}
 
-	async create_group<Path extends AbsolutePath>(
+	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props: { attrs?: Attrs } = {},
-	): Promise<ExplicitGroup<S, Hierarchy<S>, Path>> {
-		const { attrs } = props;
-		// sanity checks
-		// path = normalize_path(path);
-
-		// serialise and store metadata document
-		const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
-		const meta_key = group_meta_key(path);
-		await this.store.set(meta_key, meta_doc);
-
-		if (attrs) {
-			await this.store.set(attrs_key(path), json_encode_object(attrs));
-		}
-
-		return new ExplicitGroup({
-			store: this.store,
-			owner: this,
-			path,
-			attrs: attrs ?? {},
-		});
+	): S extends WriteableStore ? Promise<ExplicitGroup<S, Hierarchy<S>, Path>> : never {
+		assert("set" in this.store, "Not a writeable store");
+		return create_group(this as Hierarchy<Store>, path, props.attrs) as any;
 	}
 
-	async create_array<Path extends AbsolutePath, D extends DataType>(
+	create_array<Path extends AbsolutePath, D extends DataType>(
 		path: Path,
 		props: CreateArrayProps<D>,
-	): Promise<ZarrArray<D, S, Path>> {
-		const shape = props.shape;
-		const dtype = props.dtype;
-		const chunk_shape = props.chunk_shape;
-		const compressor = props.compressor;
-		const chunk_separator = props.chunk_separator ?? ".";
-
-		const meta: ArrayMetadata<D> = {
-			zarr_format: 2,
-			shape,
-			dtype,
-			chunks: chunk_shape,
-			dimension_separator: chunk_separator,
-			order: "C",
-			fill_value: props.fill_value ?? null,
-			filters: [],
-			compressor: compressor ? encode_codec_metadata(compressor) : null,
-		};
-
-		// serialise and store metadata document
-		const meta_doc = json_encode_object(meta);
-		const meta_key = array_meta_key(path);
-		await this.store.set(meta_key, meta_doc);
-
-		if (props.attrs) {
-			await this.store.set(
-				attrs_key(path),
-				json_encode_object(props.attrs),
-			);
-		}
-
-		return new ZarrArray({
-			store: this.store,
-			path,
-			shape: meta.shape,
-			dtype: dtype,
-			chunk_shape: meta.chunks,
-			chunk_key: chunk_key(path, chunk_separator),
-			compressor: compressor,
-			fill_value: meta.fill_value,
-			attrs: props.attrs ?? {},
-		});
+	): S extends WriteableStore ? Promise<ZarrArray<D, S, Path>> : never {
+		assert("set" in this.store, "Not a writeable store");
+		return create_array(this.store as Store, path, props) as any;
 	}
 
 	async get_array<Path extends AbsolutePath>(

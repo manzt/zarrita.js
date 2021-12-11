@@ -6,6 +6,7 @@ import type {
 	Attrs,
 	DataType,
 	Hierarchy,
+	ReadableStore,
 	Scalar,
 	Store,
 	TypedArray,
@@ -13,7 +14,7 @@ import type {
 } from "../types";
 import type { Codec } from "numcodecs";
 
-export class Node<S extends Store, Path extends AbsolutePath> {
+export class Node<S extends Store | ReadableStore, Path extends AbsolutePath> {
 	constructor(public readonly store: S, public readonly path: Path) {}
 
 	get name() {
@@ -22,7 +23,7 @@ export class Node<S extends Store, Path extends AbsolutePath> {
 }
 
 export class Group<
-	S extends Store,
+	S extends Store | ReadableStore,
 	H extends Hierarchy<S>,
 	P extends AbsolutePath = AbsolutePath,
 > extends Node<S, P> {
@@ -85,7 +86,7 @@ export class Group<
 
 interface ExplicitGroupProps<
 	P extends AbsolutePath,
-	S extends Store,
+	S extends Store | ReadableStore,
 	H extends Hierarchy<S>,
 > {
 	store: S;
@@ -95,7 +96,7 @@ interface ExplicitGroupProps<
 }
 
 export class ExplicitGroup<
-	S extends Store,
+	S extends Store | ReadableStore,
 	H extends Hierarchy<S>,
 	P extends AbsolutePath = AbsolutePath,
 > extends Group<S, H, P> {
@@ -118,7 +119,7 @@ export class ExplicitGroup<
 }
 
 export class ImplicitGroup<
-	S extends Store,
+	S extends Store | ReadableStore,
 	H extends Hierarchy<S>,
 	P extends AbsolutePath = AbsolutePath,
 > extends Group<S, H, P> {}
@@ -126,7 +127,7 @@ export class ImplicitGroup<
 export interface ZarrArrayProps<
 	P extends AbsolutePath,
 	D extends DataType,
-	S extends Store,
+	S extends ReadableStore,
 > {
 	store: S;
 	shape: number[];
@@ -141,7 +142,7 @@ export interface ZarrArrayProps<
 
 export class ZarrArray<
 	D extends DataType,
-	S extends Store,
+	S extends ReadableStore,
 	P extends AbsolutePath = AbsolutePath,
 > extends Node<S, P> {
 	readonly shape: number[];

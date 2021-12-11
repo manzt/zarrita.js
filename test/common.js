@@ -1,12 +1,11 @@
 // @ts-check
-
 import { test } from "zora";
 
 import { ExplicitGroup, ImplicitGroup, registry, slice, v3, ZarrArray } from "zarrita";
 import { get, set } from "zarrita/ndarray";
 import ndarray from "ndarray";
-import GZip from "numcodecs/gzip";
 
+import GZip from "numcodecs/gzip";
 // add dynamic codec to registry
 // @ts-ignore
 registry.set("gzip", () => GZip);
@@ -17,7 +16,7 @@ function json(bytes) {
 	return JSON.parse(str);
 }
 
-/** @param {{ name: string, setup: () => Promise<any> }} props */
+/** @param {{ name: string, setup: () => Promise<import('../src/types').Store> }} props */
 export function run_test_suite({ name, setup }) {
 	test(`Zarrita test suite: ${name}.`, async (t) => {
 		const store = await setup();

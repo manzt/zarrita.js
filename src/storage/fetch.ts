@@ -1,5 +1,4 @@
-import ReadOnlyStore from "./readonly";
-import type { AbsolutePath } from "../types";
+import type { AbsolutePath, ReadableAsyncStore } from "../types";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;
@@ -13,10 +12,8 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
-class FetchStore extends ReadOnlyStore<RequestInit> {
-	constructor(public url: string | URL) {
-		super();
-	}
+class FetchStore implements ReadableAsyncStore<RequestInit> {
+	constructor(public url: string | URL) {}
 
 	async get(key: AbsolutePath, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
 		const { href } = resolve(this.url, key);
