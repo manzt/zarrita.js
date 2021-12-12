@@ -48,8 +48,6 @@ export interface ExtendedReadable extends Readable {
 
 export type Attrs = Record<string, any>;
 
-export type ArraySelection = null | (number | null | Slice)[];
-
 export interface Hierarchy<Store extends Readable | Async<Readable>> {
 	// read-only
 	has(path: AbsolutePath): Promise<boolean>;

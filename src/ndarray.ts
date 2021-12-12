@@ -3,7 +3,6 @@ import ndarray from "ndarray";
 import ops from "ndarray-ops";
 
 import type {
-	ArraySelection,
 	Async,
 	DataType,
 	GetOptions,
@@ -11,6 +10,7 @@ import type {
 	Readable,
 	Scalar,
 	SetOptions,
+	Slice,
 	TypedArray,
 	Writeable,
 } from "./types";
@@ -19,12 +19,15 @@ import type { ZarrArray } from "./lib/hierarchy";
 import { get as get_with_setter } from "./lib/get";
 import { set as set_with_setter } from "./lib/set";
 
-export async function get<D extends DataType>(
+export async function get<
+	D extends DataType,
+	Sel extends (null | Slice | number)[],
+>(
 	arr: ZarrArray<D, Readable | Async<Readable>>,
-	selection: ArraySelection = null,
+	selection: Sel | null = null,
 	opts: GetOptions = {},
 ) {
-	return get_with_setter<D, ndarray.NdArray<TypedArray<D>>>(arr, selection, opts, {
+	return get_with_setter<D, ndarray.NdArray<TypedArray<D>>, Sel>(arr, selection, opts, {
 		prepare: ndarray,
 		set_scalar(target, selection, value) {
 			ops.assigns(view(target, selection), value);
@@ -40,7 +43,7 @@ export async function get<D extends DataType>(
 
 export async function set<D extends DataType>(
 	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
-	selection: ArraySelection,
+	selection: (null | Slice | number)[] | null,
 	value: Scalar<D> | ndarray.NdArray<TypedArray<D>>,
 	opts: SetOptions = {},
 ) {

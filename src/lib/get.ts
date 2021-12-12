@@ -3,7 +3,6 @@ import { BasicIndexer } from "./indexing";
 import { create_queue } from "./util";
 import type { ZarrArray } from "./hierarchy";
 import type {
-	ArraySelection,
 	Async,
 	DataType,
 	GetOptions,
@@ -13,10 +12,11 @@ import type {
 	Scalar,
 	SetFromChunk,
 	SetScalar,
+	Slice,
 	TypedArray,
 } from "../types";
 
-const get_value = <D extends DataType>(
+const unwrap = <D extends DataType>(
 	arr: TypedArray<D>,
 	idx: number,
 ): Scalar<D> => {
@@ -26,16 +26,17 @@ const get_value = <D extends DataType>(
 export async function get<
 	D extends DataType,
 	Arr extends NdArrayLike<D>,
+	Sel extends (null | Slice | number)[],
 >(
 	arr: ZarrArray<D, Readable | Async<Readable>>,
-	selection: ArraySelection,
+	selection: null | Sel,
 	opts: GetOptions,
 	setter: {
 		prepare: Prepare<D, Arr>;
 		set_scalar: SetScalar<D, Arr>;
 		set_from_chunk: SetFromChunk<D, Arr>;
 	},
-): Promise<Arr | Scalar<D>> {
+): Promise<null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>> {
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
@@ -68,5 +69,5 @@ export async function get<
 	await queue.onIdle();
 
 	// If the final out shape is empty, we just return a scalar.
-	return indexer.shape.length === 0 ? get_value(out.data, 0) : out;
+	return indexer.shape.length === 0 ? unwrap(out.data, 0) : out as any;
 }

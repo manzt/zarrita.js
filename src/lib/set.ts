@@ -4,7 +4,6 @@ import { BasicIndexer } from "./indexing";
 import type { ZarrArray } from "./hierarchy";
 
 import type {
-	ArraySelection,
 	Async,
 	DataType,
 	Indices,
@@ -15,13 +14,14 @@ import type {
 	SetFromChunk,
 	SetOptions,
 	SetScalar,
+	Slice,
 	TypedArray,
 	Writeable,
 } from "../types";
 
 export async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>>(
 	arr: ZarrArray<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
-	selection: ArraySelection,
+	selection: (number | Slice | null)[] | null,
 	value: Scalar<Dtype> | Arr,
 	opts: SetOptions,
 	setter: {

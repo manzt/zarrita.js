@@ -2,13 +2,13 @@ import { BoolArray } from "./custom-arrays";
 import type { ZarrArray } from "./hierarchy";
 
 import type {
-	ArraySelection,
 	Async,
 	GetOptions,
 	Indices,
 	NdArrayLike,
 	Readable,
 	SetOptions,
+	Slice,
 	TypedArray,
 	Writeable,
 } from "../types";
@@ -19,12 +19,15 @@ import { set as set_with_setter } from "./set";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 
-export async function get<D extends Exclude<DataType, UnicodeStr | ByteStr>>(
+export async function get<
+	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+	Sel extends (null | Slice | number)[],
+>(
 	arr: ZarrArray<D, Readable | Async<Readable>>,
-	selection: ArraySelection = null,
+	selection: Sel | null = null,
 	opts: GetOptions = {},
 ) {
-	return get_with_setter<D, NdArray<D>>(arr, selection, opts, {
+	return get_with_setter<D, NdArray<D>, Sel>(arr, selection, opts, {
 		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
@@ -35,9 +38,11 @@ export async function get<D extends Exclude<DataType, UnicodeStr | ByteStr>>(
 	});
 }
 
-export async function set<D extends Exclude<DataType, UnicodeStr | ByteStr>>(
+export async function set<
+	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+>(
 	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
-	selection: ArraySelection,
+	selection: (null | Slice | number)[] | null,
 	value: Scalar<D> | NdArrayLike<D>,
 	opts: SetOptions = {},
 ) {
