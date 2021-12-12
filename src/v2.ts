@@ -6,14 +6,14 @@ import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
 	AbsolutePath,
+	Async,
 	Attrs,
 	ChunkKey,
 	CreateArrayProps,
 	DataType,
 	Hierarchy as _Hierarchy,
-	ReadableStore,
-	Store,
-	WriteableStore,
+	Readable,
+	Writeable,
 } from "./types";
 import type { Codec } from "numcodecs";
 
@@ -59,14 +59,17 @@ const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as c
 const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
 const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
-const get_attrs = async (store: ReadableStore, path: AbsolutePath): Promise<Attrs> => {
+const get_attrs = async (
+	store: Readable | Async<Readable>,
+	path: AbsolutePath,
+): Promise<Attrs> => {
 	const attrs = await store.get(attrs_key(path));
 	return attrs ? json_decode_object(attrs) : {};
 };
 
 async function create_group<
-	S extends Store,
-	H extends Hierarchy<S>,
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	H extends Hierarchy<Store>,
 	Path extends AbsolutePath,
 >(owner: H, path: Path, attrs?: Attrs) {
 	const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
@@ -85,7 +88,7 @@ async function create_group<
 }
 
 async function create_array<
-	S extends Store,
+	S extends Writeable | Async<Writeable>,
 	Path extends AbsolutePath,
 	D extends DataType,
 >(
@@ -144,13 +147,16 @@ function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
 	};
 }
 
-export const create_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
+export const create_hierarchy = <
+	S extends Readable & Writeable | Async<Readable & Writeable>,
+>(store: S) => new Hierarchy({ store });
 
-export const get_hierarchy = <S extends Store>(store: S) => new Hierarchy({ store });
+export const get_hierarchy = <S extends Readable | Async<Readable>>(store: S) =>
+	new Hierarchy({ store });
 
 export const from_meta = async <
 	P extends AbsolutePath,
-	S extends Store | ReadableStore,
+	S extends Readable | Async<Readable>,
 	D extends DataType,
 >(
 	store: S,
@@ -171,9 +177,10 @@ export const from_meta = async <
 	});
 };
 
-export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S> {
-	public store: S;
-	constructor({ store }: { store: S }) {
+export class Hierarchy<Store extends Readable | Async<Readable>>
+	implements _Hierarchy<Store> {
+	public store: Store;
+	constructor({ store }: { store: Store }) {
 		this.store = store;
 	}
 
@@ -184,22 +191,25 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props: { attrs?: Attrs } = {},
-	): S extends WriteableStore ? Promise<ExplicitGroup<S, Hierarchy<S>, Path>> : never {
+	): Store extends (Writeable | Async<Writeable>)
+		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never {
 		assert("set" in this.store, "Not a writeable store");
-		return create_group(this as Hierarchy<Store>, path, props.attrs) as any;
+		return create_group(this as any, path, props.attrs) as any;
 	}
 
-	create_array<Path extends AbsolutePath, D extends DataType>(
+	create_array<Path extends AbsolutePath, Dtype extends DataType>(
 		path: Path,
-		props: CreateArrayProps<D>,
-	): S extends WriteableStore ? Promise<ZarrArray<D, S, Path>> : never {
+		props: CreateArrayProps<Dtype>,
+	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
+		: never {
 		assert("set" in this.store, "Not a writeable store");
-		return create_array(this.store as Store, path, props) as any;
+		return create_array(this.store as any, path, props) as any;
 	}
 
 	async get_array<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ZarrArray<DataType, S, Path>> {
+	): Promise<ZarrArray<DataType, Store, Path>> {
 		// path = normalize_path(path);
 		const meta_key = array_meta_key(path);
 		const meta_doc = await this.store.get(meta_key);
@@ -215,7 +225,7 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 
 	async get_group<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ExplicitGroup<S, Hierarchy<S>, Path>> {
+	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>> {
 		// path = normalize_path(path);
 
 		const meta_key = group_meta_key(path);
@@ -235,7 +245,7 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 	}
 
 	async get<Path extends AbsolutePath>(path: Path): Promise<
-		ZarrArray<DataType, S, Path> | ExplicitGroup<S, Hierarchy<S>, Path>
+		ZarrArray<DataType, Store, Path> | ExplicitGroup<Store, Hierarchy<Store>, Path>
 	> {
 		try {
 			return await this.get_array(path);
@@ -267,9 +277,8 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 		}
 	}
 
-	async get_children(_path: AbsolutePath): Promise<Map<string, string>> {
-		console.warn("get_children not implemented for v2.");
-		return new Map();
+	get_children(_path: AbsolutePath): never {
+		throw new Error("get_children not implemented for v2.");
 	}
 
 	get_implicit_group(_path: AbsolutePath): never {

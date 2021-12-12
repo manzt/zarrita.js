@@ -1,9 +1,17 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { AbsolutePath, AsyncStore, PrefixPath, RootPath } from "../types";
+import type {
+	AbsolutePath,
+	Async,
+	ExtendedReadable,
+	PrefixPath,
+	Readable,
+	RootPath,
+	Writeable,
+} from "../types";
 
-class FileSystemStore implements AsyncStore {
+class FileSystemStore implements Async<Readable & Writeable & ExtendedReadable> {
 	constructor(public root: string) {}
 
 	get(key: AbsolutePath): Promise<Uint8Array | undefined> {

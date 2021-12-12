@@ -1,4 +1,4 @@
-import type { AbsolutePath, ReadableAsyncStore } from "../types";
+import type { AbsolutePath, Async, Readable } from "../types";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;
@@ -12,7 +12,7 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
-class FetchStore implements ReadableAsyncStore<RequestInit> {
+class FetchStore implements Async<Readable<RequestInit>> {
 	constructor(public url: string | URL) {}
 
 	async get(key: AbsolutePath, opts: RequestInit = {}): Promise<Uint8Array | undefined> {

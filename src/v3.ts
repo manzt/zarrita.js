@@ -6,14 +6,15 @@ import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
 	AbsolutePath,
+	Async,
 	Attrs,
 	CreateArrayProps,
 	DataType,
+	ExtendedReadable,
 	Hierarchy as _Hierarchy,
-	ReadableStore,
+	Readable,
 	Scalar,
-	Store,
-	WriteableStore,
+	Writeable,
 } from "./types";
 import type { Codec } from "numcodecs";
 
@@ -96,8 +97,8 @@ function meta_key<Path extends string, Suffix extends string>(
 }
 
 async function create_group<
-	S extends Store,
-	H extends Hierarchy<S>,
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	H extends Hierarchy<Store>,
 	Path extends AbsolutePath,
 >(owner: H, path: Path, attrs: Attrs = {}) {
 	const meta: GroupMetadata = { extensions: [], attributes: attrs };
@@ -110,21 +111,21 @@ async function create_group<
 }
 
 async function create_array<
-	S extends Store,
-	H extends Hierarchy<S>,
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	H extends Hierarchy<Store>,
 	Path extends AbsolutePath,
-	D extends DataType,
+	Dtype extends DataType,
 >(
 	owner: H,
 	path: Path,
-	props: Omit<CreateArrayProps<D>, "filters">,
-): Promise<ZarrArray<D, S, Path>> {
+	props: Omit<CreateArrayProps<Dtype>, "filters">,
+): Promise<ZarrArray<Dtype, Store, Path>> {
 	const shape = props.shape;
 	const dtype = props.dtype;
 	const chunk_shape = props.chunk_shape;
 	const compressor = props.compressor;
 
-	const meta: ArrayMetadata<D> = {
+	const meta: ArrayMetadata<Dtype> = {
 		shape,
 		data_type: dtype,
 		chunk_grid: {
@@ -166,9 +167,11 @@ const chunk_key = (path: string, chunk_separator: "." | "/") =>
 		return `/data/root${path}/${chunk_identifier}`;
 	};
 
-export async function create_hierarchy<S extends Store>(
-	store: S,
-): Promise<Hierarchy<S>> {
+export async function create_hierarchy<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+>(
+	store: Store,
+): Promise<Hierarchy<Store>> {
 	// create entry point metadata document
 	const meta_key_suffix = ".json";
 
@@ -188,9 +191,9 @@ export async function create_hierarchy<S extends Store>(
 	return new Hierarchy({ store, meta_key_suffix });
 }
 
-export async function get_hierarchy<S extends Store | ReadableStore>(
-	store: S,
-): Promise<Hierarchy<S>> {
+export async function get_hierarchy<Store extends Readable | Async<Readable>>(
+	store: Store,
+): Promise<Hierarchy<Store>> {
 	// retrieve and parse entry point metadata document
 	const meta_key = "/zarr.json";
 	const meta_doc = await store.get(meta_key);
@@ -241,11 +244,12 @@ export async function get_hierarchy<S extends Store | ReadableStore>(
 	return new Hierarchy({ store, meta_key_suffix });
 }
 
-export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S> {
-	store: S;
+export class Hierarchy<Store extends Readable | Async<Readable>>
+	implements _Hierarchy<Store> {
+	store: Store;
 	meta_key_suffix: string;
 
-	constructor({ store, meta_key_suffix }: { store: S; meta_key_suffix: string }) {
+	constructor({ store, meta_key_suffix }: { store: Store; meta_key_suffix: string }) {
 		this.store = store;
 		this.meta_key_suffix = meta_key_suffix;
 	}
@@ -265,22 +269,25 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props: { attrs?: Attrs } = {},
-	): S extends WriteableStore ? Promise<ExplicitGroup<S, Hierarchy<S>, Path>> : never {
+	): Store extends (Writeable | Async<Writeable>)
+		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never {
 		assert("set" in this.store, "Not a writable store");
-		return create_group(this as Hierarchy<Store>, path, props.attrs) as any;
+		return create_group(this as Hierarchy<any>, path, props.attrs) as any;
 	}
 
-	create_array<Path extends AbsolutePath, D extends DataType>(
+	create_array<Path extends AbsolutePath, Dtype extends DataType>(
 		path: Path,
-		props: Omit<CreateArrayProps<D>, "filters">,
-	): S extends WriteableStore ? Promise<ZarrArray<D, S, Path>> : never {
+		props: Omit<CreateArrayProps<Dtype>, "filters">,
+	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
+		: never {
 		assert("set" in this.store, "Not a writable store");
-		return create_array(this as Hierarchy<Store>, path, props) as any;
+		return create_array(this as Hierarchy<any>, path, props) as any;
 	}
 
 	async get_array<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ZarrArray<DataType, S, Path>> {
+	): Promise<ZarrArray<DataType, Store, Path>> {
 		const key = meta_key(path, this.meta_key_suffix, "array");
 		const meta_doc = await this.store.get(key);
 
@@ -338,7 +345,7 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 
 	async get_group<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ExplicitGroup<S, Hierarchy<S>, Path>> {
+	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>> {
 		// retrieve and parse group metadata document
 		const key = meta_key(path, this.meta_key_suffix, "group");
 		const meta_doc = await this.store.get(key);
@@ -358,33 +365,36 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 		});
 	}
 
-	async get_implicit_group<Path extends AbsolutePath>(
+	get_implicit_group<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ImplicitGroup<S, Hierarchy<S>, Path>> {
-		let contents: string[] = [];
-		let prefixes: string[] = [];
-		if ("list_dir" in this.store) {
+	): Store extends ExtendedReadable | Async<ExtendedReadable>
+		? Promise<ImplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never {
+		assert(
+			"list_dir" in this.store,
+			"Not ExtendedReadable, store must implement list_dir",
+		);
+		return (async () => {
 			// attempt to list directory
 			const key_prefix = (path as any) === "/"
 				? "/meta/root/"
 				: `/meta/root${path}/` as const;
 
-			const result = await this.store.list_dir(key_prefix);
-			contents = result.contents;
-			prefixes = result.prefixes;
-		}
+			const res = await (this.store as ExtendedReadable | Async<ExtendedReadable>)
+				.list_dir(key_prefix);
 
-		if (contents.length === 0 && prefixes.length === 0) {
-			throw new NodeNotFoundError(path);
-		}
+			if (res.contents.length === 0 && res.prefixes.length === 0) {
+				throw new NodeNotFoundError(path);
+			}
 
-		return new ImplicitGroup({ store: this.store, path, owner: this });
+			return new ImplicitGroup({ store: this.store, path, owner: this });
+		})() as any;
 	}
 
 	async get<Path extends AbsolutePath>(path: Path): Promise<
-		| ZarrArray<DataType, S, Path>
-		| ExplicitGroup<S, Hierarchy<S>, Path>
-		| ImplicitGroup<S, Hierarchy<S>, Path>
+		| ZarrArray<DataType, Store, Path>
+		| ExplicitGroup<Store, Hierarchy<Store>, Path>
+		| ImplicitGroup<Store, Hierarchy<Store>, Path>
 	> {
 		try {
 			return await this.get_array(path);
@@ -425,71 +435,87 @@ export class Hierarchy<S extends Store | ReadableStore> implements _Hierarchy<S>
 		}
 	}
 
-	async get_nodes(): Promise<Map<string, string>> {
-		const nodes: Map<string, string> = new Map();
-		if (!("list_prefix" in this.store)) {
-			return nodes;
-		}
-		const result = await this.store.list_prefix("/meta/");
+	get_nodes(): Store extends ExtendedReadable | Async<ExtendedReadable>
+		? Promise<Map<string, string>>
+		: never {
+		assert(
+			"list_prefix" in this.store,
+			"Not ExtendedReadable, store must implement list_prefix",
+		);
+		return (async () => {
+			const nodes: Map<string, string> = new Map();
+			const result = await (this.store as ExtendedReadable | Async<ExtendedReadable>)
+				.list_prefix("/meta/");
+			const lookup = (key: string) => {
+				if (key.endsWith(this.array_suffix)) {
+					return { suffix: this.array_suffix, type: "array" };
+				} else if (key.endsWith(this.group_suffix)) {
+					return { suffix: this.group_suffix, type: "explicit_group" };
+				}
+			};
 
-		const lookup = (key: string) => {
-			if (key.endsWith(this.array_suffix)) {
-				return { suffix: this.array_suffix, type: "array" };
-			} else if (key.endsWith(this.group_suffix)) {
-				return { suffix: this.group_suffix, type: "explicit_group" };
-			}
-		};
-
-		for (const key of result) {
-			if (key === "root.array" + this.meta_key_suffix) {
-				nodes.set("/", "array");
-			} else if (key == "root.group") {
-				nodes.set("/", "explicit_group");
-			} else if (key.startsWith("root/")) {
-				const m = lookup(key);
-				if (m) {
-					const path = key.slice("root".length, -m.suffix.length);
-					nodes.set(path, m.type);
-					const segments = path.split("/");
-					segments.pop();
-					while (segments.length > 1) {
-						const parent = segments.join("/");
-						nodes.set(
-							parent,
-							nodes.get(parent) || "implicit_group",
-						);
+			for (const key of result) {
+				if (key === "root.array" + this.meta_key_suffix) {
+					nodes.set("/", "array");
+				} else if (key == "root.group") {
+					nodes.set("/", "explicit_group");
+				} else if (key.startsWith("root/")) {
+					const m = lookup(key);
+					if (m) {
+						const path = key.slice("root".length, -m.suffix.length);
+						nodes.set(path, m.type);
+						const segments = path.split("/");
 						segments.pop();
+						while (segments.length > 1) {
+							const parent = segments.join("/");
+							nodes.set(
+								parent,
+								nodes.get(parent) || "implicit_group",
+							);
+							segments.pop();
+						}
+						nodes.set("/", nodes.get("/") || "implicit_group");
 					}
-					nodes.set("/", nodes.get("/") || "implicit_group");
 				}
 			}
-		}
-		return nodes;
+			return nodes;
+		})() as any;
 	}
 
-	async get_children(path: AbsolutePath = "/"): Promise<Map<string, string>> {
-		const children: Map<string, string> = new Map();
+	get_children(
+		path: AbsolutePath = "/",
+	): Store extends ExtendedReadable | Async<ExtendedReadable>
+		? Promise<Map<string, string>>
+		: never {
+		assert(
+			"list_dir" in this.store,
+			"Not ExtendedReadable, store must implement list_dir",
+		);
+		return (async () => {
+			const children: Map<string, string> = new Map();
 
-		// attempt to list directory
-		const key_prefix = path === "/" ? "/meta/root/" : `/meta/root${path}/` as const;
-		const result = await this.store.list_dir(key_prefix);
+			// attempt to list directory
+			const key_prefix = path === "/" ? "/meta/root/" : `/meta/root${path}/` as const;
+			const result = await (this.store as ExtendedReadable | Async<ExtendedReadable>)
+				.list_dir(key_prefix);
 
-		// find explicit children
-		for (const n of result.contents) {
-			if (n.endsWith(this.array_suffix)) {
-				const name = n.slice(0, -this.array_suffix.length);
-				children.set(name, "array");
-			} else if (n.endsWith(this.group_suffix)) {
-				const name = n.slice(0, -this.group_suffix.length);
-				children.set(name, "explicit_group");
+			// find explicit children
+			for (const n of result.contents) {
+				if (n.endsWith(this.array_suffix)) {
+					const name = n.slice(0, -this.array_suffix.length);
+					children.set(name, "array");
+				} else if (n.endsWith(this.group_suffix)) {
+					const name = n.slice(0, -this.group_suffix.length);
+					children.set(name, "explicit_group");
+				}
 			}
-		}
 
-		// find implicit children
-		for (const name of result.prefixes) {
-			children.set(name, children.get(name) || "implicit_group");
-		}
+			// find implicit children
+			for (const name of result.prefixes) {
+				children.set(name, children.get(name) || "implicit_group");
+			}
 
-		return children;
+			return children;
+		})() as any;
 	}
 }

@@ -1,6 +1,13 @@
-import type { PrefixPath, RootPath, SyncStore } from "../types";
+import type {
+	ExtendedReadable,
+	PrefixPath,
+	Readable,
+	RootPath,
+	Writeable,
+} from "../types";
 
-class MemoryStore extends Map<string, Uint8Array> implements SyncStore {
+class MemoryStore extends Map<string, Uint8Array>
+	implements Readable, Writeable, ExtendedReadable {
 	list_prefix(prefix: RootPath | PrefixPath) {
 		const items = [];
 		for (const path of super.keys()) {
