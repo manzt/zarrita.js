@@ -64,30 +64,37 @@ export interface Hierarchy<Store extends Readable | Async<Readable>> {
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
 	get_implicit_group<Path extends AbsolutePath>(
 		path: Path,
-	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
-		? Promise<ImplicitGroup<Store, Hierarchy<Store>, Path>>
-		: never;
+	): Promise<
+		Store extends (ExtendedReadable | Async<ExtendedReadable>)
+			? ImplicitGroup<Store, Hierarchy<Store>, Path>
+			: never
+	>;
 	get_children(
 		path?: AbsolutePath,
-	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
-		? Promise<Map<string, string>>
-		: never;
+	): Promise<
+		Store extends (ExtendedReadable | Async<ExtendedReadable>) ? Map<string, string>
+			: never
+	>;
 
 	// write
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props?: { attrs?: Attrs },
-	): Store extends (Writeable | Async<Writeable>)
-		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
-		: never;
+	): Promise<
+		Store extends (Writeable | Async<Writeable>)
+			? ExplicitGroup<Store, Hierarchy<Store>, Path>
+			: never
+	>;
 	create_array<
 		Path extends AbsolutePath,
 		Dtype extends DataType,
 	>(
 		path: Path,
 		props: CreateArrayProps<Dtype>,
-	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
-		: never;
+	): Promise<
+		Store extends (Writeable | Async<Writeable>) ? ZarrArray<Dtype, Store, Path>
+			: never
+	>;
 }
 
 type RequiredArrayProps<D extends DataType> = {
