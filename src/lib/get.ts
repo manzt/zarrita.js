@@ -5,35 +5,16 @@ import type { ZarrArray } from "./hierarchy";
 import type {
 	ArraySelection,
 	Async,
-	BasicSetter,
 	DataType,
 	GetOptions,
 	NdArrayLike,
-	NdArraySetter,
+	Prepare,
 	Readable,
 	Scalar,
-	Setter,
+	SetFromChunk,
+	SetScalar,
 	TypedArray,
 } from "../types";
-
-export const register = {
-	basic(setter: BasicSetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends Readable | Async<Readable>,
-		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as BasicSetter<Dtype>, arr, selection, opts);
-		};
-	},
-	ndarray(setter: NdArraySetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends Readable | Async<Readable>,
-		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as NdArraySetter<Dtype>, arr, selection, opts);
-		};
-	},
-};
 
 const get_value = <D extends DataType>(
 	arr: TypedArray<D>,
@@ -42,15 +23,19 @@ const get_value = <D extends DataType>(
 	return "get" in arr ? arr.get(idx) : arr[idx] as any;
 };
 
-async function get<
+export async function get<
 	D extends DataType,
-	A extends NdArrayLike<D>,
+	Arr extends NdArrayLike<D>,
 >(
-	setter: Setter<D, A>,
 	arr: ZarrArray<D, Readable | Async<Readable>>,
 	selection: ArraySelection,
 	opts: GetOptions,
-): Promise<A | Scalar<D>> {
+	setter: {
+		prepare: Prepare<D, Arr>;
+		set_scalar: SetScalar<D, Arr>;
+		set_from_chunk: SetFromChunk<D, Arr>;
+	},
+): Promise<Arr | Scalar<D>> {
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,

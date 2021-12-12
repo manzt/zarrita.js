@@ -77,7 +77,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
-		};
+		}
 		return UnicodeStringArray as TypedArrayConstructor<D>;
 	}
 
@@ -88,7 +88,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
-		};
+		}
 		return ByteStringArray as TypedArrayConstructor<D>;
 	}
 

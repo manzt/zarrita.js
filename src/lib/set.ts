@@ -6,54 +6,29 @@ import type { ZarrArray } from "./hierarchy";
 import type {
 	ArraySelection,
 	Async,
-	BasicSetter,
 	DataType,
 	Indices,
 	NdArrayLike,
-	NdArraySetter,
+	Prepare,
 	Readable,
 	Scalar,
+	SetFromChunk,
 	SetOptions,
-	Setter,
+	SetScalar,
 	TypedArray,
 	Writeable,
 } from "../types";
 
-export const register = {
-	basic(setter: BasicSetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-		>(
-			arr: ZarrArray<Dtype, Store>,
-			selection: ArraySelection,
-			value: Scalar<Dtype> | ReturnType<BasicSetter<Dtype>["prepare"]>,
-			opts: SetOptions = {},
-		) {
-			return set(setter as any as BasicSetter<Dtype>, arr, selection, value, opts);
-		};
-	},
-	ndarray(setter: NdArraySetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-		>(
-			arr: ZarrArray<Dtype, Store>,
-			selection: ArraySelection,
-			value: Scalar<Dtype> | ReturnType<NdArraySetter<Dtype>["prepare"]>,
-			opts: SetOptions = {},
-		) {
-			return set(setter as any as NdArraySetter<Dtype>, arr, selection, value, opts);
-		};
-	},
-};
-
-async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>>(
-	setter: Setter<Dtype, Arr>,
+export async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>>(
 	arr: ZarrArray<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: ArraySelection,
 	value: Scalar<Dtype> | Arr,
 	opts: SetOptions,
+	setter: {
+		prepare: Prepare<Dtype, Arr>;
+		set_scalar: SetScalar<Dtype, Arr>;
+		set_from_chunk: SetFromChunk<Dtype, Arr>;
+	},
 ) {
 	const indexer = new BasicIndexer({
 		selection,

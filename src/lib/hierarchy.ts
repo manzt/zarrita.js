@@ -142,7 +142,7 @@ export interface ZarrArrayProps<
 
 export class ZarrArray<
 	Dtype extends DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 	Path extends AbsolutePath = AbsolutePath,
 > extends Node<Store, Path> {
 	readonly shape: number[];
