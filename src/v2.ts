@@ -88,7 +88,7 @@ async function create_group<
 }
 
 async function create_array<
-	S extends Writeable | Async<Writeable>,
+	S extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends AbsolutePath,
 	D extends DataType,
 >(

@@ -5,46 +5,54 @@ import type { ZarrArray } from "./hierarchy";
 
 import type {
 	ArraySelection,
+	Async,
 	BasicSetter,
 	DataType,
 	Indices,
 	NdArrayLike,
 	NdArraySetter,
+	Readable,
 	Scalar,
 	SetOptions,
 	Setter,
-	Store,
 	TypedArray,
+	Writeable,
 } from "../types";
 
 export const register = {
 	basic(setter: BasicSetter<DataType>) {
-		return function <D extends DataType>(
-			arr: ZarrArray<D, Store>,
+		return function <
+			Dtype extends DataType,
+			Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+		>(
+			arr: ZarrArray<Dtype, Store>,
 			selection: ArraySelection,
-			value: Scalar<D> | ReturnType<BasicSetter<D>["prepare"]>,
+			value: Scalar<Dtype> | ReturnType<BasicSetter<Dtype>["prepare"]>,
 			opts: SetOptions = {},
 		) {
-			return set(setter as any as BasicSetter<D>, arr, selection, value, opts);
+			return set(setter as any as BasicSetter<Dtype>, arr, selection, value, opts);
 		};
 	},
 	ndarray(setter: NdArraySetter<DataType>) {
-		return function <D extends DataType>(
-			arr: ZarrArray<D, Store>,
+		return function <
+			Dtype extends DataType,
+			Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+		>(
+			arr: ZarrArray<Dtype, Store>,
 			selection: ArraySelection,
-			value: Scalar<D> | ReturnType<NdArraySetter<D>["prepare"]>,
+			value: Scalar<Dtype> | ReturnType<NdArraySetter<Dtype>["prepare"]>,
 			opts: SetOptions = {},
 		) {
-			return set(setter as any as NdArraySetter<D>, arr, selection, value, opts);
+			return set(setter as any as NdArraySetter<Dtype>, arr, selection, value, opts);
 		};
 	},
 };
 
-async function set<D extends DataType, A extends NdArrayLike<D>>(
-	setter: Setter<D, A>,
-	arr: ZarrArray<D, Store>,
+async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>>(
+	setter: Setter<Dtype, Arr>,
+	arr: ZarrArray<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: ArraySelection,
-	value: Scalar<D> | A,
+	value: Scalar<Dtype> | Arr,
 	opts: SetOptions,
 ) {
 	const indexer = new BasicIndexer({
@@ -67,8 +75,7 @@ async function set<D extends DataType, A extends NdArrayLike<D>>(
 			// obtain key for chunk storage
 			const chunk_key = arr.chunk_key(chunk_coords);
 
-			/** @type {TypedArray<Dtype>} */
-			let cdata: TypedArray<D>;
+			let cdata: TypedArray<Dtype>;
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
 				// totally replace
@@ -81,7 +88,7 @@ async function set<D extends DataType, A extends NdArrayLike<D>>(
 					setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
 				} else {
 					// @ts-ignore
-					cdata.fill(value);
+					cdata.fill(value as any);
 				}
 			} else {
 				// partially replace the contents of this chunk

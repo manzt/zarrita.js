@@ -3,19 +3,19 @@ import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
 
 import type {
 	AbsolutePath,
+	Async,
 	Attrs,
 	DataType,
 	Hierarchy,
-	ReadableStore,
+	Readable,
 	Scalar,
-	Store,
 	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
 import type { Codec } from "numcodecs";
 
-export class Node<S extends Store | ReadableStore, Path extends AbsolutePath> {
-	constructor(public readonly store: S, public readonly path: Path) {}
+export class Node<Store extends Readable | Async<Readable>, Path extends AbsolutePath> {
+	constructor(public readonly store: Store, public readonly path: Path) {}
 
 	get name() {
 		return this.path.split("/").pop() ?? "";
@@ -23,12 +23,12 @@ export class Node<S extends Store | ReadableStore, Path extends AbsolutePath> {
 }
 
 export class Group<
-	S extends Store | ReadableStore,
-	H extends Hierarchy<S>,
-	P extends AbsolutePath = AbsolutePath,
-> extends Node<S, P> {
-	readonly owner: H;
-	constructor(props: { store: S; path: P; owner: H }) {
+	Store extends Readable | Async<Readable>,
+	Owner extends Hierarchy<Store>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends Node<Store, Path> {
+	readonly owner: Owner;
+	constructor(props: { store: Store; path: Path; owner: Owner }) {
 		super(props.store, props.path);
 		this.owner = props.owner;
 	}
@@ -37,9 +37,9 @@ export class Group<
 		return this.owner.get_children(this.path);
 	}
 
-	_deref<Path extends string>(
-		path: Path,
-	): Path extends AbsolutePath ? Path : P extends "/" ? `/${Path}` : `${P}/${Path}` {
+	_deref<P extends string>(
+		path: P,
+	): P extends AbsolutePath ? P : Path extends "/" ? `/${P}` : `${Path}/${P}` {
 		if (path[0] !== "/") {
 			// treat as relative path
 			if ((this.path as any) === "/") {
@@ -52,57 +52,57 @@ export class Group<
 		return path as any;
 	}
 
-	get<Path extends string>(path: Path) {
+	get<P extends string>(path: P) {
 		return this.owner.get(this._deref(path));
 	}
 
-	has<Path extends string>(path: Path) {
+	has<P extends string>(path: P) {
 		return this.owner.has(this._deref(path));
 	}
 
-	create_group<Path extends string>(path: Path, props: { attrs?: Attrs } = {}) {
+	create_group<P extends string>(path: P, props: { attrs?: Attrs } = {}) {
 		return this.owner.create_group(this._deref(path), props);
 	}
 
-	create_array<Path extends string>(
-		path: Path,
-		props: Parameters<H["create_array"]>[1],
+	create_array<P extends string>(
+		path: P,
+		props: Parameters<Owner["create_array"]>[1],
 	) {
 		return this.owner.create_array(this._deref(path), props);
 	}
 
-	get_array<Path extends string>(path: Path) {
+	get_array<P extends string>(path: P) {
 		return this.owner.get_array(this._deref(path));
 	}
 
-	get_group<Path extends string>(path: Path) {
+	get_group<P extends string>(path: P) {
 		return this.owner.get_group(this._deref(path));
 	}
 
-	get_implicit_group<Path extends string>(path: Path) {
+	get_implicit_group<P extends string>(path: P) {
 		return this.owner.get_implicit_group(this._deref(path));
 	}
 }
 
 interface ExplicitGroupProps<
-	P extends AbsolutePath,
-	S extends Store | ReadableStore,
-	H extends Hierarchy<S>,
+	Store extends Readable | Async<Readable>,
+	Owner extends Hierarchy<Store>,
+	Path extends AbsolutePath,
 > {
-	store: S;
-	path: P;
-	owner: H;
+	store: Store;
+	path: Path;
+	owner: Owner;
 	attrs: Attrs | (() => Promise<Attrs>);
 }
 
 export class ExplicitGroup<
-	S extends Store | ReadableStore,
-	H extends Hierarchy<S>,
-	P extends AbsolutePath = AbsolutePath,
-> extends Group<S, H, P> {
+	Store extends Readable | Async<Readable>,
+	Owner extends Hierarchy<Store>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends Group<Store, Owner, Path> {
 	private _attrs: Attrs | (() => Promise<Attrs>);
 
-	constructor(props: ExplicitGroupProps<P, S, H>) {
+	constructor(props: ExplicitGroupProps<Store, Owner, Path>) {
 		super(props);
 		this._attrs = props.attrs || {};
 	}
@@ -119,42 +119,42 @@ export class ExplicitGroup<
 }
 
 export class ImplicitGroup<
-	S extends Store | ReadableStore,
-	H extends Hierarchy<S>,
-	P extends AbsolutePath = AbsolutePath,
-> extends Group<S, H, P> {}
+	Store extends Readable | Async<Readable>,
+	Owner extends Hierarchy<Store>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends Group<Store, Owner, Path> {}
 
 export interface ZarrArrayProps<
-	P extends AbsolutePath,
-	D extends DataType,
-	S extends ReadableStore,
+	Dtype extends DataType,
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
 > {
-	store: S;
+	store: Store;
 	shape: number[];
-	path: P;
+	path: Path;
 	chunk_shape: number[];
-	dtype: D;
-	fill_value: Scalar<D> | null;
+	dtype: Dtype;
+	fill_value: Scalar<Dtype> | null;
 	attrs: Attrs | (() => Promise<Attrs>);
 	chunk_key: (chunk_coords: number[]) => AbsolutePath;
 	compressor?: import("numcodecs").Codec;
 }
 
 export class ZarrArray<
-	D extends DataType,
-	S extends ReadableStore,
-	P extends AbsolutePath = AbsolutePath,
-> extends Node<S, P> {
+	Dtype extends DataType,
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends Node<Store, Path> {
 	readonly shape: number[];
-	readonly dtype: D;
+	readonly dtype: Dtype;
 	readonly chunk_shape: number[];
 	readonly compressor?: Codec;
-	readonly fill_value: Scalar<D> | null;
-	readonly chunk_key: ZarrArrayProps<P, D, S>["chunk_key"];
-	readonly TypedArray: TypedArrayConstructor<D>;
+	readonly fill_value: Scalar<Dtype> | null;
+	readonly chunk_key: ZarrArrayProps<Dtype, Store, Path>["chunk_key"];
+	readonly TypedArray: TypedArrayConstructor<Dtype>;
 	private _attrs: Attrs | (() => Promise<Attrs>);
 
-	constructor(props: ZarrArrayProps<P, D, S>) {
+	constructor(props: ZarrArrayProps<Dtype, Store, Path>) {
 		super(props.store, props.path);
 		this.shape = props.shape;
 		this.dtype = props.dtype;
@@ -181,7 +181,7 @@ export class ZarrArray<
 		return this.shape.length;
 	}
 
-	async _decode_chunk(bytes: Uint8Array): Promise<TypedArray<D>> {
+	async _decode_chunk(bytes: Uint8Array): Promise<TypedArray<Dtype>> {
 		if (this.compressor) {
 			bytes = await this.compressor.decode(bytes);
 		}
@@ -195,7 +195,7 @@ export class ZarrArray<
 		return data;
 	}
 
-	async _encode_chunk(data: TypedArray<D>): Promise<Uint8Array> {
+	async _encode_chunk(data: TypedArray<Dtype>): Promise<Uint8Array> {
 		if (should_byte_swap(this.dtype)) {
 			byte_swap_inplace(data);
 		}
@@ -208,7 +208,7 @@ export class ZarrArray<
 
 	async get_chunk(
 		chunk_coords: number[],
-	): Promise<{ data: TypedArray<D>; shape: number[] }> {
+	): Promise<{ data: TypedArray<Dtype>; shape: number[] }> {
 		const chunk_key = this.chunk_key(chunk_coords);
 		const buffer = await this.store.get(chunk_key);
 		if (!buffer) throw new KeyError(chunk_key);

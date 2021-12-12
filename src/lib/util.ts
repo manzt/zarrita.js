@@ -73,21 +73,23 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	// dynamically create typed array, use named class so logging is nice
 	if (second === "U") {
 		const size = parseInt(dtype.slice(2));
-		return class UnicodeStringArray extends _UnicodeStringArray<typeof size> {
+		class UnicodeStringArray extends _UnicodeStringArray<typeof size> {
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
-		} as TypedArrayConstructor<D>;
+		};
+		return UnicodeStringArray as TypedArrayConstructor<D>;
 	}
 
 	// dynamically create typed array, use named class so logging is nice
 	if (second === "S") {
 		const size = parseInt(dtype.slice(2));
-		return class ByteStringArray extends _ByteStringArray<typeof size> {
+		class ByteStringArray extends _ByteStringArray<typeof size> {
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
-		} as TypedArrayConstructor<D>;
+		};
+		return ByteStringArray as TypedArrayConstructor<D>;
 	}
 
 	// get last two characters of three character DataType; can only be keyof DTYPES at the moment.

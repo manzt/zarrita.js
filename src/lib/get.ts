@@ -3,34 +3,34 @@ import { BasicIndexer } from "./indexing";
 import { create_queue } from "./util";
 import type { ZarrArray } from "./hierarchy";
 import type {
-	AbsolutePath,
 	ArraySelection,
+	Async,
 	BasicSetter,
 	DataType,
 	GetOptions,
 	NdArrayLike,
 	NdArraySetter,
+	Readable,
 	Scalar,
 	Setter,
-	Store,
 	TypedArray,
 } from "../types";
 
 export const register = {
 	basic(setter: BasicSetter<DataType>) {
 		return function <
-			D extends DataType,
-			S extends Store,
-		>(arr: ZarrArray<D, S>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as BasicSetter<D>, arr, selection, opts);
+			Dtype extends DataType,
+			Store extends Readable | Async<Readable>,
+		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
+			return get(setter as any as BasicSetter<Dtype>, arr, selection, opts);
 		};
 	},
 	ndarray(setter: NdArraySetter<DataType>) {
 		return function <
-			D extends DataType,
-			S extends Store,
-		>(arr: ZarrArray<D, S>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as NdArraySetter<D>, arr, selection, opts);
+			Dtype extends DataType,
+			Store extends Readable | Async<Readable>,
+		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
+			return get(setter as any as NdArraySetter<Dtype>, arr, selection, opts);
 		};
 	},
 };
@@ -47,7 +47,7 @@ async function get<
 	A extends NdArrayLike<D>,
 >(
 	setter: Setter<D, A>,
-	arr: ZarrArray<D, Store>,
+	arr: ZarrArray<D, Readable | Async<Readable>>,
 	selection: ArraySelection,
 	opts: GetOptions,
 ): Promise<A | Scalar<D>> {
