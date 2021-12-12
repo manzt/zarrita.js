@@ -29,32 +29,30 @@ export interface ListDirResult {
 	prefixes: string[];
 }
 
-export interface SyncStore<GetOptions = any> {
-	get(key: AbsolutePath, opts?: GetOptions): Uint8Array | undefined;
-	has(key: AbsolutePath): boolean;
+export type Async<T extends Record<string, any>> = {
+	[Key in keyof T]: (...args: Parameters<T[Key]>) => Promise<ReturnType<T[Key]>>;
+};
+
+export interface Readable<Opts = any> {
+	get(key: AbsolutePath, opts?: Opts): Uint8Array | undefined;
+}
+
+export interface Writeable {
 	set(key: AbsolutePath, value: Uint8Array): void;
-	delete(key: AbsolutePath): boolean;
+}
+
+export interface ExtendedReadable extends Readable {
 	list_prefix(key: RootPath | PrefixPath): string[];
 	list_dir(key?: RootPath | PrefixPath): ListDirResult;
 }
 
-export interface AsyncStore<GetOptions = any> {
-	get(key: AbsolutePath, opts?: GetOptions): Promise<Uint8Array | undefined>;
-	has(key: AbsolutePath): Promise<boolean>;
-	set(key: AbsolutePath, value: Uint8Array): Promise<void>;
-	delete(key: AbsolutePath): Promise<boolean>;
-	list_prefix(key: RootPath | PrefixPath): Promise<string[]>;
-	list_dir(key?: RootPath | PrefixPath): Promise<ListDirResult>;
-}
-
-export type Store = SyncStore | AsyncStore;
 export type Attrs = Record<string, any>;
 
 export type ArraySelection = null | (number | null | Slice)[];
 
-export interface Hierarchy<Store extends SyncStore | AsyncStore> {
+export interface Hierarchy<Store extends Readable | Async<Readable>> {
 	// read-only
-	has(path: string): Promise<boolean>;
+	has(path: AbsolutePath): Promise<boolean>;
 	get<Path extends AbsolutePath>(path: Path): Promise<
 		| ZarrArray<DataType, Store, Path>
 		| ExplicitGroup<Store, Hierarchy<Store>, Path>
@@ -68,21 +66,30 @@ export interface Hierarchy<Store extends SyncStore | AsyncStore> {
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
 	get_implicit_group<Path extends AbsolutePath>(
 		path: Path,
-	): Promise<ImplicitGroup<Store, Hierarchy<Store>, Path>>;
-	get_children(path?: AbsolutePath): Promise<Map<string, string>>;
+	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
+		? Promise<ImplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never;
+	get_children(
+		path?: AbsolutePath,
+	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
+		? Promise<Map<string, string>>
+		: never;
 
 	// write
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props?: { attrs?: Attrs },
-	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
+	): Store extends (Writeable | Async<Writeable>)
+		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
+		: never;
 	create_array<
 		Path extends AbsolutePath,
 		Dtype extends DataType,
 	>(
 		path: Path,
 		props: CreateArrayProps<Dtype>,
-	): Promise<ZarrArray<Dtype, Store, Path>>;
+	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
+		: never;
 }
 
 type RequiredArrayProps<D extends DataType> = {
