@@ -3,54 +3,40 @@ import { BasicIndexer } from "./indexing";
 import { create_queue } from "./util";
 import type { ZarrArray } from "./hierarchy";
 import type {
-	ArraySelection,
 	Async,
-	BasicSetter,
 	DataType,
 	GetOptions,
 	NdArrayLike,
-	NdArraySetter,
+	Prepare,
 	Readable,
 	Scalar,
-	Setter,
+	SetFromChunk,
+	SetScalar,
+	Slice,
 	TypedArray,
 } from "../types";
 
-export const register = {
-	basic(setter: BasicSetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends Readable | Async<Readable>,
-		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as BasicSetter<Dtype>, arr, selection, opts);
-		};
-	},
-	ndarray(setter: NdArraySetter<DataType>) {
-		return function <
-			Dtype extends DataType,
-			Store extends Readable | Async<Readable>,
-		>(arr: ZarrArray<Dtype, Store>, selection: ArraySelection, opts: GetOptions = {}) {
-			return get(setter as any as NdArraySetter<Dtype>, arr, selection, opts);
-		};
-	},
-};
-
-const get_value = <D extends DataType>(
+const unwrap = <D extends DataType>(
 	arr: TypedArray<D>,
 	idx: number,
 ): Scalar<D> => {
 	return "get" in arr ? arr.get(idx) : arr[idx] as any;
 };
 
-async function get<
+export async function get<
 	D extends DataType,
-	A extends NdArrayLike<D>,
+	Arr extends NdArrayLike<D>,
+	Sel extends (null | Slice | number)[],
 >(
-	setter: Setter<D, A>,
 	arr: ZarrArray<D, Readable | Async<Readable>>,
-	selection: ArraySelection,
+	selection: null | Sel,
 	opts: GetOptions,
-): Promise<A | Scalar<D>> {
+	setter: {
+		prepare: Prepare<D, Arr>;
+		set_scalar: SetScalar<D, Arr>;
+		set_from_chunk: SetFromChunk<D, Arr>;
+	},
+): Promise<null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>> {
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
@@ -83,5 +69,5 @@ async function get<
 	await queue.onIdle();
 
 	// If the final out shape is empty, we just return a scalar.
-	return indexer.shape.length === 0 ? get_value(out.data, 0) : out;
+	return indexer.shape.length === 0 ? unwrap(out.data, 0) : out as any;
 }

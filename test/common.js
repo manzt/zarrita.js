@@ -16,7 +16,11 @@ function json(bytes) {
 	return JSON.parse(str);
 }
 
-/** @param {{ name: string, setup: () => Promise<import('../src/types').Store> }} props */
+/** @param {{
+ *    name: string,
+ *    setup: () => Promise<
+ *      import('../src/types').Readable | import('../src/types').Async<import('../src/types').Readable>>
+ *  }} props */
 export function run_test_suite({ name, setup }) {
 	test(`Zarrita test suite: ${name}.`, async (t) => {
 		const store = await setup();

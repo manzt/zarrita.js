@@ -48,8 +48,6 @@ export interface ExtendedReadable extends Readable {
 
 export type Attrs = Record<string, any>;
 
-export type ArraySelection = null | (number | null | Slice)[];
-
 export interface Hierarchy<Store extends Readable | Async<Readable>> {
 	// read-only
 	has(path: AbsolutePath): Promise<boolean>;
@@ -66,30 +64,37 @@ export interface Hierarchy<Store extends Readable | Async<Readable>> {
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
 	get_implicit_group<Path extends AbsolutePath>(
 		path: Path,
-	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
-		? Promise<ImplicitGroup<Store, Hierarchy<Store>, Path>>
-		: never;
+	): Promise<
+		Store extends (ExtendedReadable | Async<ExtendedReadable>)
+			? ImplicitGroup<Store, Hierarchy<Store>, Path>
+			: never
+	>;
 	get_children(
 		path?: AbsolutePath,
-	): Store extends (ExtendedReadable | Async<ExtendedReadable>)
-		? Promise<Map<string, string>>
-		: never;
+	): Promise<
+		Store extends (ExtendedReadable | Async<ExtendedReadable>) ? Map<string, string>
+			: never
+	>;
 
 	// write
 	create_group<Path extends AbsolutePath>(
 		path: Path,
 		props?: { attrs?: Attrs },
-	): Store extends (Writeable | Async<Writeable>)
-		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
-		: never;
+	): Promise<
+		Store extends (Writeable | Async<Writeable>)
+			? ExplicitGroup<Store, Hierarchy<Store>, Path>
+			: never
+	>;
 	create_array<
 		Path extends AbsolutePath,
 		Dtype extends DataType,
 	>(
 		path: Path,
 		props: CreateArrayProps<Dtype>,
-	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
-		: never;
+	): Promise<
+		Store extends (Writeable | Async<Writeable>) ? ZarrArray<Dtype, Store, Path>
+			: never
+	>;
 }
 
 type RequiredArrayProps<D extends DataType> = {
@@ -106,23 +111,23 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	attrs?: Attrs;
 }
 
-export type Setter<D extends DataType, A extends NdArrayLike<D>> = {
-	prepare(data: TypedArray<D>, shape: number[]): A;
-	set_scalar(target: A, selection: (Indices | number)[], value: Scalar<D>): void;
-	set_from_chunk(
-		target: A,
-		target_selection: (Indices | number)[],
-		chunk: A,
-		chunk_selection: (Indices | number)[],
-	): void;
-};
-
-export type BasicSetter<D extends DataType> = Setter<
-	D,
-	{ data: TypedArray<D>; shape: number[]; stride?: number[] }
->;
-
-export type NdArraySetter<D extends DataType> = Setter<D, ndarray.NdArray<TypedArray<D>>>;
+export type Prepare<D extends DataType, NdArray extends NdArrayLike<D>> = (
+	data: TypedArray<D>,
+	shape: number[],
+) => NdArray;
+export type SetScalar<
+	D extends DataType,
+	NdArray extends NdArrayLike<D>,
+> = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
+export type SetFromChunk<
+	D extends DataType,
+	NdArray extends NdArrayLike<D>,
+> = (
+	target: NdArray,
+	target_selection: (Indices | number)[],
+	chunk: NdArray,
+	chunk_selection: (Indices | number)[],
+) => void;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

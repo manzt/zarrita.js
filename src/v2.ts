@@ -67,78 +67,6 @@ const get_attrs = async (
 	return attrs ? json_decode_object(attrs) : {};
 };
 
-async function create_group<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	H extends Hierarchy<Store>,
-	Path extends AbsolutePath,
->(owner: H, path: Path, attrs?: Attrs) {
-	const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
-	const meta_key = group_meta_key(path);
-
-	await owner.store.set(meta_key, meta_doc);
-
-	if (attrs) {
-		await owner.store.set(
-			attrs_key(path),
-			json_encode_object(attrs),
-		);
-	}
-
-	return new ExplicitGroup({ store: owner.store, owner, path, attrs: attrs ?? {} });
-}
-
-async function create_array<
-	S extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Path extends AbsolutePath,
-	D extends DataType,
->(
-	store: S,
-	path: Path,
-	props: CreateArrayProps<D>,
-) {
-	const shape = props.shape;
-	const dtype = props.dtype;
-	const chunk_shape = props.chunk_shape;
-	const compressor = props.compressor;
-	const chunk_separator = props.chunk_separator ?? ".";
-
-	const meta: ArrayMetadata<D> = {
-		zarr_format: 2,
-		shape,
-		dtype,
-		chunks: chunk_shape,
-		dimension_separator: chunk_separator,
-		order: "C",
-		fill_value: props.fill_value ?? null,
-		filters: [],
-		compressor: compressor ? encode_codec_metadata(compressor) : null,
-	};
-
-	// serialise and store metadata document
-	const meta_doc = json_encode_object(meta);
-	const meta_key = array_meta_key(path);
-	await store.set(meta_key, meta_doc);
-
-	if (props.attrs) {
-		await store.set(
-			attrs_key(path),
-			json_encode_object(props.attrs),
-		);
-	}
-
-	return new ZarrArray({
-		store,
-		path,
-		shape: meta.shape,
-		dtype: dtype,
-		chunk_shape: meta.chunks,
-		chunk_key: chunk_key(path, chunk_separator),
-		compressor: compressor,
-		fill_value: meta.fill_value,
-		attrs: props.attrs ?? {},
-	});
-}
-
 function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
 	const prefix = key_prefix(path);
 	return (chunk_coords) => {
@@ -188,23 +116,85 @@ export class Hierarchy<Store extends Readable | Async<Readable>>
 		return this.get("/");
 	}
 
-	create_group<Path extends AbsolutePath>(
+	async create_group<Path extends AbsolutePath>(
 		path: Path,
-		props: { attrs?: Attrs } = {},
-	): Store extends (Writeable | Async<Writeable>)
-		? Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>
-		: never {
+		{ attrs }: { attrs?: Attrs } = {},
+	): Promise<
+		Store extends (Writeable | Async<Writeable>)
+			? ExplicitGroup<Store, Hierarchy<Store>, Path>
+			: never
+	> {
 		assert("set" in this.store, "Not a writeable store");
-		return create_group(this as any, path, props.attrs) as any;
+		const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
+		const meta_key = group_meta_key(path);
+
+		await (this.store as any as Writeable | Async<Writeable>).set(meta_key, meta_doc);
+
+		if (attrs) {
+			await (this.store as any as Writeable | Async<Writeable>).set(
+				attrs_key(path),
+				json_encode_object(attrs),
+			);
+		}
+
+		return new ExplicitGroup({
+			store: this.store,
+			owner: this,
+			path,
+			attrs: attrs ?? {},
+		}) as any;
 	}
 
-	create_array<Path extends AbsolutePath, Dtype extends DataType>(
+	async create_array<Path extends AbsolutePath, Dtype extends DataType>(
 		path: Path,
 		props: CreateArrayProps<Dtype>,
-	): Store extends (Writeable | Async<Writeable>) ? Promise<ZarrArray<Dtype, Store, Path>>
-		: never {
+	): Promise<
+		Store extends (Writeable | Async<Writeable>) ? ZarrArray<Dtype, Store, Path>
+			: never
+	> {
 		assert("set" in this.store, "Not a writeable store");
-		return create_array(this.store as any, path, props) as any;
+		const shape = props.shape;
+		const dtype = props.dtype;
+		const chunk_shape = props.chunk_shape;
+		const compressor = props.compressor;
+		const chunk_separator = props.chunk_separator ?? ".";
+
+		const meta: ArrayMetadata<Dtype> = {
+			zarr_format: 2,
+			shape,
+			dtype,
+			chunks: chunk_shape,
+			dimension_separator: chunk_separator,
+			order: "C",
+			fill_value: props.fill_value ?? null,
+			filters: [],
+			compressor: compressor ? encode_codec_metadata(compressor) : null,
+		};
+
+		// serialise and store metadata document
+		const meta_doc = json_encode_object(meta);
+		const meta_key = array_meta_key(path);
+
+		await (this.store as any as Writeable | Async<Writeable>).set(meta_key, meta_doc);
+
+		if (props.attrs) {
+			await (this.store as any as Writeable | Async<Writeable>).set(
+				attrs_key(path),
+				json_encode_object(props.attrs),
+			);
+		}
+
+		return new ZarrArray({
+			store: this.store,
+			path,
+			shape: meta.shape,
+			dtype: dtype,
+			chunk_shape: meta.chunks,
+			chunk_key: chunk_key(path, chunk_separator),
+			compressor: compressor,
+			fill_value: meta.fill_value,
+			attrs: props.attrs ?? {},
+		}) as any;
 	}
 
 	async get_array<Path extends AbsolutePath>(

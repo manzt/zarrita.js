@@ -2,35 +2,64 @@ import ndarray from "ndarray";
 // @ts-ignore
 import ops from "ndarray-ops";
 
-import { register as registerGet } from "./lib/get";
-import { register as registerSet } from "./lib/set";
+import type {
+	Async,
+	DataType,
+	GetOptions,
+	Indices,
+	Readable,
+	Scalar,
+	SetOptions,
+	Slice,
+	TypedArray,
+	Writeable,
+} from "./types";
+import type { ZarrArray } from "./lib/hierarchy";
 
-import type { DataType, Indices, Scalar, TypedArray } from "./types";
+import { get as get_with_setter } from "./lib/get";
+import { set as set_with_setter } from "./lib/set";
 
-const setter = {
-	prepare: ndarray,
-	set_scalar<D extends DataType>(
-		target: ndarray.NdArray<TypedArray<D>>,
-		selection: (number | Indices)[],
-		value: Scalar<D>,
-	) {
-		ops.assigns(view(target, selection), value);
-	},
-	set_from_chunk<D extends DataType>(
-		target: ndarray.NdArray<TypedArray<D>>,
-		target_selection: (number | Indices)[],
-		chunk: ndarray.NdArray<TypedArray<D>>,
-		chunk_selection: (number | Indices)[],
-	) {
-		ops.assign(
-			view(target, target_selection),
-			view(chunk, chunk_selection),
-		);
-	},
-};
+export async function get<
+	D extends DataType,
+	Sel extends (null | Slice | number)[],
+>(
+	arr: ZarrArray<D, Readable | Async<Readable>>,
+	selection: Sel | null = null,
+	opts: GetOptions = {},
+) {
+	return get_with_setter<D, ndarray.NdArray<TypedArray<D>>, Sel>(arr, selection, opts, {
+		prepare: ndarray,
+		set_scalar(target, selection, value) {
+			ops.assigns(view(target, selection), value);
+		},
+		set_from_chunk(target, target_selection, chunk, chunk_selection) {
+			ops.assign(
+				view(target, target_selection),
+				view(chunk, chunk_selection),
+			);
+		},
+	});
+}
 
-export const set = registerSet.ndarray(setter);
-export const get = registerGet.ndarray(setter);
+export async function set<D extends DataType>(
+	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	selection: (null | Slice | number)[] | null,
+	value: Scalar<D> | ndarray.NdArray<TypedArray<D>>,
+	opts: SetOptions = {},
+) {
+	return set_with_setter<D, ndarray.NdArray<TypedArray<D>>>(arr, selection, value, opts, {
+		prepare: ndarray,
+		set_scalar(target, selection, value) {
+			ops.assigns(view(target, selection), value);
+		},
+		set_from_chunk(target, target_selection, chunk, chunk_selection) {
+			ops.assign(
+				view(target, target_selection),
+				view(chunk, chunk_selection),
+			);
+		},
+	});
+}
 
 /** Convert zarrita selection to ndarray view. */
 function view<D extends DataType>(

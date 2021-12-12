@@ -1,63 +1,87 @@
-import { register as registerGet } from "./get";
-import { register as registerSet } from "./set";
-
 import { BoolArray } from "./custom-arrays";
+import type { ZarrArray } from "./hierarchy";
 
-import type { Indices, NdArrayLike } from "../types";
-import type { Bool, DataType, Scalar, StringDataType, TypedArray } from "../dtypes";
+import type {
+	Async,
+	GetOptions,
+	Indices,
+	NdArrayLike,
+	Readable,
+	SetOptions,
+	Slice,
+	TypedArray,
+	Writeable,
+} from "../types";
+import type { Bool, ByteStr, DataType, Scalar, UnicodeStr } from "../dtypes";
+
+import { get as get_with_setter } from "./get";
+import { set as set_with_setter } from "./set";
+
+// setting fns rely on some TypedArray apis not supported with our custom arrays
+
+export async function get<
+	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+	Sel extends (null | Slice | number)[],
+>(
+	arr: ZarrArray<D, Readable | Async<Readable>>,
+	selection: Sel | null = null,
+	opts: GetOptions = {},
+) {
+	return get_with_setter<D, NdArray<D>, Sel>(arr, selection, opts, {
+		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		set_scalar(target, selection, value) {
+			set_scalar(compat(target), selection, cast_scalar(target, value));
+		},
+		set_from_chunk(target, target_selection, chunk, chunk_selection) {
+			set_from_chunk(compat(target), target_selection, compat(chunk), chunk_selection);
+		},
+	});
+}
+
+export async function set<
+	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+>(
+	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	selection: (null | Slice | number)[] | null,
+	value: Scalar<D> | NdArrayLike<D>,
+	opts: SetOptions = {},
+) {
+	return set_with_setter<D, NdArrayLike<D>>(arr, selection, value, opts, {
+		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		set_scalar(target, selection, value) {
+			set_scalar(compat(target), selection, cast_scalar(target, value));
+		},
+		set_from_chunk(target, target_selection, chunk, chunk_selection) {
+			set_from_chunk(compat(target), target_selection, compat(chunk), chunk_selection);
+		},
+	});
+}
 
 type NdArray<D extends DataType> = {
+	data: TypedArray<D>;
+	shape: number[];
 	stride: number[];
-} & NdArrayLike<D>;
+};
 
-const compat = <D extends DataType>(
+function compat<
+	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+>(
 	arr: NdArrayLike<D> & { stride?: number[] },
-): any => {
+): NdArray<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
 		stride: "stride" in arr ? arr.stride : get_strides(arr.shape),
-	};
-};
+	} as any;
+}
 
-const cast_scalar = <D extends DataType>(
+const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
 	arr: NdArrayLike<D>,
 	value: Scalar<D>,
-): any => {
+): Scalar<Exclude<DataType, UnicodeStr | ByteStr | Bool>> => {
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
-	return value;
+	return value as any;
 };
-
-const setter = {
-	prepare: <D extends DataType>(
-		data: TypedArray<D>,
-		shape: number[],
-	) => ({ data, shape, stride: get_strides(shape) }),
-	/** @template {DataType} D */
-	set_scalar<D extends DataType>(
-		out: NdArray<D>,
-		out_selection: (Indices | number)[],
-		value: Scalar<D>,
-	) {
-		return set_scalar(compat(out), out_selection, cast_scalar(out, value));
-	},
-	set_from_chunk<D extends DataType>(
-		out: NdArray<D>,
-		out_selection: (Indices | number)[],
-		chunk: NdArray<D>,
-		chunk_selection: (Indices | number)[],
-	) {
-		return set_from_chunk(
-			compat(out),
-			out_selection,
-			compat(chunk),
-			chunk_selection,
-		);
-	},
-};
-
-export const get = registerGet.basic(setter);
-export const set = registerSet.basic(setter);
 
 /** Compute strides for 'C' ordered ndarray from shape */
 function get_strides(shape: number[]) {
@@ -79,10 +103,7 @@ function indices_len(start: number, stop: number, step: number) {
 	return 0;
 }
 
-// setting fns rely on some TypedArray apis not supported with our custom arrays
-type SupportedDataType = Exclude<DataType, Bool | StringDataType>;
-
-function set_scalar<D extends SupportedDataType>(
+function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	out: Pick<NdArray<D>, "data" | "stride">,
 	out_selection: (number | Indices)[],
 	value: Scalar<D>,
@@ -119,7 +140,7 @@ function set_scalar<D extends SupportedDataType>(
 	}
 }
 
-function set_from_chunk<D extends SupportedDataType>(
+function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	out: Pick<NdArray<D>, "data" | "stride">,
 	out_selection: (number | Indices)[],
 	chunk: Pick<NdArray<D>, "data" | "stride">,
