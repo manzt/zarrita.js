@@ -6,6 +6,5 @@ export { get, set } from "./lib/ops";
 export { slice } from "./lib/util";
 export { registry } from "./lib/codec-registry";
 export { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
-export { ExplicitGroup, Group, ImplicitGroup, ZarrArray } from "./lib/hierarchy";
 
 export * from "./types";

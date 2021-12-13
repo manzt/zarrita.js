@@ -1,21 +1,71 @@
-import { ExplicitGroup, ZarrArray } from "./lib/hierarchy";
+import { Array as BaseArray, ArrayProps, Group as BaseGroup } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
-import { assert, KeyError, NodeNotFoundError } from "./lib/errors";
-// deno-fmt-ignore
+import { KeyError, NodeNotFoundError } from "./lib/errors";
 import { json_decode_object, json_encode_object } from "./lib/util";
 
 import type {
 	AbsolutePath,
 	Async,
 	Attrs,
-	ChunkKey,
 	CreateArrayProps,
 	DataType,
-	Hierarchy as _Hierarchy,
+	Deref,
 	Readable,
 	Writeable,
 } from "./types";
+
 import type { Codec } from "numcodecs";
+
+async function get_attrs<Store extends Readable | Async<Readable>>(
+	store: Store,
+	path: AbsolutePath,
+) {
+	const maybe_bytes = await store.get(attrs_key(path));
+	const attrs: Attrs = maybe_bytes ? json_decode_object(maybe_bytes) : {};
+	return attrs;
+}
+
+export class Array<
+	Dtype extends DataType,
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends BaseArray<Dtype, Store, Path> {
+	private _attrs?: Attrs;
+
+	constructor(props: ArrayProps<Dtype, Store, Path> & { attrs?: Attrs }) {
+		super(props);
+		this._attrs = props.attrs;
+	}
+	_chunk_key(chunk_coords: number[]) {
+		const prefix = key_prefix(this.path);
+		const chunk_identifier = chunk_coords.join(this.chunk_separator);
+		return `${prefix}${chunk_identifier}` as AbsolutePath;
+	}
+
+	async attrs() {
+		if (this._attrs) return this._attrs;
+		const attrs = (this._attrs = get_attrs(this.store, this.path));
+		return attrs;
+	}
+}
+
+export class Group<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath = AbsolutePath,
+> extends BaseGroup<Store, Path> {
+	private _attrs?: Attrs;
+
+	constructor(props: { store: Store; path: Path; attrs?: Attrs }) {
+		super(props);
+		this._attrs = props.attrs;
+	}
+
+	async attrs() {
+		if (this._attrs) return this._attrs;
+		const attrs = (this._attrs = get_attrs(this.store, this.path));
+		return attrs;
+	}
+}
 
 function encode_codec_metadata(codec: Codec) {
 	// @ts-ignore
@@ -56,33 +106,12 @@ function key_prefix<Path extends AbsolutePath>(
 }
 
 const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as const;
+
 const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
+
 const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
-const get_attrs = async (
-	store: Readable | Async<Readable>,
-	path: AbsolutePath,
-): Promise<Attrs> => {
-	const attrs = await store.get(attrs_key(path));
-	return attrs ? json_decode_object(attrs) : {};
-};
-
-function chunk_key(path: AbsolutePath, chunk_separator: "." | "/"): ChunkKey {
-	const prefix = key_prefix(path);
-	return (chunk_coords) => {
-		const chunk_identifier = chunk_coords.join(chunk_separator);
-		return `${prefix}${chunk_identifier}`;
-	};
-}
-
-export const create_hierarchy = <
-	S extends Readable & Writeable | Async<Readable & Writeable>,
->(store: S) => new Hierarchy({ store });
-
-export const get_hierarchy = <S extends Readable | Async<Readable>>(store: S) =>
-	new Hierarchy({ store });
-
-export const from_meta = async <
+export async function from_meta<
 	P extends AbsolutePath,
 	S extends Readable | Async<Readable>,
 	D extends DataType,
@@ -91,201 +120,305 @@ export const from_meta = async <
 	path: P,
 	meta: ArrayMetadata<D>,
 	attrs?: Record<string, any>,
-) => {
-	return new ZarrArray({
+) {
+	return new Array({
 		store: store,
 		path,
 		shape: meta.shape,
 		dtype: meta.dtype,
 		chunk_shape: meta.chunks,
-		chunk_key: chunk_key(path, meta.dimension_separator ?? "."),
+		chunk_separator: meta.dimension_separator ?? ".",
 		compressor: await get_codec(meta.compressor),
 		fill_value: meta.fill_value,
-		attrs: attrs ?? (() => get_attrs(store, path)),
+		attrs: attrs,
 	});
-};
+}
 
-export async function get_array<
+function deref<
 	Store extends Readable | Async<Readable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+>(grp: Group<Store, NodePath>, path: Path): { store: Store; path: Deref<Path, NodePath> };
+
+function deref<Store, Path extends AbsolutePath>(
+	store: Store,
+	path: Path,
+): { store: Store; path: Path };
+
+function deref<Store extends Readable | Async<Readable>>(
+	node: Store | Group<Store>,
+	path: any,
+) {
+	if ("store" in node) {
+		return { store: node.store, path: node.deref(path) };
+	}
+	return { store: node, path };
+}
+
+async function _get_array<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path) {
+	const meta_key = array_meta_key(path);
+	const meta_doc = await store.get(meta_key);
+	if (!meta_doc) {
+		throw new NodeNotFoundError(path);
+	}
+	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
+	return from_meta(store, path, meta);
+}
+
+export function get_array<
+	Store extends Readable | Async<Readable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+>(
+	group: Group<Store, NodePath>,
+	path: Path,
+): Promise<Array<DataType, Store, Deref<Path, NodePath>>>;
+
+export function get_array<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path): Promise<Array<DataType, Store, Path>>;
+
+export function get_array<
+	Store extends Readable | Async<Readable>,
+>(store: Store): Promise<Array<DataType, Store, "/">>;
+
+export async function get_array<Store extends Readable | Async<Readable>>(
+	node: Store | Group<Store>,
+	_path: any = "/",
+) {
+	const { store, path } = deref(node, _path);
+	return _get_array(store as Store, path);
+}
+
+async function _get_group<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path) {
+	const meta_key = group_meta_key(path);
+	const meta_doc = await store.get(meta_key);
+	if (!meta_doc) {
+		throw new NodeNotFoundError(path);
+	}
+	return new Group({ store, path });
+}
+
+export function get_group<
+	Store extends Readable | Async<Readable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+>(
+	group: Group<Store, NodePath>,
+	path: Path,
+): Promise<Group<Store, Deref<Path, NodePath>>>;
+
+export function get_group<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path): Promise<Group<Store, Path>>;
+
+export function get_group<
+	Store extends Readable | Async<Readable>,
+>(store: Store): Promise<Group<Store, "/">>;
+
+export async function get_group<
+	Store extends Readable | Async<Readable>,
+>(node: Store | Group<Store>, _path: any = "/") {
+	const { store, path } = deref(node, _path);
+	return _get_group(store as Store, path as AbsolutePath);
+}
+
+export function get<
+	Store extends Readable | Async<Readable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+>(
+	group: Group<Store, NodePath>,
+	path: Path,
+): Promise<
+	Array<DataType, Store, Deref<Path, NodePath>> | Group<Store, Deref<Path, NodePath>>
+>;
+
+export function get<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path): Promise<Array<DataType, Store, Path> | Group<Store, Path>>;
+
+export function get<
+	Store extends Readable | Async<Readable>,
+>(store: Store): Promise<Array<DataType, Store, "/"> | Group<Store, "/">>;
+
+export async function get<Store extends Readable | Async<Readable>>(
+	node: Store | Group<Store>,
+	_path: any = "/",
+) {
+	const { store, path } = deref(node, _path);
+	try {
+		return await _get_array(store as Store, path);
+	} catch (err) {
+		if (!(err instanceof NodeNotFoundError)) {
+			throw err;
+		}
+	}
+	// try explicit group
+	try {
+		return await _get_group(store as Store, path);
+	} catch (err) {
+		if (!(err instanceof NodeNotFoundError)) {
+			throw err;
+		}
+	}
+	throw new KeyError(path);
+}
+
+async function _create_group<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends AbsolutePath,
 >(
 	store: Store,
 	path: Path,
-): Promise<ZarrArray<DataType, Store, Path>> {
-	const meta_key = array_meta_key(path);
-	const meta_doc = await store.get(meta_key);
-
-	if (!meta_doc) {
-		throw new NodeNotFoundError(path);
+	attrs: Attrs = {},
+) {
+	const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
+	const meta_key = group_meta_key(path);
+	await store.set(meta_key, meta_doc);
+	if (attrs) {
+		await store.set(
+			attrs_key(path),
+			json_encode_object(attrs),
+		);
 	}
-
-	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
-
-	return from_meta(store, path, meta);
+	return new Group({ store, path, attrs: attrs ?? {} });
 }
 
-export async function get_group<
-	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath,
-	H extends Hierarchy<Store>,
->(store: Store, path: Path, owner?: H) {
-	const meta_key = group_meta_key(path);
-	const meta_doc = await store.get(meta_key);
+export function create_group<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+>(
+	group: Group<Store, NodePath>,
+	path: Path,
+	props?: { attrs?: Attrs },
+): Promise<Group<Store, Deref<Path, NodePath>>>;
 
-	if (!meta_doc) {
-		throw new NodeNotFoundError(path);
+export function create_group<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Path extends AbsolutePath,
+>(store: Store, path: Path, props?: { attrs?: Attrs }): Promise<Group<Store, Path>>;
+
+export async function create_group<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+>(node: Store | Group<Store>, _path: any, props: { attrs?: Attrs } = {}) {
+	const { store, path } = deref(node, _path);
+	return _create_group(store as Store, path as AbsolutePath, props.attrs);
+}
+
+async function _create_array<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Path extends AbsolutePath,
+	Dtype extends DataType,
+>(
+	store: Store,
+	path: Path,
+	props: CreateArrayProps<Dtype>,
+) {
+	const shape = props.shape;
+	const dtype = props.dtype;
+	const chunk_shape = props.chunk_shape;
+	const compressor = props.compressor;
+	const chunk_separator = props.chunk_separator ?? ".";
+
+	const meta: ArrayMetadata<Dtype> = {
+		zarr_format: 2,
+		shape,
+		dtype,
+		chunks: chunk_shape,
+		dimension_separator: chunk_separator,
+		order: "C",
+		fill_value: props.fill_value ?? null,
+		filters: [],
+		compressor: compressor ? encode_codec_metadata(compressor) : null,
+	};
+
+	// serialise and store metadata document
+	const meta_doc = json_encode_object(meta);
+	const meta_key = array_meta_key(path);
+
+	await store.set(meta_key, meta_doc);
+
+	if (props.attrs) {
+		await store.set(
+			attrs_key(path),
+			json_encode_object(props.attrs),
+		);
 	}
 
-	return new ExplicitGroup({
+	return new Array({
 		store: store,
-		owner: owner ?? get_hierarchy(store),
-		path,
-		attrs: () => get_attrs(store, path),
+		path: path,
+		shape: meta.shape,
+		dtype: dtype,
+		chunk_shape: meta.chunks,
+		chunk_separator: chunk_separator,
+		compressor: compressor,
+		fill_value: meta.fill_value,
+		attrs: props.attrs ?? {},
 	});
 }
 
-export class Hierarchy<Store extends Readable | Async<Readable>>
-	implements _Hierarchy<Store> {
-	public store: Store;
-	constructor({ store }: { store: Store }) {
-		this.store = store;
-	}
+export function create_array<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Path extends string,
+	NodePath extends AbsolutePath,
+	Dtype extends DataType,
+>(
+	group: Group<Store, NodePath>,
+	path: Path,
+	props: CreateArrayProps<Dtype>,
+): Promise<Array<Dtype, Store, Deref<Path, NodePath>>>;
 
-	get root() {
-		return this.get("/");
-	}
+export function create_array<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Path extends AbsolutePath,
+	Dtype extends DataType,
+>(
+	store: Store,
+	path: Path,
+	props: CreateArrayProps<Dtype>,
+): Promise<Array<Dtype, Store, Path>>;
 
-	async create_group<Path extends AbsolutePath>(
-		path: Path,
-		{ attrs }: { attrs?: Attrs } = {},
-	): Promise<
-		Store extends (Writeable | Async<Writeable>)
-			? ExplicitGroup<Store, Hierarchy<Store>, Path>
-			: never
-	> {
-		assert("set" in this.store, "Not a writeable store");
-		const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
-		const meta_key = group_meta_key(path);
+export async function create_array<
+	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Dtype extends DataType,
+>(node: Store | Group<Store>, _path: any, props: CreateArrayProps<Dtype>) {
+	const { store, path } = deref(node, _path);
+	return _create_array(store as Store, path as AbsolutePath, props);
+}
 
-		await (this.store as any as Writeable | Async<Writeable>).set(meta_key, meta_doc);
+export function has<Store extends Readable | Async<Readable>>(
+	group: Group<Store, AbsolutePath>,
+	path: string,
+): Promise<boolean>;
 
-		if (attrs) {
-			await (this.store as any as Writeable | Async<Writeable>).set(
-				attrs_key(path),
-				json_encode_object(attrs),
-			);
-		}
+export function has<Store extends Readable | Async<Readable>>(
+	store: Store,
+	path: AbsolutePath,
+): Promise<boolean>;
 
-		return new ExplicitGroup({
-			store: this.store,
-			owner: this,
-			path,
-			attrs: attrs ?? {},
-		}) as any;
-	}
-
-	async create_array<Path extends AbsolutePath, Dtype extends DataType>(
-		path: Path,
-		props: CreateArrayProps<Dtype>,
-	): Promise<
-		Store extends (Writeable | Async<Writeable>) ? ZarrArray<Dtype, Store, Path>
-			: never
-	> {
-		assert("set" in this.store, "Not a writeable store");
-		const shape = props.shape;
-		const dtype = props.dtype;
-		const chunk_shape = props.chunk_shape;
-		const compressor = props.compressor;
-		const chunk_separator = props.chunk_separator ?? ".";
-
-		const meta: ArrayMetadata<Dtype> = {
-			zarr_format: 2,
-			shape,
-			dtype,
-			chunks: chunk_shape,
-			dimension_separator: chunk_separator,
-			order: "C",
-			fill_value: props.fill_value ?? null,
-			filters: [],
-			compressor: compressor ? encode_codec_metadata(compressor) : null,
-		};
-
-		// serialise and store metadata document
-		const meta_doc = json_encode_object(meta);
-		const meta_key = array_meta_key(path);
-
-		await (this.store as any as Writeable | Async<Writeable>).set(meta_key, meta_doc);
-
-		if (props.attrs) {
-			await (this.store as any as Writeable | Async<Writeable>).set(
-				attrs_key(path),
-				json_encode_object(props.attrs),
-			);
-		}
-
-		return new ZarrArray({
-			store: this.store,
-			path,
-			shape: meta.shape,
-			dtype: dtype,
-			chunk_shape: meta.chunks,
-			chunk_key: chunk_key(path, chunk_separator),
-			compressor: compressor,
-			fill_value: meta.fill_value,
-			attrs: props.attrs ?? {},
-		}) as any;
-	}
-
-	async get_array<Path extends AbsolutePath>(
-		path: Path,
-	): Promise<ZarrArray<DataType, Store, Path>> {
-		return get_array(this.store, path);
-	}
-
-	async get_group<Path extends AbsolutePath>(
-		path: Path,
-	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>> {
-		return get_group(this.store, path, this);
-	}
-
-	async get<Path extends AbsolutePath>(path: Path): Promise<
-		ZarrArray<DataType, Store, Path> | ExplicitGroup<Store, Hierarchy<Store>, Path>
-	> {
-		try {
-			return await this.get_array(path);
-		} catch (err) {
-			if (!(err instanceof NodeNotFoundError)) {
-				throw err;
-			}
-		}
-		// try explicit group
-		try {
-			return await this.get_group(path);
-		} catch (err) {
-			if (!(err instanceof NodeNotFoundError)) {
-				throw err;
-			}
-		}
-		throw new KeyError(path);
-	}
-
-	async has(path: AbsolutePath): Promise<boolean> {
-		try {
-			await this.get(path);
-			return true;
-		} catch (err) {
-			if (err instanceof NodeNotFoundError) {
+export async function has<Store extends Readable | Async<Readable>>(
+	node: Store | Group<Store>,
+	_path: any,
+) {
+	const { store, path } = deref(node, _path);
+	// TODO: implement using `has` if available on store.
+	return get(store as Store, path as AbsolutePath).then(() => true)
+		.catch((err) => {
+			if (err instanceof KeyError) {
 				return false;
 			}
 			throw err;
-		}
-	}
-
-	get_children(_path: AbsolutePath): never {
-		throw new Error("get_children not implemented for v2.");
-	}
-
-	get_implicit_group(_path: AbsolutePath): never {
-		throw new Error("Implicit group not implemented for v2.");
-	}
+		});
 }
