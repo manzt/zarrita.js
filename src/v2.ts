@@ -3,6 +3,10 @@ import { registry } from "./lib/codec-registry";
 import { KeyError, NodeNotFoundError } from "./lib/errors";
 import { json_decode_object, json_encode_object } from "./lib/util";
 
+export { slice } from "./lib/util";
+export { registry } from "./lib/codec-registry";
+export { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
+
 import type {
 	AbsolutePath,
 	Async,

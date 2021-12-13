@@ -288,17 +288,11 @@ export function run_test_suite({ name, setup }) {
 				"tricia should be implicit group.",
 			);
 
-			let grp = await v3.get_implicit_group(h, "/tricia");
-			res = await v3.get_children(grp);
+			res = await v3.get_implicit_group(h, "/tricia").then((grp) => v3.get_children(grp));
 			t.equal(
 				res.get("mcmillan"),
 				"explicit_group",
 				"tricia/mcmillan should be explicit group.",
-			);
-
-			// @ts-ignore
-			res = await v3.get(h, "/tricia").then((n) => v3.get(n, "mcmillan")).then((n) =>
-				v3.get_children(n)
 			);
 
 			// @ts-ignore

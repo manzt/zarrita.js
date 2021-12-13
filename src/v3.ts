@@ -720,7 +720,7 @@ export async function get_children<
 ): Promise<Map<string, string>> {
 	if (!_path) {
 		// use root if hierarchy, get children for current node if Group
-		_path = node instanceof Hierarchy ? "/" : "";
+		_path = node instanceof Hierarchy ? "/" : node.path;
 	}
 	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path);
 	return _get_children(hierarchy, path);
