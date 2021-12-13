@@ -105,6 +105,45 @@ export const from_meta = async <
 	});
 };
 
+export async function get_array<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+>(
+	store: Store,
+	path: Path,
+): Promise<ZarrArray<DataType, Store, Path>> {
+	const meta_key = array_meta_key(path);
+	const meta_doc = await store.get(meta_key);
+
+	if (!meta_doc) {
+		throw new NodeNotFoundError(path);
+	}
+
+	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
+
+	return from_meta(store, path, meta);
+}
+
+export async function get_group<
+	Store extends Readable | Async<Readable>,
+	Path extends AbsolutePath,
+	H extends Hierarchy<Store>,
+>(store: Store, path: Path, owner?: H) {
+	const meta_key = group_meta_key(path);
+	const meta_doc = await store.get(meta_key);
+
+	if (!meta_doc) {
+		throw new NodeNotFoundError(path);
+	}
+
+	return new ExplicitGroup({
+		store: store,
+		owner: owner ?? get_hierarchy(store),
+		path,
+		attrs: () => get_attrs(store, path),
+	});
+}
+
 export class Hierarchy<Store extends Readable | Async<Readable>>
 	implements _Hierarchy<Store> {
 	public store: Store;
@@ -200,38 +239,13 @@ export class Hierarchy<Store extends Readable | Async<Readable>>
 	async get_array<Path extends AbsolutePath>(
 		path: Path,
 	): Promise<ZarrArray<DataType, Store, Path>> {
-		// path = normalize_path(path);
-		const meta_key = array_meta_key(path);
-		const meta_doc = await this.store.get(meta_key);
-
-		if (!meta_doc) {
-			throw new NodeNotFoundError(path);
-		}
-
-		const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
-
-		return from_meta(this.store, path, meta);
+		return get_array(this.store, path);
 	}
 
 	async get_group<Path extends AbsolutePath>(
 		path: Path,
 	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>> {
-		// path = normalize_path(path);
-
-		const meta_key = group_meta_key(path);
-		const meta_doc = await this.store.get(meta_key);
-
-		if (!meta_doc) {
-			throw new NodeNotFoundError(path);
-		}
-
-		// instantiate explicit group
-		return new ExplicitGroup({
-			store: this.store,
-			owner: this,
-			path,
-			attrs: () => get_attrs(this.store, path),
-		});
+		return get_group(this.store, path, this);
 	}
 
 	async get<Path extends AbsolutePath>(path: Path): Promise<
