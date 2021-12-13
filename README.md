@@ -6,7 +6,7 @@ to provide rich data-type information from zarr metadata.
 #### Usage:
 
 ```javascript
-import { v3, slice, registry } from 'zarrita';
+import * as zarr from 'zarrita/v3';
 import MemoryStore from 'zarrita/storage/mem';
 // import FileSystemStore from 'zarrita/storage/fs'; (Node)
 // import FetchStore from 'zarrita/storage/fetch'; (Browser)
@@ -16,17 +16,17 @@ import ndarray from 'ndarray';
 import { get, set } from 'zarrita/ndarray';
 
 // codec registry is empty by default, so must add codecs
-registry.set(GZip.codecId, () => GZip);
+zarr.registry.set(GZip.codecId, () => GZip);
 
 // Create store
 const store = new MemoryStore();
 
 (async () => {
   // Create hierarchy
-  const h = await v3.create_hierarchy(store);
+  const h = await zarr.create_hierarchy(store);
 
   // Create Array
-  await h.create_array('/arthur/dent', {
+  await zarr.create_array(h, '/arthur/dent', {
     shape: [5, 10],
     dtype: '<i4',
     chunk_shape: [2, 5],
@@ -35,7 +35,7 @@ const store = new MemoryStore();
   });
 
   // Create Array without compressor 
-  await h.create_array('/deep/thought', {
+  await zarr.create_array(h, '/deep/thought', {
     shape: 7500000,
     dtype: '>f4',
     chunk_shape: 42,
@@ -43,12 +43,12 @@ const store = new MemoryStore();
   });
 
   // Create a group 
-  await h.create_group('/tricia/mcmillan', {
+  await zarr.create_group(h, '/tricia/mcmillan', {
     attrs: { heart: 'gold', improbability: 'infinite' },
   });
 
   // View whole hierarchy
-  const nodes = await h.get_nodes();
+  const nodes = await zarr.get_nodes(h);
   console.log(nodes);
   //  Map(7) {
   //    '/arthur/dent' => 'array',
@@ -61,8 +61,9 @@ const store = new MemoryStore();
   //  }
   
   // Open an array
-  const a = await h.get('/arthur/dent');
-  console.log(await get(a, null));
+  const a = await zarr.get_array(h, '/arthur/dent');
+  // read entire array into memory
+  console.log(await get(a));
   // {
   //   data: Int32Array(50) [
   //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -75,7 +76,7 @@ const store = new MemoryStore();
   //   stride: [ 10, 1 ]
   // }
   await set(a, [0, null], 42);
-  console.log(await get(a, null));
+  console.log(await get(a));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -88,7 +89,7 @@ const store = new MemoryStore();
   //   stride: [ 10, 1 ]
   // }
   await set(a, [null, 3], 42);
-  console.log(await get(a, null));
+  console.log(await get(a));
   // {
   //   data: Int32Array(50) [
   //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
@@ -102,8 +103,9 @@ const store = new MemoryStore();
   // }
 
   // np.arange(50).reshape(5, 10);
-  await set(a, null, ndarray(new Int32Array([...Array(50).keys()]), [5, 10]));
-  console.log(await get(a, null));
+  const data = ndarray(new Int32Array([...Array(50).keys()]), [5, 10]);
+  await set(a, null, data);
+  console.log(await get(a));
   // {
   //   data: Int32Array(50) [
   //      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
@@ -116,7 +118,7 @@ const store = new MemoryStore();
   //   stride: [ 10, 1 ]
   // }
   
-  const selection = [slice(1,4), slice(2,7)];
+  const selection = [zarr.slice(1,4), zarr.slice(2,7)];
   console.log(await get(a, selection));
   // {
   //   data: Int32Array(15) [
