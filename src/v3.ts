@@ -3,6 +3,10 @@ import { registry } from "./lib/codec-registry";
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
 import { json_decode_object, json_encode_object } from "./lib/util";
 
+export { slice } from "./lib/util";
+export { registry } from "./lib/codec-registry";
+export { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
+
 import type {
 	AbsolutePath,
 	Async,
@@ -274,12 +278,13 @@ async function _create_group<
 
 export async function create_group<
 	Store extends Writeable | Async<Writeable>,
-	Path extends AbsolutePath,
+	Path extends string,
+	NodePath extends AbsolutePath,
 >(
-	hierarchy: Hierarchy<Store>,
+	group: ImplicitGroup<Store, NodePath>,
 	path: Path,
 	props?: { attrs?: Attrs },
-): Promise<ExplicitGroup<Store, Path>>;
+): Promise<ExplicitGroup<Store, Deref<Path, NodePath>>>;
 
 export async function create_group<
 	Store extends Writeable | Async<Writeable>,
@@ -615,6 +620,17 @@ export async function get<
 		}
 	}
 	throw new KeyError(path);
+}
+
+export function has<
+	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+>(node: Hierarchy<Store> | ImplicitGroup<Store>, _path: any = "/") {
+	return get(node as Hierarchy<Store>, _path)
+		.then(() => true)
+		.catch((err) => {
+			if (err instanceof KeyError) return false;
+			throw err;
+		});
 }
 
 export async function get_nodes(
