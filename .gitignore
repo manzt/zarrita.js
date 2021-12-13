@@ -1,8 +1,6 @@
 node_modules/
 *.zr3/
-src/**/*.d.ts
-!src/types.d.ts
-!src/missing-types.d.ts
 data/
 dist/
+docs/
 *.tgz
