@@ -16,7 +16,7 @@ jobs:
       - name: Build
       - uses: pnpm/action-setup@v2.0.1
         with:
-          version: 6.0.2
+          version: 6.23.6
 
         run: pnpm install
         run: pnpm typedoc src/index.ts && touch docs/.nojekell
