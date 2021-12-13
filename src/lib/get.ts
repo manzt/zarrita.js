@@ -1,12 +1,12 @@
 import { KeyError } from "./errors";
 import { BasicIndexer } from "./indexing";
 import { create_queue } from "./util";
-import type { ZarrArray } from "./hierarchy";
+import type { Array } from "./hierarchy";
 import type {
 	Async,
+	Chunk,
 	DataType,
 	GetOptions,
-	NdArrayLike,
 	Prepare,
 	Readable,
 	Scalar,
@@ -25,10 +25,10 @@ const unwrap = <D extends DataType>(
 
 export async function get<
 	D extends DataType,
-	Arr extends NdArrayLike<D>,
+	Arr extends Chunk<D>,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: ZarrArray<D, Readable | Async<Readable>>,
+	arr: Array<D, Readable | Async<Readable>>,
 	selection: null | Sel,
 	opts: GetOptions,
 	setter: {

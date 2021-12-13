@@ -1,13 +1,13 @@
 import { KeyError } from "./errors";
 import { create_queue } from "./util";
 import { BasicIndexer } from "./indexing";
-import type { ZarrArray } from "./hierarchy";
+import type { Array } from "./hierarchy";
 
 import type {
 	Async,
+	Chunk,
 	DataType,
 	Indices,
-	NdArrayLike,
 	Prepare,
 	Readable,
 	Scalar,
@@ -19,8 +19,8 @@ import type {
 	Writeable,
 } from "../types";
 
-export async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>>(
-	arr: ZarrArray<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
+export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
+	arr: Array<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (number | Slice | null)[] | null,
 	value: Scalar<Dtype> | Arr,
 	opts: SetOptions,
@@ -48,7 +48,7 @@ export async function set<Dtype extends DataType, Arr extends NdArrayLike<Dtype>
 	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
 		queue.add(async () => {
 			// obtain key for chunk storage
-			const chunk_key = arr.chunk_key(chunk_coords);
+			const chunk_key = arr._chunk_key(chunk_coords);
 
 			let cdata: TypedArray<Dtype>;
 

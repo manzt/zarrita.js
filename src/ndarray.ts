@@ -14,7 +14,7 @@ import type {
 	TypedArray,
 	Writeable,
 } from "./types";
-import type { ZarrArray } from "./lib/hierarchy";
+import type { Array } from "./lib/hierarchy";
 
 import { get as get_with_setter } from "./lib/get";
 import { set as set_with_setter } from "./lib/set";
@@ -23,7 +23,7 @@ export async function get<
 	D extends DataType,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: ZarrArray<D, Readable | Async<Readable>>,
+	arr: Array<D, Readable | Async<Readable>>,
 	selection: Sel | null = null,
 	opts: GetOptions = {},
 ) {
@@ -42,7 +42,7 @@ export async function get<
 }
 
 export async function set<D extends DataType>(
-	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	arr: Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (null | Slice | number)[] | null,
 	value: Scalar<D> | ndarray.NdArray<TypedArray<D>>,
 	opts: SetOptions = {},

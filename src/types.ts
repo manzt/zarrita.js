@@ -1,11 +1,9 @@
 import type { DataType, Scalar, TypedArray } from "./dtypes";
-import type { ExplicitGroup, ImplicitGroup, ZarrArray } from "./lib/hierarchy";
-import type ndarray from "ndarray";
 
 // hoist useful types here
 export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtypes";
 
-export type NdArrayLike<Dtype extends DataType> = {
+export type Chunk<Dtype extends DataType> = {
 	data: TypedArray<Dtype>;
 	shape: number[];
 };
@@ -22,7 +20,9 @@ export interface Slice {
 export type AbsolutePath<Rest extends string = string> = `/${Rest}`;
 export type RootPath = AbsolutePath<"">;
 export type PrefixPath = AbsolutePath<`${string}/`>;
-export type ChunkKey = (chunk_coord: number[]) => AbsolutePath;
+
+export type Deref<Path extends string, NodePath extends AbsolutePath> = Path extends
+	AbsolutePath ? Path : NodePath extends "/" ? `/${Path}` : `${NodePath}/${Path}`;
 
 export interface ListDirResult {
 	contents: string[];
@@ -48,55 +48,6 @@ export interface ExtendedReadable extends Readable {
 
 export type Attrs = Record<string, any>;
 
-export interface Hierarchy<Store extends Readable | Async<Readable>> {
-	// read-only
-	has(path: AbsolutePath): Promise<boolean>;
-	get<Path extends AbsolutePath>(path: Path): Promise<
-		| ZarrArray<DataType, Store, Path>
-		| ExplicitGroup<Store, Hierarchy<Store>, Path>
-		| ImplicitGroup<Store, Hierarchy<Store>, Path>
-	>;
-	get_array<Path extends AbsolutePath>(
-		path: Path,
-	): Promise<ZarrArray<DataType, Store, Path>>;
-	get_group<Path extends AbsolutePath>(
-		path: Path,
-	): Promise<ExplicitGroup<Store, Hierarchy<Store>, Path>>;
-	get_implicit_group<Path extends AbsolutePath>(
-		path: Path,
-	): Promise<
-		Store extends (ExtendedReadable | Async<ExtendedReadable>)
-			? ImplicitGroup<Store, Hierarchy<Store>, Path>
-			: never
-	>;
-	get_children(
-		path?: AbsolutePath,
-	): Promise<
-		Store extends (ExtendedReadable | Async<ExtendedReadable>) ? Map<string, string>
-			: never
-	>;
-
-	// write
-	create_group<Path extends AbsolutePath>(
-		path: Path,
-		props?: { attrs?: Attrs },
-	): Promise<
-		Store extends (Writeable | Async<Writeable>)
-			? ExplicitGroup<Store, Hierarchy<Store>, Path>
-			: never
-	>;
-	create_array<
-		Path extends AbsolutePath,
-		Dtype extends DataType,
-	>(
-		path: Path,
-		props: CreateArrayProps<Dtype>,
-	): Promise<
-		Store extends (Writeable | Async<Writeable>) ? ZarrArray<Dtype, Store, Path>
-			: never
-	>;
-}
-
 type RequiredArrayProps<D extends DataType> = {
 	shape: number[];
 	chunk_shape: number[];
@@ -111,17 +62,17 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	attrs?: Attrs;
 }
 
-export type Prepare<D extends DataType, NdArray extends NdArrayLike<D>> = (
+export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
 	shape: number[],
 ) => NdArray;
 export type SetScalar<
 	D extends DataType,
-	NdArray extends NdArrayLike<D>,
+	NdArray extends Chunk<D>,
 > = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
 export type SetFromChunk<
 	D extends DataType,
-	NdArray extends NdArrayLike<D>,
+	NdArray extends Chunk<D>,
 > = (
 	target: NdArray,
 	target_selection: (Indices | number)[],

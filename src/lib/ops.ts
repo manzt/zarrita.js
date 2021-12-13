@@ -1,11 +1,11 @@
 import { BoolArray } from "./custom-arrays";
-import type { ZarrArray } from "./hierarchy";
+import type { Array } from "./hierarchy";
 
 import type {
 	Async,
+	Chunk,
 	GetOptions,
 	Indices,
-	NdArrayLike,
 	Readable,
 	SetOptions,
 	Slice,
@@ -23,7 +23,7 @@ export async function get<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: ZarrArray<D, Readable | Async<Readable>>,
+	arr: Array<D, Readable | Async<Readable>>,
 	selection: Sel | null = null,
 	opts: GetOptions = {},
 ) {
@@ -41,12 +41,12 @@ export async function get<
 export async function set<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 >(
-	arr: ZarrArray<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	arr: Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (null | Slice | number)[] | null,
-	value: Scalar<D> | NdArrayLike<D>,
+	value: Scalar<D> | Chunk<D>,
 	opts: SetOptions = {},
 ) {
-	return set_with_setter<D, NdArrayLike<D>>(arr, selection, value, opts, {
+	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, {
 		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
@@ -66,7 +66,7 @@ type NdArray<D extends DataType> = {
 function compat<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 >(
-	arr: NdArrayLike<D> & { stride?: number[] },
+	arr: Chunk<D> & { stride?: number[] },
 ): NdArray<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
 	// ensure strides are computed
 	return {
@@ -76,7 +76,7 @@ function compat<
 }
 
 const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
-	arr: NdArrayLike<D>,
+	arr: Chunk<D>,
 	value: Scalar<D>,
 ): Scalar<Exclude<DataType, UnicodeStr | ByteStr | Bool>> => {
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
@@ -86,7 +86,7 @@ const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
 /** Compute strides for 'C' ordered ndarray from shape */
 function get_strides(shape: number[]) {
 	const ndim = shape.length;
-	const strides: number[] = Array(ndim);
+	const strides: number[] = globalThis.Array(ndim);
 	let step = 1; // init step
 	for (let i = ndim - 1; i >= 0; i--) {
 		strides[i] = step;
