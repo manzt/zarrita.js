@@ -1,164 +1,120 @@
-**Here be dragons**. Zarrita.js is a minimal, exploratory implementation of the Zarr
-version 2.0 _and_ version 3.0 protocol. It is implemented in TypeScript and utilizes
-[templates literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
-to provide rich data-type information from zarr metadata.
+**Here be dragons** 🐉
 
-#### Usage:
+# zarrita
+
+**zarrita** is a minimal and modular implementation of Zarr in TypeScript.
+
+- Zero dependencies (optionally [`scijs/ndarray`](https://github.com/scijs/ndarray))
+- Supports **v2** or **v3** protocols 
+- Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
+- Only "C"-order arrays
+- Handles **little endian** or **big endian** data-types
+- Handles **number**, **bigint**, **string**, and **boolean** data-types
+- Configurable compression via [`numcodecs`](https://github.com/manzt/numcodecs.js)
+- Allows _very_ flexible storage
+- Provides rich, in-editor **type information** via [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
+
+## Project philosphy
+
+**zarrita's** API is almost entirely [_tree-shakeable_](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking), 
+meaning that end-users are able to pick and choose the features of Zarr are necessary
+for their applications. At its core, the `zarr.Array` `class` only allows reading individual
+_chunks_. "Fancy-indexing" and "slicing" is accomplished via (optional) _functions_ that 
+operate on `zarr.Array` objects, and thus you only "pay" for these features when used
+(if bundling for the web).
+
+This design choice differs from existing implemenations of Zarr in JavaScript, and
+allows **zarrita** to be both minimal _and_ more feature-complete if necessary.
+
+## Example (v2):
 
 ```javascript
-import * as zarr from 'zarrita/v3';
-import MemoryStore from 'zarrita/storage/mem';
-// import FileSystemStore from 'zarrita/storage/fs'; (Node)
-// import FetchStore from 'zarrita/storage/fetch'; (Browser)
-import GZip from 'numcodecs/gzip';
+import * as zarr from 'zarrita/v2';
+import FetchStore from 'zarrita/storage/fetch';
 
-import ndarray from 'ndarray';
-import { get, set } from 'zarrita/ndarray';
+// must add codecs to global registry if compression is used
+import Blosc from 'numcodecs/blosc';
+zarr.registry.set(Blosc.codecId, () => Blosc);
 
-// codec registry is empty by default, so must add codecs
-zarr.registry.set(GZip.codecId, () => GZip);
+// intialize store
+const store = new FetchStore("http://localhost:8080/data.zarr");
 
-// Create store
-const store = new MemoryStore();
+// open array from root
+const arr = await zarr.get_array(store); // zarr.Array<"<i4", FetchStore, "/">
+arr.shape; // [5, 10]
+arr.chunk_shape; // [2, 5]
+arr.dtype; // "<i4"
 
-(async () => {
-  // Create hierarchy
-  const h = await zarr.create_hierarchy(store);
+// read chunk
+const chunk = await arr.get_chunk([0, 0]); // Chunk<"<i4">
+console.log(chunk);
+// {
+//   data: Int32Array(50) [
+//      0,  1,  2,  3,  4,
+//     10, 11, 12, 13, 14,
+//   ],
+//   shape: [ 2, 5 ],
+// }
 
-  // Create Array
-  await zarr.create_array(h, '/arthur/dent', {
-    shape: [5, 10],
-    dtype: '<i4',
-    chunk_shape: [2, 5],
-    compressor: new GZip(1),
-    attrs: { question: 'life', answer: 42 },
-  });
 
-  // Create Array without compressor 
-  await zarr.create_array(h, '/deep/thought', {
-    shape: 7500000,
-    dtype: '>f4',
-    chunk_shape: 42,
-    compressor: null,
-  });
+// read and combined chunks
+import { get } from "zarrita/ops"; // built-in getter, no dependencies
+import { get } from "zarrita/ndarray"; // returns scijs/ndarray array
 
-  // Create a group 
-  await zarr.create_group(h, '/tricia/mcmillan', {
-    attrs: { heart: 'gold', improbability: 'infinite' },
-  });
+// read entire dataset
+const full = await get(arr); // NdArray<"<i4"> | ndarray.Ndarray<TypedArray<"<i4">>
+console.log(full);
+// {
+//   data: Int32Array(50) [
+//      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+//     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+//     20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+//     30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+//     40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+//   ],
+//   shape: [ 5, 10 ],
+//   stride: [ 10, 1 ]
+// }
 
-  // View whole hierarchy
-  const nodes = await zarr.get_nodes(h);
-  console.log(nodes);
-  //  Map(7) {
-  //    '/arthur/dent' => 'array',
-  //    '/arthur' => 'implicit_group',
-  //    '/' => 'implicit_group',
-  //    '/deep/thought' => 'array',
-  //    '/deep' => 'implicit_group',
-  //    '/tricia/mcmillan' => 'explicit_group',
-  //    '/tricia' => 'implicit_group'
-  //  }
-  
-  // Open an array
-  const a = await zarr.get_array(h, '/arthur/dent');
-  // read entire array into memory
-  console.log(await get(a));
-  // {
-  //   data: Int32Array(50) [
-  //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  //   ],
-  //   shape: [ 5, 10 ],
-  //   stride: [ 10, 1 ]
-  // }
-  await set(a, [0, null], 42);
-  console.log(await get(a));
-  // {
-  //   data: Int32Array(50) [
-  //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-  //      0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 
-  //      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-  //      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-  //      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-  //   ],
-  //   shape: [ 5, 10 ],
-  //   stride: [ 10, 1 ]
-  // }
-  await set(a, [null, 3], 42);
-  console.log(await get(a));
-  // {
-  //   data: Int32Array(50) [
-  //     42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-  //      0,  0,  0, 42,  0,  0,  0,  0,  0,  0,
-  //      0,  0,  0, 42,  0,  0,  0,  0,  0,  0,
-  //      0,  0,  0, 42,  0,  0,  0,  0,  0,  0,
-  //      0,  0,  0, 42,  0,  0,  0,  0,  0,  0,
-  //   ],
-  //   shape: [ 5, 10 ],
-  //   stride: [ 10, 1 ]
-  // }
-
-  // np.arange(50).reshape(5, 10);
-  const data = ndarray(new Int32Array([...Array(50).keys()]), [5, 10]);
-  await set(a, null, data);
-  console.log(await get(a));
-  // {
-  //   data: Int32Array(50) [
-  //      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-  //     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-  //     20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-  //     30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-  //     40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-  //   ],
-  //   shape: [ 5, 10 ],
-  //   stride: [ 10, 1 ]
-  // }
-  
-  const selection = [zarr.slice(1,4), zarr.slice(2,7)];
-  console.log(await get(a, selection));
-  // {
-  //   data: Int32Array(15) [
-  //     12, 13, 14, 15, 16,
-  //     22, 23, 24, 25, 26,
-  //     32, 33, 34, 35, 36,
-  //   ],
-  //   shape: [ 3, 5 ],
-  //   stride: [ 5, 1 ]
-  // }
-})();
+// read region
+const region = await get(arr, [null, zarr.slice(6)]);
+console.log(full);
+// {
+//   data: Int32Array(50) [
+//      0,  1,  2,  3,  4,  5,
+//     10, 11, 12, 13, 14, 15,
+//     20, 21, 22, 23, 24, 25,
+//     30, 31, 32, 33, 34, 35,
+//     40, 41, 42, 43, 44, 45,
+//   ],
+//   shape: [ 5, 6 ],
+//   stride: [ 6, 1 ]
+// }
 ```
 
-```bash
-$ tree test.zr3
-test.zr3
-├── data
-│   └── root
-│       └── arthur
-│           └── dent
-│               ├── c0
-│               │   ├── 0
-│               │   └── 1
-│               ├── c1
-│               │   ├── 0
-│               │   └── 1
-│               └── c2
-│                   ├── 0
-│                   └── 1
-├── meta
-│   └── root
-│       ├── arthur
-│       │   └── dent.array.json
-│       ├── deep
-│       │   └── thought.array.json
-│       └── tricia
-│           └── mcmillan.group.json
-└── zarr.json
+## Usage
 
-12 directories, 10 files
+### In Browser
+
+```html
+<script type="module">
+  import * as zarr from "https://cdn.skypack.dev/zarrita/v2";
+  import { get } from "https://cdn.skypack.dev/zarrita/ops";
+</script>
+```
+
+### In Node.js or Application Bundles
+
+Import using ES module syntax, import all exports into a single object:
+
+```javascript
+import * as zarr from "zarrita/v2";
+```
+
+Import using ES module syntax, with targeted imports:
+
+```javascript
+import { get_array } from "zarrita/v2";
 ```
 
 #### Development

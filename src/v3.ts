@@ -3,10 +3,6 @@ import { registry } from "./lib/codec-registry";
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
 import { json_decode_object, json_encode_object } from "./lib/util";
 
-export { slice } from "./lib/util";
-export { registry } from "./lib/codec-registry";
-export { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
-
 import type {
 	AbsolutePath,
 	Async,
@@ -21,6 +17,9 @@ import type {
 } from "./types";
 
 import type { Codec } from "numcodecs";
+
+export { slice } from "./lib/util";
+export { registry } from "./lib/codec-registry";
 
 export class Hierarchy<Store> {
 	store: Store;
@@ -40,6 +39,7 @@ export class Hierarchy<Store> {
 	}
 }
 
+/** @category Node */
 export class ImplicitGroup<Store, Path extends AbsolutePath = AbsolutePath>
 	extends Group<Store, Path> {
 	public owner: Hierarchy<Store>;
@@ -49,8 +49,10 @@ export class ImplicitGroup<Store, Path extends AbsolutePath = AbsolutePath>
 	}
 }
 
+/** @category Node */
 export class ExplicitGroup<Store, Path extends AbsolutePath = AbsolutePath>
 	extends ImplicitGroup<Store, Path> {
+	/** @hidden */
 	private _attrs: Attrs;
 	constructor(
 		props: { store: Store; owner: Hierarchy<Store>; path: Path; attrs: Attrs },
@@ -63,22 +65,25 @@ export class ExplicitGroup<Store, Path extends AbsolutePath = AbsolutePath>
 	}
 }
 
+/** @category Node */
 export class Array<
 	Dtype extends DataType,
 	Store extends Readable | Async<Readable>,
 	Path extends AbsolutePath = AbsolutePath,
 > extends BaseArray<Dtype, Store, Path> {
+	/** @hidden */
 	private _attrs: Attrs;
 	constructor(props: ArrayProps<Dtype, Store, Path> & { attrs: Attrs }) {
 		super(props);
 		this._attrs = props.attrs;
 	}
-	async attrs() {
-		return this._attrs;
-	}
+	/** @hidden */
 	_chunk_key(chunk_coords: number[]) {
 		const chunk_identifier = "c" + chunk_coords.join(this.chunk_separator);
 		return `/data/root${this.path}/${chunk_identifier}` as const;
+	}
+	async attrs() {
+		return this._attrs;
 	}
 }
 
@@ -160,6 +165,7 @@ function meta_key<Path extends string, Suffix extends string>(
 	return `/meta/root${path}.${node}${suffix}` as const;
 }
 
+/** @category Creation */
 export async function create_hierarchy<Store extends Writeable | Async<Writeable>>(
 	store: Store,
 ): Promise<Hierarchy<Store>> {
@@ -182,6 +188,7 @@ export async function create_hierarchy<Store extends Writeable | Async<Writeable
 	return new Hierarchy({ store, meta_key_suffix });
 }
 
+/** @category Getters */
 export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 	store: Store,
 ): Promise<Hierarchy<Store>> {
@@ -276,6 +283,11 @@ async function _create_group<
 	});
 }
 
+/**
+ * @param group [[`ExplicitGroup`]] or [[`ImplicitGroup`]]
+ * @param path Treated as a relative path unless an abosolute path is provided
+ * @param props Optionally specify attributes
+ */
 export async function create_group<
 	Store extends Writeable | Async<Writeable>,
 	Path extends string,
@@ -286,6 +298,7 @@ export async function create_group<
 	props?: { attrs?: Attrs },
 ): Promise<ExplicitGroup<Store, Deref<Path, NodePath>>>;
 
+/** Create an `ExplicitGroup` from a `Hierarchy`. Must provide an abosolute path. */
 export async function create_group<
 	Store extends Writeable | Async<Writeable>,
 	Path extends AbsolutePath,
@@ -295,6 +308,7 @@ export async function create_group<
 	props?: { attrs?: Attrs },
 ): Promise<ExplicitGroup<Store, Path>>;
 
+/** @category Creation */
 export async function create_group<
 	Store extends Writeable | Async<Writeable>,
 >(
@@ -377,6 +391,7 @@ export async function create_array<
 	props: Omit<CreateArrayProps<Dtype>, "filters"> & { attrs?: Attrs },
 ): Promise<Array<Dtype, Store, Path>>;
 
+/** @category Creation */
 export async function create_array<
 	Dtype extends DataType,
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
@@ -469,6 +484,7 @@ export async function get_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(hierarchy: Hierarchy<Store>): Promise<Array<DataType, Store, "/">>;
 
+/** @category Getters */
 export async function get_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
@@ -515,6 +531,7 @@ export async function get_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(hierarchy: Hierarchy<Store>): Promise<ExplicitGroup<Store, "/">>;
 
+/** @category Getters */
 export async function get_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
@@ -554,6 +571,7 @@ export async function get_implicit_group<
 	Store extends ExtendedReadable | Async<ExtendedReadable>,
 >(hierarchy: Hierarchy<Store>): Promise<ImplicitGroup<Store, "/">>;
 
+/** @category Getters */
 export async function get_implicit_group<
 	Store extends ExtendedReadable | Async<ExtendedReadable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
@@ -588,6 +606,7 @@ export async function get<
 	| ImplicitGroup<Store, "/">
 >;
 
+/** @category Getters */
 export async function get<
 	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
 >(node: Hierarchy<Store> | ImplicitGroup<Store>, _path: any = "/") {
@@ -633,6 +652,7 @@ export function has<
 		});
 }
 
+/** @category Getters */
 export async function get_nodes(
 	h: Hierarchy<ExtendedReadable | Async<ExtendedReadable>>,
 ) {
@@ -712,6 +732,7 @@ export async function get_children(
 	path?: AbsolutePath,
 ): Promise<Map<string, string>>;
 
+/** @category Getters */
 export async function get_children<
 	Store extends ExtendedReadable | Async<ExtendedReadable>,
 >(
