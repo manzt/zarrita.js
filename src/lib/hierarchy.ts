@@ -54,6 +54,7 @@ export interface ArrayProps<
 	fill_value: Scalar<Dtype> | null;
 	chunk_separator: "." | "/";
 	compressor?: Codec;
+	filters?: Codec[];
 }
 
 export class Array<
@@ -61,10 +62,11 @@ export class Array<
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 	Path extends AbsolutePath = AbsolutePath,
 > extends Node<Store, Path> {
-	readonly shape: number[];
+	readonly shape: readonly number[];
 	readonly dtype: Dtype;
-	readonly chunk_shape: number[];
+	readonly chunk_shape: readonly number[];
 	readonly compressor?: Codec;
+	readonly filters: readonly Codec[];
 	readonly fill_value: Scalar<Dtype> | null;
 	readonly TypedArray: TypedArrayConstructor<Dtype>;
 	readonly chunk_separator: "." | "/";
@@ -77,6 +79,7 @@ export class Array<
 		this.compressor = props.compressor;
 		this.fill_value = props.fill_value;
 		this.chunk_separator = props.chunk_separator;
+		this.filters = props.filters ?? [];
 		this.TypedArray = get_ctr(props.dtype);
 	}
 
@@ -95,6 +98,11 @@ export class Array<
 			bytes = await this.compressor.decode(bytes);
 		}
 
+		// reverse through codecs
+		for (var i = this.filters.length - 1; i >= 0; i--) {
+			bytes = await this.filters[i].decode(bytes);
+		}
+
 		const data = new this.TypedArray(bytes.buffer);
 
 		if (should_byte_swap(this.dtype)) {
@@ -110,6 +118,9 @@ export class Array<
 			byte_swap_inplace(data);
 		}
 		let bytes = new Uint8Array(data.buffer);
+		for (const filter of this.filters) {
+			bytes = await filter.encode(bytes);
+		}
 		if (this.compressor) {
 			bytes = await this.compressor.encode(bytes);
 		}
@@ -121,6 +132,6 @@ export class Array<
 		const buffer = await this.store.get(chunk_key);
 		if (!buffer) throw new KeyError(chunk_key);
 		const data = await this._decode_chunk(buffer);
-		return { data, shape: this.chunk_shape };
+		return { data, shape: [...this.chunk_shape] };
 	}
 }

@@ -59,7 +59,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
 					// Otherwise data just contiguous TypedArray
-					const chunk = setter.prepare(cdata, arr.chunk_shape);
+					const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
 					setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
 				} else {
 					// @ts-ignore
@@ -77,7 +77,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 						return empty;
 					});
 
-				const chunk = setter.prepare(cdata, arr.chunk_shape);
+				const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
 
 				// Modify chunk data
 				if (typeof value === "object") {
@@ -97,7 +97,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 function is_total_slice(
 	selection: (number | Indices)[],
-	shape: number[],
+	shape: readonly number[],
 ): selection is Indices[] {
 	// all items are Indices and every slice is complete
 	return selection.every((s, i) => {

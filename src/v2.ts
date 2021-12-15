@@ -89,11 +89,10 @@ function encode_codec_metadata(codec: Codec) {
 }
 
 async function get_codec(
-	config: Record<string, any> | null | undefined,
-): Promise<Codec | undefined> {
-	if (!config) return;
+	config: Record<string, any>,
+): Promise<Codec> {
 	const importer = registry.get(config.id);
-	if (!importer) throw new Error("missing codec" + config.id);
+	if (!importer) throw new Error("missing codec " + JSON.stringify(config.id));
 	const ctr = await importer();
 	return ctr.fromConfig(config);
 }
@@ -167,7 +166,8 @@ async function _get_array<
 		dtype: meta.dtype,
 		chunk_shape: meta.chunks,
 		chunk_separator: meta.dimension_separator ?? ".",
-		compressor: await get_codec(meta.compressor),
+		filters: meta.filters ? await Promise.all(meta.filters.map(get_codec)) : undefined,
+		compressor: meta.compressor ? await get_codec(meta.compressor) : undefined,
 		fill_value: meta.fill_value,
 	});
 }
@@ -443,6 +443,7 @@ async function _create_array<
 	const chunk_shape = props.chunk_shape;
 	const compressor = props.compressor;
 	const chunk_separator = props.chunk_separator ?? ".";
+	const filters = props.filters;
 
 	const meta: ArrayMetadata<Dtype> = {
 		zarr_format: 2,
@@ -452,7 +453,7 @@ async function _create_array<
 		dimension_separator: chunk_separator,
 		order: "C",
 		fill_value: props.fill_value ?? null,
-		filters: [],
+		filters: filters ? filters.map(encode_codec_metadata) : null,
 		compressor: compressor ? encode_codec_metadata(compressor) : null,
 	};
 
@@ -477,6 +478,7 @@ async function _create_array<
 		chunk_shape: meta.chunks,
 		chunk_separator: chunk_separator,
 		compressor: compressor,
+		filters: filters,
 		fill_value: meta.fill_value,
 		attrs: props.attrs ?? {},
 	});

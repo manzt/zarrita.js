@@ -3,7 +3,7 @@ import { product, range, slice } from "./util";
 
 import type { Indices, Slice } from "../types";
 
-function err_too_many_indices(selection: (number | Slice)[], shape: number[]) {
+function err_too_many_indices(selection: (number | Slice)[], shape: readonly number[]) {
 	throw new IndexError(
 		`too many indicies for array; expected ${shape.length}, got ${selection.length}`,
 	);
@@ -19,7 +19,7 @@ function err_negative_step() {
 	throw new IndexError("only slices with step >= 1 are supported");
 }
 
-function check_selection_length(selection: (number | Slice)[], shape: number[]) {
+function check_selection_length(selection: (number | Slice)[], shape: readonly number[]) {
 	if (selection.length > shape.length) {
 		err_too_many_indices(selection, shape);
 	}
@@ -169,7 +169,7 @@ class SliceDimIndexer {
 
 function normalize_selection(
 	selection: null | (Slice | null | number)[],
-	shape: number[],
+	shape: readonly number[],
 ): (number | Slice)[] {
 	let normalized: (number | Slice)[] = [];
 	if (selection === null) {
@@ -189,8 +189,8 @@ interface ChunkProjection {
 
 interface BasicIndexerProps {
 	selection: null | (null | number | Slice)[];
-	shape: number[];
-	chunk_shape: number[];
+	shape: readonly number[];
+	chunk_shape: readonly number[];
 }
 
 export class BasicIndexer {
