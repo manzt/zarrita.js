@@ -131,7 +131,7 @@ export function run_test_suite({ name, setup }) {
 			t.deepEqual(a.shape, [7500000], "should have shape: [7500000].");
 			t.equal(a.dtype, ">f8", "should have dtype >f8.");
 			t.equal(a.chunk_shape, [42], "should have chunk_shape [42].");
-			t.equal((await a.attrs()), {}, "should have empty attrs.");
+			t.equal(await a.attrs(), {}, "should have empty attrs.");
 		});
 
 		await t.test("Verify /deep/thought metadata", async (t) => {

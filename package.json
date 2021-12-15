@@ -2,7 +2,7 @@
   "name": "zarrita",
   "type": "module",
   "license": "MIT",
-  "version": "0.2.0-alpha.2",
+  "version": "0.2.0-alpha.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/manzt/zarrita.js.git"
@@ -17,12 +17,32 @@
   "files": [
     "dist/"
   ],
+  "typings": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.mjs",
-    "./v2": "./dist/v2.mjs",
-    "./v3": "./dist/v3.mjs",
-    "./ndarray": "./dist/ndarray.mjs",
-    "./storage/*": "./dist/storage/*.mjs"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./v2": {
+      "types": "./dist/v2.d.ts",
+      "import": "./dist/v2.mjs"
+    },
+    "./v3": {
+      "types": "./dist/v3.d.ts",
+      "import": "./dist/v3.mjs"
+    },
+    "./ops": {
+      "types": "./dist/ops.d.ts",
+      "import": "./dist/ops.mjs"
+    },
+    "./ndarray": {
+      "types": "./dist/ndarray.d.ts",
+      "import": "./dist/ndarray.mjs"
+    },
+    "./storage/*": {
+      "types": "./dist/storage/*.d.ts",
+      "import": "./dist/storage/*.mjs"
+    }
   },
   "typesVersions": {
     "*": {
