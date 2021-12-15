@@ -84,10 +84,12 @@ export class Array<
 		return this.shape.length;
 	}
 
+	/** @hidden */
 	_chunk_key(_chunk_coords: number[]): AbsolutePath {
 		throw new NotImplementedError("_chunk_key must be implemented on zarr.Array");
 	}
 
+	/** @hidden */
 	async _decode_chunk(bytes: Uint8Array): Promise<TypedArray<Dtype>> {
 		if (this.compressor) {
 			bytes = await this.compressor.decode(bytes);
@@ -102,6 +104,7 @@ export class Array<
 		return data;
 	}
 
+	/** @hidden */
 	async _encode_chunk(data: TypedArray<Dtype>): Promise<Uint8Array> {
 		if (should_byte_swap(this.dtype)) {
 			byte_swap_inplace(data);

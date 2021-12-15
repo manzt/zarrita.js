@@ -148,6 +148,7 @@ export function* product<T extends Array<Iterable<any>>>(
 	}
 }
 
+/** @category Utilty */
 export function slice(end: number | null): Slice;
 export function slice(start: number, end: number | null): Slice;
 export function slice(start: number, end: number | null, step: number | null): Slice;

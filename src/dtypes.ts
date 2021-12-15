@@ -1,20 +1,34 @@
 import type { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
 
+/** @category Number */
 export type Int8 = "|i1";
+/** @category Number */
 export type Int16 = ">i2" | "<i2";
+/** @category Number */
 export type Int32 = ">i4" | "<i4";
+/** @category Bigint */
 export type Int64 = ">i8" | "<i8";
 
+/** @category Number */
 export type Uint8 = "|u1";
+/** @category Number */
 export type Uint16 = ">u2" | "<u2";
+/** @category Number */
 export type Uint32 = ">u4" | "<u4";
+/** @category Bigint */
 export type Uint64 = ">u8" | "<u8";
 
+/** @category Number */
 export type Float32 = ">f4" | "<f4";
+/** @category Number */
 export type Float64 = ">f8" | "<f8";
 
+/** @category Boolean */
 export type Bool = "|b1";
+
+/** @category String */
 export type UnicodeStr<Bytes extends number = number> = `<U${Bytes}` | `>U${Bytes}`;
+/** @category String */
 export type ByteStr<Bytes extends number = number> = `|S${Bytes}`;
 
 export type NumericDataType =

@@ -19,6 +19,7 @@ import type { Array } from "./lib/hierarchy";
 import { get as get_with_setter } from "./lib/get";
 import { set as set_with_setter } from "./lib/set";
 
+/** @category Utility */
 export async function get<
 	D extends DataType,
 	Sel extends (null | Slice | number)[],
@@ -41,6 +42,7 @@ export async function get<
 	});
 }
 
+/** @category Utility */
 export async function set<D extends DataType>(
 	arr: Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (null | Slice | number)[] | null,

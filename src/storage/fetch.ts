@@ -12,6 +12,16 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
+/**
+ * Readonly store based in the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+ * Must polyfill `fetch` for use in Node.js.
+ *
+ * ```typescript
+ * import * as zarr from "zarrita/v2";
+ * const store = new FetchStore("http://localhost:8080/data.zarr");
+ * const arr = await zarr.get_array(store);
+ * ```
+ */
 class FetchStore implements Async<Readable<RequestInit>> {
 	constructor(public url: string | URL) {}
 

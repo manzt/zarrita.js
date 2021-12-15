@@ -19,6 +19,7 @@ import { set as set_with_setter } from "./lib/set";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 
+/** @category Utility */
 export async function get<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 	Sel extends (null | Slice | number)[],
@@ -38,6 +39,7 @@ export async function get<
 	});
 }
 
+/** @category Utility */
 export async function set<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 >(
