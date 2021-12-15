@@ -29,11 +29,11 @@ allows **zarrita** to be both minimal _and_ more feature-complete if necessary.
 ## Example (v2):
 
 ```javascript
-import * as zarr from 'zarrita/v2';
-import FetchStore from 'zarrita/storage/fetch';
+import * as zarr from "zarrita/v2";
+import FetchStore from "zarrita/storage/fetch";
 
 // must add codecs to global registry if compression is used
-import Blosc from 'numcodecs/blosc';
+import Blosc from "numcodecs/blosc";
 zarr.registry.set(Blosc.codecId, () => Blosc);
 
 // intialize store
@@ -55,7 +55,6 @@ console.log(chunk);
 //   ],
 //   shape: [ 2, 5 ],
 // }
-
 
 // read and combined chunks
 import { get } from "zarrita/ops"; // built-in getter, no dependencies

@@ -6,12 +6,11 @@ import type {
 	Async,
 	ExtendedReadable,
 	PrefixPath,
-	Readable,
 	RootPath,
 	Writeable,
 } from "../types";
 
-class FileSystemStore implements Async<Readable & Writeable & ExtendedReadable> {
+class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	constructor(public root: string) {}
 
 	get(key: AbsolutePath): Promise<Uint8Array | undefined> {

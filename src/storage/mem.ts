@@ -1,13 +1,6 @@
-import type {
-	ExtendedReadable,
-	PrefixPath,
-	Readable,
-	RootPath,
-	Writeable,
-} from "../types";
+import type { ExtendedReadable, PrefixPath, RootPath, Writeable } from "../types";
 
-class MemoryStore extends Map<string, Uint8Array>
-	implements Readable, Writeable, ExtendedReadable {
+class MemoryStore extends Map<string, Uint8Array> implements ExtendedReadable, Writeable {
 	list_prefix(prefix: RootPath | PrefixPath) {
 		const items = [];
 		for (const path of super.keys()) {

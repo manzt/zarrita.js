@@ -215,7 +215,7 @@ export function get_array<
 >(store: Store): Promise<Array<DataType, Store, "/">>;
 
 /**
- * Open an Array from a Group or Store. 
+ * Open an Array from a Group or Store.
  * @category Read
  */
 export async function get_array<Store extends Readable | Async<Readable>>(
@@ -278,7 +278,7 @@ export function get_group<
 >(store: Store): Promise<Group<Store, "/">>;
 
 /**
- * Open Group from Store or anthoer Group 
+ * Open Group from Store or anthoer Group
  * @category Read
  */
 export async function get_group<
@@ -368,8 +368,6 @@ export async function get<Store extends Readable | Async<Readable>>(
 	throw new KeyError(path);
 }
 
-
-
 async function _create_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends AbsolutePath,
@@ -431,8 +429,6 @@ export async function create_group<
 	return _create_group(store as Store, path as AbsolutePath, props.attrs);
 }
 
-
-
 async function _create_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends AbsolutePath,
@@ -491,7 +487,7 @@ async function _create_array<
  *
  * ```typescript
  * let grp = zarr.get_group(store, "/path/to/grp");
- * let arr = await zarr.create_array(grp, "data", { 
+ * let arr = await zarr.create_array(grp, "data", {
  *   dtype: "<i4",
  *   shape: [100, 100],
  *   chunk_shape: [20, 20],
@@ -515,7 +511,7 @@ export function create_array<
  * Create Array in store via absolute path
  *
  * ```typescript
- * let arr = await zarr.create_array(store, "/data", { 
+ * let arr = await zarr.create_array(store, "/data", {
  *   dtype: "<i4",
  *   shape: [100, 100],
  *   chunk_shape: [20, 20],
