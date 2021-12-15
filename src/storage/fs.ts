@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { strip_prefix } from "./util";
 
 import type {
 	AbsolutePath,
@@ -14,7 +15,7 @@ class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	constructor(public root: string) {}
 
 	get(key: AbsolutePath): Promise<Uint8Array | undefined> {
-		const fp = path.join(this.root, key.slice(1));
+		const fp = path.join(this.root, strip_prefix(key));
 		return fs.promises.readFile(fp)
 			.then((buf) => new Uint8Array(buf.buffer))
 			.catch((err) => {
@@ -25,18 +26,18 @@ class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	}
 
 	has(key: AbsolutePath): Promise<boolean> {
-		const fp = path.join(this.root, key.slice(1));
+		const fp = path.join(this.root, strip_prefix(key));
 		return fs.promises.access(fp).then(() => true).catch(() => false);
 	}
 
 	async set(key: AbsolutePath, value: Uint8Array): Promise<void> {
-		const fp = path.join(this.root, key.slice(1));
+		const fp = path.join(this.root, strip_prefix(key));
 		await fs.promises.mkdir(path.dirname(fp), { recursive: true });
 		await fs.promises.writeFile(fp, value, null);
 	}
 
 	async delete(key: AbsolutePath): Promise<boolean> {
-		const fp = path.join(this.root, key.slice(1));
+		const fp = path.join(this.root, strip_prefix(key));
 		await fs.promises.unlink(fp);
 		return true;
 	}
