@@ -20,7 +20,7 @@ jobs:
       - name: Install and Build 🔧
         run: |
           pnpm install typedoc
-          pnpm typedoc src/v2.ts src/v3.ts src/dtypes.ts src/ops.ts src/ndarray.ts src/storage/index.ts
+          pnpm typedoc src/dtypes.ts src/index.ts src/storage/index.ts
           touch docs/.nojekell
 
       - name: Deploy
