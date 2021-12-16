@@ -1,6 +1,6 @@
 **Here be dragons** 🐉
 
-# zarrita
+# zarrita.js
 
 **zarrita** is a minimal and modular implementation of Zarr in TypeScript.
 
