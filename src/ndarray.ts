@@ -22,24 +22,30 @@ import { set as set_with_setter } from "./lib/set";
 /** @category Utility */
 export async function get<
 	D extends DataType,
+	Store extends Readable | Async<Readable>,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: Array<D, Readable | Async<Readable>>,
+	arr: Array<D, Store>,
 	selection: Sel | null = null,
-	opts: GetOptions = {},
+	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
-	return get_with_setter<D, ndarray.NdArray<TypedArray<D>>, Sel>(arr, selection, opts, {
-		prepare: ndarray,
-		set_scalar(target, selection, value) {
-			ops.assigns(view(target, selection), value);
+	return get_with_setter<D, Store, ndarray.NdArray<TypedArray<D>>, Sel>(
+		arr,
+		selection,
+		opts,
+		{
+			prepare: ndarray,
+			set_scalar(target, selection, value) {
+				ops.assigns(view(target, selection), value);
+			},
+			set_from_chunk(target, target_selection, chunk, chunk_selection) {
+				ops.assign(
+					view(target, target_selection),
+					view(chunk, chunk_selection),
+				);
+			},
 		},
-		set_from_chunk(target, target_selection, chunk, chunk_selection) {
-			ops.assign(
-				view(target, target_selection),
-				view(chunk, chunk_selection),
-			);
-		},
-	});
+	);
 }
 
 /** @category Utility */

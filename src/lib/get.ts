@@ -25,12 +25,13 @@ const unwrap = <D extends DataType>(
 
 export async function get<
 	D extends DataType,
+	Store extends Readable | Async<Readable>,
 	Arr extends Chunk<D>,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: Array<D, Readable | Async<Readable>>,
+	arr: Array<D, Store>,
 	selection: null | Sel,
-	opts: GetOptions,
+	opts: GetOptions<Parameters<Store["get"]>[1]>,
 	setter: {
 		prepare: Prepare<D, Arr>;
 		set_scalar: SetScalar<D, Arr>;
@@ -50,7 +51,7 @@ export async function get<
 	// iterator over chunks
 	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
 		queue.add(() =>
-			arr.get_chunk(chunk_coords)
+			arr.get_chunk(chunk_coords, opts.opts)
 				.then(({ data, shape }) => {
 					const chunk = setter.prepare(data, shape);
 					setter.set_from_chunk(out, out_selection, chunk, chunk_selection);

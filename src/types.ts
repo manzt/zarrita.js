@@ -86,6 +86,8 @@ export type ChunkQueue = {
 	onIdle(): Promise<void[]>;
 };
 
-export type Options = { create_queue?: () => ChunkQueue };
-export type GetOptions = Options;
+export type Options = {
+	create_queue?: () => ChunkQueue;
+};
+export type GetOptions<O> = Options & { opts?: O };
 export type SetOptions = Options;

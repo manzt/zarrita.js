@@ -127,9 +127,12 @@ export class Array<
 		return bytes;
 	}
 
-	async get_chunk(chunk_coords: number[]): Promise<Chunk<Dtype>> {
+	async get_chunk(
+		chunk_coords: number[],
+		opts?: Parameters<Store["get"]>[1],
+	): Promise<Chunk<Dtype>> {
 		const chunk_key = this._chunk_key(chunk_coords);
-		const buffer = await this.store.get(chunk_key);
+		const buffer = await this.store.get(chunk_key, opts);
 		if (!buffer) throw new KeyError(chunk_key);
 		const data = await this._decode_chunk(buffer);
 		return { data, shape: [...this.chunk_shape] };
