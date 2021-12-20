@@ -77,7 +77,7 @@ console.log(full);
 
 // read region
 const region = await get(arr, [null, zarr.slice(6)]);
-console.log(full);
+console.log(region);
 // {
 //   data: Int32Array(30) [
 //      0,  1,  2,  3,  4,  5,
