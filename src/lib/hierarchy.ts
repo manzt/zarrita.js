@@ -88,7 +88,7 @@ export class Array<
 	}
 
 	/** @hidden */
-	_chunk_key(_chunk_coords: number[]): AbsolutePath {
+	protected chunk_key(_chunk_coords: number[]): AbsolutePath {
 		throw new NotImplementedError("_chunk_key must be implemented on zarr.Array");
 	}
 
@@ -131,7 +131,7 @@ export class Array<
 		chunk_coords: number[],
 		opts?: Parameters<Store["get"]>[1],
 	): Promise<Chunk<Dtype>> {
-		const chunk_key = this._chunk_key(chunk_coords);
+		const chunk_key = this.chunk_key(chunk_coords);
 		const buffer = await this.store.get(chunk_key, opts);
 		if (!buffer) throw new KeyError(chunk_key);
 		const data = await this._decode_chunk(buffer);

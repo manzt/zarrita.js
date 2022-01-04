@@ -43,7 +43,7 @@ export class Array<
 		this._attrs = props.attrs;
 	}
 	/** @hidden */
-	_chunk_key(chunk_coords: number[]) {
+	protected chunk_key(chunk_coords: number[]) {
 		const prefix = key_prefix(this.path);
 		const chunk_identifier = chunk_coords.join(this.chunk_separator);
 		return `${prefix}${chunk_identifier}` as AbsolutePath;
@@ -176,7 +176,7 @@ async function _get_array<
  * Open Array relative to Group
  *
  * ```typescript
- * let grp = await zarr.get_array(store, "/path/to/grp");
+ * let grp = await zarr.get_group(store, "/path/to/grp");
  * let arr = await zarr.get_array(grp, "array");
  * // or
  * let arr = await zarr.get_array(grp, "/path/to/grp/array");

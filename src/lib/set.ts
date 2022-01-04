@@ -48,7 +48,8 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
 		queue.add(async () => {
 			// obtain key for chunk storage
-			const chunk_key = arr._chunk_key(chunk_coords);
+			// @ts-ignore TODO: make chunk_key unprotected?
+			const chunk_key = arr.chunk_key(chunk_coords);
 
 			let cdata: TypedArray<Dtype>;
 

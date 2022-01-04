@@ -78,7 +78,7 @@ export class Array<
 		this._attrs = props.attrs;
 	}
 	/** @hidden */
-	_chunk_key(chunk_coords: number[]) {
+	protected chunk_key(chunk_coords: number[]) {
 		const chunk_identifier = "c" + chunk_coords.join(this.chunk_separator);
 		return `/data/root${this.path}/${chunk_identifier}` as const;
 	}
