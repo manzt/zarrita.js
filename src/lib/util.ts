@@ -1,5 +1,6 @@
 // deno-fmt-ignore
 import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays";
+import type { Integer } from "type-fest";
 
 import type {
 	ChunkQueue,
@@ -149,9 +150,16 @@ export function* product<T extends Array<Iterable<any>>>(
 }
 
 /** @category Utilty */
-export function slice(end: number | null): Slice;
-export function slice(start: number, end: number | null): Slice;
-export function slice(start: number, end: number | null, step: number | null): Slice;
+export function slice<End extends number>(end: Integer<End> | null): Slice;
+export function slice<Start extends number, End extends number>(
+	start: Integer<Start>,
+	end: Integer<End> | null,
+): Slice;
+export function slice<Start extends number, End extends number, Step extends number>(
+	start: Integer<Start>,
+	end: Integer<End> | null,
+	step: Integer<Step> | null,
+): Slice;
 export function slice(
 	start: number | null,
 	stop?: number | null,
@@ -169,7 +177,7 @@ export function slice(
 		if (end_ix < 0) end_ix += length;
 		return [start_ix, end_ix, istep];
 	};
-	return { start, stop, step, indices, kind: "slice" };
+	return { start, stop, step, indices };
 }
 
 /** Built-in "queue" for awaiting promises. */

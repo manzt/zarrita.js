@@ -1,3 +1,4 @@
+import type { Integer, JsonObject } from "type-fest";
 import type { DataType, Scalar, TypedArray } from "./dtypes";
 
 // hoist useful types here
@@ -10,7 +11,6 @@ export type Chunk<Dtype extends DataType> = {
 
 export type Indices = [start: number, stop: number, step: number];
 export interface Slice {
-	kind: "slice";
 	start: number | null;
 	stop: number | null;
 	step: number | null;
@@ -46,7 +46,7 @@ export interface ExtendedReadable extends Readable {
 	list_dir(key?: RootPath | PrefixPath): ListDirResult;
 }
 
-export type Attrs = Record<string, any>;
+export type Attrs = JsonObject;
 
 type RequiredArrayProps<D extends DataType> = {
 	shape: number[];
