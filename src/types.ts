@@ -1,4 +1,4 @@
-import type { Integer, JsonObject } from "type-fest";
+import type { JsonObject } from "type-fest";
 import type { DataType, Scalar, TypedArray } from "./dtypes";
 
 // hoist useful types here

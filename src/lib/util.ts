@@ -1,7 +1,7 @@
 // deno-fmt-ignore
 import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays";
-import type { Integer } from "type-fest";
 
+import type { Integer } from "type-fest";
 import type {
 	ChunkQueue,
 	DataType,
