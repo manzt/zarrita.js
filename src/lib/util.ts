@@ -105,6 +105,45 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	return ctr as TypedArrayConstructor<D>;
 }
 
+export async function encode_chunk<Dtype extends DataType>(
+	arr: import("./hierarchy").Array<Dtype, any>,
+	data: TypedArray<Dtype>,
+): Promise<Uint8Array> {
+	if (should_byte_swap(arr.dtype)) {
+		byte_swap_inplace(data);
+	}
+	let bytes = new Uint8Array(data.buffer);
+	for (const filter of arr.filters) {
+		bytes = await filter.encode(bytes);
+	}
+	if (arr.compressor) {
+		bytes = await arr.compressor.encode(bytes);
+	}
+	return bytes;
+}
+
+export async function decode_chunk<Dtype extends DataType>(
+	arr: import("./hierarchy").Array<Dtype, any>,
+	bytes: Uint8Array,
+): Promise<TypedArray<Dtype>> {
+	if (arr.compressor) {
+		bytes = await arr.compressor.decode(bytes);
+	}
+
+	// reverse through codecs
+	for (var i = arr.filters.length - 1; i >= 0; i--) {
+		bytes = await arr.filters[i].decode(bytes);
+	}
+
+	const data = new arr.TypedArray(bytes.buffer);
+
+	if (should_byte_swap(arr.dtype)) {
+		byte_swap_inplace(data);
+	}
+
+	return data;
+}
+
 export function* range(start: number, stop?: number, step = 1): Generator<number> {
 	if (stop == undefined) {
 		stop = start;
