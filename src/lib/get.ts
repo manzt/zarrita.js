@@ -44,11 +44,10 @@ export async function get<
 		chunk_shape: arr.chunk_shape,
 	});
 	// Setup output array
-	const outsize = indexer.shape.reduce((a, b) => a * b, 1);
 	const out = setter.prepare(
-		new arr.TypedArray(outsize),
+		new arr.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
 		indexer.shape,
-		get_strides(indexer.shape, arr.order),
+		get_strides(indexer.shape, opts.order ?? arr.order),
 	);
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
