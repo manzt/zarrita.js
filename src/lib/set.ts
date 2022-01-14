@@ -1,5 +1,5 @@
 import { KeyError } from "./errors";
-import { byte_swap_inplace, create_queue, should_byte_swap } from "./util";
+import { create_queue, encode_chunk } from "./util";
 import { BasicIndexer } from "./indexing";
 import type { Array } from "./hierarchy";
 
