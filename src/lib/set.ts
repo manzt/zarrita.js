@@ -1,5 +1,5 @@
 import { KeyError } from "./errors";
-import { create_queue } from "./util";
+import { create_queue, encode_chunk } from "./util";
 import { BasicIndexer } from "./indexing";
 import type { Array } from "./hierarchy";
 
@@ -88,7 +88,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			}
 			// encode chunk
-			const encoded_chunk_data = await arr._encode_chunk(cdata);
+			const encoded_chunk_data = await encode_chunk(arr, cdata);
 			// store
 			await arr.store.set(chunk_key, encoded_chunk_data);
 		});

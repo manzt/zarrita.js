@@ -1,5 +1,5 @@
 import { KeyError, NotImplementedError } from "./errors";
-import { byte_swap_inplace, get_ctr, should_byte_swap } from "./util";
+import { decode_chunk, get_ctr } from "./util";
 
 import type {
 	AbsolutePath,
@@ -9,7 +9,6 @@ import type {
 	Deref,
 	Readable,
 	Scalar,
-	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
 import type { Codec } from "numcodecs";
@@ -92,49 +91,16 @@ export class Array<
 		throw new NotImplementedError("_chunk_key must be implemented on zarr.Array");
 	}
 
-	/** @hidden */
-	async _decode_chunk(bytes: Uint8Array): Promise<TypedArray<Dtype>> {
-		if (this.compressor) {
-			bytes = await this.compressor.decode(bytes);
-		}
-
-		// reverse through codecs
-		for (var i = this.filters.length - 1; i >= 0; i--) {
-			bytes = await this.filters[i].decode(bytes);
-		}
-
-		const data = new this.TypedArray(bytes.buffer);
-
-		if (should_byte_swap(this.dtype)) {
-			byte_swap_inplace(data);
-		}
-
-		return data;
-	}
-
-	/** @hidden */
-	async _encode_chunk(data: TypedArray<Dtype>): Promise<Uint8Array> {
-		if (should_byte_swap(this.dtype)) {
-			byte_swap_inplace(data);
-		}
-		let bytes = new Uint8Array(data.buffer);
-		for (const filter of this.filters) {
-			bytes = await filter.encode(bytes);
-		}
-		if (this.compressor) {
-			bytes = await this.compressor.encode(bytes);
-		}
-		return bytes;
-	}
-
 	async get_chunk(
 		chunk_coords: number[],
 		opts?: Parameters<Store["get"]>[1],
 	): Promise<Chunk<Dtype>> {
 		const chunk_key = this.chunk_key(chunk_coords);
-		const buffer = await this.store.get(chunk_key, opts);
-		if (!buffer) throw new KeyError(chunk_key);
-		const data = await this._decode_chunk(buffer);
-		return { data, shape: [...this.chunk_shape] };
+		const maybe_bytes = await this.store.get(chunk_key, opts);
+		if (!maybe_bytes) {
+			throw new KeyError(chunk_key);
+		}
+		const data = await decode_chunk(this, maybe_bytes);
+		return { data, shape: this.chunk_shape.slice() };
 	}
 }

@@ -28,9 +28,9 @@ function system_is_little_endian(): boolean {
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
-export const should_byte_swap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
+export const should_byteswap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
 
-export function byte_swap_inplace(src: TypedArray<DataType>) {
+export function byteswap_inplace(src: TypedArray<DataType>) {
 	if (!("BYTES_PER_ELEMENT" in src)) return;
 	const b = src.BYTES_PER_ELEMENT;
 	const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
@@ -105,7 +105,46 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	return ctr as TypedArrayConstructor<D>;
 }
 
-export function* range(start: number, stop?: number, step = 1): Generator<number> {
+export async function encode_chunk<Dtype extends DataType>(
+	arr: import("./hierarchy").Array<Dtype, any>,
+	data: TypedArray<Dtype>,
+): Promise<Uint8Array> {
+	if (should_byteswap(arr.dtype)) {
+		byteswap_inplace(data);
+	}
+	let bytes = new Uint8Array(data.buffer);
+	for (const filter of arr.filters) {
+		bytes = await filter.encode(bytes);
+	}
+	if (arr.compressor) {
+		bytes = await arr.compressor.encode(bytes);
+	}
+	return bytes;
+}
+
+export async function decode_chunk<Dtype extends DataType>(
+	arr: import("./hierarchy").Array<Dtype, any>,
+	bytes: Uint8Array,
+): Promise<TypedArray<Dtype>> {
+	if (arr.compressor) {
+		bytes = await arr.compressor.decode(bytes);
+	}
+
+	// reverse through codecs
+	for (var i = arr.filters.length - 1; i >= 0; i--) {
+		bytes = await arr.filters[i].decode(bytes);
+	}
+
+	const data = new arr.TypedArray(bytes.buffer);
+
+	if (should_byteswap(arr.dtype)) {
+		byteswap_inplace(data);
+	}
+
+	return data;
+}
+
+export function* range(start: number, stop?: number, step = 1): Iterable<number> {
 	if (stop == undefined) {
 		stop = start;
 		start = 0;
