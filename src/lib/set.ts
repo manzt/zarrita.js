@@ -1,5 +1,5 @@
 import { KeyError } from "./errors";
-import { create_queue, encode_chunk } from "./util";
+import { create_queue, encode_chunk, get_strides } from "./util";
 import { BasicIndexer } from "./indexing";
 import type { Array } from "./hierarchy";
 
@@ -52,6 +52,8 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 			const chunk_key = arr.chunk_key(chunk_coords);
 
 			let cdata: TypedArray<Dtype>;
+			const shape = arr.chunk_shape;
+			const stride = get_strides(shape, arr.order);
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
 				// totally replace
@@ -60,7 +62,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
 					// Otherwise data just contiguous TypedArray
-					const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
+					const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
 					setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
 				} else {
 					// @ts-ignore
@@ -78,7 +80,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 						return empty;
 					});
 
-				const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
+				const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
 
 				// Modify chunk data
 				if (typeof value === "object") {

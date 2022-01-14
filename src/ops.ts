@@ -30,7 +30,7 @@ export async function get<
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
 	return get_with_setter<D, Store, NdArray<D>, Sel>(arr, selection, opts, {
-		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		prepare: (data, shape, stride) => ({ data, shape, stride }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
 		},
@@ -50,7 +50,7 @@ export async function set<
 	opts: SetOptions = {},
 ) {
 	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, {
-		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		prepare: (data, shape, stride) => ({ data, shape, stride }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
 		},
@@ -69,13 +69,14 @@ type NdArray<D extends DataType> = {
 function compat<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 >(
-	arr: Chunk<D> & { stride?: number[] },
+	arr: Chunk<D>,
 ): NdArray<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
-		stride: "stride" in arr ? arr.stride : get_strides(arr.shape),
-	} as any;
+		shape: arr.shape,
+		stride: arr.stride,
+	};
 }
 
 const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
@@ -85,18 +86,6 @@ const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value as any;
 };
-
-/** Compute strides for 'C' ordered ndarray from shape */
-function get_strides(shape: number[]) {
-	const ndim = shape.length;
-	const strides: number[] = globalThis.Array(ndim);
-	let step = 1; // init step
-	for (let i = ndim - 1; i >= 0; i--) {
-		strides[i] = step;
-		step *= shape[i];
-	}
-	return strides;
-}
 
 function indices_len(start: number, stop: number, step: number) {
 	if (step < 0 && stop < start) {

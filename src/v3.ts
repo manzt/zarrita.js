@@ -102,7 +102,7 @@ interface ArrayMetadata<D extends DataType> {
 		separator: "/" | ".";
 		chunk_shape: number[];
 	};
-	chunk_memory_layout: "C";
+	chunk_memory_layout: "C" | "F";
 	fill_value: null | Scalar<D>;
 	extensions: Record<string, any>[];
 	attributes: Attrs;
@@ -333,6 +333,7 @@ async function _create_array<
 	const dtype = props.dtype;
 	const chunk_shape = props.chunk_shape;
 	const compressor = props.compressor;
+	const order = props.order ?? "C";
 
 	const meta: ArrayMetadata<Dtype> = {
 		shape,
@@ -342,7 +343,7 @@ async function _create_array<
 			separator: props.chunk_separator ?? "/",
 			chunk_shape,
 		},
-		chunk_memory_layout: "C",
+		chunk_memory_layout: order,
 		fill_value: props.fill_value ?? null,
 		extensions: [],
 		attributes: props.attrs ?? {},
@@ -367,6 +368,7 @@ async function _create_array<
 		compressor: compressor,
 		fill_value: meta.fill_value,
 		attrs: meta.attributes,
+		order: order,
 	});
 }
 
@@ -437,12 +439,6 @@ async function _get_array<
 		);
 	}
 
-	if (chunk_memory_layout !== "C") {
-		throw new NotImplementedError(
-			`Only support for "C" order chunk_memory_layout, got ${chunk_memory_layout}.`,
-		);
-	}
-
 	for (const spec of extensions) {
 		if (spec.must_understand) {
 			throw new NotImplementedError(
@@ -463,6 +459,7 @@ async function _get_array<
 			: undefined,
 		fill_value,
 		attrs,
+		order: chunk_memory_layout,
 	});
 }
 

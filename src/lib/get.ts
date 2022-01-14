@@ -1,6 +1,6 @@
 import { KeyError } from "./errors";
 import { BasicIndexer } from "./indexing";
-import { create_queue } from "./util";
+import { create_queue, get_strides } from "./util";
 import type { Array } from "./hierarchy";
 import type {
 	Async,
@@ -45,15 +45,19 @@ export async function get<
 	});
 	// Setup output array
 	const outsize = indexer.shape.reduce((a, b) => a * b, 1);
-	const out = setter.prepare(new arr.TypedArray(outsize), indexer.shape);
+	const out = setter.prepare(
+		new arr.TypedArray(outsize),
+		indexer.shape,
+		get_strides(indexer.shape, arr.order),
+	);
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
 	// iterator over chunks
 	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
 		queue.add(() =>
 			arr.get_chunk(chunk_coords, opts.opts)
-				.then(({ data, shape }) => {
-					const chunk = setter.prepare(data, shape);
+				.then(({ data, shape, stride }) => {
+					const chunk = setter.prepare(data, shape, stride);
 					setter.set_from_chunk(out, out_selection, chunk, chunk_selection);
 				})
 				.catch((err) => {

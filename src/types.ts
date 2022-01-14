@@ -6,6 +6,7 @@ export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtyp
 export type Chunk<Dtype extends DataType> = {
 	data: TypedArray<Dtype>;
 	shape: number[];
+	stride: number[];
 };
 
 export type Indices = [start: number, stop: number, step: number];
@@ -60,11 +61,13 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	fill_value?: Scalar<D>;
 	filters?: import("numcodecs").Codec[];
 	attrs?: Attrs;
+	order?: "C" | "F";
 }
 
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
 	shape: number[],
+	stride: number[],
 ) => NdArray;
 export type SetScalar<
 	D extends DataType,
