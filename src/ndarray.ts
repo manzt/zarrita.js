@@ -73,8 +73,8 @@ function extract_sel(
 ): { to: (number | Indices)[]; from: (number | Indices)[] } {
 	const to = [], from = [];
 	for (const m of mapping) {
-		if (m.to) to.push(m.to);
-		if (m.from) from.push(m.from);
+		if (m.to !== null) to.push(m.to);
+		if (m.from !== null) from.push(m.from);
 	}
 	return { to, from };
 }
