@@ -43,6 +43,7 @@ export async function get<
 		shape: arr.shape,
 		chunk_shape: arr.chunk_shape,
 	});
+
 	// Setup output array
 	const out = setter.prepare(
 		new arr.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
@@ -52,19 +53,19 @@ export async function get<
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
 	// iterator over chunks
-	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
+	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(() =>
 			arr.get_chunk(chunk_coords, opts.opts)
 				.then(({ data, shape, stride }) => {
 					const chunk = setter.prepare(data, shape, stride);
-					setter.set_from_chunk(out, out_selection, chunk, chunk_selection);
+					setter.set_from_chunk(out, chunk, mapping);
 				})
 				.catch((err) => {
 					// re-throw error if not a missing chunk
 					if (!(err instanceof KeyError)) throw err;
 					// KeyError, we need to fill the corresponding array
 					if (arr.fill_value) {
-						setter.set_scalar(out, out_selection, arr.fill_value);
+						setter.set_scalar(out, mapping.map((m) => m.to), arr.fill_value);
 					}
 				})
 		);

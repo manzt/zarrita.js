@@ -64,6 +64,10 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	order?: "C" | "F";
 }
 
+export type Projection = { from: null; to: number } | { from: number; to: null } | {
+	from: Indices;
+	to: Indices;
+};
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
 	shape: number[],
@@ -72,15 +76,14 @@ export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 export type SetScalar<
 	D extends DataType,
 	NdArray extends Chunk<D>,
-> = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
+> = (target: NdArray, selection: (Indices | null | number)[], value: Scalar<D>) => void;
 export type SetFromChunk<
 	D extends DataType,
 	NdArray extends Chunk<D>,
 > = (
-	target: NdArray,
-	target_selection: (Indices | number)[],
-	chunk: NdArray,
-	chunk_selection: (Indices | number)[],
+	a: NdArray,
+	b: NdArray,
+	proj: Projection[],
 ) => void;
 
 // Compatible with https://github.com/sindresorhus/p-queue
