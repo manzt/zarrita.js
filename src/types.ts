@@ -11,7 +11,6 @@ export type Chunk<Dtype extends DataType> = {
 
 export type Indices = [start: number, stop: number, step: number];
 export interface Slice {
-	kind: "slice";
 	start: number | null;
 	stop: number | null;
 	step: number | null;

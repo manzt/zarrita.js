@@ -170,8 +170,9 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
+/** Similar to python's `range` function. Supports positive ranges only. */
 export function* range(start: number, stop?: number, step = 1): Iterable<number> {
-	if (stop == undefined) {
+	if (stop === undefined) {
 		stop = start;
 		start = 0;
 	}
@@ -215,7 +216,7 @@ export function* product<T extends Array<Iterable<any>>>(
 
 /** @category Utilty */
 export function slice(end: number | null): Slice;
-export function slice(start: number, end: number | null): Slice;
+export function slice(start: number | null, end: number | null): Slice;
 export function slice(start: number, end: number | null, step: number | null): Slice;
 export function slice(
 	start: number | null,
@@ -226,15 +227,18 @@ export function slice(
 		stop = start;
 		start = null;
 	}
-	const indices = (length: number): Indices => {
+	const indices = (size: number): Indices => {
 		const istep = step ?? 1;
-		let start_ix = start ?? (istep < 0 ? length - 1 : 0);
-		let end_ix = stop ?? (istep < 0 ? -1 : length);
-		if (start_ix < 0) start_ix += length;
-		if (end_ix < 0) end_ix += length;
+		const start_ix = start ?? (istep < 0 ? size - 1 : 0);
+		let end_ix: number;
+		if (typeof stop === "number") {
+			end_ix = Math.min(size, stop);
+		} else {
+			end_ix = istep < 0 ? -1 : size;
+		}
 		return [start_ix, end_ix, istep];
 	};
-	return { start, stop, step, indices, kind: "slice" };
+	return { start, stop, step, indices };
 }
 
 /** Built-in "queue" for awaiting promises. */
