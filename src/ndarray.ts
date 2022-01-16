@@ -41,7 +41,7 @@ export async function get<
 				ops.assigns(view(target, s), value);
 			},
 			set_from_chunk(dest, src, mapping) {
-				const s = extract_sel(mapping);
+				const s = unzip_selections(mapping);
 				ops.assign(view(dest, s.to), view(src, s.from));
 			},
 		},
@@ -62,13 +62,13 @@ export async function set<D extends DataType>(
 			ops.assigns(view(target, s), value);
 		},
 		set_from_chunk(dest, src, mapping) {
-			const s = extract_sel(mapping);
+			const s = unzip_selections(mapping);
 			ops.assign(view(dest, s.to), view(src, s.from));
 		},
 	});
 }
 
-function extract_sel(
+function unzip_selections(
 	mapping: Projection[],
 ): { to: (number | Indices)[]; from: (number | Indices)[] } {
 	const to = [], from = [];
