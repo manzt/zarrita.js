@@ -9,7 +9,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mkdist && node ./test/index.test.js",
+    "test": "uvu -r tsm tests",
     "check": "tsc --noEmit",
     "prepack": "mkdist --declaration",
     "fmt": "deno fmt --options-use-tabs --options-line-width 90 src test"
@@ -61,7 +61,8 @@
   "devDependencies": {
     "@types/node": "^16.10.2",
     "mkdist": "^0.3.5",
+    "tsm": "^2.2.1",
     "typescript": "^4.5.2",
-    "zora": "^5.0.0"
+    "uvu": "^0.5.3"
   }
 }

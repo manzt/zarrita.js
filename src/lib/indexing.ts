@@ -25,7 +25,7 @@ function check_selection_length(selection: (number | Slice)[], shape: readonly n
 	}
 }
 
-function normalize_integer_selection(dim_sel: number, dim_len: number) {
+export function normalize_integer_selection(dim_sel: number, dim_len: number) {
 	// normalize type to int
 	dim_sel = Math.trunc(dim_sel);
 	// handle wraparound
@@ -166,7 +166,7 @@ class SliceDimIndexer {
 	}
 }
 
-function normalize_selection(
+export function normalize_selection(
 	selection: null | (Slice | null | number)[],
 	shape: readonly number[],
 ): (number | Slice)[] {
