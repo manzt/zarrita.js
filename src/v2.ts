@@ -375,7 +375,7 @@ async function _create_group<
 >(
 	store: Store,
 	path: Path,
-	attrs: Attrs = {},
+	attrs?: Attrs,
 ) {
 	const meta_doc = json_encode_object({ zarr_format: 2 } as GroupMetadata);
 	const meta_key = group_meta_key(path);
@@ -425,7 +425,7 @@ export function create_group<
 
 export async function create_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
->(node: Store | Group<Store>, _path: any, props: { attrs?: Attrs } = {}) {
+>(node: Store | Group<Store>, _path: any = "/", props: { attrs?: Attrs } = {}) {
 	const { store, path } = deref(node, _path);
 	return _create_group(store as Store, path as AbsolutePath, props.attrs);
 }
