@@ -216,7 +216,11 @@ export function* product<T extends Array<Iterable<any>>>(
 /** @category Utilty */
 export function slice(end: number | null): Slice;
 export function slice(start: number | null, end: number | null): Slice;
-export function slice(start: number | null, end: number | null, step: number | null): Slice;
+export function slice(
+	start: number | null,
+	end: number | null,
+	step: number | null,
+): Slice;
 export function slice(
 	start: number | null,
 	stop?: number | null,

@@ -65,7 +65,13 @@ export async function get<
 					if (!(err instanceof KeyError)) throw err;
 					// KeyError, we need to fill the corresponding array
 					if (arr.fill_value) {
-						setter.set_scalar(out, mapping.map((m) => m.to), arr.fill_value);
+						setter.set_scalar(
+							out,
+							mapping
+								.map((m) => m.to)
+								.filter((s): s is Exclude<typeof s, null> => s !== null),
+							arr.fill_value,
+						);
 					}
 				})
 		);

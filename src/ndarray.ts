@@ -20,6 +20,25 @@ import type { Array } from "./lib/hierarchy";
 import { get as get_with_setter } from "./lib/get";
 import { set as set_with_setter } from "./lib/set";
 
+export const setter = {
+	prepare: ndarray,
+	set_scalar<D extends DataType>(
+		dest: ndarray.NdArray<TypedArray<D>>,
+		selection: (number | Indices)[],
+		value: Scalar<D>,
+	) {
+		ops.assigns(view(dest, selection), value);
+	},
+	set_from_chunk<D extends DataType>(
+		dest: ndarray.NdArray<TypedArray<D>>,
+		src: ndarray.NdArray<TypedArray<D>>,
+		mapping: Projection[],
+	) {
+		const s = unzip_selections(mapping);
+		ops.assign(view(dest, s.to), view(src, s.from));
+	},
+};
+
 /** @category Utility */
 export async function get<
 	D extends DataType,
@@ -34,17 +53,7 @@ export async function get<
 		arr,
 		selection,
 		opts,
-		{
-			prepare: ndarray,
-			set_scalar(target, selection, value) {
-				const s = selection.filter((s): s is Indices | number => s !== null);
-				ops.assigns(view(target, s), value);
-			},
-			set_from_chunk(dest, src, mapping) {
-				const s = unzip_selections(mapping);
-				ops.assign(view(dest, s.to), view(src, s.from));
-			},
-		},
+		setter,
 	);
 }
 
@@ -55,17 +64,13 @@ export async function set<D extends DataType>(
 	value: Scalar<D> | ndarray.NdArray<TypedArray<D>>,
 	opts: SetOptions = {},
 ) {
-	return set_with_setter<D, ndarray.NdArray<TypedArray<D>>>(arr, selection, value, opts, {
-		prepare: ndarray,
-		set_scalar(target, selection, value) {
-			const s = selection.filter((s): s is Indices | number => s !== null);
-			ops.assigns(view(target, s), value);
-		},
-		set_from_chunk(dest, src, mapping) {
-			const s = unzip_selections(mapping);
-			ops.assign(view(dest, s.to), view(src, s.from));
-		},
-	});
+	return set_with_setter<D, ndarray.NdArray<TypedArray<D>>>(
+		arr,
+		selection,
+		value,
+		opts,
+		setter,
+	);
 }
 
 function unzip_selections(

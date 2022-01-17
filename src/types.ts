@@ -75,7 +75,7 @@ export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 export type SetScalar<
 	D extends DataType,
 	NdArray extends Chunk<D>,
-> = (target: NdArray, selection: (Indices | null | number)[], value: Scalar<D>) => void;
+> = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
 export type SetFromChunk<
 	D extends DataType,
 	NdArray extends Chunk<D>,
@@ -84,6 +84,12 @@ export type SetFromChunk<
 	b: NdArray,
 	proj: Projection[],
 ) => void;
+
+export type Setter<D extends DataType, Arr extends Chunk<D>> = {
+	prepare: Prepare<D, Arr>;
+	set_from_chunk: SetFromChunk<D, Arr>;
+	set_scalar: SetScalar<D, Arr>;
+};
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {
