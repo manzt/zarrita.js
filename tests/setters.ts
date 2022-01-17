@@ -19,18 +19,23 @@ function to_c({ data, shape, stride }: Chunk<"<f4">) {
 }
 
 function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
-	let test = uvu.suite(name);
-	let { prepare, set_from_chunk, set_scalar } = setter as typeof ops.setter;
+	let test = uvu.suite<typeof ops.setter>(name);
 
-	test("set_scalar - fill", async () => {
-		let a = prepare(
+	test.before(ctx => {
+		ctx.prepare = setter.prepare;
+		ctx.set_from_chunk = setter.set_from_chunk;
+		ctx.set_scalar = setter.set_scalar;
+	});
+
+	test("ctx.set_scalar - fill", async ctx => {
+		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
 		let sel = [2, 3, 4].map((size) => slice(null).indices(size));
-		set_scalar(a, sel, 1);
+		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 1, 1, 1,
@@ -43,14 +48,14 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_scalar - point", async () => {
-		let a = prepare(
+	test("ctx.set_scalar - point", async ctx => {
+		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
-		set_scalar(a, [0, 0, 0], 1);
+		ctx.set_scalar(a, [0, 0, 0], 1);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 0, 0, 0,
@@ -62,7 +67,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 0,
 		]));
 
-		set_scalar(a, [1, 1, 1], 2);
+		ctx.set_scalar(a, [1, 1, 1], 2);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 0, 0, 0,
@@ -74,7 +79,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 0,
 		]));
 
-		set_scalar(a, [1, 2, 3], 3);
+		ctx.set_scalar(a, [1, 2, 3], 3);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 0, 0, 0,
@@ -86,7 +91,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 3,
 		]));
 
-		set_scalar(a, [1, 2, 2], 4);
+		ctx.set_scalar(a, [1, 2, 2], 4);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 0, 0, 0,
@@ -99,15 +104,15 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_scalar - mixed", async () => {
-		let a = prepare(
+	test("ctx.set_scalar - mixed", async ctx => {
+		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
 		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
-		set_scalar(a, sel, 1);
+		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
 			1, 0, 0, 0,
@@ -120,7 +125,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 
 		sel = [0, slice(null).indices(3), slice(null).indices(4)];
-		set_scalar(a, sel, 2);
+		ctx.set_scalar(a, sel, 2);
 
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
@@ -134,15 +139,15 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_scalar - mixed F order", async () => {
-		let f = prepare(
+	test("ctx.set_scalar - mixed F order", async ctx => {
+		let f = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "F"),
 		) as Chunk<"<f4">;
 
 		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
-		set_scalar(f, sel, 1);
+		ctx.set_scalar(f, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(f.data, new Float32Array([
 			1, 1, 1, 1, 0, 0,
@@ -152,7 +157,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 
 		sel = [0, slice(null).indices(3), slice(null).indices(4)];
-		set_scalar(f, sel, 2);
+		ctx.set_scalar(f, sel, 2);
 
 		// deno-fmt-ignore
 		assert.equal(f.data, new Float32Array([
@@ -174,14 +179,14 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - complete", async () => {
-		let dest = prepare(
+	test("set_from_chunk - complete", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
+		let src = ctx.prepare(
 			new Float32Array(2 * 2 * 2).fill(1),
 			[2, 2, 2],
 			get_strides([2, 2, 2], "C"),
@@ -193,7 +198,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			{ from: [0, 2, 1], to: [0, 2, 1] },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
 		assert.equal(dest.data, new Float32Array([
 			1, 1, 0, 0,
@@ -206,14 +211,14 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - from complete to strided", async () => {
-		let dest = prepare(
+	test("set_from_chunk - from complete to strided", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
+		let src = ctx.prepare(
 			new Float32Array(2 * 2 * 2).fill(2),
 			[2, 2, 2],
 			get_strides([2, 2, 2], "C"),
@@ -225,7 +230,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			{ from: [0, 2, 1], to: [0, 4, 2] },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
 		assert.equal(dest.data, new Float32Array([
 			2, 0, 2, 0,
@@ -238,14 +243,14 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - from strided to complete", async () => {
-		let dest = prepare(
+	test("set_from_chunk - from strided to complete", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(2 * 2 * 2),
 			[2, 2, 2],
 			get_strides([2, 2, 2], "C"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
+		let src = ctx.prepare(
 			// deno-fmt-ignore
 			new Float32Array([
 				2, 0, 2, 0,
@@ -266,18 +271,18 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			{ to: [0, 2, 1], from: [0, 4, 2] },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		assert.equal(dest.data, new Float32Array(2 * 2 * 2).fill(2));
 	});
 
-	test("set_from_chunk - src squeezed", async () => {
-		let dest = prepare(
+	test("set_from_chunk - src squeezed", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "C"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
+		let src = ctx.prepare(
 			new Float32Array([2, 0, 0, 2]),
 			[4],
 			get_strides([4], "C"),
@@ -289,7 +294,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			{ to: 1, from: null },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
 		assert.equal(dest.data, new Float32Array([
 			0, 2, 0, 0,
@@ -302,14 +307,14 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - dest squeezed", async () => {
-		let dest = prepare(
+	test("set_from_chunk - dest squeezed", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(4),
 			[4],
 			get_strides([4], "C"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
+		let src = ctx.prepare(
 			// deno-fmt-ignore
 			new Float32Array([
 				0, 2, 0, 0,
@@ -330,102 +335,38 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			{ from: 1, to: null },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		assert.equal(dest.data, new Float32Array([2, 0, 0, 2]));
 	});
 
-	test("set_from_chunk - F order", async () => {
-		let dest = prepare(
+	test("set_from_chunk - complete F order", async ctx => {
+		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			get_strides([2, 3, 4], "F"),
 		) as Chunk<"<f4">;
 
-		let src = prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "F"),
+		let src = ctx.prepare(
+			new Float32Array(2 * 2 * 2).fill(1),
+			[2, 2, 2],
+			get_strides([2, 2, 2], "F"),
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
-			{ to: 0, from: null },
-			{ to: [0, 3, 2], from: [0, 4, 3] },
-			{ to: 1, from: null },
+			{ from: [0, 2, 1], to: [0, 2, 1] },
+			{ from: [0, 2, 1], to: [0, 2, 1] },
+			{ from: [0, 2, 1], to: [0, 2, 1] },
 		];
 
-		set_from_chunk(dest, src, mapping);
+		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
 		assert.equal(to_c(dest).data, new Float32Array([
-			0, 2, 0, 0,
+			1, 1, 0, 0,
+			1, 1, 0, 0,
 			0, 0, 0, 0,
-			0, 2, 0, 0,
-
-			0, 0, 0, 0,
-			0, 0, 0, 0,
-			0, 0, 0, 0,
-		]));
-	});
-
-	test("set_from_chunk - dest=F order, src=C order", async () => {
-		let dest = prepare(
-			new Float32Array(2 * 3 * 4),
-			[2, 3, 4],
-			get_strides([2, 3, 4], "F"),
-		) as Chunk<"<f4">;
-
-		let src = prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "C"),
-		) as Chunk<"<f4">;
-
-		let mapping: Projection[] = [
-			{ to: 0, from: null },
-			{ to: [0, 3, 2], from: [0, 4, 3] },
-			{ to: 1, from: null },
-		];
-
-		set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
-		assert.equal(to_c(dest).data, new Float32Array([
-			0, 2, 0, 0,
-			0, 0, 0, 0,
-			0, 2, 0, 0,
-
-			0, 0, 0, 0,
-			0, 0, 0, 0,
-			0, 0, 0, 0,
-		]));
-	});
-
-	test("set_from_chunk - dest=C order, src=F order", async () => {
-		let dest = prepare(
-			new Float32Array(2 * 3 * 4),
-			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
-		) as Chunk<"<f4">;
-
-		let src = prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "F"),
-		) as Chunk<"<f4">;
-
-		let mapping: Projection[] = [
-			{ to: 0, from: null },
-			{ to: [0, 3, 2], from: [0, 4, 3] },
-			{ to: 1, from: null },
-		];
-
-		set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
-		assert.equal(dest.data, new Float32Array([
-			0, 2, 0, 0,
-			0, 0, 0, 0,
-			0, 2, 0, 0,
-
-			0, 0, 0, 0,
-			0, 0, 0, 0,
+			
+			1, 1, 0, 0,
+			1, 1, 0, 0,
 			0, 0, 0, 0,
 		]));
 	});
@@ -433,5 +374,103 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 	return test;
 }
 
-// suite("builtin", ops.setter).run();
-suite("ndarray", nd.setter).run();
+suite("builtin", ops.setter).run();
+let n = suite("ndarray", nd.setter);
+
+n("set_from_chunk - F order", async ctx => {
+	let dest = ctx.prepare(
+		new Float32Array(2 * 3 * 4),
+		[2, 3, 4],
+		get_strides([2, 3, 4], "F"),
+	) as Chunk<"<f4">;
+
+	let src = ctx.prepare(
+		new Float32Array([2, 0, 0, 2]),
+		[4],
+		get_strides([4], "F"),
+	) as Chunk<"<f4">;
+
+	let mapping: Projection[] = [
+		{ to: 0, from: null },
+		{ to: [0, 3, 2], from: [0, 4, 3] },
+		{ to: 1, from: null },
+	];
+
+	ctx.set_from_chunk(dest, src, mapping);
+	// deno-fmt-ignore
+	assert.equal(to_c(dest).data, new Float32Array([
+		0, 2, 0, 0,
+		0, 0, 0, 0,
+		0, 2, 0, 0,
+
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+	]));
+});
+
+n("set_from_chunk - dest=F order, src=C order", async ctx => {
+	let dest = ctx.prepare(
+		new Float32Array(2 * 3 * 4),
+		[2, 3, 4],
+		get_strides([2, 3, 4], "F"),
+	) as Chunk<"<f4">;
+
+	let src = ctx.prepare(
+		new Float32Array([2, 0, 0, 2]),
+		[4],
+		get_strides([4], "C"),
+	) as Chunk<"<f4">;
+
+	let mapping: Projection[] = [
+		{ to: 0, from: null },
+		{ to: [0, 3, 2], from: [0, 4, 3] },
+		{ to: 1, from: null },
+	];
+
+	ctx.set_from_chunk(dest, src, mapping);
+	// deno-fmt-ignore
+	assert.equal(to_c(dest).data, new Float32Array([
+		0, 2, 0, 0,
+		0, 0, 0, 0,
+		0, 2, 0, 0,
+
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+	]));
+});
+
+n("set_from_chunk - dest=C order, src=F order", async ctx => {
+	let dest = ctx.prepare(
+		new Float32Array(2 * 3 * 4),
+		[2, 3, 4],
+		get_strides([2, 3, 4], "C"),
+	) as Chunk<"<f4">;
+
+	let src = ctx.prepare(
+		new Float32Array([2, 0, 0, 2]),
+		[4],
+		get_strides([4], "F"),
+	) as Chunk<"<f4">;
+
+	let mapping: Projection[] = [
+		{ to: 0, from: null },
+		{ to: [0, 3, 2], from: [0, 4, 3] },
+		{ to: 1, from: null },
+	];
+
+	ctx.set_from_chunk(dest, src, mapping);
+	// deno-fmt-ignore
+	assert.equal(dest.data, new Float32Array([
+		0, 2, 0, 0,
+		0, 0, 0, 0,
+		0, 2, 0, 0,
+
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+	]));
+});
+
+n.run();
