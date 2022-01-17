@@ -39,10 +39,9 @@ function normalize_integer_selection(dim_sel: number, dim_len: number) {
 	return dim_sel;
 }
 
-interface IntChunkDimProjection {
+export interface IntChunkDimProjection {
 	dim_chunk_ix: number;
 	dim_chunk_sel: number;
-	dim_out_sel: null;
 }
 
 interface IntDimIndexerProps {
@@ -71,11 +70,11 @@ class IntDimIndexer {
 		const dim_chunk_ix = Math.floor(this.dim_sel / this.dim_chunk_len);
 		const dim_offset = dim_chunk_ix * this.dim_chunk_len;
 		const dim_chunk_sel = this.dim_sel - dim_offset;
-		yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel: null };
+		yield { dim_chunk_ix, dim_chunk_sel };
 	}
 }
 
-interface SliceChunkDimProjection {
+export interface SliceChunkDimProjection {
 	dim_chunk_ix: number;
 	dim_chunk_sel: Indices;
 	dim_out_sel: Indices;
@@ -181,16 +180,19 @@ function normalize_selection(
 	return normalized;
 }
 
-interface ChunkProjection {
-	chunk_coords: number[];
-	chunk_selection: (number | Indices)[];
-	out_selection: Indices[];
-}
-
 interface BasicIndexerProps {
 	selection: null | (null | number | Slice)[];
 	shape: readonly number[];
 	chunk_shape: readonly number[];
+}
+
+export type IndexerProjection = { from: number; to: null } | {
+	from: Indices;
+	to: Indices;
+};
+interface ChunkProjection {
+	chunk_coords: number[];
+	mapping: IndexerProjection[];
 }
 
 export class BasicIndexer {
@@ -215,12 +217,13 @@ export class BasicIndexer {
 	*[Symbol.iterator](): IterableIterator<ChunkProjection> {
 		for (const dim_projections of product(...this.dim_indexers)) {
 			const chunk_coords = dim_projections.map((p) => p.dim_chunk_ix);
-			const chunk_selection = dim_projections.map((p) => p.dim_chunk_sel);
-			const out_selection = dim_projections
-				.map((p) => p.dim_out_sel)
-				// need to filter squeezed dims in output
-				.filter((s: Indices | null): s is Indices => s !== null);
-			yield { chunk_coords, chunk_selection, out_selection };
+			const mapping: IndexerProjection[] = dim_projections.map((p) => {
+				if ("dim_out_sel" in p) {
+					return { from: p.dim_chunk_sel, to: p.dim_out_sel };
+				}
+				return { from: p.dim_chunk_sel, to: null };
+			});
+			yield { chunk_coords, mapping };
 		}
 	}
 }

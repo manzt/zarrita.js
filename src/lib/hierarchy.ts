@@ -1,5 +1,5 @@
 import { KeyError, NotImplementedError } from "./errors";
-import { decode_chunk, get_ctr } from "./util";
+import { decode_chunk, get_ctr, get_strides } from "./util";
 
 import type {
 	AbsolutePath,
@@ -54,6 +54,7 @@ export interface ArrayProps<
 	chunk_separator: "." | "/";
 	compressor?: Codec;
 	filters?: Codec[];
+	order: "C" | "F";
 }
 
 export class Array<
@@ -69,6 +70,7 @@ export class Array<
 	readonly fill_value: Scalar<Dtype> | null;
 	readonly TypedArray: TypedArrayConstructor<Dtype>;
 	readonly chunk_separator: "." | "/";
+	readonly order: "C" | "F";
 
 	constructor(props: ArrayProps<Dtype, Store, Path>) {
 		super(props.store, props.path);
@@ -80,6 +82,7 @@ export class Array<
 		this.chunk_separator = props.chunk_separator;
 		this.filters = props.filters ?? [];
 		this.TypedArray = get_ctr(props.dtype);
+		this.order = props.order;
 	}
 
 	get ndim() {
@@ -101,6 +104,10 @@ export class Array<
 			throw new KeyError(chunk_key);
 		}
 		const data = await decode_chunk(this, maybe_bytes);
-		return { data, shape: this.chunk_shape.slice() };
+		return {
+			data,
+			shape: this.chunk_shape.slice(),
+			stride: get_strides(this.chunk_shape, this.order),
+		};
 	}
 }

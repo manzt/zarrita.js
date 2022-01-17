@@ -1,6 +1,6 @@
 import { KeyError } from "./errors";
-import { create_queue, encode_chunk } from "./util";
-import { BasicIndexer } from "./indexing";
+import { create_queue, encode_chunk, get_strides } from "./util";
+import { BasicIndexer, IndexerProjection } from "./indexing";
 import type { Array } from "./hierarchy";
 
 import type {
@@ -18,6 +18,11 @@ import type {
 	TypedArray,
 	Writeable,
 } from "../types";
+
+function flip(m: IndexerProjection) {
+	if (m.to == null) return { from: m.to, to: m.from };
+	return { from: m.to, to: m.from };
+}
 
 export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	arr: Array<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
@@ -45,13 +50,17 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 	// N.B., it is an important optimisation that we only visit chunks which overlap
 	// the selection. This minimises the number of iterations in the main for loop.
-	for (const { chunk_coords, chunk_selection, out_selection } of indexer) {
+	for (const { chunk_coords, mapping } of indexer) {
+		const chunk_selection = mapping.map((i) => i.from);
+		const flipped = mapping.map(flip);
 		queue.add(async () => {
 			// obtain key for chunk storage
 			// @ts-ignore TODO: make chunk_key unprotected?
 			const chunk_key = arr.chunk_key(chunk_coords);
 
 			let cdata: TypedArray<Dtype>;
+			const shape = arr.chunk_shape;
+			const stride = get_strides(shape, arr.order);
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
 				// totally replace
@@ -60,8 +69,8 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
 					// Otherwise data just contiguous TypedArray
-					const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
-					setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
+					const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
+					setter.set_from_chunk(chunk, value, flipped);
 				} else {
 					// @ts-ignore
 					cdata.fill(value as any);
@@ -78,11 +87,11 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 						return empty;
 					});
 
-				const chunk = setter.prepare(cdata, [...arr.chunk_shape]);
+				const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
 
 				// Modify chunk data
 				if (typeof value === "object") {
-					setter.set_from_chunk(chunk, chunk_selection, value, out_selection);
+					setter.set_from_chunk(chunk, value, flipped);
 				} else {
 					setter.set_scalar(chunk, chunk_selection, value);
 				}

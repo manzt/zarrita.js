@@ -7,6 +7,7 @@ import type {
 	DataType,
 	GetOptions,
 	Indices,
+	Projection,
 	Readable,
 	Scalar,
 	SetOptions,
@@ -36,13 +37,12 @@ export async function get<
 		{
 			prepare: ndarray,
 			set_scalar(target, selection, value) {
-				ops.assigns(view(target, selection), value);
+				const s = selection.filter((s): s is Indices | number => s !== null);
+				ops.assigns(view(target, s), value);
 			},
-			set_from_chunk(target, target_selection, chunk, chunk_selection) {
-				ops.assign(
-					view(target, target_selection),
-					view(chunk, chunk_selection),
-				);
+			set_from_chunk(dest, src, mapping) {
+				const s = extract_sel(mapping);
+				ops.assign(view(dest, s.to), view(src, s.from));
 			},
 		},
 	);
@@ -58,15 +58,25 @@ export async function set<D extends DataType>(
 	return set_with_setter<D, ndarray.NdArray<TypedArray<D>>>(arr, selection, value, opts, {
 		prepare: ndarray,
 		set_scalar(target, selection, value) {
-			ops.assigns(view(target, selection), value);
+			const s = selection.filter((s): s is Indices | number => s !== null);
+			ops.assigns(view(target, s), value);
 		},
-		set_from_chunk(target, target_selection, chunk, chunk_selection) {
-			ops.assign(
-				view(target, target_selection),
-				view(chunk, chunk_selection),
-			);
+		set_from_chunk(dest, src, mapping) {
+			const s = extract_sel(mapping);
+			ops.assign(view(dest, s.to), view(src, s.from));
 		},
 	});
+}
+
+function extract_sel(
+	mapping: Projection[],
+): { to: (number | Indices)[]; from: (number | Indices)[] } {
+	const to = [], from = [];
+	for (const m of mapping) {
+		if (m.to !== null) to.push(m.to);
+		if (m.from !== null) from.push(m.from);
+	}
+	return { to, from };
 }
 
 /** Convert zarrita selection to ndarray view. */

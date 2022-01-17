@@ -144,6 +144,32 @@ export async function decode_chunk<Dtype extends DataType>(
 	return data;
 }
 
+/** Compute strides for 'C' or 'F' ordered array from shape */
+export function get_strides(shape: readonly number[], order: "C" | "F") {
+	let fn = order === "C" ? row_major_stride : col_major_stride;
+	return fn(shape);
+}
+
+function row_major_stride(shape: readonly number[]) {
+	const ndim = shape.length;
+	const stride: number[] = globalThis.Array(ndim);
+	for (let i = ndim - 1, step = 1; i >= 0; i--) {
+		stride[i] = step;
+		step *= shape[i];
+	}
+	return stride;
+}
+
+function col_major_stride(shape: readonly number[]) {
+	const ndim = shape.length;
+	const stride: number[] = globalThis.Array(ndim);
+	for (let i = 0, step = 1; i < ndim; i++) {
+		stride[i] = step;
+		step *= shape[i];
+	}
+	return stride;
+}
+
 export function* range(start: number, stop?: number, step = 1): Iterable<number> {
 	if (stop == undefined) {
 		stop = start;

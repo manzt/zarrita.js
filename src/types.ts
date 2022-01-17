@@ -6,6 +6,7 @@ export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtyp
 export type Chunk<Dtype extends DataType> = {
 	data: TypedArray<Dtype>;
 	shape: number[];
+	stride: number[];
 };
 
 export type Indices = [start: number, stop: number, step: number];
@@ -60,24 +61,29 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	fill_value?: Scalar<D>;
 	filters?: import("numcodecs").Codec[];
 	attrs?: Attrs;
+	order?: "C" | "F";
 }
 
+export type Projection = { from: null; to: number } | { from: number; to: null } | {
+	from: Indices;
+	to: Indices;
+};
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
 	shape: number[],
+	stride: number[],
 ) => NdArray;
 export type SetScalar<
 	D extends DataType,
 	NdArray extends Chunk<D>,
-> = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
+> = (target: NdArray, selection: (Indices | null | number)[], value: Scalar<D>) => void;
 export type SetFromChunk<
 	D extends DataType,
 	NdArray extends Chunk<D>,
 > = (
-	target: NdArray,
-	target_selection: (Indices | number)[],
-	chunk: NdArray,
-	chunk_selection: (Indices | number)[],
+	a: NdArray,
+	b: NdArray,
+	proj: Projection[],
 ) => void;
 
 // Compatible with https://github.com/sindresorhus/p-queue
@@ -89,5 +95,5 @@ export type ChunkQueue = {
 export type Options = {
 	create_queue?: () => ChunkQueue;
 };
-export type GetOptions<O> = Options & { opts?: O };
+export type GetOptions<O> = Options & { opts?: O; order?: "C" | "F" };
 export type SetOptions = Options;

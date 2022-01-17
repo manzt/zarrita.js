@@ -1,5 +1,6 @@
 import { BoolArray } from "./lib/custom-arrays";
 import type { Array } from "./lib/hierarchy";
+import type { IntChunkDimProjection, SliceChunkDimProjection } from "./lib/indexing";
 
 import type {
 	Async,
@@ -30,12 +31,12 @@ export async function get<
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
 	return get_with_setter<D, Store, NdArray<D>, Sel>(arr, selection, opts, {
-		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		prepare: (data, shape, stride) => ({ data, shape, stride }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
 		},
-		set_from_chunk(target, target_selection, chunk, chunk_selection) {
-			set_from_chunk(compat(target), target_selection, compat(chunk), chunk_selection);
+		set_from_chunk(target, chunk, proj) {
+			set_from_chunk(compat(target), compat(chunk), proj);
 		},
 	});
 }
@@ -50,12 +51,12 @@ export async function set<
 	opts: SetOptions = {},
 ) {
 	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, {
-		prepare: (data, shape) => ({ data, shape, stride: get_strides(shape) }),
+		prepare: (data, shape, stride) => ({ data, shape, stride }),
 		set_scalar(target, selection, value) {
 			set_scalar(compat(target), selection, cast_scalar(target, value));
 		},
-		set_from_chunk(target, target_selection, chunk, chunk_selection) {
-			set_from_chunk(compat(target), target_selection, compat(chunk), chunk_selection);
+		set_from_chunk(target, chunk, proj) {
+			set_from_chunk(compat(target), compat(chunk), proj);
 		},
 	});
 }
@@ -69,13 +70,14 @@ type NdArray<D extends DataType> = {
 function compat<
 	D extends Exclude<DataType, UnicodeStr | ByteStr>,
 >(
-	arr: Chunk<D> & { stride?: number[] },
+	arr: Chunk<D>,
 ): NdArray<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
-		stride: "stride" in arr ? arr.stride : get_strides(arr.shape),
-	} as any;
+		shape: arr.shape,
+		stride: arr.stride,
+	};
 }
 
 const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
@@ -85,18 +87,6 @@ const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value as any;
 };
-
-/** Compute strides for 'C' ordered ndarray from shape */
-function get_strides(shape: number[]) {
-	const ndim = shape.length;
-	const strides: number[] = globalThis.Array(ndim);
-	let step = 1; // init step
-	for (let i = ndim - 1; i >= 0; i--) {
-		strides[i] = step;
-		step *= shape[i];
-	}
-	return strides;
-}
 
 function indices_len(start: number, stop: number, step: number) {
 	if (step < 0 && stop < start) {
@@ -108,7 +98,7 @@ function indices_len(start: number, stop: number, step: number) {
 
 function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	out: Pick<NdArray<D>, "data" | "stride">,
-	out_selection: (number | Indices)[],
+	out_selection: (null | Indices | number)[],
 	value: Scalar<D>,
 ) {
 	if (out_selection.length === 0) {
@@ -117,10 +107,16 @@ function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	}
 	const [slice, ...slices] = out_selection;
 	const [curr_stride, ...stride] = out.stride;
+
 	if (typeof slice === "number") {
 		const data = out.data.subarray(curr_stride * slice);
 		// @ts-ignore
 		set_scalar({ data, stride }, slices, value);
+		return;
+	}
+
+	if (slice === null) {
+		set_scalar({ data: out.data, stride }, slices, value);
 		return;
 	}
 	const [from, to, step] = slice;
@@ -143,75 +139,77 @@ function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	}
 }
 
+type Projection = { from: Indices; to: Indices } | { from: null; to: number } | {
+	from: number;
+	to: null;
+};
+
 function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
-	out: Pick<NdArray<D>, "data" | "stride">,
-	out_selection: (number | Indices)[],
-	chunk: Pick<NdArray<D>, "data" | "stride">,
-	chunk_selection: (number | Indices)[],
+	dest: Pick<NdArray<D>, "data" | "stride">,
+	src: Pick<NdArray<D>, "data" | "stride">,
+	projections: Projection[],
 ) {
-	if (chunk_selection.length === 0) {
-		// Case when last chunk dim is squeezed
-		// @ts-ignore
-		out.data.set(chunk.data.subarray(0, out.data.length));
+	const [proj, ...projs] = projections;
+	const [dstride, ...dstrides] = dest.stride;
+	const [sstride, ...sstrides] = src.stride;
+
+	if (proj.from === null) {
+		if (projs.length === 0) {
+			dest.data[proj.to] = src.data[0];
+			return;
+		}
+		set_from_chunk(
+			{
+				data: dest.data.subarray(dstride * proj.to) as any,
+				stride: dstrides,
+			},
+			src,
+			projs,
+		);
 		return;
 	}
-	// Get current indicies and strides for both destination and source arrays
-	const [out_slice, ...out_slices] = out_selection;
-	const [chunk_slice, ...chunk_slices] = chunk_selection;
 
-	const [chunk_stride = 1, ...chunk_strides] = chunk.stride;
-
-	if (typeof chunk_slice === "number") {
-		// chunk dimension is squeezed
-		const chunk_view = {
-			data: chunk.data.subarray(chunk_stride * chunk_slice),
-			stride: chunk_strides,
+	if (proj.to === null) {
+		if (projs.length === 0) {
+			dest.data[0] = src.data[proj.from];
+			return;
+		}
+		let view = {
+			data: src.data.subarray(sstride * proj.from) as any,
+			stride: sstrides,
 		};
-		// @ts-ignore
-		set_from_chunk(out, out_selection, chunk_view, chunk_slices);
+		set_from_chunk(dest, view, projs);
 		return;
 	}
 
-	const [out_stride = 1, ...out_strides] = out.stride;
-
-	if (typeof out_slice === "number") {
-		// out dimension is squeezed
-		const out_view = {
-			data: out.data.subarray(out_stride * out_slice),
-			stride: out_strides,
-		};
-		// @ts-ignore
-		set_from_chunk(out_view, out_slices, chunk, chunk_selection);
-		return;
-	}
-
-	const [from, to, step] = out_slice; // only need len of out slice since chunk subset
-	const [cfrom, _cto, cstep] = chunk_slice;
-
+	const [from, to, step] = proj.to;
+	const [sfrom, _, sstep] = proj.from;
 	const len = indices_len(from, to, step);
-	if (out_slices.length === 0 && chunk_slices.length === 0) {
+
+	if (projs.length === 0) {
 		if (
-			step === 1 && cstep === 1 && out_stride === 1 && chunk_stride === 1
+			step === 1 && sstep === 1 && dstride === 1 && sstride === 1
 		) {
-			// @ts-ignore
-			out.data.set(chunk.data.subarray(cfrom, cfrom + len), from);
+			dest.data.set(src.data.subarray(sfrom, sfrom + len) as any, from);
 		} else {
 			for (let i = 0; i < len; i++) {
-				out.data[out_stride * (from + step * i)] =
-					chunk.data[chunk_stride * (cfrom + cstep * i)];
+				dest.data[dstride * (from + step * i)] = src.data[sstride * (sfrom + sstep * i)];
 			}
 		}
 		return;
 	}
+
 	for (let i = 0; i < len; i++) {
-		const out_view = {
-			data: out.data.subarray(out_stride * (from + i * step)),
-			stride: out_strides,
-		};
-		const chunk_view = {
-			data: chunk.data.subarray(chunk_stride * (cfrom + i * cstep)),
-			stride: chunk_strides,
-		};
-		set_from_chunk(out_view, out_slices, chunk_view, chunk_slices);
+		set_from_chunk(
+			{
+				data: dest.data.subarray(dstride * (from + i * step)),
+				stride: dstrides,
+			},
+			{
+				data: src.data.subarray(sstride * (sfrom + i * sstep)),
+				stride: sstrides,
+			},
+			projs,
+		);
 	}
 }

@@ -169,6 +169,7 @@ async function _get_array<
 		filters: meta.filters ? await Promise.all(meta.filters.map(get_codec)) : undefined,
 		compressor: meta.compressor ? await get_codec(meta.compressor) : undefined,
 		fill_value: meta.fill_value,
+		order: meta.order,
 	});
 }
 
@@ -444,6 +445,7 @@ async function _create_array<
 	const compressor = props.compressor;
 	const chunk_separator = props.chunk_separator ?? ".";
 	const filters = props.filters;
+	const order = props.order ?? "C";
 
 	const meta: ArrayMetadata<Dtype> = {
 		zarr_format: 2,
@@ -451,7 +453,7 @@ async function _create_array<
 		dtype,
 		chunks: chunk_shape,
 		dimension_separator: chunk_separator,
-		order: "C",
+		order: order,
 		fill_value: props.fill_value ?? null,
 		filters: filters ? filters.map(encode_codec_metadata) : null,
 		compressor: compressor ? encode_codec_metadata(compressor) : null,
@@ -481,6 +483,7 @@ async function _create_array<
 		filters: filters,
 		fill_value: meta.fill_value,
 		attrs: props.attrs ?? {},
+		order: order,
 	});
 }
 
