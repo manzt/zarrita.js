@@ -1,6 +1,5 @@
 import { BoolArray } from "./lib/custom-arrays";
 import type { Array } from "./lib/hierarchy";
-import type { IntChunkDimProjection, SliceChunkDimProjection } from "./lib/indexing";
 
 import type {
 	Async,
