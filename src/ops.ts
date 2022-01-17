@@ -19,9 +19,31 @@ import { set as set_with_setter } from "./lib/set";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 
+type SupportedDataType = Exclude<DataType, UnicodeStr | ByteStr>;
+
+export const setter = {
+	prepare<D extends DataType>(data: TypedArray<D>, shape: number[], stride: number[]) {
+		return { data, shape, stride };
+	},
+	set_scalar<D extends SupportedDataType>(
+		dest: Chunk<D>,
+		sel: (number | Indices)[],
+		value: Scalar<D>,
+	) {
+		set_scalar(compat(dest), sel, cast_scalar(dest, value));
+	},
+	set_from_chunk<D extends SupportedDataType>(
+		dest: Chunk<D>,
+		src: Chunk<D>,
+		mapping: Projection[],
+	) {
+		set_from_chunk(compat(dest), compat(src), mapping);
+	},
+};
+
 /** @category Utility */
 export async function get<
-	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+	D extends SupportedDataType,
 	Store extends Readable | Async<Readable>,
 	Sel extends (null | Slice | number)[],
 >(
@@ -29,48 +51,24 @@ export async function get<
 	selection: Sel | null = null,
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
-	return get_with_setter<D, Store, NdArray<D>, Sel>(arr, selection, opts, {
-		prepare: (data, shape, stride) => ({ data, shape, stride }),
-		set_scalar(target, selection, value) {
-			set_scalar(compat(target), selection, cast_scalar(target, value));
-		},
-		set_from_chunk(target, chunk, proj) {
-			set_from_chunk(compat(target), compat(chunk), proj);
-		},
-	});
+	return get_with_setter<D, Store, Chunk<D>, Sel>(arr, selection, opts, setter);
 }
 
 /** @category Utility */
 export async function set<
-	D extends Exclude<DataType, UnicodeStr | ByteStr>,
+	D extends SupportedDataType,
 >(
 	arr: Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (null | Slice | number)[] | null,
 	value: Scalar<D> | Chunk<D>,
 	opts: SetOptions = {},
 ) {
-	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, {
-		prepare: (data, shape, stride) => ({ data, shape, stride }),
-		set_scalar(target, selection, value) {
-			set_scalar(compat(target), selection, cast_scalar(target, value));
-		},
-		set_from_chunk(target, chunk, proj) {
-			set_from_chunk(compat(target), compat(chunk), proj);
-		},
-	});
+	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, setter);
 }
 
-type NdArray<D extends DataType> = {
-	data: TypedArray<D>;
-	shape: number[];
-	stride: number[];
-};
-
-function compat<
-	D extends Exclude<DataType, UnicodeStr | ByteStr>,
->(
+function compat<D extends SupportedDataType>(
 	arr: Chunk<D>,
-): NdArray<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
+): Chunk<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
@@ -96,8 +94,8 @@ function indices_len(start: number, stop: number, step: number) {
 }
 
 function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
-	out: Pick<NdArray<D>, "data" | "stride">,
-	out_selection: (null | Indices | number)[],
+	out: Pick<Chunk<D>, "data" | "stride">,
+	out_selection: (Indices | number)[],
 	value: Scalar<D>,
 ) {
 	if (out_selection.length === 0) {
@@ -108,16 +106,11 @@ function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 	const [curr_stride, ...stride] = out.stride;
 
 	if (typeof slice === "number") {
-		const data = out.data.subarray(curr_stride * slice);
-		// @ts-ignore
+		const data = out.data.subarray(curr_stride * slice) as TypedArray<D>;
 		set_scalar({ data, stride }, slices, value);
 		return;
 	}
 
-	if (slice === null) {
-		set_scalar({ data: out.data, stride }, slices, value);
-		return;
-	}
 	const [from, to, step] = slice;
 	const len = indices_len(from, to, step);
 	if (slices.length === 0) {
@@ -132,8 +125,7 @@ function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 		return;
 	}
 	for (let i = 0; i < len; i++) {
-		const data = out.data.subarray(curr_stride * (from + step * i));
-		// @ts-ignore
+		const data = out.data.subarray(curr_stride * (from + step * i)) as TypedArray<D>;
 		set_scalar({ data, stride }, slices, value);
 	}
 }
@@ -144,8 +136,8 @@ type Projection = { from: Indices; to: Indices } | { from: null; to: number } | 
 };
 
 function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
-	dest: Pick<NdArray<D>, "data" | "stride">,
-	src: Pick<NdArray<D>, "data" | "stride">,
+	dest: Pick<Chunk<D>, "data" | "stride">,
+	src: Pick<Chunk<D>, "data" | "stride">,
 	projections: Projection[],
 ) {
 	const [proj, ...projs] = projections;
@@ -159,7 +151,7 @@ function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>
 		}
 		set_from_chunk(
 			{
-				data: dest.data.subarray(dstride * proj.to) as any,
+				data: dest.data.subarray(dstride * proj.to) as TypedArray<D>,
 				stride: dstrides,
 			},
 			src,
@@ -174,7 +166,7 @@ function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>
 			return;
 		}
 		let view = {
-			data: src.data.subarray(sstride * proj.from) as any,
+			data: src.data.subarray(sstride * proj.from) as TypedArray<D>,
 			stride: sstrides,
 		};
 		set_from_chunk(dest, view, projs);

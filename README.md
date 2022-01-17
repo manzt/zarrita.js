@@ -7,7 +7,7 @@
 - Zero dependencies (optionally [`scijs/ndarray`](https://github.com/scijs/ndarray))
 - Supports **v2** or **v3** protocols 
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
-- Only "C"-order arrays
+- Supports "C"-order & "F"-order arrays
 - Handles **little endian** or **big endian** data-types
 - Handles **number**, **bigint**, **string**, and **boolean** data-types
 - Configurable compression via [`numcodecs`](https://github.com/manzt/numcodecs.js)
