@@ -2,7 +2,7 @@ import { suite } from "uvu";
 import * as assert from "uvu/assert";
 
 import type * as zarr from "../src/v2";
-import { get_group, get_array } from "../src/v2";
+import { get_array, get_group } from "../src/v2";
 import { get } from "../src/ops";
 import { get as get_ndarray } from "../src/ndarray";
 import { range } from "../src/lib/util";
@@ -85,13 +85,13 @@ contiguous("1d.contiguous.f8", async () => {
 	let chunk = await arr.get_chunk([0]);
 	assert.equal(chunk.data, new Float64Array([1.5, 2.5, 3.5, 4.5]));
 	assert.equal(chunk.shape, [4]);
-})
+});
 
 contiguous("1d.contiguous.U13.le", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U13.le");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<13>), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray<13>), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -99,7 +99,7 @@ contiguous("1d.contiguous.U13.be", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U13.be");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<14>), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray<14>), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -107,7 +107,7 @@ contiguous("1d.contiguous.U7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U7");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<7>), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray<7>), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -115,7 +115,7 @@ contiguous("1d.contiguous.S7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.S7");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, ByteStringArray);
-	assert.equal(Array.from(chunk.data as ByteStringArray<7>), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(chunk.data as ByteStringArray<7>), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -139,13 +139,11 @@ contiguous("3d.contiguous.i2", async () => {
 	let chunk = await arr.get_chunk([0, 0, 0]);
 	assert.equal(chunk.data, new Int16Array(range(27)));
 	assert.equal(chunk.shape, [3, 3, 3]);
-})
+});
 
 contiguous.run();
 
-
-
-let chunked = suite('chunked');
+let chunked = suite("chunked");
 
 chunked("1d.chunked.i2", async () => {
 	let arr = await get_array(store, "/1d.chunked.i2");
@@ -200,13 +198,13 @@ chunked("2d.chunked.U7", async () => {
 		arr.get_chunk([1, 0]),
 		arr.get_chunk([1, 1]),
 	]);
-	assert.equal(Array.from(c1.data as UnicodeStringArray<7>), ['a']);
+	assert.equal(Array.from(c1.data as UnicodeStringArray<7>), ["a"]);
 	assert.equal(c1.shape, [1, 1]);
-	assert.equal(Array.from(c2.data as UnicodeStringArray<7>), ['b']);
+	assert.equal(Array.from(c2.data as UnicodeStringArray<7>), ["b"]);
 	assert.equal(c2.shape, [1, 1]);
-	assert.equal(Array.from(c3.data as UnicodeStringArray<7>), ['cc']);
+	assert.equal(Array.from(c3.data as UnicodeStringArray<7>), ["cc"]);
 	assert.equal(c3.shape, [1, 1]);
-	assert.equal(Array.from(c4.data as UnicodeStringArray<7>), ['d']);
+	assert.equal(Array.from(c4.data as UnicodeStringArray<7>), ["d"]);
 	assert.equal(c4.shape, [1, 1]);
 });
 
@@ -248,8 +246,7 @@ chunked("3d.chunked.i2", async () => {
 
 chunked.run();
 
-
-let mixed = suite('mixed');
+let mixed = suite("mixed");
 
 mixed("3d.chunked.mixed.i2.C", async () => {
 	let arr = await get_array(store, "/3d.chunked.mixed.i2.C");
@@ -293,12 +290,11 @@ mixed("3d.chunked.mixed.i2.F", async () => {
 
 mixed.run();
 
-
 let traverse = suite("traverse");
 
 traverse("open group", async () => {
-	assert.is(await get_group(store).then(g => g.path), "/");
-	assert.is(await get_group(store, "/").then(g => g.path), "/");
+	assert.is(await get_group(store).then((g) => g.path), "/");
+	assert.is(await get_group(store, "/").then((g) => g.path), "/");
 	try {
 		await get_group(store, "/not/a/group");
 		assert.unreachable("should have thrown");
@@ -318,11 +314,10 @@ traverse("open array from group", async () => {
 
 traverse.run();
 
-
 let builtin = suite("builtin");
 
 builtin("1d.contiguous.zlib.i2", async () => {
-	let arr = await get_array(store, "/1d.contiguous.zlib.i2") as zarr.Array<"<i2">
+	let arr = await get_array(store, "/1d.contiguous.zlib.i2") as zarr.Array<"<i2">;
 	let res = await get(arr);
 	assert.equal(res.data, new Int16Array([1, 2, 3, 4]));
 	assert.equal(res.shape, [4]);
@@ -392,18 +387,22 @@ builtin("1d.contiguous.f8", async () => {
 });
 
 builtin.skip("1d.contiguous.U13.le", async () => {
-	let arr = await get_array(store, "/1d.contiguous.U13.le") as unknown as zarr.Array<"<U13">;
+	let arr = await get_array(store, "/1d.contiguous.U13.le") as unknown as zarr.Array<
+		"<U13"
+	>;
 	let res = await get(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
 builtin.skip("1d.contiguous.U13.be", async () => {
-	let arr = await get_array(store, "/1d.contiguous.U13.be") as unknown as zarr.Array<">U13">;
+	let arr = await get_array(store, "/1d.contiguous.U13.be") as unknown as zarr.Array<
+		">U13"
+	>;
 	let res = await get(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -411,7 +410,7 @@ builtin.skip("1d.contiguous.U7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U7") as unknown as zarr.Array<"<U7">;
 	let res = await get(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -419,7 +418,7 @@ builtin.skip("1d.contiguous.S7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.S7") as unknown as zarr.Array<"|S7">;
 	let res = await get(arr as any);
 	assert.instance(res.data, ByteStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -443,7 +442,7 @@ builtin("3d.contiguous.i2", async () => {
 	let res = await get(arr);
 	assert.equal(res.data, new Int16Array(range(27)));
 	assert.equal(res.shape, [3, 3, 3]);
-})
+});
 
 builtin("1d.chunked.i2", async () => {
 	let arr = await get_array(store, "/1d.chunked.i2") as zarr.Array<"<i2">;
@@ -469,7 +468,7 @@ builtin("2d.chunked.i2", async () => {
 builtin.skip("2d.chunked.U7", async () => {
 	let arr = await get_array(store, "/2d.chunked.U7") as unknown as zarr.Array<"<U7">;
 	let res = await get(arr as any);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [2, 2]);
 });
 
@@ -518,11 +517,10 @@ builtin("3d.chunked.mixed.i2.F -- force C", async () => {
 
 builtin.run();
 
-
 let ndarray = suite("ndarray");
 
 ndarray("1d.contiguous.zlib.i2", async () => {
-	let arr = await get_array(store, "/1d.contiguous.zlib.i2") as zarr.Array<"<i2">
+	let arr = await get_array(store, "/1d.contiguous.zlib.i2") as zarr.Array<"<i2">;
 	let res = await get_ndarray(arr);
 	assert.equal(res.data, new Int16Array([1, 2, 3, 4]));
 	assert.equal(res.shape, [4]);
@@ -592,18 +590,22 @@ ndarray("1d.contiguous.f8", async () => {
 });
 
 ndarray("1d.contiguous.U13.le", async () => {
-	let arr = await get_array(store, "/1d.contiguous.U13.le") as unknown as zarr.Array<"<U13">;
+	let arr = await get_array(store, "/1d.contiguous.U13.le") as unknown as zarr.Array<
+		"<U13"
+	>;
 	let res = await get_ndarray(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
 ndarray("1d.contiguous.U13.be", async () => {
-	let arr = await get_array(store, "/1d.contiguous.U13.be") as unknown as zarr.Array<">U13">;
+	let arr = await get_array(store, "/1d.contiguous.U13.be") as unknown as zarr.Array<
+		">U13"
+	>;
 	let res = await get_ndarray(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -611,7 +613,7 @@ ndarray("1d.contiguous.U7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U7") as unknown as zarr.Array<"<U7">;
 	let res = await get_ndarray(arr as any);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -619,7 +621,7 @@ ndarray("1d.contiguous.S7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.S7") as unknown as zarr.Array<"|S7">;
 	let res = await get_ndarray(arr as any);
 	assert.instance(res.data, ByteStringArray);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -643,7 +645,7 @@ ndarray("3d.contiguous.i2", async () => {
 	let res = await get_ndarray(arr);
 	assert.equal(res.data, new Int16Array(range(27)));
 	assert.equal(res.shape, [3, 3, 3]);
-})
+});
 
 ndarray("1d.chunked.i2", async () => {
 	let arr = await get_array(store, "/1d.chunked.i2") as zarr.Array<"<i2">;
@@ -669,7 +671,7 @@ ndarray("2d.chunked.i2", async () => {
 ndarray("2d.chunked.U7", async () => {
 	let arr = await get_array(store, "/2d.chunked.U7") as unknown as zarr.Array<"<U7">;
 	let res = await get_ndarray(arr as any);
-	assert.equal(Array.from(res.data as any), ['a', 'b', 'cc', 'd']);
+	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [2, 2]);
 });
 
