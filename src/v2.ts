@@ -33,7 +33,7 @@ async function get_attrs<Store extends Readable | Async<Readable>>(
  */
 export class Array<
 	Dtype extends DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable | Async<Readable> = Async<Readable>,
 	Path extends AbsolutePath = AbsolutePath,
 > extends BaseArray<Dtype, Store, Path> {
 	/** @hidden */
