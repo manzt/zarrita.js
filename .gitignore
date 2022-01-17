@@ -1,6 +1,5 @@
 node_modules/
 *.zr3/
-data/
 dist/
 docs/
 *.tgz

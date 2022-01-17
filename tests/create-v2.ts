@@ -1,8 +1,8 @@
 import { test } from "uvu";
 import * as assert from "uvu/assert";
 
-import { create_array, create_group } from "../../src/v2";
-import { json_decode_object } from "../../src/lib/util";
+import { create_array, create_group } from "../src/v2";
+import { json_decode_object } from "../src/lib/util";
 
 test("create root group", async () => {
 	let store = new Map();

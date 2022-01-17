@@ -1,18 +1,18 @@
 import { suite } from "uvu";
 import * as assert from "uvu/assert";
 
-import type * as zarr from "../../src/v2";
-import { get_group, get_array } from "../../src/v2";
-import { get } from "../../src/ops";
-import { get as get_ndarray } from "../../src/ndarray";
-import { range } from "../../src/lib/util";
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "../../src/lib/custom-arrays";
-import { NodeNotFoundError } from "../../src/lib/errors";
+import type * as zarr from "../src/v2";
+import { get_group, get_array } from "../src/v2";
+import { get } from "../src/ops";
+import { get as get_ndarray } from "../src/ndarray";
+import { range } from "../src/lib/util";
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "../src/lib/custom-arrays";
+import { NodeNotFoundError } from "../src/lib/errors";
 
-import FSStore from "../../src/storage/fs";
+import FSStore from "../src/storage/fs";
 import * as path from "node:path";
 
-let root = path.resolve(__dirname, "data.zarr");
+let root = path.resolve(__dirname, "data/data.zarr");
 let store = new FSStore(root);
 
 let contiguous = suite("contiguous");
