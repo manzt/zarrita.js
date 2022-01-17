@@ -146,8 +146,7 @@ export async function decode_chunk<Dtype extends DataType>(
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 export function get_strides(shape: readonly number[], order: "C" | "F") {
-	let fn = order === "C" ? row_major_stride : col_major_stride;
-	return fn(shape);
+	return (order === "C" ? row_major_stride : col_major_stride)(shape);
 }
 
 function row_major_stride(shape: readonly number[]) {
@@ -217,7 +216,7 @@ export function* product<T extends Array<Iterable<any>>>(
 /** @category Utilty */
 export function slice(end: number | null): Slice;
 export function slice(start: number | null, end: number | null): Slice;
-export function slice(start: number, end: number | null, step: number | null): Slice;
+export function slice(start: number | null, end: number | null, step: number | null): Slice;
 export function slice(
 	start: number | null,
 	stop?: number | null,

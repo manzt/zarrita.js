@@ -11,10 +11,7 @@
     "importsNotUsedAsValues": "error",
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "baseUrl": "./",
-    "paths": {
-      "zarrita": ["./dist", "./dist/*"]
-    }
+    "baseUrl": "./"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*"]
 }

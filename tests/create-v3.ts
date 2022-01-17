@@ -16,7 +16,7 @@ test("create root group", async () => {
 	assert.equal(await grp.attrs(), attrs);
 	assert.ok(h.store.has("/zarr.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/zarr.json")),
+		json_decode_object(h.store.get("/zarr.json")!),
 		{
 			zarr_format: "https://purl.org/zarr/spec/protocol/core/3.0",
 			metadata_encoding: "https://purl.org/zarr/spec/protocol/core/3.0",
@@ -26,7 +26,7 @@ test("create root group", async () => {
 	);
 	assert.ok(h.store.has("/meta/root.group.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/meta/root.group.json")),
+		json_decode_object(h.store.get("/meta/root.group.json")!),
 		{
 			extensions: [],
 			attributes: attrs,
@@ -53,7 +53,7 @@ test("create array", async () => {
 
 	assert.ok(h.store.has("/meta/root/arthur/dent.array.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/meta/root/arthur/dent.array.json")),
+		json_decode_object(h.store.get("/meta/root/arthur/dent.array.json")!),
 		{
 			shape: [5, 10],
 			data_type: "<i4",
