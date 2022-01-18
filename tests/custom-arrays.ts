@@ -41,38 +41,8 @@ test("ByteStringArray", () => {
 });
 
 test("UnicodeStringArray", () => {
-	let data = new Int32Array([
-		72,
-		101,
-		108,
-		108,
-		111,
-		0,
-		0,
-		0,
-		0,
-		0,
-		119,
-		111,
-		114,
-		108,
-		100,
-		33,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-	]);
+	// deno-fmt-ignore
+	let data = new Int32Array([ 72, 101, 108, 108, 111, 0, 0, 0, 0, 0, 119, 111, 114, 108, 100, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 	let arr = new UnicodeStringArray(data.buffer, 10);
 	assert.is(arr.length, 3);
 	assert.equal(["Hello", "world!", ""], Array.from(arr));
@@ -81,70 +51,9 @@ test("UnicodeStringArray", () => {
 });
 
 test("UnicodeStringArray - special characters", () => {
-	let data = new Int32Array([
-		161,
-		72,
-		111,
-		108,
-		97,
-		32,
-		109,
-		117,
-		110,
-		100,
-		111,
-		33,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		72,
-		101,
-		106,
-		32,
-		86,
-		228,
-		114,
-		108,
-		100,
-		101,
-		110,
-		33,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		88,
-		105,
-		110,
-		32,
-		99,
-		104,
-		224,
-		111,
-		32,
-		116,
-		104,
-		7871,
-		32,
-		103,
-		105,
-		7899,
-		105,
-		0,
-		0,
-		0,
-	]);
+	// deno-fmt-ignore
+	let data = new Int32Array([161, 72, 111, 108, 97, 32, 109, 117, 110, 100, 111, 33, 0, 0, 0, 0, 0, 0, 0, 0, 72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0, 88, 105, 110, 32, 99, 104, 224, 111, 32, 116, 104, 7871, 32, 103, 105, 7899, 105, 0, 0, 0]);
 	let arr = new UnicodeStringArray(data.buffer, 20);
-	console.log(Array.from(arr));
 	assert.is(arr.length, 3);
 	assert.equal(["¡Hola mundo!", "Hej Världen!", "Xin chào thế giới"], Array.from(arr));
 	arr.set(2, "test");

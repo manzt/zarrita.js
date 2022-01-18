@@ -98,6 +98,8 @@ export class ByteStringArray<Chars extends number> {
 
 export class UnicodeStringArray<Chars extends number> {
 	private _data: Int32Array;
+	BYTES_PER_ELEMENT = 4;
+	byteOffset = 0;
 
 	constructor(size: number, chars: Chars);
 	constructor(buffer: ArrayBuffer, chars: Chars);
@@ -132,7 +134,8 @@ export class UnicodeStringArray<Chars extends number> {
 		const offset = this.chars * idx;
 		let result = "";
 		for (let i = 0; i < this.chars; i++) {
-			result += String.fromCodePoint(this._data[offset + i]);
+			let v = this._data[offset + i];
+			result += String.fromCodePoint(v);
 		}
 		return result.replace(/\u0000/g, "");
 	}

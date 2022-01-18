@@ -603,25 +603,25 @@ ndarray("1d.contiguous.U13.be", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U13.be") as unknown as zarr.Array<
 		">U13"
 	>;
-	let res = await get_ndarray(arr as any);
+	let res = await get_ndarray(arr);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(res.data), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
 ndarray("1d.contiguous.U7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U7") as unknown as zarr.Array<"<U7">;
-	let res = await get_ndarray(arr as any);
+	let res = await get_ndarray(arr);
 	assert.instance(res.data, UnicodeStringArray);
-	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(res.data), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
 ndarray("1d.contiguous.S7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.S7") as unknown as zarr.Array<"|S7">;
-	let res = await get_ndarray(arr as any);
+	let res = await get_ndarray(arr);
 	assert.instance(res.data, ByteStringArray);
-	assert.equal(Array.from(res.data as any), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(res.data), ["a", "b", "cc", "d"]);
 	assert.equal(res.shape, [4]);
 });
 
@@ -629,7 +629,7 @@ ndarray("1d.contiguous.b1", async () => {
 	let arr = await get_array(store, "/1d.contiguous.b1") as zarr.Array<"|b1">;
 	let res = await get_ndarray(arr);
 	assert.instance(res.data, BoolArray);
-	assert.equal(Array.from(res.data as BoolArray), [true, false, true, false]);
+	assert.equal(Array.from(res.data), [true, false, true, false]);
 	assert.equal(res.shape, [4]);
 });
 
