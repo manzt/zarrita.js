@@ -56,11 +56,7 @@ export class ByteStringArray<Chars extends number> {
 	}
 
 	private encode(s: string): Uint8Array {
-		const encoded = new TextEncoder().encode(s);
-		if (encoded.length > this.chars) {
-			throw new Error(`UTF-8 encoded string too large: ${s}`);
-		}
-		return encoded;
+		return new TextEncoder().encode(s);
 	}
 
 	get(idx: number): string {
@@ -120,9 +116,6 @@ export class UnicodeStringArray<Chars extends number> {
 	}
 
 	private encode(s: string): Int32Array {
-		if (s.length > this.chars) {
-			throw new Error(`UTF-32 encoded string too large: ${s}`);
-		}
 		let out = new Int32Array(this.chars);
 		for (let i = 0; i < this.chars; i++) {
 			out[i] = s.codePointAt(i)!;
@@ -134,8 +127,7 @@ export class UnicodeStringArray<Chars extends number> {
 		const offset = this.chars * idx;
 		let result = "";
 		for (let i = 0; i < this.chars; i++) {
-			let v = this._data[offset + i];
-			result += String.fromCodePoint(v);
+			result += String.fromCodePoint(this._data[offset + i]);
 		}
 		return result.replace(/\u0000/g, "");
 	}
