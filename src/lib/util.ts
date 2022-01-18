@@ -31,7 +31,12 @@ const LITTLE_ENDIAN_OS = system_is_little_endian();
 export const should_byteswap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
 
 export function byteswap_inplace(src: TypedArray<DataType>) {
-	if (!("BYTES_PER_ELEMENT" in src)) return;
+	if (src instanceof _UnicodeStringArray) {
+		src = (src as any)._data as Int32Array;
+	}
+	if (!("BYTES_PER_ELEMENT" in src)) {
+		return;
+	}
 	const b = src.BYTES_PER_ELEMENT;
 	const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
 	const numFlips = b / 2;
