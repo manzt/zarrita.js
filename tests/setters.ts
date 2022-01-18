@@ -5,20 +5,23 @@ import ndarray from "ndarray";
 // @ts-ignore
 import { assign } from "ndarray-ops";
 
-import type { Chunk, Projection } from "../src/types";
+import type { Chunk, DataType, Indices, Projection, TypedArray } from "../src/types";
 
 import * as ops from "../src/ops";
-import * as nd from "../src/ndarray";
-import { get_strides, slice } from "../src/lib/util";
+import * as ndops from "../src/ndarray";
 
-function to_c({ data, shape, stride }: Chunk<"<f4">) {
-	let size = shape.reduce((a, b) => a * b, 1);
-	let out = ndarray(new (data as any).constructor(size), shape);
+function to_c<D extends DataType>(chunk: Chunk<D>): ndarray.NdArray<TypedArray<D>> {
+	let { data, shape, stride } = chunk;
+	let out = ndarray(
+		new (data as any).constructor(data.length),
+		shape,
+		// computes c-order strides by default
+	);
 	assign(out, ndarray(data, shape, stride));
 	return out;
 }
 
-function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
+function suite(name: string, setter: typeof ops.setter | typeof ndops.setter) {
 	let test = uvu.suite<typeof ops.setter>(name);
 
 	test.before((ctx) => {
@@ -27,14 +30,18 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		ctx.set_scalar = setter.set_scalar;
 	});
 
-	test("ctx.set_scalar - fill", async (ctx) => {
+	test("ctx.set_scalar - full Indices", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
-		let sel = [2, 3, 4].map((size) => slice(null).indices(size));
+		let sel: Indices[] = [
+			[0, 2, 1],
+			[0, 3, 1],
+			[0, 4, 1],
+		];
 		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
@@ -48,11 +55,11 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - point", async (ctx) => {
+	test("ctx.set_scalar - number", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		ctx.set_scalar(a, [0, 0, 0], 1);
@@ -104,14 +111,18 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - mixed", async (ctx) => {
+	test("ctx.set_scalar - mixed Indices | number", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
-		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
+		let sel: (Indices | number)[] = [
+			[0, 2, 1],
+			[0, 2, 1],
+			0,
+		];
 		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(a.data, new Float32Array([
@@ -124,7 +135,11 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 0,
 		]));
 
-		sel = [0, slice(null).indices(3), slice(null).indices(4)];
+		sel = [
+			0,
+			[0, 3, 1],
+			[0, 4, 1],
+		];
 		ctx.set_scalar(a, sel, 2);
 
 		// deno-fmt-ignore
@@ -139,14 +154,18 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - mixed F order", async (ctx) => {
+	test("ctx.set_scalar - mixed Indices | number (F order)", async (ctx) => {
 		let f = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "F"),
+			[1, 2, 6],
 		) as Chunk<"<f4">;
 
-		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
+		let sel: (Indices | number)[] = [
+			[0, 2, 1],
+			[0, 2, 1],
+			0,
+		];
 		ctx.set_scalar(f, sel, 1);
 		// deno-fmt-ignore
 		assert.equal(f.data, new Float32Array([
@@ -156,7 +175,11 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 0, 0, 0,
 		]));
 
-		sel = [0, slice(null).indices(3), slice(null).indices(4)];
+		sel = [
+			0,
+			[0, 3, 1],
+			[0, 4, 1],
+		];
 		ctx.set_scalar(f, sel, 2);
 
 		// deno-fmt-ignore
@@ -183,13 +206,13 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		let src = ctx.prepare(
 			new Float32Array(2 * 2 * 2).fill(1),
 			[2, 2, 2],
-			get_strides([2, 2, 2], "C"),
+			[4, 2, 1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -215,13 +238,13 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		let src = ctx.prepare(
 			new Float32Array(2 * 2 * 2).fill(2),
 			[2, 2, 2],
-			get_strides([2, 2, 2], "C"),
+			[4, 2, 1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -247,7 +270,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 2 * 2),
 			[2, 2, 2],
-			get_strides([2, 2, 2], "C"),
+			[4, 2, 1],
 		) as Chunk<"<f4">;
 
 		let src = ctx.prepare(
@@ -262,7 +285,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 				2, 0, 2, 0,
 			]),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -279,14 +302,10 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
-		let src = ctx.prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "C"),
-		) as Chunk<"<f4">;
+		let src = ctx.prepare(new Float32Array([2, 0, 0, 2]), [4], [1]) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
 			{ to: 0, from: null },
@@ -308,12 +327,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 	});
 
 	test("set_from_chunk - dest squeezed", async (ctx) => {
-		let dest = ctx.prepare(
-			new Float32Array(4),
-			[4],
-			get_strides([4], "C"),
-		) as Chunk<"<f4">;
-
+		let dest = ctx.prepare(new Float32Array(4), [4], [1]) as Chunk<"<f4">;
 		let src = ctx.prepare(
 			// deno-fmt-ignore
 			new Float32Array([
@@ -326,7 +340,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 				0, 0, 0, 0,
 			]),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -343,13 +357,13 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "F"),
+			[1, 2, 6],
 		) as Chunk<"<f4">;
 
 		let src = ctx.prepare(
 			new Float32Array(2 * 2 * 2).fill(1),
 			[2, 2, 2],
-			get_strides([2, 2, 2], "F"),
+			[4, 2, 1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -378,14 +392,10 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "F"),
+			[1, 2, 6],
 		) as Chunk<"<f4">;
 
-		let src = ctx.prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "F"),
-		) as Chunk<"<f4">;
+		let src = ctx.prepare(new Float32Array([2, 0, 0, 2]), [4], [1]) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
 			{ to: 0, from: null },
@@ -410,14 +420,10 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "F"),
+			[1, 2, 6],
 		) as Chunk<"<f4">;
 
-		let src = ctx.prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			get_strides([4], "C"),
-		) as Chunk<"<f4">;
+		let src = ctx.prepare(new Float32Array([2, 0, 0, 2]), [4], [1]) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
 			{ to: 0, from: null },
@@ -442,13 +448,13 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
-			get_strides([2, 3, 4], "C"),
+			[12, 4, 1],
 		) as Chunk<"<f4">;
 
 		let src = ctx.prepare(
 			new Float32Array([2, 0, 0, 2]),
 			[4],
-			get_strides([4], "F"),
+			[1],
 		) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -474,4 +480,4 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 }
 
 suite("builtin", ops.setter).run();
-suite("ndarray", nd.setter).run();
+suite("ndarray", ndops.setter).run();
