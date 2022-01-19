@@ -423,6 +423,7 @@ function suite(name: string, setter: typeof ops.setter | typeof ndops.setter) {
 			[1, 2, 6],
 		) as Chunk<"<f4">;
 
+		// 1D - C order
 		let src = ctx.prepare(new Float32Array([2, 0, 0, 2]), [4], [1]) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
@@ -442,20 +443,45 @@ function suite(name: string, setter: typeof ops.setter | typeof ndops.setter) {
 			0, 0, 0, 0,
 			0, 0, 0, 0,
 		]));
+
+		// 2D - C order
+		src = ctx.prepare(
+			// deno-fmt-ignore
+			new Float32Array([
+				0, 1, 0, 1,
+				0, 2, 0, 2,
+			]),
+			[2, 4],
+			[4, 1],
+		) as Chunk<"<f4">;
+		mapping = [
+			{ to: [0, 2, 1], from: [0, 2, 1] },
+			{ to: 2, from: null },
+			{ to: [2, 4, 1], from: [1, 4, 2] },
+		];
+		ctx.set_from_chunk(dest, src, mapping);
+		// deno-fmt-ignore
+		assert.equal(to_c(dest).data, new Float32Array([
+			0, 2, 0, 0,
+			0, 0, 0, 0,
+			0, 2, 1, 1,
+
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+			0, 0, 2, 2,
+		]));
 	});
 
 	maybe_skip("set_from_chunk - dest=C order, src=F order", async (ctx) => {
+		// 3D -  C order
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
 			[12, 4, 1],
 		) as Chunk<"<f4">;
 
-		let src = ctx.prepare(
-			new Float32Array([2, 0, 0, 2]),
-			[4],
-			[1],
-		) as Chunk<"<f4">;
+		// 1D - F order
+		let src = ctx.prepare(new Float32Array([2, 0, 0, 2]), [4], [1]) as Chunk<"<f4">;
 
 		let mapping: Projection[] = [
 			{ to: 0, from: null },
@@ -474,7 +500,35 @@ function suite(name: string, setter: typeof ops.setter | typeof ndops.setter) {
 			0, 0, 0, 0,
 			0, 0, 0, 0,
 		]));
+
+		// 2D - F order
+		src = ctx.prepare(
+			// deno-fmt-ignore
+			new Float32Array([
+				0, 0, 1, 2,
+				0, 0, 1, 2
+			]),
+			[2, 4],
+			[1, 2],
+		) as Chunk<"<f4">;
+		mapping = [
+			{ to: [0, 2, 1], from: [0, 2, 1] },
+			{ to: 2, from: null },
+			{ to: [2, 4, 1], from: [1, 4, 2] },
+		];
+		ctx.set_from_chunk(dest, src, mapping);
+		// deno-fmt-ignore
+		assert.equal(dest.data, new Float32Array([
+			0, 2, 0, 0,
+			0, 0, 0, 0,
+			0, 2, 1, 1,
+
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+			0, 0, 2, 2,
+		]));
 	});
+
 
 	return test;
 }
