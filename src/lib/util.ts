@@ -225,18 +225,11 @@ function indices(
 	step: number | null,
 	length: number,
 ): Indices {
-	let step_is_negative: boolean;
-
-	/* Convert step to an integer; raise for zero step. */
-	if (step === null) {
-		step = 1;
-		step_is_negative = false;
-	} else {
-		step_is_negative = step < 0;
-	}
+	step = step ?? 1;
+	const step_is_negative = step < 0;
 
 	/* Find lower and upper bounds for start and stop. */
-	let [lower, upper] = step_is_negative ? [-1, length - 1] : [0, length];
+	const [lower, upper] = step_is_negative ? [-1, length - 1] : [0, length];
 
 	/* Compute start. */
 	if (start === null) {
@@ -247,10 +240,8 @@ function indices(
 			if (start < lower) {
 				start = lower;
 			}
-		} else {
-			if (start > upper) {
-				start = upper;
-			}
+		} else if (start > upper) {
+			start = upper;
 		}
 	}
 
@@ -263,15 +254,9 @@ function indices(
 			if (stop < lower) {
 				stop = lower;
 			}
-		} else {
-			if (stop > upper) {
-				stop = upper;
-			}
+		} else if (stop > upper) {
+			stop = upper;
 		}
-	}
-
-	if (start === null || stop === null || step === null) {
-		throw new Error("invalid");
 	}
 
 	return [start, stop, step];
