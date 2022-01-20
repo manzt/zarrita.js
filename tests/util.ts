@@ -87,6 +87,8 @@ test("slice", () => {
 	assert.equal(slice(null, null, -3).indices(14), [13, -1, -3]);
 	assert.equal(slice(null, null, -3).indices(14), [13, -1, -3]);
 	assert.equal(slice(null, null, -3).indices(2), [1, -1, -3]);
+
+	assert.throws(() => slice(null, null, 0).indices(1), "should throw for step === 0");
 });
 
 test("range", () => {

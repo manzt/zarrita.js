@@ -219,12 +219,15 @@ export function* product<T extends Array<Iterable<any>>>(
 }
 
 // https://github.com/python/cpython/blob/263c0dd16017613c5ea2fbfc270be4de2b41b5ad/Objects/sliceobject.c#L376-L519
-function indices(
+function slice_indices(
 	start: number | null,
 	stop: number | null,
 	step: number | null,
 	length: number,
 ): Indices {
+	if (step === 0) {
+		throw new Error("slice step cannot be zero");
+	}
 	step = step ?? 1;
 	const step_is_negative = step < 0;
 
@@ -283,7 +286,7 @@ export function slice(
 		stop,
 		step,
 		indices(length: number) {
-			return indices(this.start, this.stop, this.step, length);
+			return slice_indices(this.start, this.stop, this.step, length);
 		},
 	};
 }
