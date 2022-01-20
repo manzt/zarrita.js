@@ -218,13 +218,59 @@ export function* product<T extends Array<Iterable<any>>>(
 	}
 }
 
+// https://github.com/python/cpython/blob/263c0dd16017613c5ea2fbfc270be4de2b41b5ad/Objects/sliceobject.c#L376-L519
+function slice_indices(
+	start: number | null,
+	stop: number | null,
+	step: number | null,
+	length: number,
+): Indices {
+	if (step === 0) {
+		throw new Error("slice step cannot be zero");
+	}
+	step = step ?? 1;
+	const step_is_negative = step < 0;
+
+	/* Find lower and upper bounds for start and stop. */
+	const [lower, upper] = step_is_negative ? [-1, length - 1] : [0, length];
+
+	/* Compute start. */
+	if (start === null) {
+		start = step_is_negative ? upper : lower;
+	} else {
+		if (start < 0) {
+			start += length;
+			if (start < lower) {
+				start = lower;
+			}
+		} else if (start > upper) {
+			start = upper;
+		}
+	}
+
+	/* Compute stop. */
+	if (stop === null) {
+		stop = step_is_negative ? lower : upper;
+	} else {
+		if (stop < 0) {
+			stop += length;
+			if (stop < lower) {
+				stop = lower;
+			}
+		} else if (stop > upper) {
+			stop = upper;
+		}
+	}
+
+	return [start, stop, step];
+}
+
 /** @category Utilty */
-export function slice(end: number | null): Slice;
-export function slice(start: number | null, end: number | null): Slice;
+export function slice(stop: number | null): Slice;
 export function slice(
 	start: number | null,
-	end: number | null,
-	step: number | null,
+	stop?: number | null,
+	step?: number | null,
 ): Slice;
 export function slice(
 	start: number | null,
@@ -235,18 +281,14 @@ export function slice(
 		stop = start;
 		start = null;
 	}
-	const indices = (size: number): Indices => {
-		const istep = step ?? 1;
-		const start_ix = start ?? (istep < 0 ? size - 1 : 0);
-		let end_ix: number;
-		if (typeof stop === "number") {
-			end_ix = Math.min(size, stop);
-		} else {
-			end_ix = istep < 0 ? -1 : size;
-		}
-		return [start_ix, end_ix, istep];
+	return {
+		start,
+		stop,
+		step,
+		indices(length: number) {
+			return slice_indices(this.start, this.stop, this.step, length);
+		},
 	};
-	return { start, stop, step, indices };
 }
 
 /** Built-in "queue" for awaiting promises. */
