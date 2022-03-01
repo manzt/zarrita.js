@@ -9,7 +9,7 @@ specifiers:
   numcodecs: ^0.2.2
   reference-spec-reader: ^0.1.3
   tsm: ^2.2.1
-  typescript: ^4.5.2
+  typescript: ^4.6.2
   unzipit: ^1.3.6
   uvu: ^0.5.3
 
@@ -23,9 +23,9 @@ dependencies:
 
 devDependencies:
   '@types/node': 16.10.2
-  mkdist: 0.3.5_typescript@4.5.2
+  mkdist: 0.3.5_typescript@4.6.2
   tsm: 2.2.1
-  typescript: 4.5.2
+  typescript: 4.6.2
   uvu: 0.5.3
 
 packages:
@@ -544,7 +544,7 @@ packages:
       picomatch: 2.3.0
     dev: true
 
-  /mkdist/0.3.5_typescript@4.5.2:
+  /mkdist/0.3.5_typescript@4.6.2:
     resolution: {integrity: sha512-3ai1qPfTufa/YMdsjYoA372YVogn1yLkHTG7H7tG66xJpYdoK3vnelROhM41dGhHh/4RhObCkDwAQCpIx81A3g==}
     hasBin: true
     peerDependencies:
@@ -560,7 +560,7 @@ packages:
       jiti: 1.12.9
       mri: 1.2.0
       pathe: 0.2.0
-      typescript: 4.5.2
+      typescript: 4.6.2
     dev: true
 
   /mri/1.2.0:
@@ -646,8 +646,8 @@ packages:
       esbuild: 0.14.11
     dev: true
 
-  /typescript/4.5.2:
-    resolution: {integrity: sha512-5BlMof9H1yGt0P8/WF+wPNw6GfctgGjXp5hkblpyT+8rkASSmkUKMXrxR0Xg8ThVCi/JnHQiKXeBaEwCeQwMFw==}
+  /typescript/4.6.2:
+    resolution: {integrity: sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
