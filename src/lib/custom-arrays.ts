@@ -34,12 +34,12 @@ export class BoolArray {
 	}
 }
 
-export class ByteStringArray<Chars extends number> {
+export class ByteStringArray {
 	private _bytes: Uint8Array;
 
-	constructor(size: number, chars: Chars);
-	constructor(buffer: ArrayBuffer, chars: Chars);
-	constructor(x: number | ArrayBuffer, public chars: Chars) {
+	constructor(size: number, chars: number);
+	constructor(buffer: ArrayBuffer, chars: number);
+	constructor(x: number | ArrayBuffer, public chars: number) {
 		if (typeof x === "number") {
 			this._bytes = new Uint8Array(x * chars);
 		} else {
@@ -92,14 +92,14 @@ export class ByteStringArray<Chars extends number> {
 	}
 }
 
-export class UnicodeStringArray<Chars extends number> {
+export class UnicodeStringArray {
 	private _data: Int32Array;
 	BYTES_PER_ELEMENT = 4;
 	byteOffset = 0;
 
-	constructor(size: number, chars: Chars);
-	constructor(buffer: ArrayBuffer, chars: Chars);
-	constructor(x: number | ArrayBuffer, public chars: Chars) {
+	constructor(size: number, chars: number);
+	constructor(buffer: ArrayBuffer, chars: number);
+	constructor(x: number | ArrayBuffer, public chars: number) {
 		if (typeof x === "number") {
 			this._data = new Int32Array(x * chars);
 		} else {
