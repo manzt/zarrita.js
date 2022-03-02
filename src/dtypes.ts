@@ -60,9 +60,8 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
-	: D extends `|S${infer _}` ? ByteStringArray
-	: D extends `>U${infer _}` ? UnicodeStringArray
-	: D extends `<U${infer _}` ? UnicodeStringArray
+	: D extends ByteStr ? ByteStringArray
+	: D extends UnicodeStr ? UnicodeStringArray
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {
