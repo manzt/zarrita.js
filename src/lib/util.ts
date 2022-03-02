@@ -9,7 +9,7 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
-import type { DataTypeQuery, IsDataType, StringDataType } from "../dtypes";
+import type { DataTypeQuery, IsDataType } from "../dtypes";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
