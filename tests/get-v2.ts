@@ -91,7 +91,7 @@ contiguous("1d.contiguous.U13.le", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U13.le");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<13>), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -99,7 +99,7 @@ contiguous("1d.contiguous.U13.be", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U13.be");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<14>), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -107,7 +107,7 @@ contiguous("1d.contiguous.U7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.U7");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, UnicodeStringArray);
-	assert.equal(Array.from(chunk.data as UnicodeStringArray<7>), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(chunk.data as UnicodeStringArray), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -115,7 +115,7 @@ contiguous("1d.contiguous.S7", async () => {
 	let arr = await get_array(store, "/1d.contiguous.S7");
 	let chunk = await arr.get_chunk([0]);
 	assert.instance(chunk.data, ByteStringArray);
-	assert.equal(Array.from(chunk.data as ByteStringArray<7>), ["a", "b", "cc", "d"]);
+	assert.equal(Array.from(chunk.data as ByteStringArray), ["a", "b", "cc", "d"]);
 	assert.equal(chunk.shape, [4]);
 });
 
@@ -198,13 +198,13 @@ chunked("2d.chunked.U7", async () => {
 		arr.get_chunk([1, 0]),
 		arr.get_chunk([1, 1]),
 	]);
-	assert.equal(Array.from(c1.data as UnicodeStringArray<7>), ["a"]);
+	assert.equal(Array.from(c1.data as UnicodeStringArray), ["a"]);
 	assert.equal(c1.shape, [1, 1]);
-	assert.equal(Array.from(c2.data as UnicodeStringArray<7>), ["b"]);
+	assert.equal(Array.from(c2.data as UnicodeStringArray), ["b"]);
 	assert.equal(c2.shape, [1, 1]);
-	assert.equal(Array.from(c3.data as UnicodeStringArray<7>), ["cc"]);
+	assert.equal(Array.from(c3.data as UnicodeStringArray), ["cc"]);
 	assert.equal(c3.shape, [1, 1]);
-	assert.equal(Array.from(c4.data as UnicodeStringArray<7>), ["d"]);
+	assert.equal(Array.from(c4.data as UnicodeStringArray), ["d"]);
 	assert.equal(c4.shape, [1, 1]);
 });
 

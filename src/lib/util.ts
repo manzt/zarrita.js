@@ -78,7 +78,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	// dynamically create typed array, use named class so logging is nice
 	if (second === "U") {
 		const size = parseInt(dtype.slice(2));
-		class UnicodeStringArray extends _UnicodeStringArray<typeof size> {
+		class UnicodeStringArray extends _UnicodeStringArray {
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
@@ -89,7 +89,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 	// dynamically create typed array, use named class so logging is nice
 	if (second === "S") {
 		const size = parseInt(dtype.slice(2));
-		class ByteStringArray extends _ByteStringArray<typeof size> {
+		class ByteStringArray extends _ByteStringArray {
 			constructor(x: ArrayBuffer | number) {
 				super(x as any, size);
 			}
