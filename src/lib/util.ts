@@ -9,6 +9,7 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
+import type { DataTypeQuery, ExpandDataType } from "../dtypes";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -298,4 +299,29 @@ export function create_queue(): ChunkQueue {
 		add: (fn) => promises.push(fn()),
 		onIdle: () => Promise.all(promises),
 	};
+}
+
+export function is_dtype<Query extends DataTypeQuery>(
+	dtype: DataType,
+	query: Query,
+): dtype is ExpandDataType<DataType, Query> {
+	// fuzzy match, e.g. 'u4'
+	if (query.length < 3) {
+		return dtype === `|${query}` || dtype === `>${query}` || dtype === `<${query}`;
+	}
+	if (query !== "string" && query !== "number" && query !== "bigint") {
+		return dtype === query;
+	}
+
+	let prefix = dtype[1];
+	let nbytes = dtype.slice(2);
+
+	let is_string = prefix === "S" || prefix === "U";
+	if (query === "string") return is_string;
+
+	let is_bigint = (prefix === "u" || prefix === "i") && nbytes === "8";
+	if (query === "bigint") return is_bigint;
+
+	// number
+	return !is_string && !is_bigint;
 }

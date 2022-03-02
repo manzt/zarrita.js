@@ -82,3 +82,21 @@ export type Scalar<D extends DataType> = D extends "|b1" ? boolean
 type Parts<D extends DataType> = {
 	[Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
 };
+
+type DataTypeWithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest
+	: never;
+
+export type DataTypeQuery =
+	| DataType
+	| DataTypeWithoutEndianness
+	| "number"
+	| "bigint"
+	| "string";
+
+export type ExpandDataType<
+	Dtype extends DataType,
+	Query extends DataTypeQuery,
+> = Query extends "number" ? NumericDataType
+	: Query extends "bigint" ? BigintDataType
+	: Query extends "string" ? StringDataType
+	: Extract<Query | `${"<" | ">" | "|"}${Query}`, Dtype>;
