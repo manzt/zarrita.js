@@ -93,7 +93,7 @@ export type DataTypeQuery =
 	| "bigint"
 	| "string";
 
-export type IsDataType<
+export type ExpandDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
 > = Query extends "number" ? NumericDataType

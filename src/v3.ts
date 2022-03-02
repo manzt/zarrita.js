@@ -16,7 +16,7 @@ import type {
 	Writeable,
 } from "./types";
 
-import type { DataTypeQuery, IsDataType } from "./dtypes";
+import type { DataTypeQuery, ExpandDataType } from "./dtypes";
 
 import type { Codec } from "numcodecs";
 
@@ -90,7 +90,7 @@ export class Array<
 
 	is<Query extends DataTypeQuery>(
 		query: Query,
-	): this is Array<IsDataType<Dtype, Query>, Store, Path> {
+	): this is Array<ExpandDataType<Dtype, Query>, Store, Path> {
 		return is_dtype(this.dtype, query);
 	}
 }
