@@ -1,7 +1,7 @@
 import { Array as BaseArray, ArrayProps, Group as BaseGroup } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { KeyError, NodeNotFoundError } from "./lib/errors";
-import { json_decode_object, json_encode_object } from "./lib/util";
+import { is_dtype, json_decode_object, json_encode_object } from "./lib/util";
 import type {
 	AbsolutePath,
 	Async,
@@ -12,6 +12,7 @@ import type {
 	Readable,
 	Writeable,
 } from "./types";
+import type { DataTypeQuery, IsDataType } from "./dtypes";
 
 import type { Codec } from "numcodecs";
 
@@ -56,6 +57,12 @@ export class Array<
 		if (this._attrs) return this._attrs;
 		const attrs = (this._attrs = get_attrs(this.store, this.path));
 		return attrs;
+	}
+
+	is<Query extends DataTypeQuery>(
+		query: Query,
+	): this is Array<IsDataType<Dtype, Query>, Store, Path> {
+		return is_dtype(this.dtype, query);
 	}
 }
 
