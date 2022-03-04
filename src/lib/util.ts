@@ -9,7 +9,7 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "../types";
-import type { DataTypeQuery, ExpandDataType } from "../dtypes";
+import type { DataTypeQuery, NarrowDataType } from "../dtypes";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -304,7 +304,7 @@ export function create_queue(): ChunkQueue {
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,
 	query: Query,
-): dtype is ExpandDataType<DataType, Query> {
+): dtype is NarrowDataType<DataType, Query> {
 	// fuzzy match, e.g. 'u4'
 	if (query.length < 3) {
 		return dtype === `|${query}` || dtype === `>${query}` || dtype === `<${query}`;

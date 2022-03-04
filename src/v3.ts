@@ -16,7 +16,7 @@ import type {
 	Writeable,
 } from "./types";
 
-import type { DataTypeQuery, ExpandDataType } from "./dtypes";
+import type { DataTypeQuery, NarrowDataType } from "./dtypes";
 
 import type { Codec } from "numcodecs";
 
@@ -88,9 +88,31 @@ export class Array<
 		return this._attrs;
 	}
 
+	/**
+	 * A helper method to narrow `zarr.Array` Dtype.
+	 *
+	 * ```typescript
+	 * let arr: zarr.Array<DataType, FetchStore, "/"> = zarr.get_array(store);
+	 *
+	 * // Option 1: narrow by scalar type (e.g. "string", "bigint", "number")
+	 * if (arr.is("bigint")) {
+	 *   // zarr.Array<"<u8" | ">u8" | "<i8" | ">i8", FetchStore, "/">
+	 * }
+	 *
+	 * // Option 2: narrow by dtype without endianess
+	 * if (arr.is("i4")) {
+	 *   // zarr.Array<"<i4" | ">i4", FetchStore, "/">
+	 * }
+	 *
+	 * // Option 3: exact match
+	 * if (arr.is("<f4")) {
+	 *   // zarr.Array<"<f4", FetchStore, "/">
+	 * }
+	 * ```
+	 */
 	is<Query extends DataTypeQuery>(
 		query: Query,
-	): this is Array<ExpandDataType<Dtype, Query>, Store, Path> {
+	): this is Array<NarrowDataType<Dtype, Query>, Store, Path> {
 		return is_dtype(this.dtype, query);
 	}
 }
