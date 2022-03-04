@@ -12,7 +12,7 @@
     "test": "uvu -r tsm tests",
     "check": "tsc --noEmit",
     "prepack": "mkdist --declaration",
-    "fmt": "deno fmt --options-use-tabs --options-line-width 90 src tests"
+    "fmt": "deno fmt --options-use-tabs --options-line-width 90 src tests README.md"
   },
   "files": [
     "dist/"
