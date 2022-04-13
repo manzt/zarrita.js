@@ -274,7 +274,7 @@ export function slice<Start extends number, End extends number>(
 	stop: Integer<End> | null,
 ): Slice;
 export function slice<Start extends number, End extends number, Step extends number>(
-	start: Integer<Start>,
+	start: Integer<Start> | null,
 	end: Integer<End> | null,
 	step: Integer<Step> | null,
 ): Slice;
