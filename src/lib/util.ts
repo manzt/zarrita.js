@@ -1,6 +1,7 @@
 // deno-fmt-ignore
 import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays";
 
+import type { Integer } from "type-fest";
 import type {
 	ChunkQueue,
 	DataType,
@@ -267,11 +268,15 @@ function slice_indices(
 }
 
 /** @category Utilty */
-export function slice(stop: number | null): Slice;
-export function slice(
-	start: number | null,
-	stop?: number | null,
-	step?: number | null,
+export function slice<End extends number>(stop: Integer<End> | null): Slice;
+export function slice<Start extends number, End extends number>(
+	start: Integer<Start>,
+	stop: Integer<End> | null,
+): Slice;
+export function slice<Start extends number, End extends number, Step extends number>(
+	start: Integer<Start>,
+	end: Integer<End> | null,
+	step: Integer<Step> | null,
 ): Slice;
 export function slice(
 	start: number | null,

@@ -55,7 +55,7 @@ export class Array<
 	 */
 	async attrs() {
 		if (this._attrs) return this._attrs;
-		const attrs = (this._attrs = get_attrs(this.store, this.path));
+		const attrs = (this._attrs = await get_attrs(this.store, this.path));
 		return attrs;
 	}
 
@@ -107,7 +107,7 @@ export class Group<
 	 */
 	async attrs() {
 		if (this._attrs) return this._attrs;
-		const attrs = (this._attrs = get_attrs(this.store, this.path));
+		const attrs = (this._attrs = await get_attrs(this.store, this.path));
 		return attrs;
 	}
 }

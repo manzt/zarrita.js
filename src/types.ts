@@ -1,3 +1,4 @@
+import type { JsonObject } from 'type-fest';
 import type { DataType, Scalar, TypedArray } from "./dtypes";
 
 // hoist useful types here
@@ -46,7 +47,7 @@ export interface ExtendedReadable extends Readable {
 	list_dir(key?: RootPath | PrefixPath): ListDirResult;
 }
 
-export type Attrs = Record<string, any>;
+export type Attrs = JsonObject;
 
 type RequiredArrayProps<D extends DataType> = {
 	shape: number[];
