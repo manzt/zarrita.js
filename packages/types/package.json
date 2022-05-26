@@ -1,0 +1,12 @@
+{
+	"name": "@zarrita/types",
+	"version": "0.0.0",
+	"types": "./src/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./src/index.d.ts"
+			}
+		}
+	}
+}

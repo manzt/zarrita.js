@@ -1,0 +1,12 @@
+{
+	"name": "@zarrita/v3",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"scripts": {
+		"check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@zarrita/core": "workspace:*",
+		"@zarrita/types": "workspace:*"
+	}
+}

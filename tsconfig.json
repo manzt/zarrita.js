@@ -2,17 +2,11 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "node",
     "strict": true,
     "strictNullChecks": true,
-    "allowJs": true,
     "noImplicitAny": true,
     "declaration": true,
-    "declarationDir": "./types",
-    "importsNotUsedAsValues": "error",
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "baseUrl": "./",
-    "types": ["@types/wicg-file-system-access"]
-  },
-  "include": ["src/**/*", "tests/**/*"]
+    "skipLibCheck": true
+  }
 }

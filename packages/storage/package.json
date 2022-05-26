@@ -1,0 +1,31 @@
+{
+	"name": "@zarrita/storage",
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"check": "tsc --noEmit"
+	},
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dixt/index.js"
+			}
+		},
+		"./*": {
+			"import": {
+				"types": "./dist/*.d.ts",
+				"default": "./dixt/*.js"
+			}
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^17.0.35",
+		"@types/wicg-file-system-access": "^2020.9.5",
+		"@zarrita/types": "workspace:*"
+	},
+	"dependencies": {
+		"reference-spec-reader": "^0.1.3",
+		"unzipit": "^1.4.0"
+	}
+}

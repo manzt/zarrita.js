@@ -1,0 +1,24 @@
+{
+	"name": "@zarrita/ops",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"scripts": {
+		"check": "tsc --noEmit"
+	},
+	"exports": {
+		".": {
+			"import": "./src/index.ts",
+			"types": "./src/index.ts"
+		},
+		"./ndarray": {
+			"import": "./src/ndarray.ts",
+			"types": "./src/ndarray.ts"
+		}
+	},
+	"dependencies": {
+		"@types/ndarray": "^1.0.11",
+		"@zarrita/core": "workspace:*",
+		"@zarrita/types": "workspace:*",
+		"ndarray": "^1.0.19"
+	}
+}
