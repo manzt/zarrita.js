@@ -11,7 +11,8 @@
     "importsNotUsedAsValues": "error",
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "types": ["@types/wicg-file-system-access"]
   },
   "include": ["src/**/*", "tests/**/*"]
 }
