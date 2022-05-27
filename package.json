@@ -50,12 +50,6 @@
       ]
     }
   },
-  "dependencies": {
-    "@types/ndarray": "^1.0.11",
-    "ndarray": "^1.0.19",
-    "ndarray-ops": "^1.2.2",
-    "numcodecs": "^0.2.2"
-  },
   "devDependencies": {
     "mkdist": "^0.3.5",
     "tsm": "^2.2.1",

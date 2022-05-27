@@ -8,6 +8,7 @@
 		"check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@zarrita/types": "workspace:*"
+		"@zarrita/types": "workspace:*",
+		"numcodecs": "^0.2.2"
 	}
 }

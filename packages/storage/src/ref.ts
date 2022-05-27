@@ -1,7 +1,7 @@
 import { parse } from "reference-spec-reader";
 import type { AbsolutePath, Async, Readable } from "@zarrita/types";
 
-import { fetch_range, strip_prefix, uri2href } from "./util.js";
+import { fetch_range, strip_prefix, uri2href } from "./util";
 
 interface ReferenceStoreOptions {
 	target?: string | URL;

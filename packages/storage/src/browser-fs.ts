@@ -1,4 +1,4 @@
-import { strip_prefix } from "./util.js";
+import { strip_prefix } from "./util";
 
 import type { AbsolutePath, Async, Readable } from "@zarrita/types";
 

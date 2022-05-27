@@ -1,5 +1,5 @@
-export { default as FetchStore } from "./fetch.js";
-export { default as FileSystemStore } from "./fs.js";
-export { default as MemoryStore } from "./mem.js";
-export { default as ReferenceStore } from "./ref.js";
-export { default as ZipFileStore } from "./zip.js";
+export { default as FetchStore } from "./fetch";
+export { default as FileSystemStore } from "./fs";
+export { default as MemoryStore } from "./mem";
+export { default as ReferenceStore } from "./ref";
+export { default as ZipFileStore } from "./zip";

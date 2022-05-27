@@ -17,8 +17,8 @@ import type {
 	Writeable,
 } from "@zarrita/types";
 
-import { get as get_with_setter } from "./lib/get.js";
-import { set as set_with_setter } from "./lib/set.js";
+import { get as get_with_setter } from "./lib/get";
+import { set as set_with_setter } from "./lib/set";
 
 export const setter = {
 	prepare: ndarray,

@@ -1,5 +1,5 @@
-import { KeyError, NotImplementedError } from "./errors.js";
-import { decode_chunk, get_ctr, get_strides } from "./util.js";
+import { KeyError, NotImplementedError } from "./errors";
+import { decode_chunk, get_ctr, get_strides } from "./util";
 
 import type {
 	AbsolutePath,

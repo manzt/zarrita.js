@@ -1,5 +1,5 @@
 import { unzip } from "unzipit";
-import { fetch_range, strip_prefix } from "./util.js";
+import { fetch_range, strip_prefix } from "./util";
 
 import type { Reader, ZipInfo } from "unzipit";
 import type { AbsolutePath, Async, Readable } from "@zarrita/types";

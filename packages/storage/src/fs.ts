@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { strip_prefix } from "./util.js";
+import { strip_prefix } from "./util";
 
 import type {
 	AbsolutePath,

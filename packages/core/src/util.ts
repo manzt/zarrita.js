@@ -1,5 +1,5 @@
 // deno-fmt-ignore
-import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays.js";
+import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "./custom-arrays";
 
 import type {
 	ChunkQueue,
@@ -112,7 +112,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 }
 
 export async function encode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy.js").Array<Dtype, any>,
+	arr: import("./hierarchy").Array<Dtype, any>,
 	data: TypedArray<Dtype>,
 ): Promise<Uint8Array> {
 	if (should_byteswap(arr.dtype)) {
@@ -129,7 +129,7 @@ export async function encode_chunk<Dtype extends DataType>(
 }
 
 export async function decode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy.js").Array<Dtype, any>,
+	arr: import("./hierarchy").Array<Dtype, any>,
 	bytes: Uint8Array,
 ): Promise<TypedArray<Dtype>> {
 	if (arr.compressor) {
