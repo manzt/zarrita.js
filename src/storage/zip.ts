@@ -58,8 +58,10 @@ class ZipFileStore<R extends Reader> implements Async<Readable> {
 
 	async get(key: AbsolutePath) {
 		let entry = (await this.info).entries[strip_prefix(key)];
-		if (!entry) return;
-		return new Uint8Array(await entry.arrayBuffer());
+		if (!entry) {
+			return new Response(null, { status: 404 });
+		}
+		return new Response(await entry.blob());
 	}
 
 	async has(key: AbsolutePath) {

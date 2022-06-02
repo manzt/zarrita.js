@@ -1,5 +1,6 @@
-import * as fs from "node:fs";
+import * as fsp from "node:fs/promises";
 import * as path from "node:path";
+import * as stream from "node:stream";
 import { strip_prefix } from "./util";
 
 import type {
@@ -11,34 +12,42 @@ import type {
 	Writeable,
 } from "../types";
 
+
 class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	constructor(public root: string) {}
 
-	get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+	async get(key: AbsolutePath) {
 		const fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.readFile(fp)
-			.then((buf) => new Uint8Array(buf.buffer))
-			.catch((err) => {
-				// return undefined is no file or directory
-				if (err.code === "ENOENT") return undefined;
-				throw err;
-			});
+		try {
+			let filehandle = await fsp.open(fp);
+			// Could use `file.readableWebStream()` but this doesn't close the
+			// underlying filehandle once the resource is read. The following
+			// allows us to create a response that closes the filehandle once read.
+			const readable = filehandle.createReadStream({ autoClose: true });
+			// @ts-expect-error `Readable.toWeb` is avaiable in Node v17 but not in `@types/node`
+			return new Response(stream.Readable.toWeb(readable));
+		} catch (err: any) {
+			if (err.code === "ENOENT") {
+				return new Response(null, { status: 404 })
+			}
+			throw err;
+		}
 	}
 
-	has(key: AbsolutePath): Promise<boolean> {
+	has(key: AbsolutePath) {
 		const fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.access(fp).then(() => true).catch(() => false);
+		return fsp.access(fp).then(() => true).catch(() => false);
 	}
 
 	async set(key: AbsolutePath, value: Uint8Array): Promise<void> {
 		const fp = path.join(this.root, strip_prefix(key));
-		await fs.promises.mkdir(path.dirname(fp), { recursive: true });
-		await fs.promises.writeFile(fp, value, null);
+		await fsp.mkdir(path.dirname(fp), { recursive: true });
+		await fsp.writeFile(fp, value, null);
 	}
 
 	async delete(key: AbsolutePath): Promise<boolean> {
 		const fp = path.join(this.root, strip_prefix(key));
-		await fs.promises.unlink(fp);
+		await fsp.unlink(fp);
 		return true;
 	}
 
@@ -62,7 +71,7 @@ class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 
 		const fp = path.join(this.root, prefix.slice(1));
 		try {
-			const dir = await fs.promises.readdir(fp, { withFileTypes: true });
+			const dir = await fsp.readdir(fp, { withFileTypes: true });
 			dir.forEach((d) => {
 				if (d.isFile()) contents.push(d.name);
 				if (d.isDirectory()) prefixes.push(d.name); // directory
@@ -78,7 +87,7 @@ class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 }
 
 async function* walk(dir: string): AsyncGenerator<string> {
-	const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+	const dirents = await fsp.readdir(dir, { withFileTypes: true });
 	for (const dirent of dirents) {
 		const res = path.join(dir, dirent.name);
 		if (dirent.isDirectory()) {

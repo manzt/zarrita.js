@@ -34,7 +34,7 @@ export type Async<T extends Record<string, any>> = {
 };
 
 export interface Readable<Opts = any> {
-	get(key: AbsolutePath, opts?: Opts): Uint8Array | undefined;
+	get(key: AbsolutePath, opts?: Opts): Response;
 }
 
 export interface Writeable {

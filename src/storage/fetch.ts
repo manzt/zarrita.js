@@ -25,19 +25,14 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 class FetchStore implements Async<Readable<RequestInit>> {
 	constructor(public url: string | URL) {}
 
-	async get(key: AbsolutePath, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
+	async get(key: AbsolutePath, opts: RequestInit = {}) {
 		const { href } = resolve(this.url, key);
-		const res = await fetch(href, opts);
-		if (res.status === 404 || res.status === 403) {
-			return undefined;
-		}
-		const value = await res.arrayBuffer();
-		return new Uint8Array(value);
+		return fetch(href, opts);
 	}
 
-	has(key: AbsolutePath): Promise<boolean> {
+	has(key: AbsolutePath) {
 		// TODO: make parameter, use HEAD request if possible.
-		return this.get(key).then((res) => res !== undefined);
+		return this.get(key).then(res => res.ok);
 	}
 }
 

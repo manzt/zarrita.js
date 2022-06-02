@@ -1,7 +1,7 @@
 import { Array as BaseArray, ArrayProps, Group as BaseGroup } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { KeyError, NodeNotFoundError } from "./lib/errors";
-import { is_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import { is_dtype, json_encode_object } from "./lib/util";
 import type {
 	AbsolutePath,
 	Async,
@@ -23,8 +23,8 @@ async function get_attrs<Store extends Readable | Async<Readable>>(
 	store: Store,
 	path: AbsolutePath,
 ) {
-	const maybe_bytes = await store.get(attrs_key(path));
-	const attrs: Attrs = maybe_bytes ? json_decode_object(maybe_bytes) : {};
+	const response = await store.get(attrs_key(path));
+	const attrs: Attrs = response.ok ? await response.json() : {};
 	return attrs;
 }
 
@@ -183,11 +183,11 @@ async function _get_array<
 	Path extends AbsolutePath,
 >(store: Store, path: Path) {
 	const meta_key = array_meta_key(path);
-	const meta_doc = await store.get(meta_key);
-	if (!meta_doc) {
+	const response = await store.get(meta_key);
+	if (!response.ok) {
 		throw new NodeNotFoundError(path);
 	}
-	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
+	const meta: ArrayMetadata<DataType> = await response.json();
 	return new Array({
 		store: store,
 		path,
@@ -261,11 +261,12 @@ async function _get_group<
 	Path extends AbsolutePath,
 >(store: Store, path: Path) {
 	const meta_key = group_meta_key(path);
-	const meta_doc = await store.get(meta_key);
-	if (!meta_doc) {
+	const response = await store.get(meta_key);
+	if (!response.ok) {
 		throw new NodeNotFoundError(path);
 	}
-	return new Group({ store, path });
+	const attrs = await response.json();
+	return new Group({ store, path, attrs });
 }
 
 /**

@@ -99,11 +99,12 @@ export class Array<
 		opts?: Parameters<Store["get"]>[1],
 	): Promise<Chunk<Dtype>> {
 		const chunk_key = this.chunk_key(chunk_coords);
-		const maybe_bytes = await this.store.get(chunk_key, opts);
-		if (!maybe_bytes) {
+		const response = await this.store.get(chunk_key, opts);
+		if (!response.ok) {
 			throw new KeyError(chunk_key);
 		}
-		const data = await decode_chunk(this, maybe_bytes);
+		let bytes = new Uint8Array(await response.arrayBuffer())
+		const data = await decode_chunk(this, bytes);
 		return {
 			data,
 			shape: this.chunk_shape.slice(),

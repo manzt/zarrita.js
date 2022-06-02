@@ -3,7 +3,7 @@ import * as assert from "uvu/assert";
 import ndarray from "ndarray";
 
 import * as v3 from "../src/v3";
-import { json_decode_object, range } from "../src/lib/util";
+import { range } from "../src/lib/util";
 import { get, set } from "../src/ops";
 
 import MemStore from "../src/storage/mem";
@@ -16,7 +16,7 @@ test("create root group", async () => {
 	assert.equal(await grp.attrs(), attrs);
 	assert.ok(h.store.has("/zarr.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/zarr.json")!),
+		await h.store.get("/zarr.json").json(),
 		{
 			zarr_format: "https://purl.org/zarr/spec/protocol/core/3.0",
 			metadata_encoding: "https://purl.org/zarr/spec/protocol/core/3.0",
@@ -26,7 +26,7 @@ test("create root group", async () => {
 	);
 	assert.ok(h.store.has("/meta/root.group.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/meta/root.group.json")!),
+		await h.store.get("/meta/root.group.json").json(),
 		{
 			extensions: [],
 			attributes: attrs,
@@ -53,7 +53,7 @@ test("create array", async () => {
 
 	assert.ok(h.store.has("/meta/root/arthur/dent.array.json"));
 	assert.equal(
-		json_decode_object(h.store.get("/meta/root/arthur/dent.array.json")!),
+		await h.store.get("/meta/root/arthur/dent.array.json").json(),
 		{
 			shape: [5, 10],
 			data_type: "<i4",

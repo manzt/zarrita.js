@@ -1,7 +1,7 @@
 import { Array as BaseArray, ArrayProps, Group } from "./lib/hierarchy";
 import { registry } from "./lib/codec-registry";
 import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
-import { is_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import { is_dtype, json_encode_object } from "./lib/util";
 
 import type {
 	AbsolutePath,
@@ -224,13 +224,13 @@ export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 ): Promise<Hierarchy<Store>> {
 	// retrieve and parse entry point metadata document
 	const meta_key = "/zarr.json";
-	const meta_doc = await store.get(meta_key);
+	const response = await store.get(meta_key);
 
-	if (!meta_doc) {
+	if (!response.ok) {
 		throw new NodeNotFoundError(meta_key);
 	}
 
-	const meta: RootMetadata = json_decode_object(meta_doc);
+	const meta: RootMetadata = await response.json();
 
 	// check protocol version
 	const segments = meta.zarr_format.split("/");
@@ -444,13 +444,13 @@ async function _get_array<
 	path: Path,
 ) {
 	const key = meta_key(path, hierarchy.meta_key_suffix, "array");
-	const meta_doc = await hierarchy.store.get(key);
+	const response = await hierarchy.store.get(key);
 
-	if (!meta_doc) {
+	if (!response.ok) {
 		throw new NodeNotFoundError(path);
 	}
 
-	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
+	const meta: ArrayMetadata<DataType> = await response.json();
 
 	// decode and check metadata
 	const {
@@ -527,11 +527,11 @@ async function _get_group<
 	path: Path,
 ) {
 	const key = meta_key(path, hierarchy.meta_key_suffix, "group");
-	const meta_doc = await hierarchy.store.get(key);
-	if (!meta_doc) {
+	const response = await hierarchy.store.get(key);
+	if (!response.ok) {
 		throw new NodeNotFoundError(path);
 	}
-	const meta: GroupMetadata = json_decode_object(meta_doc);
+	const meta: GroupMetadata = await response.json();
 	return new ExplicitGroup({
 		store: hierarchy.store,
 		owner: hierarchy,

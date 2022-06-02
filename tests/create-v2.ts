@@ -2,10 +2,10 @@ import { test } from "uvu";
 import * as assert from "uvu/assert";
 
 import * as v2 from "../src/v2";
-import { json_decode_object } from "../src/lib/util";
+import MemoryStore from "../src/storage/mem";
 
 test("create root group", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/", { attrs });
 	assert.is(grp.path, "/");
@@ -13,17 +13,17 @@ test("create root group", async () => {
 	assert.ok(store.has("/.zattrs"));
 	assert.ok(store.has("/.zgroup"));
 	assert.equal(
-		json_decode_object(store.get("/.zgroup")),
+		await store.get("/.zgroup").json(),
 		{ zarr_format: 2 },
 	);
 	assert.equal(
-		json_decode_object(store.get("/.zattrs")),
+		await store.get("/.zattrs").json(),
 		attrs,
 	);
 });
 
 test("create nested group", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/path/to/nested", { attrs });
 	assert.is(grp.path, "/path/to/nested");
@@ -32,7 +32,7 @@ test("create nested group", async () => {
 });
 
 test("create relative and absolute groups", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	let grp = await v2.create_group(store, "/nested");
 	let attrs = { foo: "bar" };
 	await v2.create_group(grp, "relative/path", { attrs });
@@ -44,7 +44,7 @@ test("create relative and absolute groups", async () => {
 });
 
 test("create root array", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	await v2.create_array(store, "/", {
 		dtype: "<f4",
 		shape: [3, 4, 5],
@@ -54,7 +54,7 @@ test("create root array", async () => {
 	assert.ok(store.has("/.zarray"));
 	assert.ok(store.has("/.zattrs"));
 	assert.equal(
-		json_decode_object(store.get("/.zarray")),
+		await store.get("/.zarray").json(),
 		{
 			zarr_format: 2,
 			dtype: "<f4",
@@ -68,13 +68,13 @@ test("create root array", async () => {
 		},
 	);
 	assert.equal(
-		json_decode_object(store.get("/.zattrs")),
+		await store.get("/.zattrs").json(),
 		{ foo: "bar" },
 	);
 });
 
 test("create multiple arrays", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	await Promise.all([
 		v2.create_array(store, "/a", {
 			dtype: "<f4",
@@ -94,7 +94,7 @@ test("create multiple arrays", async () => {
 });
 
 test("create group and array(s)", async () => {
-	let store = new Map();
+	let store = new MemoryStore();
 	await v2.create_group(store, "/", { attrs: { foo: "bar" } });
 	let grp = await v2.create_group(store, "/nested");
 	await Promise.all([

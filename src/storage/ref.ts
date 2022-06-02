@@ -17,13 +17,18 @@ class ReferenceStore implements Async<Readable<RequestInit>> {
 	async get(key: AbsolutePath, opts: RequestInit = {}) {
 		let ref = this.refs.get(strip_prefix(key));
 
-		if (!ref) return;
+		if (!ref) {
+			return new Response(null, { status: 404 });
+		}
 
 		if (typeof ref === "string") {
+			let data;
 			if (ref.startsWith("base64:")) {
-				return to_binary(ref.slice("base64:".length));
+				data = to_binary(ref.slice("base64:".length));
+			} else {
+				data = new TextEncoder().encode(ref);
 			}
-			return new TextEncoder().encode(ref);
+			return new Response(data, { status: 200 });
 		}
 
 		let [urlOrNull, offset, size] = ref;
@@ -32,15 +37,7 @@ class ReferenceStore implements Async<Readable<RequestInit>> {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
 
-		let res = await fetch_range({ url: uri2href(url), offset, size }, opts);
-
-		if (res.status === 200 || res.status === 206) {
-			return new Uint8Array(await res.arrayBuffer());
-		}
-
-		throw new Error(
-			`Request unsuccessful for key ${key}. Response status: ${res.status}.`,
-		);
+		return fetch_range({ url: uri2href(url), offset, size }, opts);
 	}
 
 	async has(key: AbsolutePath) {

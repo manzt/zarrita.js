@@ -1,6 +1,13 @@
-import type { ExtendedReadable, PrefixPath, RootPath, Writeable } from "../types";
+import type { ExtendedReadable, PrefixPath, RootPath, Writeable, AbsolutePath } from "../types";
 
 class MemoryStore extends Map<string, Uint8Array> implements ExtendedReadable, Writeable {
+	get(path: AbsolutePath) {
+		return new Response(
+			super.get(path),
+			{ status: super.has(path) ? 200 : 404 },
+		);
+	}
+
 	list_prefix(prefix: RootPath | PrefixPath) {
 		const items = [];
 		for (const path of super.keys()) {
