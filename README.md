@@ -106,37 +106,32 @@ console.log(region);
 
 ## Usage
 
-### In Browser
+### In Browser (or Deno)
 
-```html
-<script type="module">
-  import * as zarr from "https://cdn.skypack.dev/zarrita/v2";
-  import { get } from "https://cdn.skypack.dev/zarrita/ops";
-</script>
+```javascript
+import * as zarr from "https://esm.sh/zarrita/v2";
+import { get } from "https://esm.sh/zarrita/ops";
 ```
 
 ### In Node.js or Application Bundles
 
-Import using ES module syntax, import all exports into a single object:
+Import using ES module syntax as a namespace:
 
 ```javascript
 import * as zarr from "zarrita/v2";
 ```
 
-Import using ES module syntax, with targeted imports:
+or with targeted named imports:
 
 ```javascript
 import { get_array } from "zarrita/v2";
 ```
 
-#### Development
+## Development
 
 This library uses the [`pnpm`](https://pnpm.io/) package manager.
 
 ```bash
-$ pnpm install && pnpm test
+pnpm install
+pnpm test
 ```
-
-Tests are run directly on the ESM module (contents of `dist/`), which is generated when
-running `pnpm test` thanks to [`mkdist`](https://github.com/unjs/mkdist), a simple
-file-to-file transpiler.
