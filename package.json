@@ -41,6 +41,10 @@
     "./storage/*": {
       "types": "./dist/storage/*.d.ts",
       "import": "./dist/storage/*.mjs"
+    },
+    "./custom-arrays": {
+      "types": "./dist/lib/custom-arrays.d.ts",
+      "import": "./dist/lib/custom-arrays.mjs"
     }
   },
   "typesVersions": {
