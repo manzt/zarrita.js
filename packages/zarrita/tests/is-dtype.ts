@@ -1,7 +1,5 @@
+import { test, assert } from "vitest";
 import { is_dtype } from "../src/lib/util";
-
-import { test } from "uvu";
-import * as assert from "uvu/assert";
 
 test("is number", () => {
 	assert.ok(is_dtype("|i1", "number"));
@@ -23,17 +21,17 @@ test("is number", () => {
 });
 
 test("is not number (bigint)", () => {
-	assert.not.ok(is_dtype(">i8", "number"));
-	assert.not.ok(is_dtype("<i8", "number"));
-	assert.not.ok(is_dtype(">u8", "number"));
-	assert.not.ok(is_dtype("<u8", "number"));
+	assert.notOk(is_dtype(">i8", "number"));
+	assert.notOk(is_dtype("<i8", "number"));
+	assert.notOk(is_dtype(">u8", "number"));
+	assert.notOk(is_dtype("<u8", "number"));
 });
 
 test("is not number (string)", () => {
-	assert.not.ok(is_dtype("<U8", "number"));
-	assert.not.ok(is_dtype("|S1", "number"));
-	assert.not.ok(is_dtype("|S1", "number"));
-	assert.not.ok(is_dtype("|S24", "number"));
+	assert.notOk(is_dtype("<U8", "number"));
+	assert.notOk(is_dtype("|S1", "number"));
+	assert.notOk(is_dtype("|S1", "number"));
+	assert.notOk(is_dtype("|S24", "number"));
 });
 
 test("is bigint", () => {
@@ -44,29 +42,29 @@ test("is bigint", () => {
 });
 
 test("is not bigint (number)", () => {
-	assert.not.ok(is_dtype("|i1", "bigint"));
-	assert.not.ok(is_dtype("<i2", "bigint"));
-	assert.not.ok(is_dtype(">i2", "bigint"));
-	assert.not.ok(is_dtype("<i4", "bigint"));
-	assert.not.ok(is_dtype(">i4", "bigint"));
+	assert.notOk(is_dtype("|i1", "bigint"));
+	assert.notOk(is_dtype("<i2", "bigint"));
+	assert.notOk(is_dtype(">i2", "bigint"));
+	assert.notOk(is_dtype("<i4", "bigint"));
+	assert.notOk(is_dtype(">i4", "bigint"));
 
-	assert.not.ok(is_dtype("|u1", "bigint"));
-	assert.not.ok(is_dtype("<u2", "bigint"));
-	assert.not.ok(is_dtype(">u2", "bigint"));
-	assert.not.ok(is_dtype("<u4", "bigint"));
-	assert.not.ok(is_dtype(">u4", "bigint"));
+	assert.notOk(is_dtype("|u1", "bigint"));
+	assert.notOk(is_dtype("<u2", "bigint"));
+	assert.notOk(is_dtype(">u2", "bigint"));
+	assert.notOk(is_dtype("<u4", "bigint"));
+	assert.notOk(is_dtype(">u4", "bigint"));
 
-	assert.not.ok(is_dtype("<f4", "bigint"));
-	assert.not.ok(is_dtype(">f4", "bigint"));
-	assert.not.ok(is_dtype("<f8", "bigint"));
-	assert.not.ok(is_dtype(">f8", "bigint"));
+	assert.notOk(is_dtype("<f4", "bigint"));
+	assert.notOk(is_dtype(">f4", "bigint"));
+	assert.notOk(is_dtype("<f8", "bigint"));
+	assert.notOk(is_dtype(">f8", "bigint"));
 });
 
 test("is not bigint (string)", () => {
-	assert.not.ok(is_dtype("<U8", "bigint"));
-	assert.not.ok(is_dtype(">U43", "bigint"));
-	assert.not.ok(is_dtype("|S1", "bigint"));
-	assert.not.ok(is_dtype("|S24", "bigint"));
+	assert.notOk(is_dtype("<U8", "bigint"));
+	assert.notOk(is_dtype(">U43", "bigint"));
+	assert.notOk(is_dtype("|S1", "bigint"));
+	assert.notOk(is_dtype("|S24", "bigint"));
 });
 
 test("is exact", () => {
@@ -78,9 +76,9 @@ test("is exact", () => {
 });
 
 test("is not exact", () => {
-	assert.not.ok(is_dtype("<U8", "<U88"));
-	assert.not.ok(is_dtype("<i2", ">i2"));
-	assert.not.ok(is_dtype("|S22", "|S225"));
+	assert.notOk(is_dtype("<U8", "<U88"));
+	assert.notOk(is_dtype("<i2", ">i2"));
+	assert.notOk(is_dtype("|S22", "|S225"));
 });
 
 test("is fuzzy", () => {
@@ -114,5 +112,3 @@ test("is fuzzy", () => {
 	// boolean
 	assert.ok(is_dtype("|b1", "b1"));
 });
-
-test.run();

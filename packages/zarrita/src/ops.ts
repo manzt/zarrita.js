@@ -1,4 +1,4 @@
-import { BoolArray } from "./lib/custom-arrays";
+import { BoolArray } from "@zarrita/typedarray";
 import type { Array } from "./lib/hierarchy";
 
 import type {

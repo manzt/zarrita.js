@@ -1,8 +1,12 @@
 {
   "license": "MIT",
+  "scripts": {
+    "test": "vitest"
+  },
   "devDependencies": {
-    "@changesets/cli": "^2.26.1",
+    "@changesets/cli": "^2.26.2",
     "@svitejs/changesets-changelog-github-compact": "^1.1.0",
-    "typescript": "^4.6.2"
+    "typescript": "^5.1.6",
+    "vitest": "^0.33.0"
   }
 }

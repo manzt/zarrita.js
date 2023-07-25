@@ -1,49 +1,48 @@
-import { test } from "uvu";
-import * as assert from "uvu/assert";
+import { test, expect, assert } from "vitest";
 
 import type { DataType } from "../src/dtypes";
 
 import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/lib/util";
 
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "../src/lib/custom-arrays";
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
 test("get_ctr", () => {
 	// get an instance of returned constructor
 	const get = <D extends DataType>(s: D) => new (get_ctr(s))(1);
 
-	assert.instance(get("|i1"), Int8Array);
-	assert.instance(get("<i2"), Int16Array);
-	assert.instance(get(">i2"), Int16Array);
-	assert.instance(get("<i4"), Int32Array);
-	assert.instance(get(">i4"), Int32Array);
-	assert.instance(get("<i8"), BigInt64Array);
-	assert.instance(get(">i8"), BigInt64Array);
+	expect(get("|i1")).toBeInstanceOf(Int8Array);
+	expect(get("<i2")).toBeInstanceOf(Int16Array);
+	expect(get(">i2")).toBeInstanceOf(Int16Array);
+	expect(get("<i4")).toBeInstanceOf(Int32Array);
+	expect(get(">i4")).toBeInstanceOf(Int32Array);
+	expect(get("<i8")).toBeInstanceOf(BigInt64Array);
+	expect(get(">i8")).toBeInstanceOf(BigInt64Array);
 
-	assert.instance(get("|u1"), Uint8Array);
-	assert.instance(get("<u2"), Uint16Array);
-	assert.instance(get(">u2"), Uint16Array);
-	assert.instance(get("<u4"), Uint32Array);
-	assert.instance(get(">u4"), Uint32Array);
-	assert.instance(get("<u8"), BigUint64Array);
-	assert.instance(get(">u8"), BigUint64Array);
+	expect(get("|u1")).toBeInstanceOf(Uint8Array);
+	expect(get("<u2")).toBeInstanceOf(Uint16Array);
+	expect(get(">u2")).toBeInstanceOf(Uint16Array);
+	expect(get("<u4")).toBeInstanceOf(Uint32Array);
+	expect(get(">u4")).toBeInstanceOf(Uint32Array);
+	expect(get("<u8")).toBeInstanceOf(BigUint64Array);
+	expect(get(">u8")).toBeInstanceOf(BigUint64Array);
 
-	assert.throws(() => get("<f2" as any));
-	assert.throws(() => get(">f2" as any));
-	assert.instance(get("<f4"), Float32Array);
-	assert.instance(get(">f4"), Float32Array);
-	assert.instance(get("<f8"), Float64Array);
-	assert.instance(get(">f8"), Float64Array);
+	expect(() => get("<f2" as any)).toThrowError();
+	expect(() => get(">f2" as any)).toThrowError();
+	expect(get("<f4")).toBeInstanceOf(Float32Array);
+	expect(get(">f4")).toBeInstanceOf(Float32Array);
+	expect(get("<f8")).toBeInstanceOf(Float64Array);
+	expect(get(">f8")).toBeInstanceOf(Float64Array);
 
-	assert.instance(get("|b1"), BoolArray);
+	expect(get("|b1")).toBeInstanceOf(BoolArray);
 
-	assert.instance(get("<U20"), UnicodeStringArray);
-	assert.instance(get(">U20"), UnicodeStringArray);
-	assert.is(get(">U20").chars, 20);
-	assert.is(get("<U32").chars, 32);
+	expect(get("<U20")).toBeInstanceOf(UnicodeStringArray);
+	expect(get(">U20")).toBeInstanceOf(UnicodeStringArray);
+	expect(get(">U20").chars).toBe(20);
+	expect(get("<U32").chars).toBe(32);
 
-	assert.instance(get("|S8"), ByteStringArray);
-	assert.instance(get("|S4"), ByteStringArray);
-	assert.is(get("|S16").chars, 16);
+	expect(get("|S8")).toBeInstanceOf(ByteStringArray);
+	expect(get("|S4")).toBeInstanceOf(ByteStringArray);
+	expect(get("|S16").chars).toBe(16);
 });
 
 test("byteswap_inplace", () => {
@@ -64,20 +63,20 @@ test("byteswap_inplace", () => {
 });
 
 test("slice", () => {
-	assert.is(slice(null).start, null);
-	assert.is(slice(null).stop, null);
-	assert.is(slice(null).step, null);
+	assert.equal(slice(null).start, null);
+	assert.equal(slice(null).stop, null);
+	assert.equal(slice(null).step, null);
 	assert.equal(slice(null).indices(10), [0, 10, 1]);
 
-	assert.is(slice(3, 15, 2).start, 3);
-	assert.is(slice(3, 15, 2).stop, 15);
-	assert.is(slice(3, 15, 2).step, 2);
+	assert.equal(slice(3, 15, 2).start, 3);
+	assert.equal(slice(3, 15, 2).stop, 15);
+	assert.equal(slice(3, 15, 2).step, 2);
 	assert.equal(slice(3, 15, 2).indices(10), [3, 10, 2]);
 	assert.equal(slice(3, 15, 2).indices(30), [3, 15, 2]);
 
-	assert.is(slice(40).start, null);
-	assert.is(slice(40).stop, 40);
-	assert.is(slice(40).step, null);
+	assert.equal(slice(40).start, null);
+	assert.equal(slice(40).stop, 40);
+	assert.equal(slice(40).step, null);
 	assert.equal(slice(40).indices(4), [0, 4, 1]);
 	assert.equal(slice(40).indices(41), [0, 40, 1]);
 
@@ -112,5 +111,3 @@ test("get_strides", () => {
 	assert.equal(get_strides([3, 4, 10, 2], "C"), [80, 20, 2, 1]);
 	assert.equal(get_strides([3, 4, 10, 2], "F"), [1, 3, 12, 120]);
 });
-
-test.run();

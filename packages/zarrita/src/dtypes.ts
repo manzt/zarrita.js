@@ -1,4 +1,4 @@
-import type { BoolArray, ByteStringArray, UnicodeStringArray } from "./lib/custom-arrays";
+import type { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
 /** @category Number */
 export type Int8 = "|i1";

@@ -41,10 +41,6 @@
     "./storage/*": {
       "types": "./dist/storage/*.d.ts",
       "import": "./dist/storage/*.mjs"
-    },
-    "./custom-arrays": {
-      "types": "./dist/lib/custom-arrays.d.ts",
-      "import": "./dist/lib/custom-arrays.mjs"
     }
   },
   "typesVersions": {
@@ -56,6 +52,7 @@
   },
   "dependencies": {
     "@types/ndarray": "^1.0.11",
+    "@zarrita/typedarray": "workspace:^",
     "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2",
     "numcodecs": "^0.2.2",

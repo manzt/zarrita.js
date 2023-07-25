@@ -1,5 +1,4 @@
-import { test } from "uvu";
-import * as assert from "uvu/assert";
+import { test, assert } from "vitest";
 
 import * as v2 from "../src/v2";
 import { json_decode_object } from "../src/lib/util";
@@ -8,7 +7,7 @@ test("create root group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/", { attrs });
-	assert.is(grp.path, "/");
+	assert.equal(grp.path, "/");
 	assert.equal(await grp.attrs(), attrs);
 	assert.ok(store.has("/.zattrs"));
 	assert.ok(store.has("/.zgroup"));
@@ -26,7 +25,7 @@ test("create nested group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/path/to/nested", { attrs });
-	assert.is(grp.path, "/path/to/nested");
+	assert.equal(grp.path, "/path/to/nested");
 	assert.ok(store.has("/path/to/nested/.zattrs"));
 	assert.ok(store.has("/path/to/nested/.zgroup"));
 });
@@ -122,5 +121,3 @@ test("create group and array(s)", async () => {
 		]),
 	);
 });
-
-test.run();

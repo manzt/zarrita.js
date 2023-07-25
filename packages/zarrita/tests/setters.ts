@@ -1,5 +1,4 @@
-import * as uvu from "uvu";
-import * as assert from "uvu/assert";
+import { describe, it, beforeEach, assert } from "vitest";
 
 import ndarray from "ndarray";
 // @ts-ignore
@@ -19,15 +18,13 @@ function to_c({ data, shape, stride }: Chunk<"<f4">) {
 }
 
 function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
-	let test = uvu.suite<typeof ops.setter>(name);
-
-	test.before((ctx) => {
+	beforeEach<typeof setter>((ctx) => {
 		ctx.prepare = setter.prepare;
 		ctx.set_from_chunk = setter.set_from_chunk;
 		ctx.set_scalar = setter.set_scalar;
 	});
 
-	test("ctx.set_scalar - fill", async (ctx) => {
+	it("ctx.set_scalar - fill", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -48,7 +45,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - point", async (ctx) => {
+	it("ctx.set_scalar - point", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -104,7 +101,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - mixed", async (ctx) => {
+	it("ctx.set_scalar - mixed", async (ctx) => {
 		let a = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -139,7 +136,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("ctx.set_scalar - mixed F order", async (ctx) => {
+	it("ctx.set_scalar - mixed F order", async (ctx) => {
 		let f = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -179,7 +176,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - complete", async (ctx) => {
+	it("set_from_chunk - complete", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -211,7 +208,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - from complete to strided", async (ctx) => {
+	it("set_from_chunk - from complete to strided", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -243,7 +240,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - from strided to complete", async (ctx) => {
+	it("set_from_chunk - from strided to complete", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 2 * 2),
 			[2, 2, 2],
@@ -275,7 +272,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		assert.equal(dest.data, new Float32Array(2 * 2 * 2).fill(2));
 	});
 
-	test("set_from_chunk - src squeezed", async (ctx) => {
+	it("set_from_chunk - src squeezed", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -307,7 +304,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 	});
 
-	test("set_from_chunk - dest squeezed", async (ctx) => {
+	it("set_from_chunk - dest squeezed", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(4),
 			[4],
@@ -339,7 +336,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		assert.equal(dest.data, new Float32Array([2, 0, 0, 2]));
 	});
 
-	test("set_from_chunk - complete F order", async (ctx) => {
+	it("set_from_chunk - complete F order", async (ctx) => {
 		let dest = ctx.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -372,7 +369,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 	});
 
 	// TODO(2022-01-17): fix the following tests to work for "builtin" as well;
-	let maybe_skip = name === "builtin" ? test.skip : test;
+	let maybe_skip = name === "builtin" ? it.skip : it;
 
 	maybe_skip("set_from_chunk - F order", async (ctx) => {
 		let dest = ctx.prepare(
@@ -469,9 +466,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 			0, 0, 0, 0,
 		]));
 	});
-
-	return test;
 }
 
-suite("builtin", ops.setter).run();
-suite("ndarray", nd.setter).run();
+suite("builtin", ops.setter);
+suite("ndarray", nd.setter);

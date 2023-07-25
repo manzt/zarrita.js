@@ -1,5 +1,4 @@
-import { test } from "uvu";
-import * as assert from "uvu/assert";
+import { test, assert } from "vitest";
 
 import type { Slice } from "../src/types";
 
@@ -31,11 +30,11 @@ test("normalize_selection", () => {
 });
 
 test("normalize_integer_selection", () => {
-	assert.is(normalize_integer_selection(2, 5), 2);
-	assert.is(normalize_integer_selection(-1, 5), 4);
-	assert.is(normalize_integer_selection(-2, 5), 3);
-	assert.is(normalize_integer_selection(-2.2, 5), 3);
-	assert.is(normalize_integer_selection(4.3, 5), 4);
+	assert.equal(normalize_integer_selection(2, 5), 2);
+	assert.equal(normalize_integer_selection(-1, 5), 4);
+	assert.equal(normalize_integer_selection(-2, 5), 3);
+	assert.equal(normalize_integer_selection(-2.2, 5), 3);
+	assert.equal(normalize_integer_selection(4.3, 5), 4);
 	assert.throws(() => normalize_integer_selection(5, 5));
 	assert.throws(() => normalize_integer_selection(6, 5));
 	assert.throws(() => normalize_integer_selection(-6, 5));
@@ -146,5 +145,3 @@ test("BasicIndexer - squeezed dim", () => {
 		{ from: 0, to: null },
 	]);
 });
-
-test.run();

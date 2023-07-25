@@ -1,5 +1,4 @@
-import { test } from "uvu";
-import * as assert from "uvu/assert";
+import { test, expect, assert } from "vitest";
 import ndarray from "ndarray";
 
 import * as v3 from "../src/v3";
@@ -12,7 +11,7 @@ test("create root group", async () => {
 	let h = await v3.create_hierarchy(new MemStore());
 	let attrs = { hello: "world" };
 	let grp = await v3.create_group(h, "/", { attrs });
-	assert.is(grp.path, "/");
+	assert.equal(grp.path, "/");
 	assert.equal(await grp.attrs(), attrs);
 	assert.ok(h.store.has("/zarr.json"));
 	assert.equal(
@@ -43,11 +42,11 @@ test("create array", async () => {
 		chunk_shape: [2, 5],
 		attrs,
 	});
-	assert.is(a.path, "/arthur/dent");
-	assert.is(a.name, "dent");
-	assert.is(a.ndim, 2);
+	assert.equal(a.path, "/arthur/dent");
+	assert.equal(a.name, "dent");
+	assert.equal(a.ndim, 2);
 	assert.equal(a.shape, [5, 10]);
-	assert.is(a.dtype, "<i4");
+	assert.equal(a.dtype, "<i4");
 	assert.equal(a.chunk_shape, [2, 5]);
 	assert.equal(await a.attrs(), attrs);
 
@@ -90,7 +89,7 @@ test("create explicit group and access implicit group", async () => {
 	let h = await v3.create_hierarchy(new MemStore());
 	await v3.create_group(h, "/tricia/mcmillan");
 	let grp = await v3.get_implicit_group(h, "/tricia");
-	assert.instance(grp, v3.ImplicitGroup);
+	expect(grp).toBeInstanceOf(v3.ImplicitGroup);
 });
 
 test("create nodes via groups", async () => {
@@ -102,12 +101,12 @@ test("create nodes via groups", async () => {
 		dtype: "|u1",
 		chunk_shape: [2, 2],
 	});
-	assert.instance(marvin, v3.ExplicitGroup);
-	assert.is(marvin.path, "/marvin");
-	assert.instance(paranoid, v3.ExplicitGroup);
-	assert.is(paranoid.path, "/marvin/paranoid");
-	assert.instance(android, v3.Array);
-	assert.is(android.path, "/marvin/android");
+	expect(marvin).toBeInstanceOf(v3.ExplicitGroup);
+	assert.equal(marvin.path, "/marvin");
+	expect(paranoid).toBeInstanceOf(v3.ExplicitGroup);
+	assert.equal(paranoid.path, "/marvin/paranoid");
+	expect(android).toBeInstanceOf(v3.Array);
+	assert.equal(android.path, "/marvin/android");
 });
 
 test("get_children", async () => {
@@ -354,5 +353,3 @@ test("Read and write array data - builtin", async () => {
 		new Float64Array(10).fill(1, 0, 5),
 	);
 });
-
-test.run();

@@ -2,16 +2,11 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "nodenext",
     "strict": true,
-    "strictNullChecks": true,
-    "allowJs": true,
     "noImplicitAny": true,
     "declaration": true,
-    "declarationDir": "./types",
-    "importsNotUsedAsValues": "error",
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "baseUrl": "./"
-  },
-  "include": ["src/**/*", "tests/**/*"]
+    "verbatimModuleSyntax": true
+  }
 }
