@@ -7,7 +7,6 @@ import { assign } from "ndarray-ops";
 import type { Chunk, Projection } from "../src/types";
 
 import * as ops from "../src/ops";
-import * as nd from "../src/ndarray";
 import { get_strides, slice } from "../src/lib/util";
 
 function to_c({ data, shape, stride }: Chunk<"<f4">) {
@@ -17,7 +16,7 @@ function to_c({ data, shape, stride }: Chunk<"<f4">) {
 	return out;
 }
 
-function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
+function run_suite(name: string, setter: any) {
 	beforeEach<typeof setter>((ctx) => {
 		ctx.prepare = setter.prepare;
 		ctx.set_from_chunk = setter.set_from_chunk;
@@ -468,5 +467,4 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 	});
 }
 
-suite("builtin", ops.setter);
-suite("ndarray", nd.setter);
+run_suite("builtin", ops.setter);

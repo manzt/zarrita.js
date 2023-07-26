@@ -1,9 +1,7 @@
 import { beforeEach, describe, it, expect } from "vitest";
-import * as assert from "uvu/assert";
 
 import * as zarr from "../src/v2";
 
-import * as ndarray_ops from "../src/ndarray";
 import * as ops from "../src/ops";
 
 import { range, slice } from "../src/lib/util";
@@ -14,10 +12,7 @@ interface Context {
 	arr: zarr.Array<"<i4", Map<string, Uint8Array>>;
 }
 
-function register(
-	name: string,
-	getter: typeof ops.get | typeof ndarray_ops.get,
-) {
+export function run_suite(name: string, getter: any) {
 	const get = getter as typeof ops.get;
 
 	beforeEach<Context>(async (ctx) => {
@@ -33,7 +28,7 @@ function register(
 		});
 		let shape = [2, 3, 4];
 		let data = new Int32Array(range(2 * 3 * 4));
-		await ndarray_ops.set(arr, null, ndarray(data, shape));
+		await ops.set(arr, null, ndarray(data, shape));
 		ctx.arr = arr;
 	});
 
@@ -92,7 +87,7 @@ array([[[ 0,  1],
 		it<Context>(`selection = [1, 1, 1], output = 17`, async (ctx) => {
 			let sel = [1, 1, 1];
 			let res = await get(ctx.arr, sel);
-			assert.equal(res, 17);
+			expect(res).toBe(17);
 		});
 
 		it<Context>(
@@ -213,16 +208,11 @@ array([[[ 0,  1,  2,  3],
 
 		it<Context>("reads Does not support negative indices", async (ctx) => {
 			let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-			try {
-				await get(ctx.arr, sel);
-				assert.unreachable("should have thrown");
-			} catch (err) {
-				assert.ok("throws");
-				assert.instance(err, IndexError);
-			}
+			await expect(get(ctx.arr, sel))
+				.rejects
+				.toThrowError(IndexError);
 		});
 	});
 }
 
-register("builtin", ops.get);
-register("ndarray", ndarray_ops.get);
+run_suite("builtins", ops.get);

@@ -1,4 +1,5 @@
 import type { DataType, Scalar, TypedArray } from "./dtypes";
+export type { Array, Group } from "./lib/hierarchy";
 
 // hoist useful types here
 export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtypes";

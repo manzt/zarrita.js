@@ -1,37 +1,23 @@
 import ndarray from "ndarray";
 // @ts-expect-error
 import ops from "ndarray-ops";
-
-import type {
-	Async,
-	DataType,
-	GetOptions,
-	Indices,
-	Projection,
-	Readable,
-	Scalar,
-	SetOptions,
-	Slice,
-	TypedArray,
-	Writeable,
-	Array,
-} from "@zarrita/core";
-
 import { get_with_setter, set_with_setter } from "@zarrita/core";
+
+import type * as zarr from "@zarrita/core/types";
 
 export const setter = {
 	prepare: ndarray,
-	set_scalar<D extends DataType>(
-		dest: ndarray.NdArray<TypedArray<D>>,
-		selection: (number | Indices)[],
-		value: Scalar<D>,
+	set_scalar<D extends zarr.DataType>(
+		dest: ndarray.NdArray<zarr.TypedArray<D>>,
+		selection: (number | zarr.Indices)[],
+		value: zarr.Scalar<D>,
 	) {
 		ops.assigns(view(dest, selection), value);
 	},
-	set_from_chunk<D extends DataType>(
-		dest: ndarray.NdArray<TypedArray<D>>,
-		src: ndarray.NdArray<TypedArray<D>>,
-		mapping: Projection[],
+	set_from_chunk<D extends zarr.DataType>(
+		dest: ndarray.NdArray<zarr.TypedArray<D>>,
+		src: ndarray.NdArray<zarr.TypedArray<D>>,
+		mapping: zarr.Projection[],
 	) {
 		const s = unzip_selections(mapping);
 		ops.assign(view(dest, s.to), view(src, s.from));
@@ -40,15 +26,15 @@ export const setter = {
 
 /** @category Utility */
 export async function get<
-	D extends DataType,
-	Store extends Readable | Async<Readable>,
-	Sel extends (null | Slice | number)[],
+	D extends zarr.DataType,
+	Store extends zarr.Readable | zarr.Async<zarr.Readable>,
+	Sel extends (null | zarr.Slice | number)[],
 >(
-	arr: Array<D, Store>,
+	arr: zarr.Array<D, Store>,
 	selection: Sel | null = null,
-	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
+	opts: zarr.GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
-	return get_with_setter<D, Store, ndarray.NdArray<TypedArray<D>>, Sel>(
+	return get_with_setter<D, Store, ndarray.NdArray<zarr.TypedArray<D>>, Sel>(
 		arr,
 		selection,
 		opts,
@@ -57,13 +43,13 @@ export async function get<
 }
 
 /** @category Utility */
-export async function set<D extends DataType>(
-	arr: Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
-	selection: (null | Slice | number)[] | null,
-	value: Scalar<D> | ndarray.NdArray<TypedArray<D>>,
-	opts: SetOptions = {},
+export async function set<D extends zarr.DataType>(
+	arr: zarr.Array<D, (zarr.Readable & zarr.Writeable) | zarr.Async<zarr.Readable & zarr.Writeable>>,
+	selection: (null | zarr.Slice | number)[] | null,
+	value: zarr.Scalar<D> | ndarray.NdArray<zarr.TypedArray<D>>,
+	opts: zarr.SetOptions = {},
 ) {
-	return set_with_setter<D, ndarray.NdArray<TypedArray<D>>>(
+	return set_with_setter<D, ndarray.NdArray<zarr.TypedArray<D>>>(
 		arr,
 		selection,
 		value,
@@ -73,8 +59,8 @@ export async function set<D extends DataType>(
 }
 
 function unzip_selections(
-	mapping: Projection[],
-): { to: (number | Indices)[]; from: (number | Indices)[] } {
+	mapping: zarr.Projection[],
+): { to: (number | zarr.Indices)[]; from: (number | zarr.Indices)[] } {
 	const to = [], from = [];
 	for (const m of mapping) {
 		if (m.to !== null) to.push(m.to);
@@ -84,9 +70,9 @@ function unzip_selections(
 }
 
 /** Convert zarrita selection to ndarray view. */
-function view<D extends DataType>(
-	arr: ndarray.NdArray<TypedArray<D>>,
-	sel: (number | Indices)[],
+function view<D extends zarr.DataType>(
+	arr: ndarray.NdArray<zarr.TypedArray<D>>,
+	sel: (number | zarr.Indices)[],
 ) {
 	const lo: number[] = [];
 	const hi: number[] = [];
