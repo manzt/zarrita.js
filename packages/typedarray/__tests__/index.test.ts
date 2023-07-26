@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "./index.ts";
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "../index.js";
 
 test("BoolArray", () => {
 	let arr = new BoolArray(5);

@@ -5,15 +5,15 @@ import * as url from "node:url";
 import type * as zarr from "@zarrita/core/types";
 import { get_array } from "@zarrita/core/v2";
 
-import { get } from "./index.js";
-import FSStore from "../core/src/storage/fs.js";
-import { range } from "../core/src/lib/util.js";
+import { get } from "../index.js";
+import FSStore from "../../core/src/storage/fs.js";
+import { range } from "../../core/src/lib/util.js";
 
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-let root = path.resolve(__dirname, "../core/__tests__/data/data.zarr");
+let root = path.resolve(__dirname, "../../core/__tests__/data/data.zarr");
 let store = new FSStore(root);
 
 
