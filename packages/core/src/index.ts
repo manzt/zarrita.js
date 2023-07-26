@@ -5,3 +5,5 @@ export * as ndarray from "./ndarray";
 export { slice } from "./lib/util";
 export { registry } from "./lib/codec-registry";
 export * from "./types";
+export { get as get_with_setter } from "./lib/get";
+export { set as set_with_setter } from "./lib/set";

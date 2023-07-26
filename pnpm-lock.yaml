@@ -21,6 +21,67 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
 
+  packages/core:
+    dependencies:
+      '@types/ndarray':
+        specifier: ^1.0.11
+        version: 1.0.11
+      '@zarrita/typedarray':
+        specifier: workspace:^
+        version: link:../typedarray
+      ndarray:
+        specifier: ^1.0.19
+        version: 1.0.19
+      ndarray-ops:
+        specifier: ^1.2.2
+        version: 1.2.2
+      numcodecs:
+        specifier: ^0.2.2
+        version: 0.2.2
+      reference-spec-reader:
+        specifier: ^0.1.3
+        version: 0.1.3
+      unzipit:
+        specifier: ^1.3.6
+        version: 1.3.6
+    devDependencies:
+      '@changesets/cli':
+        specifier: ^2.26.1
+        version: 2.26.2
+      '@svitejs/changesets-changelog-github-compact':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@types/node':
+        specifier: ^16.10.2
+        version: 16.10.2
+      mkdist:
+        specifier: ^0.3.5
+        version: 0.3.5(typescript@4.6.2)
+      tsm:
+        specifier: ^2.2.1
+        version: 2.2.1
+      typescript:
+        specifier: ^4.6.2
+        version: 4.6.2
+      uvu:
+        specifier: ^0.5.3
+        version: 0.5.3
+
+  packages/ndarray:
+    dependencies:
+      '@types/ndarray':
+        specifier: ^1.0.11
+        version: 1.0.11
+      '@zarrita/core':
+        specifier: workspace:^
+        version: link:../core
+      ndarray:
+        specifier: ^1.0.19
+        version: 1.0.19
+      ndarray-ops:
+        specifier: ^1.2.2
+        version: 1.2.2
+
   packages/typedarray: {}
 
   packages/zarrita:

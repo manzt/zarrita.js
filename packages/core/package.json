@@ -1,5 +1,5 @@
 {
-  "name": "zarrita",
+  "name": "@zarrita/core",
   "type": "module",
   "license": "MIT",
   "version": "0.2.2",
@@ -11,7 +11,7 @@
   "scripts": {
     "test": "uvu -r tsm tests",
     "check": "tsc --noEmit",
-    "prepack": "mkdist --declaration",
+    "build": "mkdist --declaration",
     "fmt": "deno fmt --options-use-tabs --options-line-width 90 src tests README.md"
   },
   "files": [
