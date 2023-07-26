@@ -1,4 +1,4 @@
-import { beforeEach, describe, it } from "vitest";
+import { beforeEach, describe, it, expect } from "vitest";
 import * as assert from "uvu/assert";
 
 import * as zarr from "../src/v2";
@@ -50,9 +50,9 @@ array([[[ 4,  5],
 			async (ctx) => {
 				let sel = [null, slice(1, 3), slice(2)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]));
-				assert.equal(shape, [2, 2, 2]);
-				assert.equal(stride, [4, 2, 1]);
+				expect(data).toStrictEqual(new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]));
+				expect(shape).toStrictEqual([2, 2, 2]);
+				expect(stride).toStrictEqual([4, 2, 1]);
 			},
 		);
 
@@ -65,9 +65,9 @@ array([[ 0,  4,  8],
 			async (ctx) => {
 				let sel = [null, null, 0];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([0, 4, 8, 12, 16, 20]));
-				assert.equal(shape, [2, 3]);
-				assert.equal(stride, [3, 1]);
+				expect(data).toStrictEqual(new Int32Array([0, 4, 8, 12, 16, 20]));
+				expect(shape).toStrictEqual([2, 3]);
+				expect(stride).toStrictEqual([3, 1]);
 			},
 		);
 
@@ -83,9 +83,9 @@ array([[[ 0,  1],
 			async (ctx) => {
 				let sel = [slice(3), slice(2), slice(2)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]));
-				assert.equal(shape, [2, 2, 2]);
-				assert.equal(stride, [4, 2, 1]);
+				expect(data).toStrictEqual(new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]));
+				expect(shape).toStrictEqual([2, 2, 2]);
+				expect(stride).toStrictEqual([4, 2, 1]);
 			},
 		);
 
@@ -105,9 +105,9 @@ array([[12, 13, 14, 15],
 			async (ctx) => {
 				let sel = [1, null, null];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array(range(12, 24)));
-				assert.equal(shape, [3, 4]);
-				assert.equal(stride, [4, 1]);
+				expect(data).toStrictEqual(new Int32Array(range(12, 24)));
+				expect(shape).toStrictEqual([3, 4]);
+				expect(stride).toStrictEqual([4, 1]);
 			},
 		);
 
@@ -120,9 +120,9 @@ array([[ 0,  3],
 			async (ctx) => {
 				let sel = [0, slice(null, null, 2), slice(null, null, 3)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([0, 3, 8, 11]));
-				assert.equal(shape, [2, 2]);
-				assert.equal(stride, [2, 1]);
+				expect(data).toStrictEqual(new Int32Array([0, 3, 8, 11]));
+				expect(shape).toStrictEqual([2, 2]);
+				expect(stride).toStrictEqual([2, 1]);
 			},
 		);
 
@@ -135,9 +135,9 @@ array([[ 0,  3],
 			async (ctx) => {
 				let sel = [0, slice(null, null, 2), slice(null, null, 3)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([0, 3, 8, 11]));
-				assert.equal(shape, [2, 2]);
-				assert.equal(stride, [2, 1]);
+				expect(data).toStrictEqual(new Int32Array([0, 3, 8, 11]));
+				expect(shape).toStrictEqual([2, 2]);
+				expect(stride).toStrictEqual([2, 1]);
 			},
 		);
 
@@ -155,9 +155,9 @@ array([[[ 0],
 			async (ctx) => {
 				let sel = [null, null, slice(null, null, 4)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([0, 4, 8, 12, 16, 20]));
-				assert.equal(shape, [2, 3, 1]);
-				assert.equal(stride, [3, 1, 1]);
+				expect(data).toStrictEqual(new Int32Array([0, 4, 8, 12, 16, 20]));
+				expect(shape).toStrictEqual([2, 3, 1]);
+				expect(stride).toStrictEqual([3, 1, 1]);
 			},
 		);
 
@@ -171,9 +171,9 @@ array([[12, 14],
 			async (ctx) => {
 				let sel = [1, null, slice(null, 3, 2)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([12, 14, 16, 18, 20, 22]));
-				assert.equal(shape, [3, 2]);
-				assert.equal(stride, [2, 1]);
+				expect(data).toStrictEqual(new Int32Array([12, 14, 16, 18, 20, 22]));
+				expect(shape).toStrictEqual([3, 2]);
+				expect(stride).toStrictEqual([2, 1]);
 			},
 		);
 
@@ -186,9 +186,9 @@ array([[ 4,  5,  6,  7],
 			async (ctx) => {
 				let sel = [null, 1, null];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				assert.equal(data, new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]));
-				assert.equal(shape, [2, 4]);
-				assert.equal(stride, [4, 1]);
+				expect(data).toStrictEqual(new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]));
+				expect(shape).toStrictEqual([2, 4]);
+				expect(stride).toStrictEqual([4, 1]);
 			},
 		);
 
@@ -205,9 +205,9 @@ array([[[ 0,  1,  2,  3],
 `,
 			async (ctx) => {
 				let { data, shape, stride } = await get(ctx.arr);
-				assert.equal(data, new Int32Array(range(24)));
-				assert.equal(shape, [2, 3, 4]);
-				assert.equal(stride, [12, 4, 1]);
+				expect(data).toStrictEqual(new Int32Array(range(24)));
+				expect(shape).toStrictEqual([2, 3, 4]);
+				expect(stride).toStrictEqual([12, 4, 1]);
 			},
 		);
 

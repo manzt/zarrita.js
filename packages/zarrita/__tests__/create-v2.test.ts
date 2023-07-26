@@ -1,4 +1,4 @@
-import { test, assert } from "vitest";
+import { test, expect } from "vitest";
 
 import * as v2 from "../src/v2";
 import { json_decode_object } from "../src/lib/util";
@@ -7,27 +7,21 @@ test("create root group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/", { attrs });
-	assert.equal(grp.path, "/");
-	assert.equal(await grp.attrs(), attrs);
-	assert.ok(store.has("/.zattrs"));
-	assert.ok(store.has("/.zgroup"));
-	assert.equal(
-		json_decode_object(store.get("/.zgroup")),
-		{ zarr_format: 2 },
-	);
-	assert.equal(
-		json_decode_object(store.get("/.zattrs")),
-		attrs,
-	);
+	expect(grp.path).toBe("/");
+	expect(await grp.attrs()).toStrictEqual(attrs);
+	expect(store.has("/.zattrs")).true;
+	expect(store.has("/.zgroup")).true;
+	expect(json_decode_object(store.get("/.zgroup"))).toStrictEqual({ zarr_format: 2 });
+	expect(json_decode_object(store.get("/.zattrs"))).toStrictEqual(attrs);
 });
 
 test("create nested group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
 	let grp = await v2.create_group(store, "/path/to/nested", { attrs });
-	assert.equal(grp.path, "/path/to/nested");
-	assert.ok(store.has("/path/to/nested/.zattrs"));
-	assert.ok(store.has("/path/to/nested/.zgroup"));
+	expect(grp.path).toBe("/path/to/nested");
+	expect(store.has("/path/to/nested/.zattrs")).true;
+	expect(store.has("/path/to/nested/.zgroup")).true;
 });
 
 test("create relative and absolute groups", async () => {
@@ -35,11 +29,11 @@ test("create relative and absolute groups", async () => {
 	let grp = await v2.create_group(store, "/nested");
 	let attrs = { foo: "bar" };
 	await v2.create_group(grp, "relative/path", { attrs });
-	assert.ok(store.has("/nested/relative/path/.zgroup"));
-	assert.ok(store.has("/nested/relative/path/.zattrs"));
+	expect(store.has("/nested/relative/path/.zgroup")).true;
+	expect(store.has("/nested/relative/path/.zattrs")).true;
 	await v2.create_group(grp, "/absolute/path");
-	assert.ok(store.has("/absolute/path/.zgroup"));
-	assert.ok(!store.has("/absolute/path/.zattrs"), "doesn't write attrs");
+	expect(store.has("/absolute/path/.zgroup")).true;
+	expect(!store.has("/absolute/path/.zattrs"), "doesn't write attrs").true;
 });
 
 test("create root array", async () => {
@@ -50,10 +44,9 @@ test("create root array", async () => {
 		chunk_shape: [2, 2, 2],
 		attrs: { foo: "bar" },
 	});
-	assert.ok(store.has("/.zarray"));
-	assert.ok(store.has("/.zattrs"));
-	assert.equal(
-		json_decode_object(store.get("/.zarray")),
+	expect(store.has("/.zarray")).true;
+	expect(store.has("/.zattrs")).true;
+	expect(json_decode_object(store.get("/.zarray"))).toStrictEqual(
 		{
 			zarr_format: 2,
 			dtype: "<f4",
@@ -66,10 +59,7 @@ test("create root array", async () => {
 			fill_value: null,
 		},
 	);
-	assert.equal(
-		json_decode_object(store.get("/.zattrs")),
-		{ foo: "bar" },
-	);
+	expect(json_decode_object(store.get("/.zattrs"))).toStrictEqual({ foo: "bar" });
 });
 
 test("create multiple arrays", async () => {
@@ -86,10 +76,7 @@ test("create multiple arrays", async () => {
 			chunk_shape: [1, 1],
 		}),
 	]);
-	assert.equal(
-		new Set(store.keys()),
-		new Set(["/a/.zarray", "/b/.zarray"]),
-	);
+	expect(new Set(store.keys())).toStrictEqual(new Set(["/a/.zarray", "/b/.zarray"]));
 });
 
 test("create group and array(s)", async () => {
@@ -109,15 +96,12 @@ test("create group and array(s)", async () => {
 			attrs: { hello: "world" },
 		}),
 	]);
-	assert.equal(
-		new Set(store.keys()),
-		new Set([
+	expect(new Set(store.keys())).toStrictEqual(new Set([
 			"/.zgroup",
 			"/.zattrs",
 			"/nested/.zgroup",
 			"/nested/a/.zarray",
 			"/b/.zarray",
 			"/b/.zattrs",
-		]),
-	);
+		]));
 });

@@ -66,26 +66,26 @@ test("slice", () => {
 	assert.equal(slice(null).start, null);
 	assert.equal(slice(null).stop, null);
 	assert.equal(slice(null).step, null);
-	assert.equal(slice(null).indices(10), [0, 10, 1]);
+	expect(slice(null).indices(10)).toStrictEqual([0, 10, 1]);
 
 	assert.equal(slice(3, 15, 2).start, 3);
 	assert.equal(slice(3, 15, 2).stop, 15);
 	assert.equal(slice(3, 15, 2).step, 2);
-	assert.equal(slice(3, 15, 2).indices(10), [3, 10, 2]);
-	assert.equal(slice(3, 15, 2).indices(30), [3, 15, 2]);
+	expect(slice(3, 15, 2).indices(10)).toStrictEqual([3, 10, 2]);
+	expect(slice(3, 15, 2).indices(30)).toStrictEqual([3, 15, 2]);
 
 	assert.equal(slice(40).start, null);
 	assert.equal(slice(40).stop, 40);
 	assert.equal(slice(40).step, null);
-	assert.equal(slice(40).indices(4), [0, 4, 1]);
-	assert.equal(slice(40).indices(41), [0, 40, 1]);
+	expect(slice(40).indices(4)).toStrictEqual([0, 4, 1]);
+	expect(slice(40).indices(41)).toStrictEqual([0, 40, 1]);
 
-	assert.equal(slice(2, 10, -1).indices(20), [2, 10, -1]);
-	assert.equal(slice(2, 10, -1).indices(4), [2, 3, -1]);
+	expect(slice(2, 10, -1).indices(20)).toStrictEqual([2, 10, -1]);
+	expect(slice(2, 10, -1).indices(4)).toStrictEqual([2, 3, -1]);
 
-	assert.equal(slice(null, null, -3).indices(14), [13, -1, -3]);
-	assert.equal(slice(null, null, -3).indices(14), [13, -1, -3]);
-	assert.equal(slice(null, null, -3).indices(2), [1, -1, -3]);
+	expect(slice(null, null, -3).indices(14)).toStrictEqual([13, -1, -3]);
+	expect(slice(null, null, -3).indices(14)).toStrictEqual([13, -1, -3]);
+	expect(slice(null, null, -3).indices(2)).toStrictEqual([1, -1, -3]);
 
 	assert.throws(() => slice(null, null, 0).indices(1), "should throw for step === 0");
 });
@@ -99,15 +99,15 @@ test("range", () => {
 });
 
 test("get_strides", () => {
-	assert.equal(get_strides([3], "C"), [1]);
-	assert.equal(get_strides([3], "F"), [1]);
+	expect(get_strides([3], "C")).toStrictEqual([1]);
+	expect(get_strides([3], "F")).toStrictEqual([1]);
 
-	assert.equal(get_strides([3, 4], "C"), [4, 1]);
-	assert.equal(get_strides([3, 4], "F"), [1, 3]);
+	expect(get_strides([3, 4], "C")).toStrictEqual([4, 1]);
+	expect(get_strides([3, 4], "F")).toStrictEqual([1, 3]);
 
-	assert.equal(get_strides([3, 4, 10], "C"), [40, 10, 1]);
-	assert.equal(get_strides([3, 4, 10], "F"), [1, 3, 12]);
+	expect(get_strides([3, 4, 10], "C")).toStrictEqual([40, 10, 1]);
+	expect(get_strides([3, 4, 10], "F")).toStrictEqual([1, 3, 12]);
 
-	assert.equal(get_strides([3, 4, 10, 2], "C"), [80, 20, 2, 1]);
-	assert.equal(get_strides([3, 4, 10, 2], "F"), [1, 3, 12, 120]);
+	expect(get_strides([3, 4, 10, 2], "C")).toStrictEqual([80, 20, 2, 1]);
+	expect(get_strides([3, 4, 10, 2], "F")).toStrictEqual([1, 3, 12, 120]);
 });

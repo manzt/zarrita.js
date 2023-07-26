@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, assert } from "vitest";
+import { it, beforeEach, expect } from "vitest";
 
 import ndarray from "ndarray";
 // @ts-ignore
@@ -34,7 +34,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let sel = [2, 3, 4].map((size) => slice(null).indices(size));
 		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 1, 1, 1,
 			1, 1, 1, 1,
 			1, 1, 1, 1,
@@ -54,7 +54,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_scalar(a, [0, 0, 0], 1);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -66,7 +66,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_scalar(a, [1, 1, 1], 2);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -78,7 +78,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_scalar(a, [1, 2, 3], 3);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -90,7 +90,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_scalar(a, [1, 2, 2], 4);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -111,7 +111,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
 		ctx.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -125,7 +125,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		ctx.set_scalar(a, sel, 2);
 
 		// deno-fmt-ignore
-		assert.equal(a.data, new Float32Array([
+		expect(a.data).toStrictEqual(new Float32Array([
 			2, 2, 2, 2,
 			2, 2, 2, 2,
 			2, 2, 2, 2,
@@ -146,7 +146,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
 		ctx.set_scalar(f, sel, 1);
 		// deno-fmt-ignore
-		assert.equal(f.data, new Float32Array([
+		expect(f.data).toStrictEqual(new Float32Array([
 			1, 1, 1, 1, 0, 0,
 			0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0,
@@ -157,7 +157,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		ctx.set_scalar(f, sel, 2);
 
 		// deno-fmt-ignore
-		assert.equal(f.data, new Float32Array([
+		expect(f.data).toStrictEqual(new Float32Array([
 			2, 1, 2, 1, 2, 0,
 			2, 0, 2, 0, 2, 0,
 			2, 0, 2, 0, 2, 0,
@@ -165,7 +165,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		]));
 
 		// deno-fmt-ignore
-		assert.equal(to_c(f).data, new Float32Array([
+		expect(to_c(f).data).toStrictEqual(new Float32Array([
 			2, 2, 2, 2,
 			2, 2, 2, 2,
 			2, 2, 2, 2,
@@ -197,7 +197,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(dest.data, new Float32Array([
+		expect(dest.data).toStrictEqual(new Float32Array([
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
@@ -229,7 +229,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(dest.data, new Float32Array([
+		expect(dest.data).toStrictEqual(new Float32Array([
 			2, 0, 2, 0,
 			0, 0, 0, 0,
 			2, 0, 2, 0,
@@ -269,7 +269,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		];
 
 		ctx.set_from_chunk(dest, src, mapping);
-		assert.equal(dest.data, new Float32Array(2 * 2 * 2).fill(2));
+		expect(dest.data).toStrictEqual(new Float32Array(2 * 2 * 2).fill(2));
 	});
 
 	it("set_from_chunk - src squeezed", async (ctx) => {
@@ -293,7 +293,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(dest.data, new Float32Array([
+		expect(dest.data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
 			0, 2, 0, 0,
@@ -333,7 +333,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 		];
 
 		ctx.set_from_chunk(dest, src, mapping);
-		assert.equal(dest.data, new Float32Array([2, 0, 0, 2]));
+		expect(dest.data).toStrictEqual(new Float32Array([2, 0, 0, 2]));
 	});
 
 	it("set_from_chunk - complete F order", async (ctx) => {
@@ -357,7 +357,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(to_c(dest).data, new Float32Array([
+		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
@@ -392,7 +392,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(to_c(dest).data, new Float32Array([
+		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
 			0, 2, 0, 0,
@@ -424,7 +424,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(to_c(dest).data, new Float32Array([
+		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
 			0, 2, 0, 0,
@@ -456,7 +456,7 @@ function suite(name: string, setter: typeof ops.setter | typeof nd.setter) {
 
 		ctx.set_from_chunk(dest, src, mapping);
 		// deno-fmt-ignore
-		assert.equal(dest.data, new Float32Array([
+		expect(dest.data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
 			0, 2, 0, 0,

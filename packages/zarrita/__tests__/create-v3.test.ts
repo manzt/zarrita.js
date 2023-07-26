@@ -11,11 +11,10 @@ test("create root group", async () => {
 	let h = await v3.create_hierarchy(new MemStore());
 	let attrs = { hello: "world" };
 	let grp = await v3.create_group(h, "/", { attrs });
-	assert.equal(grp.path, "/");
-	assert.equal(await grp.attrs(), attrs);
-	assert.ok(h.store.has("/zarr.json"));
-	assert.equal(
-		json_decode_object(h.store.get("/zarr.json")!),
+	expect(grp.path).toBe("/");
+	expect(await grp.attrs()).toStrictEqual(attrs);
+	expect(h.store.has("/zarr.json")).true;
+	expect(json_decode_object(h.store.get("/zarr.json")!)).toStrictEqual(
 		{
 			zarr_format: "https://purl.org/zarr/spec/protocol/core/3.0",
 			metadata_encoding: "https://purl.org/zarr/spec/protocol/core/3.0",
@@ -23,9 +22,8 @@ test("create root group", async () => {
 			extensions: [],
 		},
 	);
-	assert.ok(h.store.has("/meta/root.group.json"));
-	assert.equal(
-		json_decode_object(h.store.get("/meta/root.group.json")!),
+	expect(h.store.has("/meta/root.group.json")).true;
+	expect(json_decode_object(h.store.get("/meta/root.group.json")!)).toStrictEqual(
 		{
 			extensions: [],
 			attributes: attrs,
@@ -42,17 +40,16 @@ test("create array", async () => {
 		chunk_shape: [2, 5],
 		attrs,
 	});
-	assert.equal(a.path, "/arthur/dent");
-	assert.equal(a.name, "dent");
-	assert.equal(a.ndim, 2);
-	assert.equal(a.shape, [5, 10]);
-	assert.equal(a.dtype, "<i4");
-	assert.equal(a.chunk_shape, [2, 5]);
-	assert.equal(await a.attrs(), attrs);
+	expect(a.path).toBe("/arthur/dent");
+	expect(a.name).toBe("dent");
+	expect(a.ndim).toBe(2);
+	expect(a.shape).toStrictEqual([5, 10]);
+	expect(a.dtype).toBe("<i4");
+	expect(a.chunk_shape).toStrictEqual([2, 5]);
+	expect(await a.attrs()).toStrictEqual(attrs);
 
-	assert.ok(h.store.has("/meta/root/arthur/dent.array.json"));
-	assert.equal(
-		json_decode_object(h.store.get("/meta/root/arthur/dent.array.json")!),
+	expect(h.store.has("/meta/root/arthur/dent.array.json")).true;
+	expect(json_decode_object(h.store.get("/meta/root/arthur/dent.array.json")!)).toStrictEqual(
 		{
 			shape: [5, 10],
 			data_type: "<i4",
@@ -74,15 +71,12 @@ test("create group from another group", async () => {
 	let grp = await v3.create_group(h, "/tricia/mcmillan");
 	await v3.create_group(grp, "relative");
 	await v3.create_group(grp, "/absolute");
-	assert.equal(
-		new Set(h.store.keys()),
-		new Set([
+	expect(new Set(h.store.keys())).toStrictEqual(new Set([
 			"/zarr.json",
 			"/meta/root/tricia/mcmillan.group.json",
 			"/meta/root/tricia/mcmillan/relative.group.json",
 			"/meta/root/absolute.group.json",
-		]),
-	);
+		]));
 });
 
 test("create explicit group and access implicit group", async () => {
@@ -102,11 +96,11 @@ test("create nodes via groups", async () => {
 		chunk_shape: [2, 2],
 	});
 	expect(marvin).toBeInstanceOf(v3.ExplicitGroup);
-	assert.equal(marvin.path, "/marvin");
+	expect(marvin.path).toBe("/marvin");
 	expect(paranoid).toBeInstanceOf(v3.ExplicitGroup);
-	assert.equal(paranoid.path, "/marvin/paranoid");
+	expect(paranoid.path).toBe("/marvin/paranoid");
 	expect(android).toBeInstanceOf(v3.Array);
-	assert.equal(android.path, "/marvin/android");
+	expect(android.path).toBe("/marvin/android");
 });
 
 test("get_children", async () => {
@@ -135,23 +129,18 @@ test("get_children", async () => {
 		chunk_shape: [2, 2],
 	});
 
-	assert.equal(
-		await v3.get_children(h, "/"),
-		new Map([
+	expect(await v3.get_children(h, "/")).toStrictEqual(new Map([
 			["arthur", "implicit_group"],
 			["deep", "implicit_group"],
 			["marvin", "explicit_group"],
 			["tricia", "implicit_group"],
-		]),
-	);
+		]));
 
-	assert.equal(
-		await v3.get_children(h, "/tricia"),
+	expect(await v3.get_children(h, "/tricia")).toStrictEqual(
 		new Map().set("mcmillan", "explicit_group"),
 	);
 
-	assert.equal(
-		await v3.get_children(h, "/arthur"),
+	expect(await v3.get_children(h, "/arthur")).toStrictEqual(
 		new Map().set("dent", "array"),
 	);
 });
@@ -182,29 +171,22 @@ test("get_nodes", async () => {
 		chunk_shape: [2, 2],
 	});
 
-	assert.equal(
-		await v3.get_children(h, "/"),
-		new Map([
+	expect(await v3.get_children(h, "/")).toStrictEqual(new Map([
 			["arthur", "implicit_group"],
 			["deep", "implicit_group"],
 			["marvin", "explicit_group"],
 			["tricia", "implicit_group"],
-		]),
-	);
+		]));
 
-	assert.equal(
-		await v3.get_children(h, "/tricia"),
+	expect(await v3.get_children(h, "/tricia")).toStrictEqual(
 		new Map().set("mcmillan", "explicit_group"),
 	);
 
-	assert.equal(
-		await v3.get_children(h, "/arthur"),
+	expect(await v3.get_children(h, "/arthur")).toStrictEqual(
 		new Map().set("dent", "array"),
 	);
 
-	assert.equal(
-		await v3.get_nodes(h),
-		new Map([
+	expect(await v3.get_nodes(h)).toStrictEqual(new Map([
 			["/", "implicit_group"],
 			["/arthur", "implicit_group"],
 			["/arthur/dent", "array"],
@@ -215,8 +197,7 @@ test("get_nodes", async () => {
 			["/marvin/paranoid", "explicit_group"],
 			["/tricia", "implicit_group"],
 			["/tricia/mcmillan", "explicit_group"],
-		]),
-	);
+		]));
 });
 
 test("Read and write array data - builtin", async () => {
@@ -228,79 +209,57 @@ test("Read and write array data - builtin", async () => {
 	});
 
 	let res = await get(a, [null, null]);
-	assert.equal(res.shape, [5, 10]);
-	assert.equal(res.data, new Int32Array(50));
+	expect(res.shape).toStrictEqual([5, 10]);
+	expect(res.data).toStrictEqual(new Int32Array(50));
 
 	res = await get(a);
-	assert.equal(res.shape, [5, 10]);
-	assert.equal(res.data, new Int32Array(50));
+	expect(res.shape).toStrictEqual([5, 10]);
+	expect(res.data).toStrictEqual(new Int32Array(50));
 
 	await set(a, [0, null], 42);
-	assert.equal(
-		(await get(a, null)).data,
+	expect((await get(a, null)).data).toStrictEqual(
 		new Int32Array(50).fill(42, 0, 10),
 	);
 
 	const expected = new Int32Array(50).fill(42, 0, 10);
 	[10, 20, 30, 40].forEach((i) => (expected[i] = 42));
 	await set(a, [null, 0], 42);
-	assert.equal(
-		(await get(a, null)).data,
-		expected,
-	);
+	expect((await get(a, null)).data).toStrictEqual(expected);
 
 	await set(a, null, 42);
 	expected.fill(42);
-	assert.equal(
-		(await get(a, null)).data,
-		expected,
-	);
+	expect((await get(a, null)).data).toStrictEqual(expected);
 
 	let arr = ndarray(new Int32Array([...Array(10).keys()]), [10]);
 	expected.set(arr.data);
 	await set(a, [0, null], arr);
-	assert.equal((await get(a, null)).data, expected);
+	expect((await get(a, null)).data).toStrictEqual(expected);
 
 	arr = ndarray(new Int32Array(range(50)), [5, 10]);
 	await set(a, null, arr);
-	assert.equal(
-		(await get(a, null)).data,
-		arr.data,
-	);
+	expect((await get(a, null)).data).toStrictEqual(arr.data);
 
 	// Read array slices
 	res = await get(a, [null, 0]);
-	assert.equal(res.shape, [5]);
-	assert.equal(
-		res.data,
-		new Int32Array([0, 10, 20, 30, 40]),
-	);
+	expect(res.shape).toStrictEqual([5]);
+	expect(res.data).toStrictEqual(new Int32Array([0, 10, 20, 30, 40]));
 
 	res = await get(a, [null, 1]);
-	assert.equal(res.shape, [5]);
-	assert.equal(
-		res.data,
-		new Int32Array([1, 11, 21, 31, 41]),
-	);
+	expect(res.shape).toStrictEqual([5]);
+	expect(res.data).toStrictEqual(new Int32Array([1, 11, 21, 31, 41]));
 
 	res = await get(a, [0, null]);
-	assert.equal(res.shape, [10]);
-	assert.equal(
-		res.data,
-		new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
-	);
+	expect(res.shape).toStrictEqual([10]);
+	expect(res.data).toStrictEqual(new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 
 	res = await get(a, [1, null]);
-	assert.equal(res.shape, [10]);
-	assert.equal(
-		res.data,
-		new Int32Array([10, 11, 12, 13, 14, 15, 16, 17, 18, 19]),
-	);
+	expect(res.shape).toStrictEqual([10]);
+	expect(res.data).toStrictEqual(new Int32Array([10, 11, 12, 13, 14, 15, 16, 17, 18, 19]));
 
 	res = await get(a, [null, v3.slice(0, 7)]);
-	assert.equal(res.shape, [5, 7]);
+	expect(res.shape).toStrictEqual([5, 7]);
 	// deno-fmt-ignore
-	assert.equal(res.data, new Int32Array([ 
+	expect(res.data).toStrictEqual(new Int32Array([ 
 		 0,  1,  2,  3,  4,
 		 5,  6, 10, 11, 12,
 		13, 14, 15, 16, 20,
@@ -311,26 +270,26 @@ test("Read and write array data - builtin", async () => {
 	]));
 
 	res = await get(a, [v3.slice(0, 3), null]);
-	assert.equal(res.shape, [3, 10]);
+	expect(res.shape).toStrictEqual([3, 10]);
 	// deno-fmt-ignore
-	assert.equal(res.data, new Int32Array([
+	expect(res.data).toStrictEqual(new Int32Array([
 		 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 	]));
 	res = await get(a, [v3.slice(0, 3), v3.slice(0, 7)]);
-	assert.equal(res.shape, [3, 7]);
+	expect(res.shape).toStrictEqual([3, 7]);
 	// deno-fmt-ignore
-	assert.equal(res.data, new Int32Array([
+	expect(res.data).toStrictEqual(new Int32Array([
 		 0,  1,  2,  3,  4,  5,  6,
 		10, 11, 12, 13, 14, 15, 16,
 		20, 21, 22, 23, 24, 25, 26,
 	]));
 
 	res = await get(a, [v3.slice(1, 4), v3.slice(2, 7)]);
-	assert.equal(res.shape, [3, 5]);
+	expect(res.shape).toStrictEqual([3, 5]);
 	// deno-fmt-ignore
-	assert.equal( res.data, new Int32Array([
+	expect(res.data).toStrictEqual(new Int32Array([
 		12, 13, 14, 15, 16,
 		22, 23, 24, 25, 26,
 		32, 33, 34, 35, 36,
@@ -343,13 +302,10 @@ test("Read and write array data - builtin", async () => {
 	});
 
 	let resb = await get(b, [v3.slice(10)]);
-	assert.equal(resb.shape, [10]);
-	assert.equal(resb.data, new Float64Array(10));
+	expect(resb.shape).toStrictEqual([10]);
+	expect(resb.data).toStrictEqual(new Float64Array(10));
 
 	expected.fill(1, 0, 5);
 	await set(b, [v3.slice(5)], 1);
-	assert.equal(
-		(await get(b, [v3.slice(10)])).data,
-		new Float64Array(10).fill(1, 0, 5),
-	);
+	expect((await get(b, [v3.slice(10)])).data).toStrictEqual(new Float64Array(10).fill(1, 0, 5));
 });
