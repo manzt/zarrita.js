@@ -1,4 +1,4 @@
-import type { AbsolutePath, Async, Readable } from "../types";
+import type { AbsolutePath, Async, Readable } from "@zarrita/core/types";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;

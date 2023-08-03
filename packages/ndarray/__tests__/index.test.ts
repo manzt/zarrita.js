@@ -2,14 +2,13 @@ import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
 
-import type * as zarr from "@zarrita/core/types";
-import { get_array } from "@zarrita/core/v2";
-
 import { get } from "../index.js";
-import FSStore from "../../core/src/storage/fs.js";
 import { range } from "../../core/src/lib/util.js";
 
+import type * as zarr from "@zarrita/core/types";
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import { FSStore } from "@zarrita/storage";
+import { get_array } from "@zarrita/core/v2";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

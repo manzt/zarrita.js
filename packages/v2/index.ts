@@ -1,9 +1,18 @@
-import { Array as BaseArray, ArrayProps, Group as BaseGroup } from "./lib/hierarchy";
-import { registry } from "./lib/codec-registry";
-import { KeyError, NodeNotFoundError } from "./lib/errors";
-import { is_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import {
+	Array as BaseArray,
+	Group as BaseGroup,
+	KeyError,
+	NodeNotFoundError,
+	registry,
+	slice,
+	is_dtype,
+	json_decode_object,
+	json_encode_object,
+} from "@zarrita/core";
+
 import type {
 	AbsolutePath,
+	ArrayProps,
 	Async,
 	Attrs,
 	CreateArrayProps,
@@ -11,13 +20,13 @@ import type {
 	Deref,
 	Readable,
 	Writeable,
-} from "./types";
-import type { DataTypeQuery, NarrowDataType } from "./dtypes";
+	Codec,
+	DataTypeQuery,
+	NarrowDataType,
+	Scalar,
+} from "@zarrita/core";
 
-import type { Codec } from "numcodecs";
-
-export { slice } from "./lib/util";
-export { registry } from "./lib/codec-registry";
+export { slice, registry };
 
 async function get_attrs<Store extends Readable | Async<Readable>>(
 	store: Store,
@@ -133,7 +142,7 @@ export interface ArrayMetadata<Dtype extends DataType> {
 	chunks: number[];
 	dtype: Dtype;
 	compressor: null | Record<string, any>;
-	fill_value: import("./types").Scalar<Dtype> | null;
+	fill_value: Scalar<Dtype> | null;
 	order: "C" | "F";
 	filters: null | Record<string, any>[];
 	dimension_separator?: "." | "/";

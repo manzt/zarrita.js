@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { strip_prefix } from "./util";
+
+import { strip_prefix } from "./util.js";
 
 import type {
 	AbsolutePath,
@@ -9,7 +10,7 @@ import type {
 	PrefixPath,
 	RootPath,
 	Writeable,
-} from "../types";
+} from "@zarrita/core/types";
 
 class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	constructor(public root: string) {}

@@ -1,12 +1,12 @@
 import { test, expect } from "vitest";
 
-import * as v2 from "../src/v2";
-import { json_decode_object } from "../src/lib/util";
+import { json_decode_object } from "@zarrita/core";
+import * as zarr from "../index.js";
 
 test("create root group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
-	let grp = await v2.create_group(store, "/", { attrs });
+	let grp = await zarr.create_group(store, "/", { attrs });
 	expect(grp.path).toBe("/");
 	expect(await grp.attrs()).toStrictEqual(attrs);
 	expect(store.has("/.zattrs")).true;
@@ -18,7 +18,7 @@ test("create root group", async () => {
 test("create nested group", async () => {
 	let store = new Map();
 	let attrs = { hello: "world" };
-	let grp = await v2.create_group(store, "/path/to/nested", { attrs });
+	let grp = await zarr.create_group(store, "/path/to/nested", { attrs });
 	expect(grp.path).toBe("/path/to/nested");
 	expect(store.has("/path/to/nested/.zattrs")).true;
 	expect(store.has("/path/to/nested/.zgroup")).true;
@@ -26,19 +26,19 @@ test("create nested group", async () => {
 
 test("create relative and absolute groups", async () => {
 	let store = new Map();
-	let grp = await v2.create_group(store, "/nested");
+	let grp = await zarr.create_group(store, "/nested");
 	let attrs = { foo: "bar" };
-	await v2.create_group(grp, "relative/path", { attrs });
+	await zarr.create_group(grp, "relative/path", { attrs });
 	expect(store.has("/nested/relative/path/.zgroup")).true;
 	expect(store.has("/nested/relative/path/.zattrs")).true;
-	await v2.create_group(grp, "/absolute/path");
+	await zarr.create_group(grp, "/absolute/path");
 	expect(store.has("/absolute/path/.zgroup")).true;
 	expect(!store.has("/absolute/path/.zattrs"), "doesn't write attrs").true;
 });
 
 test("create root array", async () => {
 	let store = new Map();
-	await v2.create_array(store, "/", {
+	await zarr.create_array(store, "/", {
 		dtype: "<f4",
 		shape: [3, 4, 5],
 		chunk_shape: [2, 2, 2],
@@ -65,12 +65,12 @@ test("create root array", async () => {
 test("create multiple arrays", async () => {
 	let store = new Map();
 	await Promise.all([
-		v2.create_array(store, "/a", {
+		zarr.create_array(store, "/a", {
 			dtype: "<f4",
 			shape: [3, 4, 5],
 			chunk_shape: [2, 2, 2],
 		}),
-		v2.create_array(store, "/b", {
+		zarr.create_array(store, "/b", {
 			dtype: "|u1",
 			shape: [4, 4],
 			chunk_shape: [1, 1],
@@ -81,15 +81,15 @@ test("create multiple arrays", async () => {
 
 test("create group and array(s)", async () => {
 	let store = new Map();
-	await v2.create_group(store, "/", { attrs: { foo: "bar" } });
-	let grp = await v2.create_group(store, "/nested");
+	await zarr.create_group(store, "/", { attrs: { foo: "bar" } });
+	let grp = await zarr.create_group(store, "/nested");
 	await Promise.all([
-		v2.create_array(grp, "a", {
+		zarr.create_array(grp, "a", {
 			dtype: "<f4",
 			shape: [3, 4, 5],
 			chunk_shape: [2, 2, 2],
 		}),
-		v2.create_array(grp, "/b", {
+		zarr.create_array(grp, "/b", {
 			dtype: "|u1",
 			shape: [4, 4],
 			chunk_shape: [1, 1],

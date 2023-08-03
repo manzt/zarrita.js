@@ -1,8 +1,8 @@
 import { unzip } from "unzipit";
-import { fetch_range, strip_prefix } from "./util";
+import { fetch_range, strip_prefix } from "./util.js";
 
 import type { Reader, ZipInfo } from "unzipit";
-import type { AbsolutePath, Async, Readable } from "../types";
+import type { AbsolutePath, Async, Readable } from "@zarrita/core/types";
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}

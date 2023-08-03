@@ -1,4 +1,4 @@
-import type { AbsolutePath } from "../types";
+import type { AbsolutePath } from "@zarrita/core/types";
 
 function range_header(offset: number, size: number) {
 	return {

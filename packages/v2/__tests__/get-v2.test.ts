@@ -1,15 +1,16 @@
 import * as url from "node:url";
 import * as path from "node:path";
 import { describe, it, expect } from "vitest";
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
-import type * as zarr from "../src/v2";
-import { get_array, get_group } from "../src/v2";
+
+import * as zarr from "../index.js";
+const { get_array, get_group } = zarr;
 import { get } from "../src/ops";
-import { range } from "../src/lib/util";
-import { NodeNotFoundError } from "../src/lib/errors";
+import { range, NodeNotFoundError } from "@zarrita/core";
 
-import FSStore from "../src/storage/fs";
+import FSStore from "@zarrita/core/storage/fs";
+
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
