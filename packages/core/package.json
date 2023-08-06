@@ -1,0 +1,47 @@
+{
+  "name": "@zarrita/core",
+  "type": "module",
+  "license": "MIT",
+  "version": "0.2.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manzt/zarrita.js.git"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "test": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./v3": {
+      "types": "./dist/src/v3.d.ts",
+      "import": "./dist/src/v3.js"
+    }
+  },
+  "dependencies": {
+    "@zarrita/storage": "workspace:^",
+    "@zarrita/typedarray": "workspace:^",
+    "numcodecs": "^0.2.2"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.1",
+    "@svitejs/changesets-changelog-github-compact": "^1.1.0",
+    "@types/ndarray": "^1.0.11",
+    "@types/node": "^16.10.2",
+    "ndarray": "^1.0.19",
+    "ndarray-ops": "^1.2.2"
+  }
+}
