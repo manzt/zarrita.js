@@ -1,0 +1,16 @@
+{
+  "name": "@zarrita/typedarray",
+  "type": "module",
+  "version": "0.0.0",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}

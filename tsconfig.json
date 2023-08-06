@@ -2,16 +2,20 @@
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "nodenext",
     "strict": true,
-    "strictNullChecks": true,
-    "allowJs": true,
-    "noImplicitAny": true,
     "declaration": true,
-    "declarationDir": "./types",
-    "importsNotUsedAsValues": "error",
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "baseUrl": "./"
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "allowJs": false
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/ndarray" },
+    { "path": "./packages/storage" },
+    { "path": "./packages/typedarray" },
+    { "path": "./packages/v2" }
+  ]
 }

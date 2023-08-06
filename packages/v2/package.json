@@ -1,0 +1,23 @@
+{
+  "name": "@zarrita/v2",
+  "type": "module",
+  "version": "0.0.0",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@zarrita/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@zarrita/storage": "workspace:^",
+    "@zarrita/typedarray": "workspace:^"
+  }
+}
