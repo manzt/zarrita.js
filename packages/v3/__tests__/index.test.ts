@@ -1,16 +1,17 @@
-import { test, expect, assert } from "vitest";
+import { test, expect } from "vitest";
 import ndarray from "ndarray";
 
 import MemStore from "@zarrita/storage/mem";
 
-import * as v3 from "../src/v3.js";
-import { json_decode_object, range } from "../src/lib/util.js";
-import { get, set } from "../src/ops.js";
+import { ops, json_decode_object, range } from "@zarrita/core";
+let { get, set } = ops;
+
+import * as zarr from "../index.js";
 
 test("create root group", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
+	let h = await zarr.create_hierarchy(new MemStore());
 	let attrs = { hello: "world" };
-	let grp = await v3.create_group(h, "/", { attrs });
+	let grp = await zarr.create_group(h, "/", { attrs });
 	expect(grp.path).toBe("/");
 	expect(await grp.attrs()).toStrictEqual(attrs);
 	expect(h.store.has("/zarr.json")).true;
@@ -32,9 +33,9 @@ test("create root group", async () => {
 });
 
 test("create array", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
+	let h = await zarr.create_hierarchy(new MemStore());
 	let attrs = { question: "life", answer: 42 };
-	let a = await v3.create_array(h, "/arthur/dent", {
+	let a = await zarr.create_array(h, "/arthur/dent", {
 		shape: [5, 10],
 		dtype: "<i4",
 		chunk_shape: [2, 5],
@@ -67,10 +68,10 @@ test("create array", async () => {
 });
 
 test("create group from another group", async () => {
-	let h = await v3.create_hierarchy(new Map());
-	let grp = await v3.create_group(h, "/tricia/mcmillan");
-	await v3.create_group(grp, "relative");
-	await v3.create_group(grp, "/absolute");
+	let h = await zarr.create_hierarchy(new Map());
+	let grp = await zarr.create_group(h, "/tricia/mcmillan");
+	await zarr.create_group(grp, "relative");
+	await zarr.create_group(grp, "/absolute");
 	expect(new Set(h.store.keys())).toStrictEqual(new Set([
 			"/zarr.json",
 			"/meta/root/tricia/mcmillan.group.json",
@@ -80,113 +81,113 @@ test("create group from another group", async () => {
 });
 
 test("create explicit group and access implicit group", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
-	await v3.create_group(h, "/tricia/mcmillan");
-	let grp = await v3.get_implicit_group(h, "/tricia");
-	expect(grp).toBeInstanceOf(v3.ImplicitGroup);
+	let h = await zarr.create_hierarchy(new MemStore());
+	await zarr.create_group(h, "/tricia/mcmillan");
+	let grp = await zarr.get_implicit_group(h, "/tricia");
+	expect(grp).toBeInstanceOf(zarr.ImplicitGroup);
 });
 
 test("create nodes via groups", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
-	let marvin = await v3.create_group(h, "/marvin");
-	let paranoid = await v3.create_group(marvin, "paranoid");
-	let android = await v3.create_array(marvin, "android", {
+	let h = await zarr.create_hierarchy(new MemStore());
+	let marvin = await zarr.create_group(h, "/marvin");
+	let paranoid = await zarr.create_group(marvin, "paranoid");
+	let android = await zarr.create_array(marvin, "android", {
 		shape: [42, 42],
 		dtype: "|u1",
 		chunk_shape: [2, 2],
 	});
-	expect(marvin).toBeInstanceOf(v3.ExplicitGroup);
+	expect(marvin).toBeInstanceOf(zarr.ExplicitGroup);
 	expect(marvin.path).toBe("/marvin");
-	expect(paranoid).toBeInstanceOf(v3.ExplicitGroup);
+	expect(paranoid).toBeInstanceOf(zarr.ExplicitGroup);
 	expect(paranoid.path).toBe("/marvin/paranoid");
-	expect(android).toBeInstanceOf(v3.Array);
+	expect(android).toBeInstanceOf(zarr.Array);
 	expect(android.path).toBe("/marvin/android");
 });
 
 test("get_children", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
+	let h = await zarr.create_hierarchy(new MemStore());
 
-	await v3.create_array(h, "/arthur/dent", {
+	await zarr.create_array(h, "/arthur/dent", {
 		shape: [5, 10],
 		dtype: "<i4",
 		chunk_shape: [2, 5],
 		attrs: { question: "life", answer: 42 },
 	});
 
-	await v3.create_array(h, "/deep/thought", {
+	await zarr.create_array(h, "/deep/thought", {
 		shape: [7500000],
 		dtype: ">f8",
 		chunk_shape: [42],
 	});
 
-	await v3.create_group(h, "/tricia/mcmillan");
+	await zarr.create_group(h, "/tricia/mcmillan");
 
-	let marvin = await v3.create_group(h, "/marvin");
-	await v3.create_group(marvin, "paranoid");
-	await v3.create_array(marvin, "android", {
+	let marvin = await zarr.create_group(h, "/marvin");
+	await zarr.create_group(marvin, "paranoid");
+	await zarr.create_array(marvin, "android", {
 		shape: [42, 42],
 		dtype: "|u1",
 		chunk_shape: [2, 2],
 	});
 
-	expect(await v3.get_children(h, "/")).toStrictEqual(new Map([
+	expect(await zarr.get_children(h, "/")).toStrictEqual(new Map([
 			["arthur", "implicit_group"],
 			["deep", "implicit_group"],
 			["marvin", "explicit_group"],
 			["tricia", "implicit_group"],
 		]));
 
-	expect(await v3.get_children(h, "/tricia")).toStrictEqual(
+	expect(await zarr.get_children(h, "/tricia")).toStrictEqual(
 		new Map().set("mcmillan", "explicit_group"),
 	);
 
-	expect(await v3.get_children(h, "/arthur")).toStrictEqual(
+	expect(await zarr.get_children(h, "/arthur")).toStrictEqual(
 		new Map().set("dent", "array"),
 	);
 });
 
 test("get_nodes", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
+	let h = await zarr.create_hierarchy(new MemStore());
 
-	await v3.create_array(h, "/arthur/dent", {
+	await zarr.create_array(h, "/arthur/dent", {
 		shape: [5, 10],
 		dtype: "<i4",
 		chunk_shape: [2, 5],
 		attrs: { question: "life", answer: 42 },
 	});
 
-	await v3.create_array(h, "/deep/thought", {
+	await zarr.create_array(h, "/deep/thought", {
 		shape: [7500000],
 		dtype: ">f8",
 		chunk_shape: [42],
 	});
 
-	await v3.create_group(h, "/tricia/mcmillan");
+	await zarr.create_group(h, "/tricia/mcmillan");
 
-	let marvin = await v3.create_group(h, "/marvin");
-	await v3.create_group(marvin, "paranoid");
-	await v3.create_array(marvin, "android", {
+	let marvin = await zarr.create_group(h, "/marvin");
+	await zarr.create_group(marvin, "paranoid");
+	await zarr.create_array(marvin, "android", {
 		shape: [42, 42],
 		dtype: "|u1",
 		chunk_shape: [2, 2],
 	});
 
-	expect(await v3.get_children(h, "/")).toStrictEqual(new Map([
+	expect(await zarr.get_children(h, "/")).toStrictEqual(new Map([
 			["arthur", "implicit_group"],
 			["deep", "implicit_group"],
 			["marvin", "explicit_group"],
 			["tricia", "implicit_group"],
 		]));
 
-	expect(await v3.get_children(h, "/tricia")).toStrictEqual(
+	expect(await zarr.get_children(h, "/tricia")).toStrictEqual(
 		new Map().set("mcmillan", "explicit_group"),
 	);
 
-	expect(await v3.get_children(h, "/arthur")).toStrictEqual(
+	expect(await zarr.get_children(h, "/arthur")).toStrictEqual(
 		new Map().set("dent", "array"),
 	);
 
-	expect(await v3.get_nodes(h)).toStrictEqual(new Map([
+	expect(await zarr.get_nodes(h)).toStrictEqual(new Map([
 			["/", "implicit_group"],
 			["/arthur", "implicit_group"],
 			["/arthur/dent", "array"],
@@ -201,8 +202,8 @@ test("get_nodes", async () => {
 });
 
 test("Read and write array data - builtin", async () => {
-	let h = await v3.create_hierarchy(new MemStore());
-	let a = await v3.create_array(h, "/arthur/dent", {
+	let h = await zarr.create_hierarchy(new MemStore());
+	let a = await zarr.create_array(h, "/arthur/dent", {
 		shape: [5, 10],
 		dtype: "<i4",
 		chunk_shape: [2, 5],
@@ -256,7 +257,7 @@ test("Read and write array data - builtin", async () => {
 	expect(res.shape).toStrictEqual([10]);
 	expect(res.data).toStrictEqual(new Int32Array([10, 11, 12, 13, 14, 15, 16, 17, 18, 19]));
 
-	res = await get(a, [null, v3.slice(0, 7)]);
+	res = await get(a, [null, zarr.slice(0, 7)]);
 	expect(res.shape).toStrictEqual([5, 7]);
 	// deno-fmt-ignore
 	expect(res.data).toStrictEqual(new Int32Array([ 
@@ -269,7 +270,7 @@ test("Read and write array data - builtin", async () => {
 		42, 43, 44, 45, 46,
 	]));
 
-	res = await get(a, [v3.slice(0, 3), null]);
+	res = await get(a, [zarr.slice(0, 3), null]);
 	expect(res.shape).toStrictEqual([3, 10]);
 	// deno-fmt-ignore
 	expect(res.data).toStrictEqual(new Int32Array([
@@ -277,7 +278,7 @@ test("Read and write array data - builtin", async () => {
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 	]));
-	res = await get(a, [v3.slice(0, 3), v3.slice(0, 7)]);
+	res = await get(a, [zarr.slice(0, 3), zarr.slice(0, 7)]);
 	expect(res.shape).toStrictEqual([3, 7]);
 	// deno-fmt-ignore
 	expect(res.data).toStrictEqual(new Int32Array([
@@ -286,7 +287,7 @@ test("Read and write array data - builtin", async () => {
 		20, 21, 22, 23, 24, 25, 26,
 	]));
 
-	res = await get(a, [v3.slice(1, 4), v3.slice(2, 7)]);
+	res = await get(a, [zarr.slice(1, 4), zarr.slice(2, 7)]);
 	expect(res.shape).toStrictEqual([3, 5]);
 	// deno-fmt-ignore
 	expect(res.data).toStrictEqual(new Int32Array([
@@ -295,17 +296,17 @@ test("Read and write array data - builtin", async () => {
 		32, 33, 34, 35, 36,
 	]));
 
-	let b = await v3.create_array(h, "/deep/thought", {
+	let b = await zarr.create_array(h, "/deep/thought", {
 		shape: [7500000],
 		dtype: ">f8",
 		chunk_shape: [42],
 	});
 
-	let resb = await get(b, [v3.slice(10)]);
+	let resb = await get(b, [zarr.slice(10)]);
 	expect(resb.shape).toStrictEqual([10]);
 	expect(resb.data).toStrictEqual(new Float64Array(10));
 
 	expected.fill(1, 0, 5);
-	await set(b, [v3.slice(5)], 1);
-	expect((await get(b, [v3.slice(10)])).data).toStrictEqual(new Float64Array(10).fill(1, 0, 5));
+	await set(b, [zarr.slice(5)], 1);
+	expect((await get(b, [zarr.slice(10)])).data).toStrictEqual(new Float64Array(10).fill(1, 0, 5));
 });

@@ -1,12 +1,7 @@
 {
   "name": "@zarrita/core",
   "type": "module",
-  "license": "MIT",
-  "version": "0.2.2",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/manzt/zarrita.js.git"
-  },
+  "version": "0.0.0",
   "sideEffects": false,
   "scripts": {
     "check": "tsc --noEmit",
@@ -14,9 +9,7 @@
     "test": "vitest",
     "clean": "rm -rf dist"
   },
-  "files": [
-    "dist/"
-  ],
+  "files": ["dist/"],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

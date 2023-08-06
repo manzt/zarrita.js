@@ -1,28 +1,52 @@
-import { Array as BaseArray, type ArrayProps, Group } from "./lib/hierarchy.js";
-import { registry } from "./lib/codec-registry.js";
-import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors.js";
-import { is_dtype, json_decode_object, json_encode_object } from "./lib/util.js";
+import {
+	Array as BaseArray,
+	Group,
+	is_dtype,
+	json_decode_object,
+	json_encode_object,
+	KeyError,
+	NodeNotFoundError,
+	registry,
+} from "@zarrita/core";
 
 import type {
+	ArrayProps,
 	Attrs,
 	CreateArrayProps,
 	DataType,
-	Scalar,
 	DataTypeQuery,
 	NarrowDataType,
-} from "./types.js";
-import type { Async, AbsolutePath, Readable, ExtendedReadable, Deref, Writeable } from "@zarrita/storage";
+	Scalar,
+} from "@zarrita/core";
 
-import type { Codec } from "numcodecs";
+import type {
+	AbsolutePath,
+	Async,
+	Deref,
+	ExtendedReadable,
+	Readable,
+	Writeable,
+} from "@zarrita/storage";
 
-export { slice } from "./lib/util.js";
-export { registry } from "./lib/codec-registry.js";
+export { registry, slice } from "@zarrita/core";
+
+interface Codec {
+	encode(data: Uint8Array): Promise<Uint8Array>;
+	decode(data: Uint8Array): Promise<Uint8Array>;
+}
+
+type CodecConstructor = {
+	new (...args: any[]): Codec;
+	codecId: string;
+}
 
 export class Hierarchy<Store> {
 	store: Store;
 	meta_key_suffix: string;
 
-	constructor({ store, meta_key_suffix }: { store: Store; meta_key_suffix: string }) {
+	constructor(
+		{ store, meta_key_suffix }: { store: Store; meta_key_suffix: string },
+	) {
 		this.store = store;
 		this.meta_key_suffix = meta_key_suffix;
 	}
@@ -145,16 +169,12 @@ interface GroupMetadata {
 }
 
 function encode_codec_metadata(codec: Codec): CodecMetadata {
-	// only support gzip for now
 	const supported_codecs = new Set("gzip");
-	// @ts-ignore
-	const codec_id = codec.constructor.codecId;
-	assert(
-		!supported_codecs.has(codec_id),
-		`codec not supported for metadata, got: ${codec_id}.`,
-	);
-	// @ts-ignore
-	const config = { level: codec.level };
+	const codec_id = (codec.constructor as CodecConstructor).codecId;
+	if (!supported_codecs.has(codec_id)) {
+		throw new Error(`codec not supported for metadata, got: ${codec_id}.`);
+	}
+	const config = { level: (codec as unknown as { level: number }).level };
 	const meta = {
 		codec: "https://purl.org/zarr/spec/codec/gzip/1.0",
 		configuration: config,
@@ -165,9 +185,7 @@ function encode_codec_metadata(codec: Codec): CodecMetadata {
 async function decode_codec_metadata(meta: CodecMetadata): Promise<Codec> {
 	// only support gzip for now
 	if (meta.codec !== "https://purl.org/zarr/spec/codec/gzip/1.0") {
-		throw new NotImplementedError(
-			`No support for codec, got ${meta.codec}.`,
-		);
+		throw new Error(`No support for codec, got ${meta.codec}.`);
 	}
 	const importer = registry.get("gzip");
 	if (!importer) {
@@ -191,7 +209,9 @@ function meta_key<Path extends string, Suffix extends string>(
 }
 
 /** @category Creation */
-export async function create_hierarchy<Store extends Writeable | Async<Writeable>>(
+export async function create_hierarchy<
+	Store extends Writeable | Async<Writeable>,
+>(
 	store: Store,
 ): Promise<Hierarchy<Store>> {
 	// create entry point metadata document
@@ -232,13 +252,13 @@ export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 	const protocol_version = segments.pop() || "";
 	const protocol_uri = segments.join("/");
 	if (protocol_uri !== "https://purl.org/zarr/spec/protocol/core") {
-		throw new NotImplementedError(
+		throw new Error(
 			`No support for Protocol URI, got ${protocol_uri}.`,
 		);
 	}
 	const protocol_major_version = protocol_version.split(".")[0];
 	if (protocol_major_version !== "3") {
-		throw new NotImplementedError(
+		throw new Error(
 			`No support for protocol version, got ${protocol_major_version}.`,
 		);
 	}
@@ -248,7 +268,7 @@ export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 		meta.metadata_encoding !==
 			"https://purl.org/zarr/spec/protocol/core/3.0"
 	) {
-		throw new NotImplementedError(
+		throw new Error(
 			`No support for metadata encoding, got ${meta.metadata_encoding}.`,
 		);
 	}
@@ -256,7 +276,7 @@ export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 	// check extensions
 	for (const spec of meta.extensions) {
 		if (spec.must_understand) {
-			throw new NotImplementedError(
+			throw new Error(
 				`No support for required extensions, got ${JSON.stringify(spec)}.`,
 			);
 		}
@@ -266,6 +286,11 @@ export async function get_hierarchy<Store extends Readable | Async<Readable>>(
 	const meta_key_suffix = meta.metadata_key_suffix;
 	return new Hierarchy({ store, meta_key_suffix });
 }
+
+type NewType<Store, Path extends AbsolutePath> = {
+    hierarchy: Hierarchy<Store>;
+    path: Path;
+};
 
 function deref<
 	Store,
@@ -279,9 +304,12 @@ function deref<
 function deref<Store, Path extends AbsolutePath>(
 	hierarchy: Hierarchy<Store>,
 	path: Path,
-): { hierarchy: Hierarchy<Store>; path: Path };
+): NewType<Store, Path>;
 
-function deref<Store>(node: Hierarchy<Store> | ImplicitGroup<Store>, path: any) {
+function deref<Store>(
+	node: Hierarchy<Store> | ImplicitGroup<Store>,
+	path: any,
+) {
 	if ("meta_key_suffix" in node) {
 		return { hierarchy: node, path };
 	}
@@ -341,7 +369,10 @@ export async function create_group<
 	_path: any,
 	props: { attrs?: Attrs } = {},
 ) {
-	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path as AbsolutePath);
+	const { hierarchy, path } = deref(
+		node as Hierarchy<Store>,
+		_path as AbsolutePath,
+	);
 	return _create_group(hierarchy, path, props.attrs);
 }
 
@@ -427,7 +458,10 @@ export async function create_array<
 	_path: any,
 	props: Omit<CreateArrayProps<Dtype>, "filters"> & { attrs?: Attrs },
 ) {
-	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path as AbsolutePath);
+	const { hierarchy, path } = deref(
+		node as Hierarchy<Store>,
+		_path as AbsolutePath,
+	);
 	return _create_array(hierarchy as Hierarchy<Store>, path, props);
 }
 
@@ -459,14 +493,14 @@ async function _get_array<
 	} = meta;
 
 	if (chunk_grid.type !== "regular") {
-		throw new NotImplementedError(
+		throw new Error(
 			`Only support for "regular" chunk_grids, got ${chunk_grid.type}.`,
 		);
 	}
 
 	for (const spec of extensions) {
 		if (spec.must_understand) {
-			throw new NotImplementedError(
+			throw new Error(
 				`No support for required extensions found, ${JSON.stringify(spec)}.`,
 			);
 		}
@@ -500,7 +534,10 @@ export async function get_array<
 export async function get_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends AbsolutePath,
->(hierarchy: Hierarchy<Store>, path: Path): Promise<Array<DataType, Store, Path>>;
+>(
+	hierarchy: Hierarchy<Store>,
+	path: Path,
+): Promise<Array<DataType, Store, Path>>;
 
 export async function get_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
@@ -510,7 +547,10 @@ export async function get_array<
 export async function get_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
-	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path as AbsolutePath);
+	const { hierarchy, path } = deref(
+		node as Hierarchy<Store>,
+		_path as AbsolutePath,
+	);
 	return _get_array(hierarchy as Hierarchy<Store>, path);
 }
 
@@ -557,7 +597,10 @@ export async function get_group<
 export async function get_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
-	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path as AbsolutePath);
+	const { hierarchy, path } = deref(
+		node as Hierarchy<Store>,
+		_path as AbsolutePath,
+	);
 	return _get_group(hierarchy as Hierarchy<Store>, path);
 }
 
@@ -597,12 +640,19 @@ export async function get_implicit_group<
 export async function get_implicit_group<
 	Store extends ExtendedReadable | Async<ExtendedReadable>,
 >(node: ImplicitGroup<Store> | Hierarchy<Store>, _path: any = "/") {
-	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path as AbsolutePath);
+	const { hierarchy, path } = deref(
+		node as Hierarchy<Store>,
+		_path as AbsolutePath,
+	);
 	return _get_implicit_group(hierarchy as Hierarchy<Store>, path);
 }
 
 export async function get<
-	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+	Store extends
+		| Readable
+		| Async<Readable>
+		| ExtendedReadable
+		| Async<ExtendedReadable>,
 	Path extends string,
 	NodePath extends AbsolutePath,
 >(group: ImplicitGroup<Store, NodePath>, path: Path): Promise<
@@ -612,7 +662,11 @@ export async function get<
 >;
 
 export async function get<
-	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+	Store extends
+		| Readable
+		| Async<Readable>
+		| ExtendedReadable
+		| Async<ExtendedReadable>,
 	Path extends AbsolutePath,
 >(hierarchy: Hierarchy<Store>, path: Path): Promise<
 	| Array<DataType, Store, Path>
@@ -621,7 +675,11 @@ export async function get<
 >;
 
 export async function get<
-	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+	Store extends
+		| Readable
+		| Async<Readable>
+		| ExtendedReadable
+		| Async<ExtendedReadable>,
 >(hierarchy: Hierarchy<Store>): Promise<
 	| Array<DataType, Store, "/">
 	| ExplicitGroup<Store, "/">
@@ -630,7 +688,11 @@ export async function get<
 
 /** @category Getters */
 export async function get<
-	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+	Store extends
+		| Readable
+		| Async<Readable>
+		| ExtendedReadable
+		| Async<ExtendedReadable>,
 >(node: Hierarchy<Store> | ImplicitGroup<Store>, _path: any = "/") {
 	const { hierarchy, path } = deref(node as Hierarchy<Store>, _path);
 	// try array
@@ -653,7 +715,10 @@ export async function get<
 	// try implicit group only if ExtendedReadable
 	if ("list_dir" in hierarchy.store) {
 		try {
-			return await get_implicit_group(hierarchy as Hierarchy<ExtendedReadable>, path);
+			return await get_implicit_group(
+				hierarchy as Hierarchy<ExtendedReadable>,
+				path,
+			);
 		} catch (err) {
 			if (!(err instanceof NodeNotFoundError)) {
 				throw err;
@@ -664,7 +729,11 @@ export async function get<
 }
 
 export function has<
-	Store extends Readable | Async<Readable> | ExtendedReadable | Async<ExtendedReadable>,
+	Store extends
+		| Readable
+		| Async<Readable>
+		| ExtendedReadable
+		| Async<ExtendedReadable>,
 >(node: Hierarchy<Store> | ImplicitGroup<Store>, _path: any = "/") {
 	return get(node as Hierarchy<Store>, _path)
 		.then(() => true)
@@ -722,7 +791,9 @@ async function _get_children(
 	const children: Map<string, string> = new Map();
 
 	// attempt to list directory
-	const key_prefix = path === "/" ? "/meta/root/" : `/meta/root${path}/` as const;
+	const key_prefix = path === "/"
+		? "/meta/root/"
+		: `/meta/root${path}/` as const;
 	const result = await h.store.list_dir(key_prefix);
 
 	// find explicit children
