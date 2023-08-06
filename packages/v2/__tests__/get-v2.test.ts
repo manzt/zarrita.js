@@ -14,7 +14,7 @@ let { get } = ops;
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 
-let root = path.resolve(__dirname, "../../core/__tests__/data/data.zarr");
+let root = path.resolve(__dirname, "data/data.zarr");
 let store = new FSStore(root);
 
 describe("contiguous", () => {
