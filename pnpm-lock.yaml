@@ -82,9 +82,6 @@ importers:
       '@types/node':
         specifier: ^20.4.5
         version: 20.4.5
-      '@zarrita/core':
-        specifier: workspace:^
-        version: link:../core
       reference-spec-reader:
         specifier: ^0.1.3
         version: 0.1.3

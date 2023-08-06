@@ -10,7 +10,7 @@ import type {
 	PrefixPath,
 	RootPath,
 	Writeable,
-} from "@zarrita/core/types";
+} from "./types.js";
 
 class FileSystemStore implements Async<ExtendedReadable & Writeable> {
 	constructor(public root: string) {}

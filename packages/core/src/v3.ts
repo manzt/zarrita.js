@@ -4,19 +4,14 @@ import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/
 import { is_dtype, json_decode_object, json_encode_object } from "./lib/util.js";
 
 import type {
-	AbsolutePath,
-	Async,
 	Attrs,
 	CreateArrayProps,
 	DataType,
-	Deref,
-	ExtendedReadable,
-	Readable,
 	Scalar,
-	Writeable,
 	DataTypeQuery,
 	NarrowDataType,
 } from "./types.js";
+import type { Async, AbsolutePath, Readable, ExtendedReadable, Deref, Writeable } from "@zarrita/storage";
 
 import type { Codec } from "numcodecs";
 

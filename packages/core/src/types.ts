@@ -116,35 +116,6 @@ export interface Slice {
 	indices: (length: number) => Indices;
 }
 
-export type AbsolutePath<Rest extends string = string> = `/${Rest}`;
-export type RootPath = AbsolutePath<"">;
-export type PrefixPath = AbsolutePath<`${string}/`>;
-
-export type Deref<Path extends string, NodePath extends AbsolutePath> = Path extends
-	AbsolutePath ? Path : NodePath extends "/" ? `/${Path}` : `${NodePath}/${Path}`;
-
-export interface ListDirResult {
-	contents: string[];
-	prefixes: string[];
-}
-
-export type Async<T extends Record<string, any>> = {
-	[Key in keyof T]: (...args: Parameters<T[Key]>) => Promise<ReturnType<T[Key]>>;
-};
-
-export interface Readable<Opts = any> {
-	get(key: AbsolutePath, opts?: Opts): Uint8Array | undefined;
-}
-
-export interface Writeable {
-	set(key: AbsolutePath, value: Uint8Array): void;
-}
-
-export interface ExtendedReadable extends Readable {
-	list_prefix(key: RootPath | PrefixPath): string[];
-	list_dir(key?: RootPath | PrefixPath): ListDirResult;
-}
-
 export type Attrs = Record<string, any>;
 
 type RequiredArrayProps<D extends DataType> = {
