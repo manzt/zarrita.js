@@ -11,20 +11,17 @@ import {
 } from "@zarrita/core";
 
 import type {
-	AbsolutePath,
 	ArrayProps,
-	Async,
 	Attrs,
 	CreateArrayProps,
 	DataType,
-	Deref,
-	Readable,
-	Writeable,
 	Codec,
 	Scalar,
 	DataTypeQuery,
 	NarrowDataType,
 } from "@zarrita/core";
+
+import type { AbsolutePath, Async, Readable, Writeable, Deref } from "@zarrita/storage";
 
 export { slice, registry };
 

@@ -4,20 +4,19 @@ import { BasicIndexer, type IndexerProjection } from "./indexing.js";
 import type { Array } from "./hierarchy.js";
 
 import type {
-	Async,
 	Chunk,
 	DataType,
 	Indices,
 	Prepare,
-	Readable,
 	Scalar,
 	SetFromChunk,
 	SetOptions,
 	SetScalar,
 	Slice,
 	TypedArray,
-	Writeable,
 } from "../types.js";
+
+import type { Async, Readable, Writeable } from "@zarrita/storage";
 
 function flip(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };

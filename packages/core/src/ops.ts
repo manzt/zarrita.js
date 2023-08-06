@@ -2,21 +2,20 @@ import { BoolArray } from "@zarrita/typedarray";
 import type { Array } from "./lib/hierarchy.js";
 
 import type {
-	Async,
 	Chunk,
 	GetOptions,
 	Indices,
-	Readable,
 	SetOptions,
 	Slice,
 	TypedArray,
-	Writeable,
 	Bool,
 	ByteStr,
 	DataType,
 	Scalar,
 	UnicodeStr,
 } from "./types.js";
+
+import type { Async, Readable, Writeable } from "@zarrita/storage";
 
 import { get as get_with_setter } from "./lib/get.js";
 import { set as set_with_setter } from "./lib/set.js";

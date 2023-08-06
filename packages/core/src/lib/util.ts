@@ -1,4 +1,8 @@
-import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "@zarrita/typedarray";
+import {
+	BoolArray,
+	ByteStringArray as _ByteStringArray,
+	UnicodeStringArray as _UnicodeStringArray
+} from "@zarrita/typedarray";
 
 import type {
 	ChunkQueue,

@@ -3,18 +3,18 @@ import { BasicIndexer } from "./indexing.js";
 import { create_queue, get_strides } from "./util.js";
 import type { Array } from "./hierarchy.js";
 import type {
-	Async,
 	Chunk,
 	DataType,
 	GetOptions,
 	Prepare,
-	Readable,
 	Scalar,
 	SetFromChunk,
 	SetScalar,
 	Slice,
 	TypedArray,
 } from "../types.js";
+
+import type { Async, Readable } from "@zarrita/storage";
 
 const unwrap = <D extends DataType>(
 	arr: TypedArray<D>,

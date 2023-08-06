@@ -1,17 +1,15 @@
 import type { Codec } from "numcodecs";
+import type { AbsolutePath, Async, Readable, Deref } from "@zarrita/storage";
 
 import { KeyError } from "./errors.js";
 import { decode_chunk, get_ctr, get_strides } from "./util.js";
 import type {
-	AbsolutePath,
-	Async,
 	Chunk,
 	DataType,
-	Deref,
-	Readable,
 	Scalar,
 	TypedArrayConstructor,
 } from "../types.js";
+
 
 export class Node<Store, Path extends AbsolutePath> {
 	constructor(public readonly store: Store, public readonly path: Path) {}
