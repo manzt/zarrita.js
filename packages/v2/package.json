@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "exports": {
     ".": {
