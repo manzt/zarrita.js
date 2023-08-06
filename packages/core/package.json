@@ -11,23 +11,28 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "clean": "rm -rf dist"
   },
   "files": [
     "dist/"
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     },
     "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js"
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./dtypes": {
+      "types": "./dist/src/dtypes.d.ts",
+      "import": "./dist/src/dtypes.js"
     },
     "./v3": {
-      "types": "./dist/v3.d.ts",
-      "import": "./dist/v3.js"
+      "types": "./dist/src/v3.d.ts",
+      "import": "./dist/src/v3.js"
     }
   },
   "dependencies": {

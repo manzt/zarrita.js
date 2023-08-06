@@ -21,10 +21,13 @@ import type {
 	Readable,
 	Writeable,
 	Codec,
-	DataTypeQuery,
-	NarrowDataType,
 	Scalar,
 } from "@zarrita/core";
+
+import type { 
+	DataTypeQuery,
+	NarrowDataType,
+} from "@zarrita/core/dtypes";
 
 export { slice, registry };
 
