@@ -1,4 +1,4 @@
-import { test, expect, assert } from "vitest";
+import { test, expect } from "vitest";
 
 import type { DataType } from "../src/dtypes.js";
 
@@ -58,44 +58,119 @@ test("byteswap_inplace", () => {
 	].forEach(([arr, expected]) => {
 		byteswap_inplace(arr);
 		byteswap_inplace(arr);
-		assert.equal(arr, expected);
+		expect(arr).toStrictEqual(expected);
 	});
 });
 
 test("slice", () => {
-	assert.equal(slice(null).start, null);
-	assert.equal(slice(null).stop, null);
-	assert.equal(slice(null).step, null);
-	expect(slice(null).indices(10)).toStrictEqual([0, 10, 1]);
+	expect(slice(null)).toMatchInlineSnapshot(`
+		{
+		  "indices": [Function],
+		  "start": null,
+		  "step": null,
+		  "stop": null,
+		}
+	`);
+	expect(slice(null).indices(10)).toMatchInlineSnapshot(`
+		[
+		  0,
+		  10,
+		  1,
+		]
+	`);
 
-	assert.equal(slice(3, 15, 2).start, 3);
-	assert.equal(slice(3, 15, 2).stop, 15);
-	assert.equal(slice(3, 15, 2).step, 2);
-	expect(slice(3, 15, 2).indices(10)).toStrictEqual([3, 10, 2]);
-	expect(slice(3, 15, 2).indices(30)).toStrictEqual([3, 15, 2]);
+	expect(slice(3, 15, 2)).toMatchInlineSnapshot(`
+		{
+		  "indices": [Function],
+		  "start": 3,
+		  "step": 2,
+		  "stop": 15,
+		}
+	`);
+	expect(slice(3, 15, 2).indices(10)).toMatchInlineSnapshot(`
+		[
+		  3,
+		  10,
+		  2,
+		]
+	`);
+	expect(slice(3, 15, 2).indices(30)).toMatchInlineSnapshot(`
+		[
+		  3,
+		  15,
+		  2,
+		]
+	`);
 
-	assert.equal(slice(40).start, null);
-	assert.equal(slice(40).stop, 40);
-	assert.equal(slice(40).step, null);
-	expect(slice(40).indices(4)).toStrictEqual([0, 4, 1]);
-	expect(slice(40).indices(41)).toStrictEqual([0, 40, 1]);
+	expect(slice(40)).toMatchInlineSnapshot(`
+		{
+		  "indices": [Function],
+		  "start": null,
+		  "step": null,
+		  "stop": 40,
+		}
+	`);
+	expect(slice(40).indices(4)).toMatchInlineSnapshot(`
+		[
+		  0,
+		  4,
+		  1,
+		]
+	`);
+	expect(slice(40).indices(41)).toMatchInlineSnapshot(`
+		[
+		  0,
+		  40,
+		  1,
+		]
+	`);
 
-	expect(slice(2, 10, -1).indices(20)).toStrictEqual([2, 10, -1]);
-	expect(slice(2, 10, -1).indices(4)).toStrictEqual([2, 3, -1]);
+	expect(slice(2, 10, -1).indices(20)).toMatchInlineSnapshot(`
+		[
+		  2,
+		  10,
+		  -1,
+		]
+	`);
+	expect(slice(2, 10, -1).indices(4)).toMatchInlineSnapshot(`
+		[
+		  2,
+		  3,
+		  -1,
+		]
+	`);
 
-	expect(slice(null, null, -3).indices(14)).toStrictEqual([13, -1, -3]);
-	expect(slice(null, null, -3).indices(14)).toStrictEqual([13, -1, -3]);
-	expect(slice(null, null, -3).indices(2)).toStrictEqual([1, -1, -3]);
+	expect(slice(null, null, -3).indices(14)).toMatchInlineSnapshot(`
+		[
+		  13,
+		  -1,
+		  -3,
+		]
+	`);
+	expect(slice(null, null, -3).indices(14)).toMatchInlineSnapshot(`
+		[
+		  13,
+		  -1,
+		  -3,
+		]
+	`);
+	expect(slice(null, null, -3).indices(2)).toMatchInlineSnapshot(`
+		[
+		  1,
+		  -1,
+		  -3,
+		]
+	`);
 
-	assert.throws(() => slice(null, null, 0).indices(1), "should throw for step === 0");
+	expect(() => slice(null, null, 0).indices(1)).toThrowError();
 });
 
 test("range", () => {
-	assert.equal([0, 1, 2, 3], Array.from(range(4)));
-	assert.equal([0, 2, 4, 6, 8], Array.from(range(0, 10, 2)));
-	assert.equal([0, 3, 6, 9], Array.from(range(0, 10, 3)));
-	assert.equal([0], Array.from(range(0, 2, 3)));
-	assert.equal([], Array.from(range(0)));
+	expect(range(4)).toMatchInlineSnapshot('{}');
+	expect(range(0, 10, 2)).toMatchInlineSnapshot('{}');
+	expect(range(0, 10, 3)).toMatchInlineSnapshot('{}');
+	expect(range(0, 2, 3)).toMatchInlineSnapshot('{}');
+	expect(range(0)).toMatchInlineSnapshot('{}');
 });
 
 test("get_strides", () => {

@@ -4,10 +4,17 @@
     "target": "esnext",
     "moduleResolution": "nodenext",
     "strict": true,
-    "noImplicitAny": true,
     "declaration": true,
     "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
-  }
+  },
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/ndarray" },
+    { "path": "./packages/storage" },
+    { "path": "./packages/typedarray" },
+    { "path": "./packages/v2" }
+  ]
 }
