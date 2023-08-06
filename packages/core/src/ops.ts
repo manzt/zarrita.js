@@ -11,8 +11,12 @@ import type {
 	Slice,
 	TypedArray,
 	Writeable,
+	Bool,
+	ByteStr,
+	DataType,
+	Scalar,
+	UnicodeStr,
 } from "./types.js";
-import type { Bool, ByteStr, DataType, Scalar, UnicodeStr } from "./dtypes.js";
 
 import { get as get_with_setter } from "./lib/get.js";
 import { set as set_with_setter } from "./lib/set.js";

@@ -14,9 +14,9 @@ import type {
 	Readable,
 	Scalar,
 	Writeable,
+	DataTypeQuery,
+	NarrowDataType,
 } from "./types.js";
-
-import type { DataTypeQuery, NarrowDataType } from "./dtypes.js";
 
 import type { Codec } from "numcodecs";
 

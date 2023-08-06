@@ -7,8 +7,9 @@ import type {
 	Slice,
 	TypedArray,
 	TypedArrayConstructor,
+	DataTypeQuery,
+	NarrowDataType,
 } from "../types.js";
-import type { DataTypeQuery, NarrowDataType } from "../dtypes.js";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);

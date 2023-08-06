@@ -1,6 +1,7 @@
-import { KeyError, NotImplementedError } from "./errors.js";
-import { decode_chunk, get_ctr, get_strides } from "./util.js";
+import type { Codec } from "numcodecs";
 
+import { KeyError } from "./errors.js";
+import { decode_chunk, get_ctr, get_strides } from "./util.js";
 import type {
 	AbsolutePath,
 	Async,
@@ -11,7 +12,6 @@ import type {
 	Scalar,
 	TypedArrayConstructor,
 } from "../types.js";
-import type { Codec } from "numcodecs";
 
 export class Node<Store, Path extends AbsolutePath> {
 	constructor(public readonly store: Store, public readonly path: Path) {}

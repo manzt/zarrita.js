@@ -26,10 +26,6 @@
       "types": "./dist/src/types.d.ts",
       "import": "./dist/src/types.js"
     },
-    "./dtypes": {
-      "types": "./dist/src/dtypes.d.ts",
-      "import": "./dist/src/dtypes.js"
-    },
     "./v3": {
       "types": "./dist/src/v3.d.ts",
       "import": "./dist/src/v3.js"

@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 
-import type { DataType } from "../src/dtypes.js";
+import type { DataType } from "../src/index.js";
 
 import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/lib/util.js";
 

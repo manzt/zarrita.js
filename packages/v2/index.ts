@@ -22,12 +22,9 @@ import type {
 	Writeable,
 	Codec,
 	Scalar,
-} from "@zarrita/core";
-
-import type { 
 	DataTypeQuery,
 	NarrowDataType,
-} from "@zarrita/core/dtypes";
+} from "@zarrita/core";
 
 export { slice, registry };
 

@@ -7,5 +7,3 @@ export { get as get_with_setter } from "./lib/get.js";
 export { set as set_with_setter } from "./lib/set.js";
 export type * from "./types.js";
 export type { Codec } from "numcodecs";
-
-export const Foo = "Trevor";
