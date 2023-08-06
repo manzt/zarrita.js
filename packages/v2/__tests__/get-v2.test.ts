@@ -5,17 +5,16 @@ import { describe, it, expect } from "vitest";
 
 import * as zarr from "../index.js";
 const { get_array, get_group } = zarr;
-import { get } from "../src/ops";
-import { range, NodeNotFoundError } from "@zarrita/core";
 
-import FSStore from "@zarrita/core/storage/fs";
-
+import FSStore from "@zarrita/storage/fs";
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import { range, NodeNotFoundError, ops } from "@zarrita/core";
+let { get } = ops;
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 
-let root = path.resolve(__dirname, "data/data.zarr");
+let root = path.resolve(__dirname, "../../core/__tests__/data/data.zarr");
 let store = new FSStore(root);
 
 describe("contiguous", () => {

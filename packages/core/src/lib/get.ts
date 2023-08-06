@@ -1,7 +1,7 @@
-import { KeyError } from "./errors";
-import { BasicIndexer } from "./indexing";
-import { create_queue, get_strides } from "./util";
-import type { Array } from "./hierarchy";
+import { KeyError } from "./errors.js";
+import { BasicIndexer } from "./indexing.js";
+import { create_queue, get_strides } from "./util.js";
+import type { Array } from "./hierarchy.js";
 import type {
 	Async,
 	Chunk,
@@ -14,7 +14,7 @@ import type {
 	SetScalar,
 	Slice,
 	TypedArray,
-} from "../types";
+} from "../types.js";
 
 const unwrap = <D extends DataType>(
 	arr: TypedArray<D>,

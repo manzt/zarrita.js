@@ -1,8 +1,8 @@
 import { test, expect, assert } from "vitest";
 
-import type { DataType } from "../src/dtypes";
+import type { DataType } from "../src/dtypes.js";
 
-import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/lib/util";
+import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/lib/util.js";
 
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 

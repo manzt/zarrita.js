@@ -1,5 +1,5 @@
 {
-  "name": "@zarrita/typedarray",
+  "name": "@zarrita/v2",
   "type": "module",
   "version": "0.0.0",
   "sideEffects": false,
@@ -16,6 +16,7 @@
     "@zarrita/core": "workspace:^"
   },
   "devDependencies": {
+    "@zarrita/storage": "workspace:^",
     "@zarrita/typedarray": "workspace:^"
   }
 }

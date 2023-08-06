@@ -7,13 +7,13 @@ import { range } from "../../core/src/lib/util.js";
 
 import type * as zarr from "@zarrita/core/types";
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
-import { FSStore } from "@zarrita/storage";
-import { get_array } from "@zarrita/core/v2";
+import { FileSystemStore } from "@zarrita/storage";
+import { get_array } from "@zarrita/v2";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 let root = path.resolve(__dirname, "../../core/__tests__/data/data.zarr");
-let store = new FSStore(root);
+let store = new FileSystemStore(root);
 
 
 describe("ndarray", () => {

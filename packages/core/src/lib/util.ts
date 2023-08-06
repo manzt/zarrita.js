@@ -1,4 +1,3 @@
-// deno-fmt-ignore
 import { BoolArray, ByteStringArray as _ByteStringArray, UnicodeStringArray as _UnicodeStringArray } from "@zarrita/typedarray";
 
 import type {
@@ -8,8 +7,8 @@ import type {
 	Slice,
 	TypedArray,
 	TypedArrayConstructor,
-} from "../types";
-import type { DataTypeQuery, NarrowDataType } from "../dtypes";
+} from "../types.js";
+import type { DataTypeQuery, NarrowDataType } from "../dtypes.js";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -112,7 +111,7 @@ export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> 
 }
 
 export async function encode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy").Array<Dtype, any>,
+	arr: import("./hierarchy.js").Array<Dtype, any>,
 	data: TypedArray<Dtype>,
 ): Promise<Uint8Array> {
 	if (should_byteswap(arr.dtype)) {
@@ -129,7 +128,7 @@ export async function encode_chunk<Dtype extends DataType>(
 }
 
 export async function decode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy").Array<Dtype, any>,
+	arr: import("./hierarchy.js").Array<Dtype, any>,
 	bytes: Uint8Array,
 ): Promise<TypedArray<Dtype>> {
 	if (arr.compressor) {

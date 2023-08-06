@@ -1,5 +1,5 @@
 import { test, assert } from "vitest";
-import { is_dtype } from "../src/lib/util";
+import { is_dtype } from "../src/lib/util.js";
 
 test("is number", () => {
 	assert.ok(is_dtype("|i1", "number"));

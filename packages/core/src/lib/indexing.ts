@@ -1,7 +1,7 @@
-import { IndexError } from "./errors";
-import { product, range, slice } from "./util";
+import { IndexError } from "./errors.js";
+import { product, range, slice } from "./util.js";
 
-import type { Indices, Slice } from "../types";
+import type { Indices, Slice } from "../types.js";
 
 function err_too_many_indices(selection: (number | Slice)[], shape: readonly number[]) {
 	throw new IndexError(

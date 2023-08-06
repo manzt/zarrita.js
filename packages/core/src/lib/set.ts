@@ -1,7 +1,7 @@
-import { KeyError } from "./errors";
-import { create_queue, encode_chunk, get_strides } from "./util";
-import { BasicIndexer, IndexerProjection } from "./indexing";
-import type { Array } from "./hierarchy";
+import { KeyError } from "./errors.js";
+import { create_queue, encode_chunk, get_strides } from "./util.js";
+import { BasicIndexer, type IndexerProjection } from "./indexing.js";
+import type { Array } from "./hierarchy.js";
 
 import type {
 	Async,
@@ -17,7 +17,7 @@ import type {
 	Slice,
 	TypedArray,
 	Writeable,
-} from "../types";
+} from "../types.js";
 
 function flip(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };

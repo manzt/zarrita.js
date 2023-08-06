@@ -23,9 +23,12 @@ importers:
 
   packages/core:
     dependencies:
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
       '@zarrita/typedarray':
         specifier: workspace:^
-        version: link:../v2
+        version: link:../typedarray
       numcodecs:
         specifier: ^0.2.2
         version: 0.2.2
@@ -69,6 +72,9 @@ importers:
       '@zarrita/storage':
         specifier: workspace:^
         version: link:../storage
+      '@zarrita/v2':
+        specifier: workspace:^
+        version: link:../v2
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
@@ -78,7 +84,7 @@ importers:
     devDependencies:
       '@zarrita/typedarray':
         specifier: workspace:^
-        version: link:../v2
+        version: link:../typedarray
 
   packages/storage:
     dependencies:
@@ -103,9 +109,12 @@ importers:
         specifier: workspace:^
         version: link:../core
     devDependencies:
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
       '@zarrita/typedarray':
         specifier: workspace:^
-        version: 'link:'
+        version: link:../typedarray
 
 packages:
 

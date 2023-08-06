@@ -16,6 +16,7 @@
     "@types/ndarray": "^1.0.11",
     "@zarrita/core": "workspace:^",
     "@zarrita/storage": "workspace:^",
+    "@zarrita/v2": "workspace:^",
     "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2"
   },

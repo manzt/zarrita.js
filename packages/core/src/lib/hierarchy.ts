@@ -1,5 +1,5 @@
-import { KeyError, NotImplementedError } from "./errors";
-import { decode_chunk, get_ctr, get_strides } from "./util";
+import { KeyError, NotImplementedError } from "./errors.js";
+import { decode_chunk, get_ctr, get_strides } from "./util.js";
 
 import type {
 	AbsolutePath,
@@ -10,7 +10,7 @@ import type {
 	Readable,
 	Scalar,
 	TypedArrayConstructor,
-} from "../types";
+} from "../types.js";
 import type { Codec } from "numcodecs";
 
 export class Node<Store, Path extends AbsolutePath> {
@@ -90,8 +90,8 @@ export class Array<
 	}
 
 	/** @hidden */
-	protected chunk_key(_chunk_coords: number[]): AbsolutePath {
-		throw new NotImplementedError("_chunk_key must be implemented on zarr.Array");
+	protected chunk_key(chunk_coords: number[]): AbsolutePath {
+		return `${this.path}${chunk_coords.join(this.chunk_separator)}` as AbsolutePath;
 	}
 
 	async get_chunk(

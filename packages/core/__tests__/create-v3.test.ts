@@ -1,11 +1,11 @@
 import { test, expect, assert } from "vitest";
 import ndarray from "ndarray";
 
-import * as v3 from "../src/v3";
-import { json_decode_object, range } from "../src/lib/util";
-import { get, set } from "../src/ops";
+import MemStore from "@zarrita/storage/mem";
 
-import MemStore from "../src/storage/mem";
+import * as v3 from "../src/v3.js";
+import { json_decode_object, range } from "../src/lib/util.js";
+import { get, set } from "../src/ops.js";
 
 test("create root group", async () => {
 	let h = await v3.create_hierarchy(new MemStore());

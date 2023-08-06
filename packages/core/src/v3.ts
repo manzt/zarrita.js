@@ -1,7 +1,7 @@
-import { Array as BaseArray, ArrayProps, Group } from "./lib/hierarchy";
-import { registry } from "./lib/codec-registry";
-import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors";
-import { is_dtype, json_decode_object, json_encode_object } from "./lib/util";
+import { Array as BaseArray, type ArrayProps, Group } from "./lib/hierarchy.js";
+import { registry } from "./lib/codec-registry.js";
+import { assert, KeyError, NodeNotFoundError, NotImplementedError } from "./lib/errors.js";
+import { is_dtype, json_decode_object, json_encode_object } from "./lib/util.js";
 
 import type {
 	AbsolutePath,
@@ -14,14 +14,14 @@ import type {
 	Readable,
 	Scalar,
 	Writeable,
-} from "./types";
+} from "./types.js";
 
-import type { DataTypeQuery, NarrowDataType } from "./dtypes";
+import type { DataTypeQuery, NarrowDataType } from "./dtypes.js";
 
 import type { Codec } from "numcodecs";
 
-export { slice } from "./lib/util";
-export { registry } from "./lib/codec-registry";
+export { slice } from "./lib/util.js";
+export { registry } from "./lib/codec-registry.js";
 
 export class Hierarchy<Store> {
 	store: Store;

@@ -1,5 +1,5 @@
 import { BoolArray } from "@zarrita/typedarray";
-import type { Array } from "./lib/hierarchy";
+import type { Array } from "./lib/hierarchy.js";
 
 import type {
 	Async,
@@ -11,11 +11,11 @@ import type {
 	Slice,
 	TypedArray,
 	Writeable,
-} from "./types";
-import type { Bool, ByteStr, DataType, Scalar, UnicodeStr } from "./dtypes";
+} from "./types.js";
+import type { Bool, ByteStr, DataType, Scalar, UnicodeStr } from "./dtypes.js";
 
-import { get as get_with_setter } from "./lib/get";
-import { set as set_with_setter } from "./lib/set";
+import { get as get_with_setter } from "./lib/get.js";
+import { set as set_with_setter } from "./lib/set.js";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 

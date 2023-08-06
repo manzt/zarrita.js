@@ -1,13 +1,13 @@
+// @ts-nocheck
 import { it, beforeEach, expect } from "vitest";
 
 import ndarray from "ndarray";
 // @ts-ignore
 import { assign } from "ndarray-ops";
 
-import type { Chunk, Projection } from "../src/types";
-
-import * as ops from "../src/ops";
-import { get_strides, slice } from "../src/lib/util";
+import type { Chunk, Projection } from "../src/types.js";
+import * as ops from "../src/ops.js";
+import { get_strides, slice } from "../src/lib/util.js";
 
 function to_c({ data, shape, stride }: Chunk<"<f4">) {
 	let size = shape.reduce((a, b) => a * b, 1);

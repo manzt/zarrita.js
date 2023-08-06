@@ -1,12 +1,11 @@
 import { beforeEach, describe, it, expect } from "vitest";
-
-import * as zarr from "../src/v2";
-
-import * as ops from "../src/ops";
-
-import { range, slice } from "../src/lib/util";
-import { IndexError } from "../src/lib/errors";
 import ndarray from "ndarray";
+
+import * as ops from "../src/ops.js";
+
+import { range, slice } from "../src/lib/util.js";
+import { IndexError } from "../src/lib/errors.js";
+import * as zarr from "../src/lib/hierarchy.js";
 
 interface Context {
 	arr: zarr.Array<"<i4", Map<string, Uint8Array>>;

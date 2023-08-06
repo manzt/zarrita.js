@@ -1,8 +1,8 @@
-import type { DataType, Scalar, TypedArray } from "./dtypes";
-export type { Array, Group } from "./lib/hierarchy";
+import type { DataType, Scalar, TypedArray } from "./dtypes.js";
+export type { Array, Group } from "./lib/hierarchy.js";
 
 // hoist useful types here
-export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtypes";
+export type { DataType, Scalar, TypedArray, TypedArrayConstructor } from "./dtypes.js";
 
 export type Chunk<Dtype extends DataType> = {
 	data: TypedArray<Dtype>;

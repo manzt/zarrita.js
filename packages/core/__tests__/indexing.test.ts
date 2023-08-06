@@ -1,13 +1,13 @@
 import { test, assert, expect } from "vitest";
 
-import type { Slice } from "../src/types";
+import type { Slice } from "../src/types.js";
 
 import {
 	BasicIndexer,
 	normalize_integer_selection,
 	normalize_selection,
-} from "../src/lib/indexing";
-import { slice } from "../src/lib/util";
+} from "../src/lib/indexing.js";
+import { slice } from "../src/lib/util.js";
 
 test("normalize_selection", () => {
 	// null !== null, so need custom compare
