@@ -1,20 +1,20 @@
 import {
 	BoolArray,
 	ByteStringArray as _ByteStringArray,
-	UnicodeStringArray as _UnicodeStringArray
+	UnicodeStringArray as _UnicodeStringArray,
 } from "@zarrita/typedarray";
 
 import type {
+	ArrayMetadata,
+	Chunk,
 	ChunkQueue,
 	DataType,
+	DataTypeQuery,
 	Indices,
+	NarrowDataType,
 	Slice,
 	TypedArray,
 	TypedArrayConstructor,
-	DataTypeQuery,
-	NarrowDataType,
-	Chunk,
-	ArrayMetadata,
 } from "./types.js";
 
 import { registry } from "./codec-registry.js";
@@ -38,7 +38,8 @@ function system_is_little_endian(): boolean {
 
 export const LITTLE_ENDIAN_OS = system_is_little_endian();
 
-export const should_byteswap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
+export const should_byteswap = (dtype: DataType) =>
+	LITTLE_ENDIAN_OS && dtype[0] === ">";
 
 export function byteswap_inplace(src: TypedArray<DataType>) {
 	if (src instanceof _UnicodeStringArray) {
@@ -79,14 +80,15 @@ const CONSTRUCTORS = {
 	bool: BoolArray,
 };
 
-export function get_ctr<D extends DataType>(data_type: D): TypedArrayConstructor<D> {
+export function get_ctr<D extends DataType>(
+	data_type: D,
+): TypedArrayConstructor<D> {
 	let ctr = (CONSTRUCTORS as any)[data_type];
 	if (!ctr) {
 		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
 	}
 	return ctr as any;
 }
-
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 export function get_strides(shape: readonly number[], order: "C" | "F") {
@@ -114,7 +116,11 @@ function col_major_stride(shape: readonly number[]) {
 }
 
 /** Similar to python's `range` function. Supports positive ranges only. */
-export function* range(start: number, stop?: number, step = 1): Iterable<number> {
+export function* range(
+	start: number,
+	stop?: number,
+	step = 1,
+): Iterable<number> {
 	if (stop === undefined) {
 		stop = start;
 		start = 0;
@@ -130,7 +136,9 @@ export function* range(start: number, stop?: number, step = 1): Iterable<number>
  */
 export function* product<T extends Array<Iterable<any>>>(
 	...iterables: T
-): IterableIterator<{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never }> {
+): IterableIterator<
+	{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never }
+> {
 	if (iterables.length === 0) {
 		return;
 	}
@@ -245,7 +253,8 @@ export function is_dtype<Query extends DataTypeQuery>(
 ): dtype is NarrowDataType<DataType, Query> {
 	// fuzzy match, e.g. 'u4'
 	if (query.length < 3) {
-		return dtype === `|${query}` || dtype === `>${query}` || dtype === `<${query}`;
+		return dtype === `|${query}` || dtype === `>${query}` ||
+			dtype === `<${query}`;
 	}
 	if (query !== "string" && query !== "number" && query !== "bigint") {
 		return dtype === query;
@@ -270,13 +279,13 @@ export function create_codec_pipeline(
 	array_metadata: ArrayMetadata<DataType>,
 	codec_registry: typeof registry = registry,
 ) {
-
 	let codecs: Promise<Codec>[] | undefined;
 
 	function init() {
 		let metadata = array_metadata.codecs;
-		// TODO: first codec needs to be transpose?
+
 		if (metadata[0]?.name !== "transpose") {
+			// TODO: first codec needs to be transpose?
 			metadata = [
 				{ name: "transpose", configuration: { order: "C" } },
 				...metadata,
@@ -293,7 +302,9 @@ export function create_codec_pipeline(
 		});
 	}
 	return {
-		async encode<Dtype extends DataType>(data: TypedArray<Dtype>): Promise<Uint8Array> {
+		async encode<Dtype extends DataType>(
+			data: TypedArray<Dtype>,
+		): Promise<Uint8Array> {
 			if (!codecs) codecs = init();
 			for await (const codec of codecs) {
 				data = codec.encode(data);
@@ -308,8 +319,8 @@ export function create_codec_pipeline(
 				data = await codec.decode(data);
 			}
 			return data as any;
-		}
-	}
+		},
+	};
 }
 
 export function encode_chunk_key(
@@ -324,4 +335,3 @@ export function encode_chunk_key(
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
-

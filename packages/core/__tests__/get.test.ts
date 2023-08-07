@@ -32,7 +32,7 @@ export function run_suite(name: string, getter: any) {
 				chunk_key_encoding: {
 					name: "default",
 					configuration: {
-						separator: ".",
+						separator: "/",
 					}
 				},
 				codecs: [],

@@ -3,6 +3,7 @@ import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
 import { registry } from "./codec-registry.js";
 import { encode_chunk_key, create_codec_pipeline, type CodecPipeline  } from "./util.js";
 import type { DataType, ArrayMetadata, GroupMetadata, Chunk, Scalar } from "./types.js";
+import { KeyError } from "./errors.js";
 
 function dereference_path(root: AbsolutePath, path: string): AbsolutePath {
 	if (path[0] !== "/") {
@@ -76,13 +77,14 @@ export class Array<
 
 	_chunk_path(chunk_coords: number[]): AbsolutePath {
 		let chunk_key = encode_chunk_key(chunk_coords, this.#metadata.chunk_key_encoding);
-		return `${this.path}/${chunk_key}`;
+		return `${this.path}${chunk_key}`;
 	}
 
 	async get_chunk(chunk_coords: number[], options?: Parameters<Store["get"]>[1]): Promise<Chunk<Dtype>> {
-		let maybe_bytes = await this.store.get(this._chunk_path(chunk_coords), options);
+		let chunk_path = this._chunk_path(chunk_coords);
+		let maybe_bytes = await this.store.get(chunk_path, options);
 		if (!maybe_bytes) {
-			throw new Error(`Chunk not found: ${chunk_coords}`);
+			throw new KeyError(chunk_path);
 		}
 		return this.codec_pipeline.decode(maybe_bytes);
 	}

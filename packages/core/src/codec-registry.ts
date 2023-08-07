@@ -106,7 +106,7 @@ class TransposeCodec {
 		public array_metadata: ArrayMetadata<DataType>,
 	) {}
 
-	fromConfig(
+	static fromConfig(
 		config: { order: "C" | "F" },
 		array_metadata: ArrayMetadata<DataType>,
 	): TransposeCodec {

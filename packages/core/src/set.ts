@@ -58,7 +58,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 			let cdata: TypedArray<Dtype>;
 			const shape = arr.chunk_shape;
-			const stride = (value as Chunk<Dtype>)?.stride ?? get_strides(shape, "C");
+			const stride = get_strides(shape, "C");
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
 				// totally replace
