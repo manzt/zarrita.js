@@ -1,38 +1,69 @@
 import type { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
-export type { Array, Group } from "./lib/hierarchy.js";
+
+export type CodecMetadata = {
+	name: string;
+	configuration: Record<string, unknown>;
+};
+
+export type ArrayMetadata<D extends DataType = DataType> = {
+	zarr_format: 3;
+	node_type: "array";
+	shape: number[];
+	dimension_names?: string[];
+	data_type: D;
+	chunk_grid: {
+		name: "regular";
+		configuration: {
+			chunk_shape: number[];
+		};
+	};
+	chunk_key_encoding: {
+		name: "v2" | "default";
+		configuration: {
+			separator: "." | "/";
+		};
+	};
+	codecs: CodecMetadata[];
+	fill_value: Scalar<D> | null;
+	attributes: Record<string, unknown>;
+};
+
+export type GroupMetadata = {
+	zarr_format: 3;
+	node_type: "group";
+	attributes: Record<string, unknown>;
+};
 
 /** @category Number */
-export type Int8 = "|i1";
+export type Int8 = "int8";
 /** @category Number */
-export type Int16 = ">i2" | "<i2";
+export type Int16 = "int16"
 /** @category Number */
-export type Int32 = ">i4" | "<i4";
+export type Int32 = "int32";
 /** @category Bigint */
-export type Int64 = ">i8" | "<i8";
+export type Int64 = "int64";
 
 /** @category Number */
-export type Uint8 = "|u1";
+export type Uint8 = "uint8";
 /** @category Number */
-export type Uint16 = ">u2" | "<u2";
+export type Uint16 = "uint16";
 /** @category Number */
-export type Uint32 = ">u4" | "<u4";
+export type Uint32 = "uint32";
 /** @category Bigint */
-export type Uint64 = ">u8" | "<u8";
+export type Uint64 = "uint64";
 
 /** @category Number */
-export type Float32 = ">f4" | "<f4";
+export type Float32 = "float32";
 /** @category Number */
-export type Float64 = ">f8" | "<f8";
+export type Float64 = "float64";
 
 /** @category Boolean */
-export type Bool = "|b1";
+export type Bool = "bool";
 
-/** @category String */
-export type UnicodeStr<Bytes extends number = number> = `<U${Bytes}` | `>U${Bytes}`;
-/** @category String */
-export type ByteStr<Bytes extends number = number> = `|S${Bytes}`;
+/** @category Raw */
+export type Raw = `r${number}`;
 
-export type NumericDataType =
+export type NumberDataType =
 	| Int8
 	| Int16
 	| Int32
@@ -41,14 +72,14 @@ export type NumericDataType =
 	| Uint32
 	| Float32
 	| Float64;
+
 export type BigintDataType = Int64 | Uint64;
-export type StringDataType = UnicodeStr | ByteStr;
 
 export type DataType =
-	| NumericDataType
+	| NumberDataType
 	| BigintDataType
-	| StringDataType
-	| Bool;
+	| Bool
+	| Raw;
 
 export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Int16 ? Int16Array
@@ -61,8 +92,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
-	: D extends ByteStr ? ByteStringArray
-	: D extends UnicodeStr ? UnicodeStringArray
+	: D extends Raw ? ByteStringArray | UnicodeStringArray
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {
@@ -74,15 +104,10 @@ export type TypedArrayConstructor<D extends DataType> = {
 };
 
 // Hack to get scalar type since is not defined on any typed arrays.
-export type Scalar<D extends DataType> = D extends "|b1" ? boolean
-	: D extends `${infer _}${"U" | "S"}${infer _}` ? string
-	: D extends `${"<" | ">"}${"u" | "i"}8` ? bigint
+export type Scalar<D extends DataType> = D extends Bool ? boolean
+	: D extends `${"u" | ""}int64` ? bigint
+	: D extends Raw ? string
 	: number;
-
-// TODO: Using this for sanity check, but really should move to formal compilation tests.
-type Parts<D extends DataType> = {
-	[Key in D]: [TypedArrayConstructor<Key>, TypedArray<Key>, Scalar<Key>];
-};
 
 type DataTypeWithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest
 	: never;
@@ -97,9 +122,9 @@ export type DataTypeQuery =
 export type NarrowDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
-> = Query extends "number" ? NumericDataType
+> = Query extends "number" ? NumberDataType 
 	: Query extends "bigint" ? BigintDataType
-	: Query extends "string" ? StringDataType
+	: Query extends "string" ? Raw
 	: Extract<Query | `${"<" | ">" | "|"}${Query}`, Dtype>;
 
 export type Chunk<Dtype extends DataType> = {
@@ -137,15 +162,18 @@ export type Projection = { from: null; to: number } | { from: number; to: null }
 	from: Indices;
 	to: Indices;
 };
+
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
 	shape: number[],
 	stride: number[],
 ) => NdArray;
+
 export type SetScalar<
 	D extends DataType,
 	NdArray extends Chunk<D>,
 > = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
+
 export type SetFromChunk<
 	D extends DataType,
 	NdArray extends Chunk<D>,
@@ -170,5 +198,7 @@ export type ChunkQueue = {
 export type Options = {
 	create_queue?: () => ChunkQueue;
 };
+
 export type GetOptions<O> = Options & { opts?: O; order?: "C" | "F" };
+
 export type SetOptions = Options;

@@ -1,11 +1,11 @@
+import type { Async, Readable, Writeable } from "@zarrita/storage";
+
 import { KeyError } from "./errors.js";
-import { create_queue, encode_chunk, get_strides } from "./util.js";
+import { create_queue, get_ctr, get_strides } from "./util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexing.js";
 import type { Array } from "./hierarchy.js";
-
 import type {
 	Chunk,
-	DataType,
 	Indices,
 	Prepare,
 	Scalar,
@@ -13,10 +13,9 @@ import type {
 	SetOptions,
 	SetScalar,
 	Slice,
-	TypedArray,
-} from "../types.js";
-
-import type { Async, Readable, Writeable } from "@zarrita/storage";
+	DataType,
+	TypedArray
+} from "./types.js";
 
 function flip(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };
@@ -46,6 +45,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 	const chunk_size = arr.chunk_shape.reduce((a, b) => a * b, 1);
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
+	const TypedArrayConstructor = get_ctr(arr.dtype);
 
 	// N.B., it is an important optimisation that we only visit chunks which overlap
 	// the selection. This minimises the number of iterations in the main for loop.
@@ -54,16 +54,15 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const flipped = mapping.map(flip);
 		queue.add(async () => {
 			// obtain key for chunk storage
-			// @ts-ignore TODO: make chunk_key unprotected?
-			const chunk_key = arr.chunk_key(chunk_coords);
+			const chunk_key = arr._chunk_path(chunk_coords);
 
 			let cdata: TypedArray<Dtype>;
 			const shape = arr.chunk_shape;
-			const stride = get_strides(shape, arr.order);
+			const stride = (value as Chunk<Dtype>)?.stride ?? get_strides(shape, "C");
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
 				// totally replace
-				cdata = new arr.TypedArray(chunk_size);
+				cdata = new TypedArrayConstructor(chunk_size);
 				// optimization: we are completely replacing the chunk, so no need
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
@@ -71,7 +70,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 					const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
 					setter.set_from_chunk(chunk, value, flipped);
 				} else {
-					// @ts-ignore
+					// @ts-expect-error
 					cdata.fill(value as any);
 				}
 			} else {
@@ -80,7 +79,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 					.then(({ data }) => data)
 					.catch((err) => {
 						if (!(err instanceof KeyError)) throw err;
-						const empty = new arr.TypedArray(chunk_size);
+						const empty = new TypedArrayConstructor(chunk_size);
 						// @ts-ignore
 						if (arr.fill_value) empty.fill(arr.fill_value);
 						return empty;
@@ -96,7 +95,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			}
 			// encode chunk
-			const encoded_chunk_data = await encode_chunk(arr, cdata);
+			const encoded_chunk_data = await arr.codec_pipeline.encode(cdata);
 			// store
 			await arr.store.set(chunk_key, encoded_chunk_data);
 		});

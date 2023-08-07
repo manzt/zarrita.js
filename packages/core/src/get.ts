@@ -1,6 +1,6 @@
 import { KeyError } from "./errors.js";
 import { BasicIndexer } from "./indexing.js";
-import { create_queue, get_strides } from "./util.js";
+import { create_queue, get_ctr, get_strides } from "./util.js";
 import type { Array } from "./hierarchy.js";
 import type {
 	Chunk,
@@ -12,7 +12,7 @@ import type {
 	SetScalar,
 	Slice,
 	TypedArray,
-} from "../types.js";
+} from "./types.js";
 
 import type { Async, Readable } from "@zarrita/storage";
 
@@ -43,12 +43,13 @@ export async function get<
 		shape: arr.shape,
 		chunk_shape: arr.chunk_shape,
 	});
+	const TypedArrayContstructor = get_ctr(arr.dtype);
 
 	// Setup output array
 	const out = setter.prepare(
-		new arr.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
+		new TypedArrayContstructor(indexer.shape.reduce((a, b) => a * b, 1)),
 		indexer.shape,
-		get_strides(indexer.shape, opts.order ?? arr.order),
+		get_strides(indexer.shape, opts.order ?? "C"),
 	);
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
 

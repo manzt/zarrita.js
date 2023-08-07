@@ -6,8 +6,8 @@ import {
 	BasicIndexer,
 	normalize_integer_selection,
 	normalize_selection,
-} from "../src/lib/indexing.js";
-import { slice } from "../src/lib/util.js";
+} from "../src/indexing.js";
+import { slice } from "../src/util.js";
 
 test("normalize_selection", () => {
 	// null !== null, so need custom compare

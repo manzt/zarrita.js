@@ -115,7 +115,7 @@ export class UnicodeStringArray {
 		return this._data.length / this.chars;
 	}
 
-	private encode(s: string): Int32Array {
+	#encode(s: string): Int32Array {
 		let out = new Int32Array(this.chars);
 		for (let i = 0; i < this.chars; i++) {
 			out[i] = s.codePointAt(i)!;
@@ -136,11 +136,11 @@ export class UnicodeStringArray {
 		const offset = this.chars * idx;
 		const view = this._data.subarray(offset, offset + this.chars);
 		view.fill(0); // clear current
-		view.set(this.encode(value));
+		view.set(this.#encode(value));
 	}
 
 	fill(value: string): void {
-		const encoded = this.encode(value);
+		const encoded = this.#encode(value);
 		for (let i = 0; i < this.length; i++) {
 			this._data.set(encoded, i * this.chars);
 		}

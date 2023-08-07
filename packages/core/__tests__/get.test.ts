@@ -3,28 +3,43 @@ import ndarray from "ndarray";
 
 import * as ops from "../src/ops.js";
 
-import { range, slice } from "../src/lib/util.js";
-import { IndexError } from "../src/lib/errors.js";
-import * as zarr from "../src/lib/hierarchy.js";
+import { range, slice } from "../src/util.js";
+import { IndexError } from "../src/errors.js";
+import * as zarr from "../src/hierarchy.js";
 
 interface Context {
-	arr: zarr.Array<"<i4", Map<string, Uint8Array>>;
+	arr: zarr.Array<"int32", Map<string, Uint8Array>>;
 }
 
 export function run_suite(name: string, getter: any) {
 	const get = getter as typeof ops.get;
 
 	beforeEach<Context>(async (ctx) => {
-		let arr = new zarr.Array({
-			fill_value: null,
-			order: "C",
-			shape: [2, 3, 4],
-			chunk_shape: [1, 2, 2],
-			dtype: "<i4",
-			store: new Map<string, Uint8Array>(),
-			path: "/",
-			chunk_separator: ".",
-		});
+		let arr = new zarr.Array(
+			new Map<string, Uint8Array>(),
+			"/",
+			{
+				zarr_format: 3,
+				node_type: "array",
+				shape: [2, 3, 4],
+				data_type: "int32",
+				chunk_grid: {
+					name: "regular",
+					configuration: {
+						chunk_shape: [1, 2, 2],
+					}
+				},
+				chunk_key_encoding: {
+					name: "default",
+					configuration: {
+						separator: ".",
+					}
+				},
+				codecs: [],
+				fill_value: null,
+				attributes: {}
+			}
+		);
 		let shape = [2, 3, 4];
 		let data = new Int32Array(range(2 * 3 * 4));
 		await ops.set(arr, null, ndarray(data, shape));

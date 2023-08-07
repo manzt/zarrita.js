@@ -1,5 +1,5 @@
 import { BoolArray } from "@zarrita/typedarray";
-import type { Array } from "./lib/hierarchy.js";
+import type { Array } from "./hierarchy.js";
 
 import type {
 	Chunk,
@@ -8,21 +8,20 @@ import type {
 	SetOptions,
 	Slice,
 	TypedArray,
-	Bool,
-	ByteStr,
 	DataType,
 	Scalar,
-	UnicodeStr,
+	BigintDataType,
+	NumberDataType,
 } from "./types.js";
 
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 
-import { get as get_with_setter } from "./lib/get.js";
-import { set as set_with_setter } from "./lib/set.js";
+import { get as get_with_setter } from "./get.js";
+import { set as set_with_setter } from "./set.js";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 
-type SupportedDataType = Exclude<DataType, UnicodeStr | ByteStr>;
+type SupportedDataType = DataType;
 
 export const setter = {
 	prepare<D extends DataType>(data: TypedArray<D>, shape: number[], stride: number[]) {
@@ -71,7 +70,7 @@ export async function set<
 
 function compat<D extends SupportedDataType>(
 	arr: Chunk<D>,
-): Chunk<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
+): Chunk<NumberDataType | BigintDataType> {
 	// ensure strides are computed
 	return {
 		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
@@ -80,10 +79,10 @@ function compat<D extends SupportedDataType>(
 	};
 }
 
-const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
+const cast_scalar = <D extends DataType>(
 	arr: Chunk<D>,
 	value: Scalar<D>,
-): Scalar<Exclude<DataType, UnicodeStr | ByteStr | Bool>> => {
+): Scalar<DataType> => {
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value as any;
 };
@@ -96,7 +95,7 @@ function indices_len(start: number, stop: number, step: number) {
 	return 0;
 }
 
-function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
+function set_scalar<D extends DataType>(
 	out: Pick<Chunk<D>, "data" | "stride">,
 	out_selection: (Indices | number)[],
 	value: Scalar<D>,
@@ -138,7 +137,7 @@ type Projection = { from: Indices; to: Indices } | { from: null; to: number } | 
 	to: null;
 };
 
-function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
+function set_from_chunk<D extends DataType>(
 	dest: Pick<Chunk<D>, "data" | "stride">,
 	src: Pick<Chunk<D>, "data" | "stride">,
 	projections: Projection[],

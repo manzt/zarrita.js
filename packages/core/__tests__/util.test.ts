@@ -2,7 +2,7 @@ import { test, expect } from "vitest";
 
 import type { DataType } from "../src/index.js";
 
-import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/lib/util.js";
+import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/util.js";
 
 import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
@@ -10,39 +10,21 @@ test("get_ctr", () => {
 	// get an instance of returned constructor
 	const get = <D extends DataType>(s: D) => new (get_ctr(s))(1);
 
-	expect(get("|i1")).toBeInstanceOf(Int8Array);
-	expect(get("<i2")).toBeInstanceOf(Int16Array);
-	expect(get(">i2")).toBeInstanceOf(Int16Array);
-	expect(get("<i4")).toBeInstanceOf(Int32Array);
-	expect(get(">i4")).toBeInstanceOf(Int32Array);
-	expect(get("<i8")).toBeInstanceOf(BigInt64Array);
-	expect(get(">i8")).toBeInstanceOf(BigInt64Array);
+	expect(get("int8")).toBeInstanceOf(Int8Array);
+	expect(get("int16")).toBeInstanceOf(Int16Array);
+	expect(get("int32")).toBeInstanceOf(Int32Array);
+	expect(get("int64")).toBeInstanceOf(BigInt64Array);
 
-	expect(get("|u1")).toBeInstanceOf(Uint8Array);
-	expect(get("<u2")).toBeInstanceOf(Uint16Array);
-	expect(get(">u2")).toBeInstanceOf(Uint16Array);
-	expect(get("<u4")).toBeInstanceOf(Uint32Array);
-	expect(get(">u4")).toBeInstanceOf(Uint32Array);
-	expect(get("<u8")).toBeInstanceOf(BigUint64Array);
-	expect(get(">u8")).toBeInstanceOf(BigUint64Array);
+	expect(get("uint8")).toBeInstanceOf(Uint8Array);
+	expect(get("uint16")).toBeInstanceOf(Uint16Array);
+	expect(get("uint32")).toBeInstanceOf(Uint32Array);
+	expect(get("uint64")).toBeInstanceOf(BigUint64Array);
 
-	expect(() => get("<f2" as any)).toThrowError();
-	expect(() => get(">f2" as any)).toThrowError();
-	expect(get("<f4")).toBeInstanceOf(Float32Array);
-	expect(get(">f4")).toBeInstanceOf(Float32Array);
-	expect(get("<f8")).toBeInstanceOf(Float64Array);
-	expect(get(">f8")).toBeInstanceOf(Float64Array);
+	expect(() => get("float16" as any)).toThrowError();
+	expect(get("float32")).toBeInstanceOf(Float32Array);
+	expect(get("float64")).toBeInstanceOf(Float64Array);
 
-	expect(get("|b1")).toBeInstanceOf(BoolArray);
-
-	expect(get("<U20")).toBeInstanceOf(UnicodeStringArray);
-	expect(get(">U20")).toBeInstanceOf(UnicodeStringArray);
-	expect(get(">U20").chars).toBe(20);
-	expect(get("<U32").chars).toBe(32);
-
-	expect(get("|S8")).toBeInstanceOf(ByteStringArray);
-	expect(get("|S4")).toBeInstanceOf(ByteStringArray);
-	expect(get("|S16").chars).toBe(16);
+	expect(get("bool")).toBeInstanceOf(BoolArray);
 });
 
 test("byteswap_inplace", () => {

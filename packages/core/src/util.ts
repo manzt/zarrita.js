@@ -13,7 +13,12 @@ import type {
 	TypedArrayConstructor,
 	DataTypeQuery,
 	NarrowDataType,
-} from "../types.js";
+	Chunk,
+	ArrayMetadata,
+} from "./types.js";
+
+import { registry } from "./codec-registry.js";
+import type { Codec } from "numcodecs";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -31,7 +36,7 @@ function system_is_little_endian(): boolean {
 	return !(b[0] === 0x12);
 }
 
-const LITTLE_ENDIAN_OS = system_is_little_endian();
+export const LITTLE_ENDIAN_OS = system_is_little_endian();
 
 export const should_byteswap = (dtype: DataType) => LITTLE_ENDIAN_OS && dtype[0] === ">";
 
@@ -60,99 +65,28 @@ export function ensure_array<T>(maybe_arr: T | T[]): T[] {
 	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
-const constructors = {
-	u1: Uint8Array,
-	i1: Int8Array,
-	u2: Uint16Array,
-	i2: Int16Array,
-	u4: Uint32Array,
-	i4: Int32Array,
-	i8: globalThis.BigInt64Array,
-	u8: globalThis.BigUint64Array,
-	f4: Float32Array,
-	f8: Float64Array,
-	b1: BoolArray,
-	U: _UnicodeStringArray,
-	S: _ByteStringArray,
+const CONSTRUCTORS = {
+	int8: Int8Array,
+	int16: Int16Array,
+	int32: Int32Array,
+	int64: globalThis.BigInt64Array,
+	uint8: Uint8Array,
+	uint16: Uint16Array,
+	uint32: Uint32Array,
+	uint64: globalThis.BigUint64Array,
+	float32: Float32Array,
+	float64: Float64Array,
+	bool: BoolArray,
 };
 
-export function get_ctr<D extends DataType>(dtype: D): TypedArrayConstructor<D> {
-	const second = dtype[1] as DataType extends `${infer _}${infer T}${infer _}` ? T
-		: never;
-
-	// dynamically create typed array, use named class so logging is nice
-	if (second === "U") {
-		const size = parseInt(dtype.slice(2));
-		class UnicodeStringArray extends _UnicodeStringArray {
-			constructor(x: ArrayBuffer | number) {
-				super(x as any, size);
-			}
-		}
-		return UnicodeStringArray as TypedArrayConstructor<D>;
-	}
-
-	// dynamically create typed array, use named class so logging is nice
-	if (second === "S") {
-		const size = parseInt(dtype.slice(2));
-		class ByteStringArray extends _ByteStringArray {
-			constructor(x: ArrayBuffer | number) {
-				super(x as any, size);
-			}
-		}
-		return ByteStringArray as TypedArrayConstructor<D>;
-	}
-
-	// get last two characters of three character DataType; can only be keyof DTYPES at the moment.
-	const key = dtype.slice(1) as Exclude<keyof typeof constructors, "U" | "S">;
-	const ctr = constructors[key];
-
+export function get_ctr<D extends DataType>(data_type: D): TypedArrayConstructor<D> {
+	let ctr = (CONSTRUCTORS as any)[data_type];
 	if (!ctr) {
-		throw new Error(
-			`dtype not supported either in zarrita or in browser! got ${dtype}.`,
-		);
+		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
 	}
-
-	return ctr as TypedArrayConstructor<D>;
+	return ctr as any;
 }
 
-export async function encode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy.js").Array<Dtype, any>,
-	data: TypedArray<Dtype>,
-): Promise<Uint8Array> {
-	if (should_byteswap(arr.dtype)) {
-		byteswap_inplace(data);
-	}
-	let bytes = new Uint8Array(data.buffer);
-	for (const filter of arr.filters) {
-		bytes = await filter.encode(bytes);
-	}
-	if (arr.compressor) {
-		bytes = await arr.compressor.encode(bytes);
-	}
-	return bytes;
-}
-
-export async function decode_chunk<Dtype extends DataType>(
-	arr: import("./hierarchy.js").Array<Dtype, any>,
-	bytes: Uint8Array,
-): Promise<TypedArray<Dtype>> {
-	if (arr.compressor) {
-		bytes = await arr.compressor.decode(bytes);
-	}
-
-	// reverse through codecs
-	for (var i = arr.filters.length - 1; i >= 0; i--) {
-		bytes = await arr.filters[i].decode(bytes);
-	}
-
-	const data = new arr.TypedArray(bytes.buffer);
-
-	if (should_byteswap(arr.dtype)) {
-		byteswap_inplace(data);
-	}
-
-	return data;
-}
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 export function get_strides(shape: readonly number[], order: "C" | "F") {
@@ -329,3 +263,65 @@ export function is_dtype<Query extends DataTypeQuery>(
 	// number
 	return !is_string && !is_bigint;
 }
+
+export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
+
+export function create_codec_pipeline(
+	array_metadata: ArrayMetadata<DataType>,
+	codec_registry: typeof registry = registry,
+) {
+
+	let codecs: Promise<Codec>[] | undefined;
+
+	function init() {
+		let metadata = array_metadata.codecs;
+		// TODO: first codec needs to be transpose?
+		if (metadata[0]?.name !== "transpose") {
+			metadata = [
+				{ name: "transpose", configuration: { order: "C" } },
+				...metadata,
+			];
+		}
+
+		return metadata.map(async (meta) => {
+			let Codec = await codec_registry.get(meta.name)?.();
+			if (!Codec) {
+				throw new Error(`Unknown codec: ${meta.name}`);
+			}
+			// @ts-expect-error
+			return Codec.fromConfig(meta.configuration, array_metadata);
+		});
+	}
+	return {
+		async encode<Dtype extends DataType>(data: TypedArray<Dtype>): Promise<Uint8Array> {
+			if (!codecs) codecs = init();
+			for await (const codec of codecs) {
+				data = codec.encode(data);
+			}
+			return data as Uint8Array;
+		},
+		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
+			if (!codecs) codecs = init();
+			let data = bytes;
+			for (let i = codecs.length - 1; i >= 0; i--) {
+				let codec = await codecs[i];
+				data = await codec.decode(data);
+			}
+			return data as any;
+		}
+	}
+}
+
+export function encode_chunk_key(
+	chunk_coords: number[],
+	{ name, configuration }: ArrayMetadata["chunk_key_encoding"],
+): string {
+	if (name === "default") {
+		return ["c", ...chunk_coords].join(configuration.separator);
+	}
+	if (name === "v2") {
+		return chunk_coords.join(configuration.separator) || "0";
+	}
+	throw new Error(`Unknown chunk key encoding: ${name}`);
+}
+
