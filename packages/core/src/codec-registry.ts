@@ -1,12 +1,6 @@
-import { BoolArray } from "@zarrita/typedarray";
 import type { Codec } from "numcodecs";
-
-import type {
-	ArrayMetadata,
-	Chunk,
-	DataType,
-	TypedArrayConstructor,
-} from "./types.js";
+import type { ArrayMetadata, Chunk, DataType, TypedArray } from "./types.js";
+import { get_ctr, get_strides } from "./util.js";
 
 type Config = Record<string, any>;
 type CodecImporter = () => Promise<{ fromConfig: (config: Config) => Codec }>;
@@ -17,9 +11,8 @@ function system_is_little_endian(): boolean {
 	return !(b[0] === 0x12);
 }
 
-export const LITTLE_ENDIAN_OS = system_is_little_endian();
-
-export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
+const LITTLE_ENDIAN_OS = system_is_little_endian();
+function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
 	const numFlips = bytes_per_element / 2;
 	const endByteIndex = bytes_per_element - 1;
 	let t = 0;
@@ -82,27 +75,6 @@ class EndianCodec {
 	}
 }
 
-function get_ctr<D extends DataType>(
-	data_type: D,
-): TypedArrayConstructor<DataType> {
-	let mapping: any = {
-		int8: Int8Array,
-		int16: Int16Array,
-		int32: Int32Array,
-		int64: BigInt64Array,
-		uint8: Uint8Array,
-		uint16: Uint16Array,
-		uint32: Uint32Array,
-		uint64: BigUint64Array,
-		float32: Float32Array,
-		float64: Float64Array,
-		bool: BoolArray,
-	};
-	let ctr = mapping[data_type];
-	if (!ctr) throw new Error(`Unsupported \`data_type\`: ${data_type}`);
-	return ctr;
-}
-
 function create_default_registry(): Map<string, CodecImporter> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
@@ -110,7 +82,7 @@ function create_default_registry(): Map<string, CodecImporter> {
 		.set("lz4", () => import("numcodecs/lz4").then((m) => m.default))
 		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
-		.set("endian", () => EndianCodec)
+		.set("endian", () => EndianCodec);
 }
 
 export const registry = create_default_registry();
@@ -136,23 +108,30 @@ export function create_codec_pipeline(
 	}
 	return {
 		async encode<Dtype extends DataType>(
-			data: Chunk<Dtype>,
+			data: TypedArray<Dtype>,
 		): Promise<Uint8Array> {
 			if (!codecs) codecs = init();
-			let view = new Uint8Array(data.data.);
+			let bytes = new Uint8Array(data.buffer);
 			for await (const codec of codecs) {
-				view = await codec.encode(view);
+				bytes = await codec.encode(bytes);
 			}
-			return view as unknown as Uint8Array;
+			return bytes as unknown as Uint8Array;
 		},
 		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
 			if (!codecs) codecs = init();
-			let data = bytes;
 			for (let i = codecs.length - 1; i >= 0; i--) {
 				let codec = await codecs[i];
-				data = await codec.decode(data);
+				bytes = await codec.decode(bytes);
 			}
-			return data as any;
+			let ctr = get_ctr(array_metadata.data_type);
+			return {
+				data: new ctr(bytes.buffer),
+				shape: array_metadata.chunk_grid.configuration.chunk_shape,
+				stride: get_strides(
+					array_metadata.chunk_grid.configuration.chunk_shape,
+					"C",
+				),
+			};
 		},
 	};
 }

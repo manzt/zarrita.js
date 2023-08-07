@@ -1,11 +1,11 @@
 import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
 
-import { registry } from "./codec-registry.js";
 import {
 	type CodecPipeline,
 	create_codec_pipeline,
-	encode_chunk_key,
-} from "./util.js";
+	registry,
+} from "./codec-registry.js";
+import { encode_chunk_key } from "./util.js";
 import type {
 	ArrayMetadata,
 	Chunk,
