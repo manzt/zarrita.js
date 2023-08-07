@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { test, assert } from "vitest";
+import { assert, test } from "vitest";
 import { is_dtype } from "../src/util.js";
 
 test.skip("is number", () => {

@@ -1,4 +1,4 @@
-import { test, assert, expect } from "vitest";
+import { assert, expect, test } from "vitest";
 
 import type { Slice } from "../src/types.js";
 
@@ -12,7 +12,9 @@ import { slice } from "../src/util.js";
 test("normalize_selection", () => {
 	// null !== null, so need custom compare
 	let eq = (a: (Slice | number)[], b: (Slice | number)[]) => {
-		expect(a.map((s) => s.toString())).toStrictEqual(b.map((s) => s.toString()));
+		expect(a.map((s) => s.toString())).toStrictEqual(
+			b.map((s) => s.toString()),
+		);
 	};
 	eq(
 		normalize_selection(null, [2, 3, 4]),
@@ -47,7 +49,9 @@ test("BasicIndexer - chunk_shape === shape", () => {
 		chunk_shape: [3, 4, 5],
 	});
 	expect(indexer.shape).toStrictEqual([3, 4, 5]);
-	expect(Array.from(indexer).map((i) => i.mapping)[0]).toStrictEqual([[0, 3, 1], [0, 4, 1], [0, 5, 1]].map((to) => ({ from: to, to })));
+	expect(Array.from(indexer).map((i) => i.mapping)[0]).toStrictEqual(
+		[[0, 3, 1], [0, 4, 1], [0, 5, 1]].map((to) => ({ from: to, to })),
+	);
 });
 
 test("BasicIndexer - complete multichunk", () => {
@@ -63,39 +67,45 @@ test("BasicIndexer - complete multichunk", () => {
 
 	let p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([0, 0, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] },
-		{ from: [0, 2, 1], to: [0, 2, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] }, {
+		from: [0, 2, 1],
+		to: [0, 2, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([1, 0, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] },
-		{ from: [0, 2, 1], to: [0, 2, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] }, {
+		from: [0, 2, 1],
+		to: [0, 2, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([2, 0, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] },
-		{ from: [0, 2, 1], to: [0, 2, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] }, {
+		from: [0, 2, 1],
+		to: [0, 2, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([0, 1, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] },
-		{ from: [0, 2, 1], to: [2, 4, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] }, {
+		from: [0, 2, 1],
+		to: [2, 4, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([1, 1, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] },
-		{ from: [0, 2, 1], to: [2, 4, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] }, {
+		from: [0, 2, 1],
+		to: [2, 4, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([2, 1, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] },
-		{ from: [0, 2, 1], to: [2, 4, 1] },
-		{ from: [0, 5, 1], to: [0, 5, 1] },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] }, {
+		from: [0, 2, 1],
+		to: [2, 4, 1],
+	}, { from: [0, 5, 1], to: [0, 5, 1] }]);
 });
 
 test("BasicIndexer - squeezed dim", () => {
@@ -111,16 +121,22 @@ test("BasicIndexer - squeezed dim", () => {
 
 	let p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([0, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] },
-		{ from: 0, to: null },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [0, 1, 1] }, {
+		from: 0,
+		to: null,
+	}]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([1, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] },
-		{ from: 0, to: null },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [1, 2, 1] }, {
+		from: 0,
+		to: null,
+	}]);
 
 	p = iter.next().value;
 	expect(p.chunk_coords).toStrictEqual([2, 0]);
-	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] },
-		{ from: 0, to: null },]);
+	expect(p.mapping).toStrictEqual([{ from: [0, 1, 1], to: [2, 3, 1] }, {
+		from: 0,
+		to: null,
+	}]);
 });

@@ -1,4 +1,8 @@
-import type { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import type {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
 
 export type CodecMetadata = {
 	name: string;
@@ -37,7 +41,7 @@ export type GroupMetadata = {
 /** @category Number */
 export type Int8 = "int8";
 /** @category Number */
-export type Int16 = "int16"
+export type Int16 = "int16";
 /** @category Number */
 export type Int32 = "int32";
 /** @category Bigint */
@@ -109,7 +113,8 @@ export type Scalar<D extends DataType> = D extends Bool ? boolean
 	: D extends Raw ? string
 	: number;
 
-type DataTypeWithoutEndianness = DataType extends `${infer _}${infer Rest}` ? Rest
+type DataTypeWithoutEndianness = DataType extends `${infer _}${infer Rest}`
+	? Rest
 	: never;
 
 export type DataTypeQuery =
@@ -122,7 +127,7 @@ export type DataTypeQuery =
 export type NarrowDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
-> = Query extends "number" ? NumberDataType 
+> = Query extends "number" ? NumberDataType
 	: Query extends "bigint" ? BigintDataType
 	: Query extends "string" ? Raw
 	: Extract<Query | `${"<" | ">" | "|"}${Query}`, Dtype>;
@@ -149,7 +154,8 @@ type RequiredArrayProps<D extends DataType> = {
 	dtype: D;
 };
 
-export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps<D> {
+export interface CreateArrayProps<D extends DataType>
+	extends RequiredArrayProps<D> {
 	compressor?: import("numcodecs").Codec;
 	chunk_separator?: "." | "/";
 	fill_value?: Scalar<D>;
@@ -158,10 +164,13 @@ export interface CreateArrayProps<D extends DataType> extends RequiredArrayProps
 	order?: "C" | "F";
 }
 
-export type Projection = { from: null; to: number } | { from: number; to: null } | {
-	from: Indices;
-	to: Indices;
-};
+export type Projection =
+	| { from: null; to: number }
+	| { from: number; to: null }
+	| {
+		from: Indices;
+		to: Indices;
+	};
 
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
@@ -172,7 +181,11 @@ export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 export type SetScalar<
 	D extends DataType,
 	NdArray extends Chunk<D>,
-> = (target: NdArray, selection: (Indices | number)[], value: Scalar<D>) => void;
+> = (
+	target: NdArray,
+	selection: (Indices | number)[],
+	value: Scalar<D>,
+) => void;
 
 export type SetFromChunk<
 	D extends DataType,

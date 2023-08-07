@@ -1,10 +1,20 @@
-import { test, expect } from "vitest";
+import { expect, test } from "vitest";
 
 import type { DataType } from "../src/index.js";
 
-import { byteswap_inplace, get_ctr, get_strides, range, slice } from "../src/util.js";
+import {
+	byteswap_inplace,
+	get_ctr,
+	get_strides,
+	range,
+	slice,
+} from "../src/util.js";
 
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
 
 test("get_ctr", () => {
 	// get an instance of returned constructor
@@ -148,11 +158,11 @@ test("slice", () => {
 });
 
 test("range", () => {
-	expect(range(4)).toMatchInlineSnapshot('{}');
-	expect(range(0, 10, 2)).toMatchInlineSnapshot('{}');
-	expect(range(0, 10, 3)).toMatchInlineSnapshot('{}');
-	expect(range(0, 2, 3)).toMatchInlineSnapshot('{}');
-	expect(range(0)).toMatchInlineSnapshot('{}');
+	expect(range(4)).toMatchInlineSnapshot("{}");
+	expect(range(0, 10, 2)).toMatchInlineSnapshot("{}");
+	expect(range(0, 10, 3)).toMatchInlineSnapshot("{}");
+	expect(range(0, 2, 3)).toMatchInlineSnapshot("{}");
+	expect(range(0)).toMatchInlineSnapshot("{}");
 });
 
 test("get_strides", () => {

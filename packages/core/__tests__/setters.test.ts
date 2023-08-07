@@ -1,4 +1,4 @@
-import { it, beforeEach, expect } from "vitest";
+import { beforeEach, expect, it } from "vitest";
 
 import ndarray from "ndarray";
 // @ts-ignore

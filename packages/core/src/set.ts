@@ -6,6 +6,7 @@ import { BasicIndexer, type IndexerProjection } from "./indexing.js";
 import type { Array } from "./hierarchy.js";
 import type {
 	Chunk,
+	DataType,
 	Indices,
 	Prepare,
 	Scalar,
@@ -13,8 +14,7 @@ import type {
 	SetOptions,
 	SetScalar,
 	Slice,
-	DataType,
-	TypedArray
+	TypedArray,
 } from "./types.js";
 
 function flip(m: IndexerProjection) {
@@ -58,6 +58,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 			let cdata: TypedArray<Dtype>;
 			const shape = arr.chunk_shape;
+			// TODO: We should compute strides for the chunk, not the array
 			const stride = get_strides(shape, "C");
 
 			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
@@ -95,7 +96,12 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			}
 			// encode chunk
-			const encoded_chunk_data = await arr.codec_pipeline.encode(cdata);
+			const encoded_chunk_data = await arr.codec_pipeline.encode({
+				data: cdata,
+				shape,
+				stride,
+			});
+			console.log({ chunk_key, encoded_chunk_data });
 			// store
 			await arr.store.set(chunk_key, encoded_chunk_data);
 		});

@@ -2,7 +2,10 @@ import { IndexError } from "./errors.js";
 import { product, range, slice } from "./util.js";
 import type { Indices, Slice } from "./types.js";
 
-function err_too_many_indices(selection: (number | Slice)[], shape: readonly number[]) {
+function err_too_many_indices(
+	selection: (number | Slice)[],
+	shape: readonly number[],
+) {
 	throw new IndexError(
 		`too many indicies for array; expected ${shape.length}, got ${selection.length}`,
 	);
@@ -18,7 +21,10 @@ function err_negative_step() {
 	throw new IndexError("only slices with step >= 1 are supported");
 }
 
-function check_selection_length(selection: (number | Slice)[], shape: readonly number[]) {
+function check_selection_length(
+	selection: (number | Slice)[],
+	shape: readonly number[],
+) {
 	if (selection.length > shape.length) {
 		err_too_many_indices(selection, shape);
 	}
@@ -200,14 +206,18 @@ export class BasicIndexer {
 
 	constructor({ selection, shape, chunk_shape }: BasicIndexerProps) {
 		// setup per-dimension indexers
-		this.dim_indexers = normalize_selection(selection, shape).map((dim_sel, i) => {
-			return new (typeof dim_sel === "number" ? IntDimIndexer : SliceDimIndexer)({
-				// ts inference not strong enough to know correct chunk
-				dim_sel: dim_sel as any,
-				dim_len: shape[i],
-				dim_chunk_len: chunk_shape[i],
-			});
-		});
+		this.dim_indexers = normalize_selection(selection, shape).map(
+			(dim_sel, i) => {
+				return new (typeof dim_sel === "number"
+					? IntDimIndexer
+					: SliceDimIndexer)({
+					// ts inference not strong enough to know correct chunk
+					dim_sel: dim_sel as any,
+					dim_len: shape[i],
+					dim_chunk_len: chunk_shape[i],
+				});
+			},
+		);
 		this.shape = this.dim_indexers
 			.filter((ixr) => ixr instanceof SliceDimIndexer)
 			.map((sixr) => sixr.nitems);

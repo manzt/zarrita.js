@@ -2,16 +2,16 @@ import { BoolArray } from "@zarrita/typedarray";
 import type { Array } from "./hierarchy.js";
 
 import type {
+	BigintDataType,
 	Chunk,
+	DataType,
 	GetOptions,
 	Indices,
+	NumberDataType,
+	Scalar,
 	SetOptions,
 	Slice,
 	TypedArray,
-	DataType,
-	Scalar,
-	BigintDataType,
-	NumberDataType,
 } from "./types.js";
 
 import type { Async, Readable, Writeable } from "@zarrita/storage";
@@ -24,7 +24,11 @@ import { set as set_with_setter } from "./set.js";
 type SupportedDataType = DataType;
 
 export const setter = {
-	prepare<D extends DataType>(data: TypedArray<D>, shape: number[], stride: number[]) {
+	prepare<D extends DataType>(
+		data: TypedArray<D>,
+		shape: number[],
+		stride: number[],
+	) {
 		return { data, shape, stride };
 	},
 	set_scalar<D extends SupportedDataType>(
@@ -73,7 +77,9 @@ function compat<D extends SupportedDataType>(
 ): Chunk<NumberDataType | BigintDataType> {
 	// ensure strides are computed
 	return {
-		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
+		data: arr.data instanceof BoolArray
+			? (new Uint8Array(arr.data.buffer))
+			: arr.data,
 		shape: arr.shape,
 		stride: arr.stride,
 	};
@@ -127,15 +133,20 @@ function set_scalar<D extends DataType>(
 		return;
 	}
 	for (let i = 0; i < len; i++) {
-		const data = out.data.subarray(curr_stride * (from + step * i)) as TypedArray<D>;
+		const data = out.data.subarray(
+			curr_stride * (from + step * i),
+		) as TypedArray<D>;
 		set_scalar({ data, stride }, slices, value);
 	}
 }
 
-type Projection = { from: Indices; to: Indices } | { from: null; to: number } | {
-	from: number;
-	to: null;
-};
+type Projection =
+	| { from: Indices; to: Indices }
+	| { from: null; to: number }
+	| {
+		from: number;
+		to: null;
+	};
 
 function set_from_chunk<D extends DataType>(
 	dest: Pick<Chunk<D>, "data" | "stride">,
@@ -186,7 +197,8 @@ function set_from_chunk<D extends DataType>(
 			dest.data.set(src.data.subarray(sfrom, sfrom + len) as any, from);
 		} else {
 			for (let i = 0; i < len; i++) {
-				dest.data[dstride * (from + step * i)] = src.data[sstride * (sfrom + sstep * i)];
+				dest.data[dstride * (from + step * i)] =
+					src.data[sstride * (sfrom + sstep * i)];
 			}
 		}
 		return;

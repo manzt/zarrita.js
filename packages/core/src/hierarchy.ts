@@ -1,8 +1,18 @@
 import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
 
 import { registry } from "./codec-registry.js";
-import { encode_chunk_key, create_codec_pipeline, type CodecPipeline  } from "./util.js";
-import type { DataType, ArrayMetadata, GroupMetadata, Chunk, Scalar } from "./types.js";
+import {
+	type CodecPipeline,
+	create_codec_pipeline,
+	encode_chunk_key,
+} from "./util.js";
+import type {
+	ArrayMetadata,
+	Chunk,
+	DataType,
+	GroupMetadata,
+	Scalar,
+} from "./types.js";
 import { KeyError } from "./errors.js";
 
 function dereference_path(root: AbsolutePath, path: string): AbsolutePath {
@@ -76,11 +86,17 @@ export class Array<
 	}
 
 	_chunk_path(chunk_coords: number[]): AbsolutePath {
-		let chunk_key = encode_chunk_key(chunk_coords, this.#metadata.chunk_key_encoding);
+		let chunk_key = encode_chunk_key(
+			chunk_coords,
+			this.#metadata.chunk_key_encoding,
+		);
 		return `${this.path}${chunk_key}`;
 	}
 
-	async get_chunk(chunk_coords: number[], options?: Parameters<Store["get"]>[1]): Promise<Chunk<Dtype>> {
+	async get_chunk(
+		chunk_coords: number[],
+		options?: Parameters<Store["get"]>[1],
+	): Promise<Chunk<Dtype>> {
 		let chunk_path = this._chunk_path(chunk_coords);
 		let maybe_bytes = await this.store.get(chunk_path, options);
 		if (!maybe_bytes) {
@@ -109,4 +125,3 @@ export class Array<
 		return this.#metadata.attributes;
 	}
 }
-

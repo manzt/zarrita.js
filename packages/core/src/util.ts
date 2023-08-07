@@ -6,7 +6,6 @@ import {
 
 import type {
 	ArrayMetadata,
-	Chunk,
 	ChunkQueue,
 	DataType,
 	DataTypeQuery,
@@ -16,9 +15,6 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "./types.js";
-
-import { registry } from "./codec-registry.js";
-import type { Codec } from "numcodecs";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -271,56 +267,6 @@ export function is_dtype<Query extends DataTypeQuery>(
 
 	// number
 	return !is_string && !is_bigint;
-}
-
-export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
-
-export function create_codec_pipeline(
-	array_metadata: ArrayMetadata<DataType>,
-	codec_registry: typeof registry = registry,
-) {
-	let codecs: Promise<Codec>[] | undefined;
-
-	function init() {
-		let metadata = array_metadata.codecs;
-
-		if (metadata[0]?.name !== "transpose") {
-			// TODO: first codec needs to be transpose?
-			metadata = [
-				{ name: "transpose", configuration: { order: "C" } },
-				...metadata,
-			];
-		}
-
-		return metadata.map(async (meta) => {
-			let Codec = await codec_registry.get(meta.name)?.();
-			if (!Codec) {
-				throw new Error(`Unknown codec: ${meta.name}`);
-			}
-			// @ts-expect-error
-			return Codec.fromConfig(meta.configuration, array_metadata);
-		});
-	}
-	return {
-		async encode<Dtype extends DataType>(
-			data: TypedArray<Dtype>,
-		): Promise<Uint8Array> {
-			if (!codecs) codecs = init();
-			for await (const codec of codecs) {
-				data = codec.encode(data);
-			}
-			return data as Uint8Array;
-		},
-		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
-			if (!codecs) codecs = init();
-			let data = bytes;
-			for (let i = codecs.length - 1; i >= 0; i--) {
-				let codec = await codecs[i];
-				data = await codec.decode(data);
-			}
-			return data as any;
-		},
-	};
 }
 
 export function encode_chunk_key(

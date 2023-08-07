@@ -37,7 +37,9 @@ export async function get<
 		set_scalar: SetScalar<D, Arr>;
 		set_from_chunk: SetFromChunk<D, Arr>;
 	},
-): Promise<null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>> {
+): Promise<
+	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
+> {
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,

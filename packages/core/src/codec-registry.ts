@@ -1,8 +1,12 @@
 import { BoolArray } from "@zarrita/typedarray";
 import type { Codec } from "numcodecs";
 
-import type { DataType, TypedArray, TypedArrayConstructor, ArrayMetadata, Chunk } from "./types.js";
-import { get_strides } from "./util.js";
+import type {
+	ArrayMetadata,
+	Chunk,
+	DataType,
+	TypedArrayConstructor,
+} from "./types.js";
 
 type Config = Record<string, any>;
 type CodecImporter = () => Promise<{ fromConfig: (config: Config) => Codec }>;
@@ -76,7 +80,6 @@ class EndianCodec {
 		}
 		return bytes;
 	}
-
 }
 
 function get_ctr<D extends DataType>(
@@ -100,33 +103,6 @@ function get_ctr<D extends DataType>(
 	return ctr;
 }
 
-class TransposeCodec {
-	constructor(
-		public configuration: { order: "C" | "F" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
-
-	static fromConfig(
-		config: { order: "C" | "F" },
-		array_metadata: ArrayMetadata<DataType>,
-	): TransposeCodec {
-		return new TransposeCodec(config, array_metadata);
-	}
-
-	decode(bytes: Uint8Array): Chunk<DataType> {
-		let ctr = get_ctr(this.array_metadata.data_type);
-		return {
-			data: new ctr(bytes) as TypedArray<DataType>,
-			shape: this.array_metadata.shape,
-			stride: get_strides(this.array_metadata.shape, this.configuration.order),
-		};
-	}
-
-	encode(chunk: Chunk<DataType>): Uint8Array {
-		return chunk.data as Uint8Array;
-	}
-}
-
 function create_default_registry(): Map<string, CodecImporter> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
@@ -135,7 +111,48 @@ function create_default_registry(): Map<string, CodecImporter> {
 		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
 		.set("endian", () => EndianCodec)
-		.set("transpose", () => TransposeCodec);
 }
 
 export const registry = create_default_registry();
+
+export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
+
+export function create_codec_pipeline(
+	array_metadata: ArrayMetadata<DataType>,
+	codec_registry: typeof registry = registry,
+) {
+	let codecs: Promise<Codec>[] | undefined;
+
+	function init() {
+		let metadata = array_metadata.codecs;
+		return metadata.map(async (meta) => {
+			let Codec = await codec_registry.get(meta.name)?.();
+			if (!Codec) {
+				throw new Error(`Unknown codec: ${meta.name}`);
+			}
+			// @ts-expect-error
+			return Codec.fromConfig(meta.configuration, array_metadata);
+		});
+	}
+	return {
+		async encode<Dtype extends DataType>(
+			data: Chunk<Dtype>,
+		): Promise<Uint8Array> {
+			if (!codecs) codecs = init();
+			let view = new Uint8Array(data.data.);
+			for await (const codec of codecs) {
+				view = await codec.encode(view);
+			}
+			return view as unknown as Uint8Array;
+		},
+		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
+			if (!codecs) codecs = init();
+			let data = bytes;
+			for (let i = codecs.length - 1; i >= 0; i--) {
+				let codec = await codecs[i];
+				data = await codec.decode(data);
+			}
+			return data as any;
+		},
+	};
+}

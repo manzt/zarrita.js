@@ -1,8 +1,7 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import ndarray from "ndarray";
 
 import * as ops from "../src/ops.js";
-
 import { range, slice } from "../src/util.js";
 import { IndexError } from "../src/errors.js";
 import * as zarr from "../src/hierarchy.js";
@@ -15,34 +14,29 @@ export function run_suite(name: string, getter: any) {
 	const get = getter as typeof ops.get;
 
 	beforeEach<Context>(async (ctx) => {
-		let arr = new zarr.Array(
-			new Map<string, Uint8Array>(),
-			"/",
-			{
-				zarr_format: 3,
-				node_type: "array",
-				shape: [2, 3, 4],
-				data_type: "int32",
-				chunk_grid: {
-					name: "regular",
-					configuration: {
-						chunk_shape: [1, 2, 2],
-					}
+		let arr = new zarr.Array(new Map(), "/", {
+			zarr_format: 3,
+			node_type: "array",
+			shape: [2, 3, 4],
+			data_type: "int32",
+			chunk_grid: {
+				name: "regular",
+				configuration: {
+					chunk_shape: [1, 2, 2],
 				},
-				chunk_key_encoding: {
-					name: "default",
-					configuration: {
-						separator: "/",
-					}
+			},
+			chunk_key_encoding: {
+				name: "default",
+				configuration: {
+					separator: "/",
 				},
-				codecs: [],
-				fill_value: null,
-				attributes: {}
-			}
-		);
-		let shape = [2, 3, 4];
-		let data = new Int32Array(range(2 * 3 * 4));
-		await ops.set(arr, null, ndarray(data, shape));
+			},
+			codecs: [],
+			fill_value: 0,
+			attributes: {},
+		});
+		let data = ndarray(new Int32Array(range(2 * 3 * 4)), arr.shape);
+		await ops.set(arr, null, data);
 		ctx.arr = arr;
 	});
 
@@ -59,7 +53,9 @@ array([[[ 4,  5],
 			async (ctx) => {
 				let sel = [null, slice(1, 3), slice(2)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]));
+				expect(data).toStrictEqual(
+					new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]),
+				);
 				expect(shape).toStrictEqual([2, 2, 2]);
 				expect(stride).toStrictEqual([4, 2, 1]);
 			},
@@ -92,7 +88,9 @@ array([[[ 0,  1],
 			async (ctx) => {
 				let sel = [slice(3), slice(2), slice(2)];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]));
+				expect(data).toStrictEqual(
+					new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]),
+				);
 				expect(shape).toStrictEqual([2, 2, 2]);
 				expect(stride).toStrictEqual([4, 2, 1]);
 			},
@@ -195,7 +193,9 @@ array([[ 4,  5,  6,  7],
 			async (ctx) => {
 				let sel = [null, 1, null];
 				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]));
+				expect(data).toStrictEqual(
+					new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]),
+				);
 				expect(shape).toStrictEqual([2, 4]);
 				expect(stride).toStrictEqual([4, 1]);
 			},
