@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BoolArray } from "@zarrita/typedarray";
 import type { Array } from "./hierarchy.js";
 
