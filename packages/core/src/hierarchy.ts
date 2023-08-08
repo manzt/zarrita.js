@@ -39,6 +39,12 @@ export class Location<Store> {
 		}
 		return new Location(this.store, path as AbsolutePath, this.version);
 	}
+
+	static v2<Store>(
+		store: Store,
+	) {
+		return new Location<Store>(store, "/", "2");
+	}
 }
 
 type LazyGetter<T, Key extends keyof T> = {
@@ -70,7 +76,7 @@ export class Group<
 
 export class Array<
 	Dtype extends DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
 	codec_pipeline: CodecPipeline;
 	#metadata: LazyGetter<ArrayMetadata<Dtype>, "attributes">;
