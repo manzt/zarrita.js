@@ -90,7 +90,7 @@ export const registry = create_default_registry();
 export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
 
 export function create_codec_pipeline(
-	array_metadata: ArrayMetadata<DataType>,
+	array_metadata: Omit<ArrayMetadata<DataType>, "attributes">,
 	codec_registry: typeof registry = registry,
 ) {
 	let codecs: Promise<Codec>[] | undefined;

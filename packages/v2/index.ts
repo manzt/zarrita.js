@@ -1,139 +1,34 @@
 import {
-	Array as BaseArray,
-	Group as BaseGroup,
+	Array,
+	Group,
+	json_decode_object,
+	json_encode_object,
 	KeyError,
 	NodeNotFoundError,
 	registry,
 	slice,
-	is_dtype,
-	json_decode_object,
-	json_encode_object,
 } from "@zarrita/core";
 
 import type {
-	ArrayProps,
+	ArrayMetadata,
 	Attrs,
+	CodecMetadata,
 	CreateArrayProps,
 	DataType,
-	Codec,
 	Scalar,
-	DataTypeQuery,
-	NarrowDataType,
 } from "@zarrita/core";
 
-import type { AbsolutePath, Async, Readable, Writeable, Deref } from "@zarrita/storage";
+import type {
+	AbsolutePath,
+	Async,
+	Readable,
+	Writeable,
+} from "@zarrita/storage";
 
-export { slice, registry };
-
-async function get_attrs<Store extends Readable | Async<Readable>>(
-	store: Store,
-	path: AbsolutePath,
-) {
-	const maybe_bytes = await store.get(attrs_key(path));
-	const attrs: Attrs = maybe_bytes ? json_decode_object(maybe_bytes) : {};
-	return attrs;
-}
-
-/**
- * Zarr v2 Array
- * @category Hierarchy
- */
-export class Array<
-	Dtype extends DataType,
-	Store extends Readable | Async<Readable> = Async<Readable>,
-	Path extends AbsolutePath = AbsolutePath,
-> extends BaseArray<Dtype, Store, Path> {
-	/** @hidden */
-	private _attrs?: Attrs;
-	constructor(props: ArrayProps<Dtype, Store, Path> & { attrs?: Attrs }) {
-		super(props);
-		this._attrs = props.attrs;
-	}
-	/** @hidden */
-	protected chunk_key(chunk_coords: number[]) {
-		const prefix = key_prefix(this.path);
-		const chunk_identifier = chunk_coords.join(this.chunk_separator);
-		return `${prefix}${chunk_identifier}` as AbsolutePath;
-	}
-	/**
-	 * Get attributes for Array. Loads attributes from underlying
-	 * Stores and caches result to avoid accessing store multiple times.
-	 */
-	async attrs() {
-		if (this._attrs) return this._attrs;
-		const attrs = (this._attrs = get_attrs(this.store, this.path));
-		return attrs;
-	}
-
-	/**
-	 * A helper method to narrow `zarr.Array` Dtype.
-	 *
-	 * ```typescript
-	 * let arr: zarr.Array<DataType, FetchStore, "/"> = zarr.get_array(store);
-	 *
-	 * // Option 1: narrow by scalar type (e.g. "string", "bigint", "number")
-	 * if (arr.is("bigint")) {
-	 *   // zarr.Array<"<u8" | ">u8" | "<i8" | ">i8", FetchStore, "/">
-	 * }
-	 *
-	 * // Option 2: narrow by dtype without endianess
-	 * if (arr.is("i4")) {
-	 *   // zarr.Array<"<i4" | ">i4", FetchStore, "/">
-	 * }
-	 *
-	 * // Option 3: exact match
-	 * if (arr.is("<f4")) {
-	 *   // zarr.Array<"<f4", FetchStore, "/">
-	 * }
-	 * ```
-	 */
-	is<Query extends DataTypeQuery>(
-		query: Query,
-	): this is Array<NarrowDataType<Dtype, Query>, Store, Path> {
-		return is_dtype(this.dtype, query);
-	}
-}
-
-/**
- * Zarr v2 Group
- * @category Hierarchy
- */
-export class Group<
-	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath = AbsolutePath,
-> extends BaseGroup<Store, Path> {
-	private _attrs?: Attrs;
-	constructor(props: { store: Store; path: Path; attrs?: Attrs }) {
-		super(props);
-		this._attrs = props.attrs;
-	}
-	/**
-	 * Get attributes for Group. Loads attributes from underlying
-	 * Store and caches result to avoid accessing store multiple times.
-	 */
-	async attrs() {
-		if (this._attrs) return this._attrs;
-		const attrs = (this._attrs = get_attrs(this.store, this.path));
-		return attrs;
-	}
-}
-
-function encode_codec_metadata(codec: Codec) {
-	// @ts-ignore
-	return { id: codec.constructor.codecId, ...codec };
-}
-
-async function get_codec(
-	config: Record<string, any>,
-): Promise<Codec> {
-	const importer = registry.get(config.id);
-	if (!importer) throw new Error("missing codec " + JSON.stringify(config.id));
-	const ctr = await importer();
-	return ctr.fromConfig(config);
-}
+export { registry, slice };
 
 /** Zarr v2 Array Metadata. Stored as JSON with key `.zarray`. */
-export interface ArrayMetadata<Dtype extends DataType> {
+export interface ArrayMetadataV2<Dtype extends DataType> {
 	zarr_format: 2;
 	shape: number[];
 	chunks: number[];
@@ -157,22 +52,23 @@ function key_prefix<Path extends AbsolutePath>(
 	return path === "/" ? path : `${path}/`;
 }
 
-const array_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zarray` as const;
+const array_meta_key = (path: AbsolutePath) =>
+	`${key_prefix(path)}.zarray` as const;
 
-const group_meta_key = (path: AbsolutePath) => `${key_prefix(path)}.zgroup` as const;
+const group_meta_key = (path: AbsolutePath) =>
+	`${key_prefix(path)}.zgroup` as const;
 
 const attrs_key = (path: AbsolutePath) => `${key_prefix(path)}.zattrs` as const;
 
 function deref<
 	Store extends Readable | Async<Readable>,
 	Path extends string,
-	NodePath extends AbsolutePath,
->(grp: Group<Store, NodePath>, path: Path): { store: Store; path: Deref<Path, NodePath> };
+>(grp: Group<Store>, path: Path): { store: Store; path: AbsolutePath };
 
-function deref<Store, Path extends AbsolutePath>(
+function deref<Store>(
 	store: Store,
-	path: Path,
-): { store: Store; path: Path };
+	path: AbsolutePath,
+): { store: Store; path: AbsolutePath };
 
 function deref<Store extends Readable | Async<Readable>>(
 	node: Store | Group<Store>,
@@ -184,28 +80,47 @@ function deref<Store extends Readable | Async<Readable>>(
 	return { store: node, path };
 }
 
+function v2_to_v3(meta: ArrayMetadataV2<DataType>): ArrayMetadata<DataType> {
+	let codecs: CodecMetadata[] = [];
+	for (let filter in meta.filters) {
+		codecs.push(convert_codec_metadata(filter));
+	}
+	if (meta.compressor) {
+		codecs.push(convert_codec_metadata(meta.compressor));
+	}
+	return {
+		zarr_format: 3,
+		node_type: "array",
+		shape: meta.shape,
+		data_type: meta.dtype,
+		chunk_grid: {
+			name: "regular",
+			configuration: {
+				chunk_shape: meta.chunks,
+			},
+		},
+		chunk_key_encoding: {
+			name: "v2",
+			configuration: {
+				separator: meta.dimension_separator ?? ".",
+			},
+		},
+		codecs,
+		fill_value: meta.fill_value,
+		attributes: {},
+	};
+}
+
 async function _get_array<
 	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath,
->(store: Store, path: Path) {
+>(store: Store, path: AbsolutePath) {
 	const meta_key = array_meta_key(path);
 	const meta_doc = await store.get(meta_key);
 	if (!meta_doc) {
 		throw new NodeNotFoundError(path);
 	}
-	const meta: ArrayMetadata<DataType> = json_decode_object(meta_doc);
-	return new Array({
-		store: store,
-		path,
-		shape: meta.shape,
-		dtype: meta.dtype,
-		chunk_shape: meta.chunks,
-		chunk_separator: meta.dimension_separator ?? ".",
-		filters: meta.filters ? await Promise.all(meta.filters.map(get_codec)) : undefined,
-		compressor: meta.compressor ? await get_codec(meta.compressor) : undefined,
-		fill_value: meta.fill_value,
-		order: meta.order,
-	});
+	const meta: ArrayMetadataV2<DataType> = json_decode_object(meta_doc);
+	return new Array(store, path, v2_to_v3(meta));
 }
 
 /**
@@ -220,12 +135,10 @@ async function _get_array<
  */
 export function get_array<
 	Store extends Readable | Async<Readable>,
-	Path extends string,
-	NodePath extends AbsolutePath,
 >(
-	group: Group<Store, NodePath>,
-	path: Path,
-): Promise<Array<DataType, Store, Deref<Path, NodePath>>>;
+	group: Group<Store>,
+	path: string,
+): Promise<Array<DataType, Store>>;
 
 /**
  * Open Array from store using an absolute path
@@ -236,8 +149,7 @@ export function get_array<
  */
 export function get_array<
 	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath,
->(store: Store, path: Path): Promise<Array<DataType, Store, Path>>;
+>(store: Store, path: AbsolutePath): Promise<Array<DataType, Store>>;
 
 /**
  * Open root as Array
@@ -248,7 +160,7 @@ export function get_array<
  */
 export function get_array<
 	Store extends Readable | Async<Readable>,
->(store: Store): Promise<Array<DataType, Store, "/">>;
+>(store: Store): Promise<Array<DataType, Store>>;
 
 /**
  * Open an Array from a Group or Store.
@@ -271,7 +183,12 @@ async function _get_group<
 	if (!meta_doc) {
 		throw new NodeNotFoundError(path);
 	}
-	return new Group({ store, path });
+	// TODO: lazy
+	return new Group(store, path, {
+		zarr_format: 3,
+		node_type: "group",
+		attributes: {},
+	});
 }
 
 /**
@@ -283,12 +200,10 @@ async function _get_group<
  */
 export function get_group<
 	Store extends Readable | Async<Readable>,
-	Path extends string,
-	NodePath extends AbsolutePath,
 >(
-	group: Group<Store, NodePath>,
-	path: Path,
-): Promise<Group<Store, Deref<Path, NodePath>>>;
+	group: Group<Store>,
+	path: string,
+): Promise<Group<Store>>;
 
 /**
  * Open Group from store via absolute path
@@ -299,8 +214,7 @@ export function get_group<
  */
 export function get_group<
 	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath,
->(store: Store, path: Path): Promise<Group<Store, Path>>;
+>(store: Store, path: AbsolutePath): Promise<Group<Store>>;
 
 /**
  * Open root as Group
@@ -311,7 +225,7 @@ export function get_group<
  */
 export function get_group<
 	Store extends Readable | Async<Readable>,
->(store: Store): Promise<Group<Store, "/">>;
+>(store: Store): Promise<Group<Store>>;
 
 /**
  * Open Group from Store or anthoer Group
@@ -338,13 +252,11 @@ export async function get_group<
  */
 export function get<
 	Store extends Readable | Async<Readable>,
-	Path extends string,
-	NodePath extends AbsolutePath,
 >(
-	group: Group<Store, NodePath>,
-	path: Path,
+	group: Group<Store>,
+	path: string,
 ): Promise<
-	Array<DataType, Store, Deref<Path, NodePath>> | Group<Store, Deref<Path, NodePath>>
+	Array<DataType, Store> | Group<Store>
 >;
 
 /**
@@ -361,8 +273,10 @@ export function get<
  */
 export function get<
 	Store extends Readable | Async<Readable>,
-	Path extends AbsolutePath,
->(store: Store, path: Path): Promise<Array<DataType, Store, Path> | Group<Store, Path>>;
+>(
+	store: Store,
+	path: AbsolutePath,
+): Promise<Array<DataType, Store> | Group<Store>>;
 
 /**
  * Open root Node (Group or Array) from store
@@ -378,7 +292,7 @@ export function get<
  */
 export function get<
 	Store extends Readable | Async<Readable>,
->(store: Store): Promise<Array<DataType, Store, "/"> | Group<Store, "/">>;
+>(store: Store): Promise<Array<DataType, Store> | Group<Store>>;
 
 /** @category Read */
 export async function get<Store extends Readable | Async<Readable>>(
@@ -421,7 +335,11 @@ async function _create_group<
 			json_encode_object(attrs),
 		);
 	}
-	return new Group({ store, path, attrs: attrs ?? {} });
+	return new Group(store, path, {
+		zarr_format: 3,
+		node_type: "group",
+		attributes: attrs || {},
+	});
 }
 
 /**
@@ -437,12 +355,11 @@ async function _create_group<
 export function create_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
 	Path extends string,
-	NodePath extends AbsolutePath,
 >(
-	group: Group<Store, NodePath>,
-	path: Path,
+	group: Group<Store>,
+	path: string,
 	props?: { attrs?: Attrs },
-): Promise<Group<Store, Deref<Path, NodePath>>>;
+): Promise<Group<Store>>;
 
 /**
  * Create Group from store via absolute path
@@ -455,8 +372,11 @@ export function create_group<
  */
 export function create_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Path extends AbsolutePath,
->(store: Store, path: Path, props?: { attrs?: Attrs }): Promise<Group<Store, Path>>;
+>(
+	store: Store,
+	path: AbsolutePath,
+	props?: { attrs?: Attrs },
+): Promise<Group<Store>>;
 
 export async function create_group<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
@@ -465,13 +385,20 @@ export async function create_group<
 	return _create_group(store as Store, path as AbsolutePath, props.attrs);
 }
 
+function encode_codec_metadata({ name, configuration }: CodecMetadata) {
+	return { id: name, ...configuration };
+}
+
+function convert_codec_metadata({ id: name, ...configuration }: any): CodecMetadata {
+	return { name, configuration };
+}
+
 async function _create_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Path extends AbsolutePath,
 	Dtype extends DataType,
 >(
 	store: Store,
-	path: Path,
+	path: AbsolutePath,
 	props: CreateArrayProps<Dtype>,
 ) {
 	const shape = props.shape;
@@ -482,7 +409,7 @@ async function _create_array<
 	const filters = props.filters;
 	const order = props.order ?? "C";
 
-	const meta: ArrayMetadata<Dtype> = {
+	const meta: ArrayMetadataV2<Dtype> = {
 		zarr_format: 2,
 		shape,
 		dtype,
@@ -507,19 +434,7 @@ async function _create_array<
 		);
 	}
 
-	return new Array({
-		store: store,
-		path: path,
-		shape: meta.shape,
-		dtype: dtype,
-		chunk_shape: meta.chunks,
-		chunk_separator: chunk_separator,
-		compressor: compressor,
-		filters: filters,
-		fill_value: meta.fill_value,
-		attrs: props.attrs ?? {},
-		order: order,
-	});
+	return new Array(store, path, v2_to_v3(meta));
 }
 
 /**
@@ -538,14 +453,13 @@ async function _create_array<
  */
 export function create_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Path extends string,
 	NodePath extends AbsolutePath,
 	Dtype extends DataType,
 >(
-	group: Group<Store, NodePath>,
-	path: Path,
+	group: Group<Store>,
+	path: string,
 	props: CreateArrayProps<Dtype>,
-): Promise<Array<Dtype, Store, Deref<Path, NodePath>>>;
+): Promise<Array<Dtype, Store>>;
 
 /**
  * Create Array in store via absolute path
@@ -562,13 +476,12 @@ export function create_array<
  */
 export function create_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Path extends AbsolutePath,
 	Dtype extends DataType,
 >(
 	store: Store,
-	path: Path,
+	path: AbsolutePath,
 	props: CreateArrayProps<Dtype>,
-): Promise<Array<Dtype, Store, Path>>;
+): Promise<Array<Dtype>>;
 
 export async function create_array<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
@@ -588,7 +501,7 @@ export async function create_array<
  * ```
  */
 export function has<Store extends Readable | Async<Readable>>(
-	group: Group<Store, AbsolutePath>,
+	group: Group<Store>,
 	path: string,
 ): Promise<boolean>;
 

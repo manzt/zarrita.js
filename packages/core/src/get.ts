@@ -16,12 +16,12 @@ import type {
 
 import type { Async, Readable } from "@zarrita/storage";
 
-const unwrap = <D extends DataType>(
+function unwrap<D extends DataType>(
 	arr: TypedArray<D>,
 	idx: number,
-): Scalar<D> => {
+): Scalar<D> {
 	return "get" in arr ? arr.get(idx) : arr[idx] as any;
-};
+}
 
 export async function get<
 	D extends DataType,
