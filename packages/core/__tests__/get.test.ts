@@ -14,26 +14,10 @@ export function run_suite(name: string, getter: any) {
 	const get = getter as typeof ops.get;
 
 	beforeEach<Context>(async (ctx) => {
-		let arr = new zarr.Array(new Map(), "/", {
-			zarr_format: 3,
-			node_type: "array",
+		let arr = await zarr.create(new Map<string, Uint8Array>(), {
 			shape: [2, 3, 4],
 			data_type: "int32",
-			chunk_grid: {
-				name: "regular",
-				configuration: {
-					chunk_shape: [1, 2, 2],
-				},
-			},
-			chunk_key_encoding: {
-				name: "default",
-				configuration: {
-					separator: "/",
-				},
-			},
-			codecs: [],
-			fill_value: 0,
-			attributes: {},
+			chunk_shape: [1, 2, 2],
 		});
 		let data = ndarray(new Int32Array(range(2 * 3 * 4)), arr.shape);
 		await ops.set(arr, null, data);

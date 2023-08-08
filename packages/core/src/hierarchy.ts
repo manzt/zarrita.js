@@ -313,7 +313,7 @@ export async function create<
 >(
 	location: Location<Store> | Store,
 	options: CreateArrayOptions<Dtype>,
-): Promise<Array<DataType, Store>>;
+): Promise<Array<Dtype, Store>>;
 
 export async function create<
 	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
@@ -321,12 +321,12 @@ export async function create<
 >(
 	location: Location<Store> | Store,
 	options: CreateArrayOptions<Dtype> | CreateGroupOptions,
-): Promise<Array<DataType, Store> | Group<Store>> {
+): Promise<Array<Dtype, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
 	if (loc.version !== "3") {
 		throw new Error("Only Zarr v3 is supported");
 	}
-	if ("shape" in options) return create_array(loc, options);
+	if ("shape" in options) return create_array(loc, options) as any;
 	return create_group(loc, options);
 }
 
