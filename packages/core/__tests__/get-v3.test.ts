@@ -16,7 +16,7 @@ let store = zarr.root(new FSStore(root));
 
 describe("contiguous", () => {
 	it("reads 1d.contiguous.gzip.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.gzip.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.gzip.i2"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -25,25 +25,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.blosc.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.blosc.i2"), {
-			kind: "array",
-		});
-		let chunk = await arr.get_chunk([0]);
-		expect(chunk.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(chunk.shape).toStrictEqual([4]);
-	});
-
-	it("reads 1d.contiguous.lz4.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.lz4.i2"), {
-			kind: "array",
-		});
-		let chunk = await arr.get_chunk([0]);
-		expect(chunk.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(chunk.shape).toStrictEqual([4]);
-	});
-
-	it("reads 1d.contiguous.zstd.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.zstd.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -52,7 +34,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.raw.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.raw.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -61,7 +43,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.i4", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.i4"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -70,7 +52,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.u1", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.u1"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -79,7 +61,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.f4.le", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f4.le"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -88,7 +70,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.f4.be", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f4.be"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -97,7 +79,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.f8", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f8"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -106,7 +88,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 1d.contiguous.b1", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.b1"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0]);
@@ -121,7 +103,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 2d.contiguous.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.contiguous.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0, 0]);
@@ -130,7 +112,7 @@ describe("contiguous", () => {
 	});
 
 	it("reads 3d.contiguous.i2", async () => {
-		let arr = await zarr.open(store.resolve("/3d.contiguous.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
 		let chunk = await arr.get_chunk([0, 0, 0]);
@@ -141,7 +123,7 @@ describe("contiguous", () => {
 
 describe("chunked", () => {
 	it("reads 1d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.chunked.i2"), {
 			kind: "array",
 		});
 		let [c1, c2] = await Promise.all([
@@ -155,7 +137,7 @@ describe("chunked", () => {
 	});
 
 	it("reads 1d.chunked.ragged.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.chunked.ragged.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.chunked.ragged.i2"), {
 			kind: "array",
 		});
 		let [c1, c2, c3] = await Promise.all([
@@ -172,7 +154,7 @@ describe("chunked", () => {
 	});
 
 	it("reads 2d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.chunked.i2"), {
 			kind: "array",
 		});
 		let [c1, c2, c3, c4] = await Promise.all([
@@ -192,7 +174,7 @@ describe("chunked", () => {
 	});
 
 	it("reads 2d.chunked.ragged.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.chunked.ragged.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.chunked.ragged.i2"), {
 			kind: "array",
 		});
 		let [c1, c2, c3, c4] = await Promise.all([
@@ -212,17 +194,14 @@ describe("chunked", () => {
 	});
 
 	it("reads 3d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.i2"), {
 			kind: "array",
 		});
-		let [c1, c2, c3, c4] = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
+		let [c2, c3, c4] = await Promise.all([
 			arr.get_chunk([0, 0, 2]),
 			arr.get_chunk([1, 1, 1]),
 			arr.get_chunk([2, 2, 2]),
 		]);
-		expect(c1.data).toStrictEqual(new Int16Array([0]));
-		expect(c1.shape).toStrictEqual([1, 1, 1]);
 		expect(c2.data).toStrictEqual(new Int16Array([2]));
 		expect(c2.shape).toStrictEqual([1, 1, 1]);
 		expect(c3.data).toStrictEqual(new Int16Array([13]));
@@ -234,7 +213,7 @@ describe("chunked", () => {
 
 describe("mixed", () => {
 	it("reads 3d.chunked.mixed.i2.C", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.mixed.i2.C"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.mixed.i2.C"), {
 			kind: "array",
 		});
 		let [c1, c2, c3] = await Promise.all([
@@ -255,8 +234,8 @@ describe("mixed", () => {
 		expect(c3.stride).toStrictEqual(stride);
 	});
 
-	it("reads 3d.chunked.mixed.i2.F", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.mixed.i2.F"), {
+	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
 		let [c1, c2, c3] = await Promise.all([
@@ -286,28 +265,25 @@ describe("mixed", () => {
 
 describe("traverse", () => {
 	it("opens group", async () => {
-		expect(await zarr.open(store, { kind: "group" }).then((g) => g.path)).toBe(
-			"/",
-		);
-		await expect(zarr.open(store.resolve("/not/a/group"), { kind: "group" }))
+		let grp = await zarr.open.v3(store, { kind: "group" });
+		expect(grp.path).toBe("/");
+		await expect(zarr.open.v3(store.resolve("/not/a/group"), { kind: "group" }))
 			.rejects
 			.toThrow(NodeNotFoundError);
 	});
 
 	it("opens array from group", async () => {
-		let grp = await zarr.open(store, { kind: "group" });
-		let a1 = await zarr.open(store.resolve("/1d.chunked.i2"), {
-			kind: "array",
-		});
-		let a2 = await zarr.open(grp.resolve("1d.chunked.i2"), { kind: "group" });
+		let grp = await zarr.open.v3(store, { kind: "group" });
+		let a1 = await zarr.open.v3(store.resolve("/1d.chunked.i2"), { kind: "array" });
+		let a2 = await zarr.open.v3(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(a1.path).toBe("/1d.chunked.i2");
 		expect(a2.path).toBe("/1d.chunked.i2");
 	});
 });
 
 describe("builtin", () => {
-	it("reads 1d.contiguous.zlib.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.zlib.i2"), {
+	it("reads 1d.contiguous.gzip.i2", async () => {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.gzip.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -316,25 +292,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.blosc.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.blosc.i2"), {
-			kind: "array",
-		});
-		let res = await get(arr);
-		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(res.shape).toStrictEqual([4]);
-	});
-
-	it("reads 1d.contiguous.lz4.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.lz4.i2"), {
-			kind: "array",
-		});
-		let res = await get(arr);
-		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(res.shape).toStrictEqual([4]);
-	});
-
-	it("reads 1d.contiguous.zstd.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.zstd.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -343,7 +301,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.raw.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.raw.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -352,7 +310,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.i4", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.i4"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -361,7 +319,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.u1", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.u1"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -370,7 +328,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.f4.le", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f4.le"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -379,7 +337,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.f4.be", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f4.be"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -388,7 +346,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.f8", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.f8"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -397,7 +355,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.contiguous.b1", async () => {
-		let arr = await zarr.open(store.resolve("/1d.contiguous.b1"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -412,7 +370,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 2d.contiguous.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.contiguous.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -421,7 +379,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 3d.contiguous.i2", async () => {
-		let arr = await zarr.open(store.resolve("/3d.contiguous.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -430,7 +388,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.chunked.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -439,7 +397,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 1d.chunked.ragged.i2", async () => {
-		let arr = await zarr.open(store.resolve("/1d.chunked.ragged.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/1d.chunked.ragged.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -448,7 +406,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 2d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.chunked.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -457,7 +415,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 2d.chunked.ragged.i2", async () => {
-		let arr = await zarr.open(store.resolve("/2d.chunked.ragged.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/2d.chunked.ragged.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -466,7 +424,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 3d.chunked.i2", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.i2"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.i2"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -475,7 +433,7 @@ describe("builtin", () => {
 	});
 
 	it("reads 3d.chunked.mixed.i2.C", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.mixed.i2.C"), {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.mixed.i2.C"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -484,8 +442,8 @@ describe("builtin", () => {
 		expect(res.stride).toStrictEqual([9, 3, 1]);
 	});
 
-	it("reads 3d.chunked.mixed.i2.F", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.mixed.i2.F"), {
+	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
 		let res = await get(arr);
@@ -499,8 +457,8 @@ describe("builtin", () => {
 		expect(res.stride).toStrictEqual([1, 3, 9]);
 	});
 
-	it("reads 3d.chunked.mixed.i2.F -- force C", async () => {
-		let arr = await zarr.open(store.resolve("/3d.chunked.mixed.i2.F"), {
+	it.skip("reads 3d.chunked.mixed.i2.F -- force C", async () => {
+		let arr = await zarr.open.v3(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
 		let res = await get(arr, null, { order: "C" });

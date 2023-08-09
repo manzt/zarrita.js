@@ -6,6 +6,7 @@ import numpy as np
 shutil.rmtree("data.zarr", ignore_errors=True)
 
 store = zarrita.LocalStore("data.zarr")
+zarrita.Group.create(store)
 
 # 1d.contiguous.gzip.i2
 a = zarrita.Array.create(
@@ -21,7 +22,7 @@ a = zarrita.Array.create(
 a[:] = [1, 2, 3, 4]
 
 # 1d.contiguous.blosc.i2
-zarrita.Array.create(
+a = zarrita.Array.create(
     store / "1d.contiguous.blosc.i2",
     dtype="int16",
     shape=(4,),
@@ -47,7 +48,7 @@ a[:] = [1, 2, 3, 4]
 
 
 # 1d.contiguous.i4
-zarrita.Array.create(
+a = zarrita.Array.create(
     store / "1d.contiguous.i4",
     dtype="int32",
     chunk_shape=(4,),
