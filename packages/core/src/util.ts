@@ -1,13 +1,6 @@
-import {
-	BoolArray,
-	ByteStringArray as _ByteStringArray,
-	UnicodeStringArray as _UnicodeStringArray,
-} from "@zarrita/typedarray";
-
+import type { ArrayMetadata, DataType } from "./metadata.js";
 import type {
-	ArrayMetadata,
 	ChunkQueue,
-	DataType,
 	DataTypeQuery,
 	Indices,
 	NarrowDataType,
@@ -15,6 +8,12 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "./types.js";
+
+import {
+	BoolArray,
+	ByteStringArray as _ByteStringArray,
+	UnicodeStringArray as _UnicodeStringArray,
+} from "@zarrita/typedarray";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);

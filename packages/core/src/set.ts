@@ -1,21 +1,19 @@
 import type { Async, Readable, Writeable } from "@zarrita/storage";
-
-import { KeyError } from "./errors.js";
-import { create_queue, get_ctr, get_strides } from "./util.js";
-import { BasicIndexer, type IndexerProjection } from "./indexing.js";
 import type { Array } from "./hierarchy.js";
+import type { DataType, Scalar } from "./metadata.js";
 import type {
 	Chunk,
-	DataType,
 	Indices,
 	Prepare,
-	Scalar,
 	SetFromChunk,
 	SetOptions,
 	SetScalar,
 	Slice,
 	TypedArray,
 } from "./types.js";
+import { KeyError } from "./errors.js";
+import { create_queue, get_ctr, get_strides } from "./util.js";
+import { BasicIndexer, type IndexerProjection } from "./indexing.js";
 
 function flip(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };

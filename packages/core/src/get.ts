@@ -1,20 +1,19 @@
-import { KeyError } from "./errors.js";
-import { BasicIndexer } from "./indexing.js";
-import { create_queue, get_ctr, get_strides } from "./util.js";
+import type { Async, Readable } from "@zarrita/storage";
 import type { Array } from "./hierarchy.js";
+import type { DataType, Scalar } from "./metadata.js";
 import type {
 	Chunk,
-	DataType,
 	GetOptions,
 	Prepare,
-	Scalar,
 	SetFromChunk,
 	SetScalar,
 	Slice,
 	TypedArray,
 } from "./types.js";
 
-import type { Async, Readable } from "@zarrita/storage";
+import { KeyError } from "./errors.js";
+import { BasicIndexer } from "./indexing.js";
+import { create_queue, get_ctr, get_strides } from "./util.js";
 
 function unwrap<D extends DataType>(
 	arr: TypedArray<D>,

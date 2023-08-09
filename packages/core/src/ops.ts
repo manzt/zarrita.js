@@ -1,22 +1,21 @@
-// @ts-nocheck
-import { BoolArray } from "@zarrita/typedarray";
+import type { Async, Readable, Writeable } from "@zarrita/storage";
 import type { Array } from "./hierarchy.js";
-
 import type {
-	BigintDataType,
 	Chunk,
-	DataType,
 	GetOptions,
 	Indices,
-	NumberDataType,
-	Scalar,
 	SetOptions,
 	Slice,
 	TypedArray,
 } from "./types.js";
+import type {
+	BigintDataType,
+	DataType,
+	NumberDataType,
+	Scalar,
+} from "./metadata.js";
 
-import type { Async, Readable, Writeable } from "@zarrita/storage";
-
+import { BoolArray } from "@zarrita/typedarray";
 import { get as get_with_setter } from "./get.js";
 import { set as set_with_setter } from "./set.js";
 

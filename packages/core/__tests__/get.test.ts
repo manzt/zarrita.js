@@ -4,7 +4,7 @@ import ndarray from "ndarray";
 import * as ops from "../src/ops.js";
 import { range, slice } from "../src/util.js";
 import { IndexError } from "../src/errors.js";
-import * as zarr from "../src/hierarchy.js";
+import * as zarr from "../src/index.js";
 
 interface Context {
 	arr: zarr.Array<"int32", Map<string, Uint8Array>>;

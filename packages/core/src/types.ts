@@ -16,6 +16,7 @@ import type {
 	Int8,
 	NumberDataType,
 	Raw,
+	Scalar,
 	Uint16,
 	Uint32,
 	Uint64,
@@ -43,12 +44,6 @@ export type TypedArrayConstructor<D extends DataType> = {
 	// new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): TypedArray<D>
 	// new(elements: Iterable<Scalar<D>>): TypedArray<D>
 };
-
-// Hack to get scalar type since is not defined on any typed arrays.
-export type Scalar<D extends DataType> = D extends Bool ? boolean
-	: D extends `${"u" | ""}int64` ? bigint
-	: D extends Raw ? string
-	: number;
 
 type DataTypeWithoutEndianness = DataType extends `${infer _}${infer Rest}`
 	? Rest

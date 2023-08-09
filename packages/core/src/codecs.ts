@@ -3,13 +3,14 @@ import type { Chunk, TypedArray } from "./types.js";
 import type { ArrayMetadata, DataType } from "./metadata.js";
 import { get_ctr, get_strides } from "./util.js";
 
+const LITTLE_ENDIAN_OS = system_is_little_endian();
+
 function system_is_little_endian(): boolean {
 	const a = new Uint32Array([0x12345678]);
 	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
 	return !(b[0] === 0x12);
 }
 
-const LITTLE_ENDIAN_OS = system_is_little_endian();
 function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
 	const numFlips = bytes_per_element / 2;
 	const endByteIndex = bytes_per_element - 1;
@@ -97,7 +98,6 @@ class TransposeCodec {
 
 type InitCodec = (config: Record<string, any>, meta: ArrayMetadata) => Codec;
 type CodecImporter = () => Promise<{ fromConfig: InitCodec }>;
-export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
 
 function create_default_registry(): Map<string, CodecImporter> {
 	return new Map()
