@@ -1,7 +1,5 @@
 import { test, expect } from "vitest";
-
 import { json_decode_object } from "@zarrita/core";
-import * as zarr from "../index.js";
 
 test("create root group", async () => {
 	let store = new Map();
