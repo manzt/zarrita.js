@@ -483,9 +483,7 @@ describe("builtin", () => {
 	it.skip("1d.contiguous.U13.le", async () => {
 		let arr = await zarr.open(store.resolve("/1d.contiguous.U13.le"), {
 			kind: "array",
-		}) as unknown as zarr.Array<
-			"<U13"
-		>;
+		});
 		let res = await get(arr as any);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
@@ -495,9 +493,7 @@ describe("builtin", () => {
 	it.skip("1d.contiguous.U13.be", async () => {
 		let arr = await zarr.open(store.resolve("/1d.contiguous.U13.be"), {
 			kind: "array",
-		}) as unknown as zarr.Array<
-			">U13"
-		>;
+		});
 		let res = await get(arr as any);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
@@ -507,7 +503,7 @@ describe("builtin", () => {
 	it.skip("1d.contiguous.U7", async () => {
 		let arr = await zarr.open(store.resolve("/1d.contiguous.U7"), {
 			kind: "array",
-		}) as unknown as zarr.Array<"<U7">;
+		});
 		let res = await get(arr as any);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
@@ -517,7 +513,7 @@ describe("builtin", () => {
 	it.skip("1d.contiguous.S7", async () => {
 		let arr = await zarr.open(store.resolve("/1d.contiguous.S7"), {
 			kind: "array",
-		}) as unknown as zarr.Array<"|S7">;
+		});
 		let res = await get(arr as any);
 		expect(res.data).toBeInstanceOf(ByteStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
@@ -587,8 +583,8 @@ describe("builtin", () => {
 	it.skip("2d.chunked.U7", async () => {
 		let arr = await zarr.open(store.resolve("/2d.chunked.U7"), {
 			kind: "array",
-		}) as unknown as zarr.Array<"<U7">;
-		let res = await get(arr as any);
+		});
+		let res = await get(arr);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([2, 2]);
 	});

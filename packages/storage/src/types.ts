@@ -5,7 +5,9 @@ export type RootPath = AbsolutePath<"">;
 export type PrefixPath = AbsolutePath<`${string}/`>;
 
 export type Async<T extends Record<string, any>> = {
-	[Key in keyof T]: (...args: Parameters<T[Key]>) => Promise<ReturnType<T[Key]>>;
+	[Key in keyof T]: (
+		...args: Parameters<T[Key]>
+	) => Promise<ReturnType<T[Key]>>;
 };
 
 export interface Readable<Opts = any> {
@@ -26,5 +28,7 @@ export interface ExtendedReadable extends Readable {
 	list_dir(key?: RootPath | PrefixPath): ListDirResult;
 }
 
-export type Deref<Path extends string, NodePath extends AbsolutePath> = Path extends
-	AbsolutePath ? Path : NodePath extends "/" ? `/${Path}` : `${NodePath}/${Path}`;
+export type Deref<Path extends string, NodePath extends AbsolutePath> =
+	Path extends AbsolutePath ? Path
+		: NodePath extends "/" ? `/${Path}`
+		: `${NodePath}/${Path}`;

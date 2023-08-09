@@ -25,7 +25,10 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 class FetchStore implements Async<Readable<RequestInit>> {
 	constructor(public url: string | URL) {}
 
-	async get(key: AbsolutePath, opts: RequestInit = {}): Promise<Uint8Array | undefined> {
+	async get(
+		key: AbsolutePath,
+		opts: RequestInit = {},
+	): Promise<Uint8Array | undefined> {
 		const { href } = resolve(this.url, key);
 		const res = await fetch(href, opts);
 		if (res.status === 404 || res.status === 403) {

@@ -1,22 +1,22 @@
 {
-  "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "nodenext",
-    "strict": true,
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "allowJs": false
-  },
-  "files": [],
-  "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/ndarray" },
-    { "path": "./packages/storage" },
-    { "path": "./packages/typedarray" },
-    { "path": "./packages/v2" },
-    { "path": "./packages/v3" }
-  ]
+	"compilerOptions": {
+		"module": "esnext",
+		"target": "esnext",
+		"moduleResolution": "nodenext",
+		"strict": true,
+		"declaration": true,
+		"allowSyntheticDefaultImports": true,
+		"verbatimModuleSyntax": true,
+		"skipLibCheck": true,
+		"allowJs": false
+	},
+	"files": [],
+	"references": [
+		{ "path": "./packages/core" },
+		{ "path": "./packages/ndarray" },
+		{ "path": "./packages/storage" },
+		{ "path": "./packages/typedarray" },
+		{ "path": "./packages/v2" },
+		{ "path": "./packages/v3" }
+	]
 }

@@ -4,13 +4,15 @@
 
 **zarrita** is a minimal and modular implementation of Zarr in TypeScript.
 
-- Zero dependencies (optionally [`scijs/ndarray`](https://github.com/scijs/ndarray))
+- Zero dependencies (optionally
+  [`scijs/ndarray`](https://github.com/scijs/ndarray))
 - Supports **v2** or **v3** protocols
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
 - Supports **C-order** & **F-order** arrays
 - Handles **little endian** or **big endian** data-types
 - Handles **number**, **bigint**, **string**, and **boolean** data-types
-- Configurable compression via [`numcodecs`](https://github.com/manzt/numcodecs.js)
+- Configurable compression via
+  [`numcodecs`](https://github.com/manzt/numcodecs.js)
 - Allows _very_ flexible storage
 - Provides rich, in-editor **type information** via
   [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
@@ -19,14 +21,15 @@
 
 **zarrita's** API is almost entirely
 [_tree-shakeable_](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking),
-meaning users are able to pick and choose only the features of Zarr which are necessary
-for an applications. At its core, the `zarr.Array` `class` allows reading individual
-_chunks_. "Fancy-indexing" and "slicing" are accomplished via (optional) _functions_ which
-operate on `zarr.Array` objects, and thus you only "pay" for these features if used (when
-bundling for the web).
+meaning users are able to pick and choose only the features of Zarr which are
+necessary for an applications. At its core, the `zarr.Array` `class` allows
+reading individual _chunks_. "Fancy-indexing" and "slicing" are accomplished via
+(optional) _functions_ which operate on `zarr.Array` objects, and thus you only
+"pay" for these features if used (when bundling for the web).
 
-This design choice differs from existing implemenations of Zarr in JavaScript, and allows
-**zarrita** to be both minimal _and_ more feature-complete if necessary.
+This design choice differs from existing implemenations of Zarr in JavaScript,
+and allows **zarrita** to be both minimal _and_ more feature-complete if
+necessary.
 
 ## Example (v2):
 

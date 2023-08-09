@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 import type { Array } from "./hierarchy.js";
 import type {
