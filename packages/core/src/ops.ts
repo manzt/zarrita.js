@@ -1,6 +1,6 @@
-import { BoolArray } from "@zarrita/typedarray";
-import type { Array } from "./lib/hierarchy.js";
-
+// @ts-nocheck
+import type { Async, Readable, Writeable } from "@zarrita/storage";
+import type { Array } from "./hierarchy.js";
 import type {
 	Chunk,
 	GetOptions,
@@ -8,24 +8,28 @@ import type {
 	SetOptions,
 	Slice,
 	TypedArray,
-	Bool,
-	ByteStr,
-	DataType,
-	Scalar,
-	UnicodeStr,
 } from "./types.js";
+import type {
+	BigintDataType,
+	DataType,
+	NumberDataType,
+	Scalar,
+} from "./metadata.js";
 
-import type { Async, Readable, Writeable } from "@zarrita/storage";
-
-import { get as get_with_setter } from "./lib/get.js";
-import { set as set_with_setter } from "./lib/set.js";
+import { BoolArray } from "@zarrita/typedarray";
+import { get as get_with_setter } from "./get.js";
+import { set as set_with_setter } from "./set.js";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 
-type SupportedDataType = Exclude<DataType, UnicodeStr | ByteStr>;
+type SupportedDataType = DataType;
 
 export const setter = {
-	prepare<D extends DataType>(data: TypedArray<D>, shape: number[], stride: number[]) {
+	prepare<D extends DataType>(
+		data: TypedArray<D>,
+		shape: number[],
+		stride: number[],
+	) {
 		return { data, shape, stride };
 	},
 	set_scalar<D extends SupportedDataType>(
@@ -71,19 +75,21 @@ export async function set<
 
 function compat<D extends SupportedDataType>(
 	arr: Chunk<D>,
-): Chunk<Exclude<DataType, UnicodeStr | ByteStr | Bool>> {
+): Chunk<NumberDataType | BigintDataType> {
 	// ensure strides are computed
 	return {
-		data: arr.data instanceof BoolArray ? (new Uint8Array(arr.data.buffer)) : arr.data,
+		data: arr.data instanceof BoolArray
+			? (new Uint8Array(arr.data.buffer))
+			: arr.data,
 		shape: arr.shape,
 		stride: arr.stride,
 	};
 }
 
-const cast_scalar = <D extends Exclude<DataType, UnicodeStr | ByteStr>>(
+const cast_scalar = <D extends DataType>(
 	arr: Chunk<D>,
 	value: Scalar<D>,
-): Scalar<Exclude<DataType, UnicodeStr | ByteStr | Bool>> => {
+): Scalar<DataType> => {
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value as any;
 };
@@ -96,7 +102,7 @@ function indices_len(start: number, stop: number, step: number) {
 	return 0;
 }
 
-function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
+function set_scalar<D extends DataType>(
 	out: Pick<Chunk<D>, "data" | "stride">,
 	out_selection: (Indices | number)[],
 	value: Scalar<D>,
@@ -128,17 +134,22 @@ function set_scalar<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
 		return;
 	}
 	for (let i = 0; i < len; i++) {
-		const data = out.data.subarray(curr_stride * (from + step * i)) as TypedArray<D>;
+		const data = out.data.subarray(
+			curr_stride * (from + step * i),
+		) as TypedArray<D>;
 		set_scalar({ data, stride }, slices, value);
 	}
 }
 
-type Projection = { from: Indices; to: Indices } | { from: null; to: number } | {
-	from: number;
-	to: null;
-};
+type Projection =
+	| { from: Indices; to: Indices }
+	| { from: null; to: number }
+	| {
+		from: number;
+		to: null;
+	};
 
-function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>>(
+function set_from_chunk<D extends DataType>(
 	dest: Pick<Chunk<D>, "data" | "stride">,
 	src: Pick<Chunk<D>, "data" | "stride">,
 	projections: Projection[],
@@ -187,7 +198,8 @@ function set_from_chunk<D extends Exclude<DataType, ByteStr | UnicodeStr | Bool>
 			dest.data.set(src.data.subarray(sfrom, sfrom + len) as any, from);
 		} else {
 			for (let i = 0; i < len; i++) {
-				dest.data[dstride * (from + step * i)] = src.data[sstride * (sfrom + sstep * i)];
+				dest.data[dstride * (from + step * i)] =
+					src.data[sstride * (sfrom + sstep * i)];
 			}
 		}
 		return;

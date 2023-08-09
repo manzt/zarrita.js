@@ -11,7 +11,10 @@ interface ReferenceStoreOptions {
 class ReferenceStore implements Async<Readable<RequestInit>> {
 	private target?: string | URL;
 
-	constructor(private refs: ReturnType<typeof parse>, opts: ReferenceStoreOptions = {}) {
+	constructor(
+		private refs: ReturnType<typeof parse>,
+		opts: ReferenceStoreOptions = {},
+	) {
 		this.target = opts.target;
 	}
 

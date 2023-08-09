@@ -13,7 +13,9 @@ export function strip_prefix<Path extends AbsolutePath>(
 }
 
 export function uri2href(url: string | URL) {
-	let [protocol, rest] = (typeof url === "string" ? url : url.href).split("://");
+	let [protocol, rest] = (typeof url === "string" ? url : url.href).split(
+		"://",
+	);
 	if (protocol === "https" || protocol === "http") {
 		return url;
 	}
