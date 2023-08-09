@@ -4,86 +4,23 @@ import type {
 	UnicodeStringArray,
 } from "@zarrita/typedarray";
 
-export type CodecMetadata = {
-	name: string;
-	configuration: Record<string, unknown>;
-};
-
-export type ArrayMetadata<D extends DataType = DataType> = {
-	zarr_format: 3;
-	node_type: "array";
-	shape: number[];
-	dimension_names?: string[];
-	data_type: D;
-	chunk_grid: {
-		name: "regular";
-		configuration: {
-			chunk_shape: number[];
-		};
-	};
-	chunk_key_encoding: {
-		name: "v2" | "default";
-		configuration: {
-			separator: "." | "/";
-		};
-	};
-	codecs: CodecMetadata[];
-	fill_value: Scalar<D> | null;
-	attributes: Record<string, unknown>;
-};
-
-export type GroupMetadata = {
-	zarr_format: 3;
-	node_type: "group";
-	attributes: Record<string, unknown>;
-};
-
-/** @category Number */
-export type Int8 = "int8";
-/** @category Number */
-export type Int16 = "int16";
-/** @category Number */
-export type Int32 = "int32";
-/** @category Bigint */
-export type Int64 = "int64";
-
-/** @category Number */
-export type Uint8 = "uint8";
-/** @category Number */
-export type Uint16 = "uint16";
-/** @category Number */
-export type Uint32 = "uint32";
-/** @category Bigint */
-export type Uint64 = "uint64";
-
-/** @category Number */
-export type Float32 = "float32";
-/** @category Number */
-export type Float64 = "float64";
-
-/** @category Boolean */
-export type Bool = "bool";
-
-/** @category Raw */
-export type Raw = `r${number}`;
-
-export type NumberDataType =
-	| Int8
-	| Int16
-	| Int32
-	| Uint8
-	| Uint16
-	| Uint32
-	| Float32
-	| Float64;
-
-export type BigintDataType = Int64 | Uint64;
-
-export type DataType =
-	| NumberDataType
-	| BigintDataType
-	| Bool
-	| Raw;
+import type {
+	BigintDataType,
+	Bool,
+	DataType,
+	Float32,
+	Float64,
+	Int16,
+	Int32,
+	Int64,
+	Int8,
+	NumberDataType,
+	Raw,
+	Uint16,
+	Uint32,
+	Uint64,
+	Uint8,
+} from "./metadata.js";
 
 export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Int16 ? Int16Array

@@ -54,7 +54,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const flipped = mapping.map(flip);
 		queue.add(async () => {
 			// obtain key for chunk storage
-			const chunk_key = arr._chunk_path(chunk_coords);
+			const chunk_path = arr.resolve(arr.chunk_key(chunk_coords)).path;
 
 			let cdata: TypedArray<Dtype>;
 			const shape = arr.chunk_shape;
@@ -98,7 +98,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 			// encode chunk
 			const encoded_chunk_data = await arr.codec_pipeline.encode(cdata);
 			// store
-			await arr.store.set(chunk_key, encoded_chunk_data);
+			await arr.store.set(chunk_path, encoded_chunk_data);
 		});
 	}
 	await queue.onIdle();

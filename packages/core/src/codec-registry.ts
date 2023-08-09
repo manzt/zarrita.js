@@ -1,9 +1,7 @@
 import type { Codec } from "numcodecs";
-import type { ArrayMetadata, Chunk, DataType, TypedArray } from "./types.js";
+import type { Chunk, TypedArray } from "./types.js";
+import type { ArrayMetadata, DataType } from "./metadata.js";
 import { get_ctr, get_strides } from "./util.js";
-
-type Config = Record<string, any>;
-type CodecImporter = () => Promise<{ fromConfig: (config: Config) => Codec }>;
 
 function system_is_little_endian(): boolean {
 	const a = new Uint32Array([0x12345678]);
@@ -75,6 +73,32 @@ class EndianCodec {
 	}
 }
 
+class TransposeCodec {
+	constructor(
+		public configuration: { order: "C" | "F" },
+		public array_metadata: ArrayMetadata<DataType>,
+	) {}
+
+	static fromConfig(
+		configuration: { order: "C" | "F" },
+		array_metadata: ArrayMetadata<DataType>,
+	): TransposeCodec {
+		return new TransposeCodec(configuration, array_metadata);
+	}
+
+	encode(bytes: Uint8Array): Uint8Array {
+		return bytes;
+	}
+
+	decode(bytes: Uint8Array): Uint8Array {
+		return bytes;
+	}
+}
+
+type InitCodec = (config: Record<string, any>, meta: ArrayMetadata) => Codec;
+type CodecImporter = () => Promise<{ fromConfig: InitCodec }>;
+export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
+
 function create_default_registry(): Map<string, CodecImporter> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
@@ -82,35 +106,35 @@ function create_default_registry(): Map<string, CodecImporter> {
 		.set("lz4", () => import("numcodecs/lz4").then((m) => m.default))
 		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
-		.set("endian", () => EndianCodec);
+		.set("endian", () => EndianCodec)
+		.set("transpose", () => TransposeCodec);
 }
 
 export const registry = create_default_registry();
 
-export type CodecPipeline = ReturnType<typeof create_codec_pipeline>;
-
 export function create_codec_pipeline(
-	array_metadata: Omit<ArrayMetadata<DataType>, "attributes">,
+	array_metadata: ArrayMetadata<DataType>,
 	codec_registry: typeof registry = registry,
 ) {
 	let codecs: Promise<Codec>[] | undefined;
 
-	function init() {
+	// allows us to laziy load codecs only if they are required
+	function init_codecs() {
 		let metadata = array_metadata.codecs;
 		return metadata.map(async (meta) => {
 			let Codec = await codec_registry.get(meta.name)?.();
 			if (!Codec) {
 				throw new Error(`Unknown codec: ${meta.name}`);
 			}
-			// @ts-expect-error
 			return Codec.fromConfig(meta.configuration, array_metadata);
 		});
 	}
+
 	return {
 		async encode<Dtype extends DataType>(
 			data: TypedArray<Dtype>,
 		): Promise<Uint8Array> {
-			if (!codecs) codecs = init();
+			if (!codecs) codecs = init_codecs();
 			let bytes = new Uint8Array(data.buffer);
 			for await (const codec of codecs) {
 				bytes = await codec.encode(bytes);
@@ -118,7 +142,7 @@ export function create_codec_pipeline(
 			return bytes as unknown as Uint8Array;
 		},
 		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
-			if (!codecs) codecs = init();
+			if (!codecs) codecs = init_codecs();
 			for (let i = codecs.length - 1; i >= 0; i--) {
 				let codec = await codecs[i];
 				bytes = await codec.decode(bytes);

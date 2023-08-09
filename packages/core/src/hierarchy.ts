@@ -4,71 +4,67 @@ import type {
 	Readable,
 	Writeable,
 } from "@zarrita/storage";
-import { type CodecPipeline, create_codec_pipeline } from "./codec-registry.js";
+import { create_codec_pipeline } from "./codec-registry.js";
 import {
 	encode_chunk_key,
 	json_decode_object,
 	json_encode_object,
 } from "./util.js";
-import type {
-	ArrayMetadata,
-	Chunk,
-	CodecMetadata,
-	DataType,
-	GroupMetadata,
-	Scalar,
-} from "./types.js";
+import {
+	type ArrayMetadata,
+	type Attributes,
+	type CodecMetadata,
+	type DataType,
+	type GroupMetadata,
+	type Scalar,
+	v2_marker,
+	v2_to_v3_array_metadata,
+	v2_to_v3_group_metadata,
+} from "./metadata.js";
 import { KeyError, NodeNotFoundError } from "./errors.js";
+import type * as typesJs from "./types.js";
 
 export class Location<Store> {
 	constructor(
 		public readonly store: Store,
 		public readonly path: AbsolutePath = "/",
-		public version: "2" | "3" = "3",
 	) {}
 
 	resolve(path: string): Location<Store> {
-		if (path[0] !== "/") {
-			// treat as relative path
-			if ((this.path as any) === "/") {
-				// special case root group
-				path = `/${path}` as any;
-			} else {
-				path = `${this.path}/${path}` as any;
-			}
-		}
-		return new Location(this.store, path as AbsolutePath, this.version);
-	}
-
-	static v2<Store>(
-		store: Store,
-	) {
-		return new Location<Store>(store, "/", "2");
+		// reuse URL resolution logic built into the browser
+		// handles relative paths, absolute paths, etc.
+		let root = new URL(
+			`file://${this.path.endsWith("/") ? this.path : `${this.path}/`}`,
+		);
+		return new Location(
+			this.store,
+			new URL(path, root).pathname as AbsolutePath,
+		);
 	}
 }
-
-type LazyGetter<T, Key extends keyof T> = {
-	[K in keyof T]: K extends Key ? T[K] | (() => Promise<T[K]>) : T[K];
-};
 
 export class Group<
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
-	#metadata: LazyGetter<GroupMetadata, "attributes">;
+	#metadata: GroupMetadata;
 	#attributes: Record<string, any> | undefined;
 
 	constructor(
 		store: Store,
 		path: AbsolutePath,
-		metadata: LazyGetter<GroupMetadata, "attributes">,
+		metadata: GroupMetadata,
 	) {
 		super(store, path);
 		this.#metadata = metadata;
 	}
 
 	async attrs() {
-		if (!this.#attributes && typeof this.#metadata.attributes === "function") {
-			this.#attributes = await this.#metadata.attributes();
+		if (
+			this.#attributes === undefined &&
+			v2_marker in this.#metadata.attributes
+		) {
+			let maybe_bytes = await this.store.get(this.resolve(`.zattrs`).path);
+			this.#attributes = (maybe_bytes && json_decode_object(maybe_bytes)) || {};
 		}
 		return this.#attributes;
 	}
@@ -79,13 +75,13 @@ export class Array<
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
 	codec_pipeline: CodecPipeline;
-	#metadata: LazyGetter<ArrayMetadata<Dtype>, "attributes">;
+	#metadata: ArrayMetadata<Dtype>;
 	#attributes: Record<string, any> | undefined;
 
 	constructor(
 		store: Store,
 		path: AbsolutePath,
-		metadata: LazyGetter<ArrayMetadata<Dtype>, "attributes">,
+		metadata: ArrayMetadata<Dtype>,
 	) {
 		super(store, path);
 		this.codec_pipeline = create_codec_pipeline(metadata);
@@ -95,19 +91,18 @@ export class Array<
 		}
 	}
 
-	_chunk_path(chunk_coords: number[]): AbsolutePath {
-		let chunk_key = encode_chunk_key(
+	chunk_key(chunk_coords: number[]): string {
+		return encode_chunk_key(
 			chunk_coords,
 			this.#metadata.chunk_key_encoding,
 		);
-		return `${this.path}${chunk_key}`;
 	}
 
 	async get_chunk(
 		chunk_coords: number[],
 		options?: Parameters<Store["get"]>[1],
-	): Promise<Chunk<Dtype>> {
-		let chunk_path = this._chunk_path(chunk_coords);
+	): Promise<typesJs.Chunk<Dtype>> {
+		let chunk_path = this.resolve(this.chunk_key(chunk_coords)).path;
 		let maybe_bytes = await this.store.get(chunk_path, options);
 		if (!maybe_bytes) {
 			throw new KeyError(chunk_path);
@@ -132,83 +127,15 @@ export class Array<
 	}
 
 	async attrs() {
-		if (!this.#attributes && typeof this.#metadata.attributes === "function") {
-			this.#attributes = await this.#metadata.attributes();
+		if (
+			this.#attributes === undefined &&
+			v2_marker in this.#metadata.attributes
+		) {
+			let attrs = await this.store.get(this.resolve(".zattrs").path);
+			this.#attributes = (attrs && json_decode_object(attrs)) || {};
 		}
-		return this.#attributes;
+		return this.#attributes ?? {};
 	}
-}
-
-const meta_converters = {
-	array<Store extends Readable | Async<Readable>>(
-		location: Location<Store>,
-		meta: ArrayMetadataV2<DataType>,
-	): LazyGetter<ArrayMetadata<DataType>, "attributes"> {
-		let codecs: CodecMetadata[] = [];
-		for (let { id, ...configuration } of meta.filters ?? []) {
-			codecs.push({ name: id, configuration });
-		}
-		if (meta.compressor) {
-			let { id, ...configuration } = meta.compressor;
-			codecs.push({ name: id, configuration });
-		}
-		return {
-			zarr_format: 3,
-			node_type: "array",
-			shape: meta.shape,
-			data_type: meta.dtype,
-			chunk_grid: {
-				name: "regular",
-				configuration: {
-					chunk_shape: meta.chunks,
-				},
-			},
-			chunk_key_encoding: {
-				name: "v2",
-				configuration: {
-					separator: meta.dimension_separator ?? ".",
-				},
-			},
-			codecs,
-			fill_value: meta.fill_value,
-			attributes: async () => {
-				let meta = await location.store.get(location.resolve(".zattrs").path);
-				if (!meta) return {};
-				return json_decode_object(meta);
-			},
-		};
-	},
-	group<Store extends Readable | Async<Readable>>(
-		location: Location<Store>,
-	): LazyGetter<GroupMetadata, "attributes"> {
-		return {
-			zarr_format: 3,
-			node_type: "group",
-			attributes: async () => {
-				let meta = await location.store.get(location.resolve(".zattrs").path);
-				if (!meta) return {};
-				return json_decode_object(meta);
-			},
-		};
-	},
-};
-
-/** Zarr v2 Array Metadata. Stored as JSON with key `.zarray`. */
-export interface ArrayMetadataV2<Dtype extends DataType> {
-	zarr_format: 2;
-	shape: number[];
-	chunks: number[];
-	dtype: Dtype;
-	compressor: null | Record<string, any>;
-	fill_value: Scalar<Dtype> | null;
-	order: "C" | "F";
-	filters: null | Record<string, any>[];
-	dimension_separator?: "." | "/";
-}
-
-/** Zarr v2 Group Metadata. Stored as JSON with key `.zgroup`. */
-export interface GroupMetadataV2 {
-	zarr_format: 2;
 }
 
 export function root<Store>(store: Store) {
@@ -239,13 +166,27 @@ export async function open<Store extends Readable | Async<Readable>>(
 	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
 ) {
 	let loc = "store" in location ? location : new Location(location);
-	if (loc.version === "3") {
+	try {
 		let node = await open_v3(loc);
 		if (options.kind === "auto") return node;
 		if (options.kind === "array" && node instanceof Array) return node;
 		if (options.kind === "group" && node instanceof Group) return node;
-		throw new Error(`Expected ${options.kind} but got ${node}`);
+	} catch (err) {
+		if (err instanceof NodeNotFoundError) {
+			return open_v2(loc, options);
+		}
+		throw err;
 	}
+}
+
+open.v2 = open_v2;
+open.v3 = open_v3;
+
+async function open_v2<Store extends Readable | Async<Readable>>(
+	location: Location<Store> | Store,
+	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
+) {
+	let loc = "store" in location ? location : new Location(location);
 	if (options.kind === "array") return open_array_v2(loc);
 	if (options.kind === "group") return open_group_v2(loc);
 	return open_array_v2(loc).catch(() => open_group_v2(loc));
@@ -254,25 +195,31 @@ export async function open<Store extends Readable | Async<Readable>>(
 async function open_array_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store>,
 ) {
-	let { store, path } = location.resolve(".zarray");
+	let { path } = location.resolve(".zarray");
 	let meta = await location.store.get(path);
 	if (!meta) {
 		throw new NodeNotFoundError(path);
 	}
-	let meta_doc: ArrayMetadataV2<any> = json_decode_object(meta);
-	return new Array(store, path, meta_converters.array(location, meta_doc));
+	return new Array(
+		location.store,
+		location.path,
+		v2_to_v3_array_metadata(json_decode_object(meta)),
+	);
 }
 
 async function open_group_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store>,
 ) {
-	let { store, path } = location.resolve(".zgroup");
+	let { path } = location.resolve(".zgroup");
 	let meta = await location.store.get(path);
 	if (!meta) {
 		throw new NodeNotFoundError(path);
 	}
-	json_decode_object(meta); // just make sure we don't get an error
-	return new Group(store, path, meta_converters.group(location));
+	return new Group(
+		location.store,
+		location.path,
+		v2_to_v3_group_metadata(json_decode_object(meta)),
+	);
 }
 
 async function open_v3<Store extends Readable | Async<Readable>>(
@@ -287,8 +234,8 @@ async function open_v3<Store extends Readable | Async<Readable>>(
 		meta,
 	);
 	return meta_doc.node_type === "array"
-		? new Array(store, path, meta_doc)
-		: new Group(store, path, meta_doc);
+		? new Array(store, location.path, meta_doc)
+		: new Group(store, location.path, meta_doc);
 }
 
 export interface CreateGroupOptions {
@@ -302,7 +249,7 @@ export interface CreateArrayOptions<Dtype extends DataType> {
 	codecs?: CodecMetadata[];
 	fill_value?: Scalar<Dtype>;
 	chunk_separator?: "." | "/";
-	attributes?: Record<string, any>;
+	attributes?: Attributes;
 }
 
 export async function create<
@@ -329,9 +276,6 @@ export async function create<
 	options: CreateArrayOptions<Dtype> | CreateGroupOptions,
 ): Promise<Array<Dtype, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
-	if (loc.version !== "3") {
-		throw new Error("Only Zarr v3 is supported");
-	}
 	if ("shape" in options) return create_array(loc, options) as any;
 	return create_group(loc, options);
 }
@@ -347,9 +291,11 @@ async function create_group<
 		node_type: "group",
 		attributes: options.attributes ?? {},
 	} satisfies GroupMetadata;
-	let { store, path } = location.resolve("zarr.json");
-	await store.set(path, json_encode_object(metadata));
-	return new Group(store, path, metadata);
+	await location.store.set(
+		location.resolve("zarr.json").path,
+		json_encode_object(metadata),
+	);
+	return new Group(location.store, location.path, metadata);
 }
 
 async function create_array<
@@ -380,7 +326,9 @@ async function create_array<
 		fill_value: options.fill_value ?? null,
 		attributes: options.attributes ?? {},
 	} satisfies ArrayMetadata<Dtype>;
-	let { store, path } = location.resolve("zarr.json");
-	await store.set(path, json_encode_object(metadata));
-	return new Array(store, path, metadata);
+	await location.store.set(
+		location.resolve("zarr.json").path,
+		json_encode_object(metadata),
+	);
+	return new Array(location.store, location.path, metadata);
 }

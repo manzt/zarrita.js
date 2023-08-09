@@ -1,6 +1,6 @@
 export * as ops from "./ops.js";
 export { KeyError, NodeNotFoundError } from "./errors.js";
-export { Array, create, Group, Location, open } from "./hierarchy.js";
+export { Array, create, Group, Location, open, root } from "./hierarchy.js";
 export {
 	is_dtype,
 	json_decode_object,
