@@ -7,10 +7,13 @@ import {
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
+	BigintDataType,
 	CodecMetadata,
 	DataType,
 	GroupMetadata,
 	GroupMetadataV2,
+	NumberDataType,
+	Raw,
 	TypedArrayConstructor,
 } from "./metadata.js";
 
@@ -178,4 +181,32 @@ export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
 		node_type: "group",
 		attributes: { [v2_marker]: true },
 	};
+}
+
+export type DataTypeQuery =
+	| DataType
+	| "number"
+	| "bigint"
+	| "raw";
+
+export type NarrowDataType<
+	Dtype extends DataType,
+	Query extends DataTypeQuery,
+> = Query extends "number" ? NumberDataType
+	: Query extends "bigint" ? BigintDataType
+	: Query extends "raw" ? Raw
+	: Extract<Query, Dtype>;
+
+export function is_dtype<Query extends DataTypeQuery>(
+	dtype: DataType,
+	query: Query,
+): dtype is NarrowDataType<DataType, Query> {
+	if (query !== "raw" && query !== "number" && query !== "bigint") {
+		return dtype === query;
+	}
+	const is_raw = dtype.startsWith("r");
+	if (query === "raw") return is_raw;
+	const is_bigint = dtype === "int64" || dtype === "uint64";
+	if (query === "bigint") return is_bigint;
+	return !is_raw && !is_bigint && !(dtype === "bool");
 }

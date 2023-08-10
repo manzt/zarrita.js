@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import type { DataType } from "../src/index.js";
-import { byteswap_inplace, get_ctr, get_strides } from "../src/util.js";
+import {
+	byteswap_inplace,
+	get_ctr,
+	get_strides,
+	is_dtype,
+} from "../src/util.js";
 
 import {
 	BoolArray,
@@ -61,5 +66,75 @@ describe("get_strides", () => {
 		[[3, 4, 10, 2], "F", [1, 3, 12, 120]],
 	])("get_strides(%o, %s) -> %o", (shape, order, expected) => {
 		expect(get_strides(shape, order)).toStrictEqual(expected);
+	});
+});
+
+describe("is_dtype", () => {
+	test.each<[DataType, boolean]>([
+		["int8", true],
+		["int16", true],
+		["int32", true],
+		["uint8", true],
+		["uint16", true],
+		["uint32", true],
+		["float32", true],
+		["float64", true],
+		["bool", false],
+		["int64", false],
+		["uint64", false],
+		["r42", false],
+	])("is_dtype(%s, 'number') -> %s", (dtype, expected) => {
+		expect(is_dtype(dtype, "number")).toBe(expected);
+	});
+
+	test.each<[DataType, boolean]>([
+		["int8", false],
+		["int16", false],
+		["int32", false],
+		["uint8", false],
+		["uint16", false],
+		["uint32", false],
+		["float32", false],
+		["float64", false],
+		["bool", false],
+		["int64", true],
+		["uint64", true],
+		["r42", false],
+	])("is_dtype(%s, 'bigint') -> %s", (dtype, expected) => {
+		expect(is_dtype(dtype, "bigint")).toBe(expected);
+	});
+
+	test.each<[DataType, boolean]>([
+		["int8", false],
+		["int16", false],
+		["int32", false],
+		["uint8", false],
+		["uint16", false],
+		["uint32", false],
+		["float32", false],
+		["float64", false],
+		["bool", false],
+		["int64", false],
+		["uint64", false],
+		["r42", true],
+	])("is_dtype(%s, 'raw') -> %s", (dtype, expected) => {
+		expect(is_dtype(dtype, "raw")).toBe(expected);
+	});
+
+	test.each<DataType>([
+		"int8",
+		"int16",
+		"int32",
+		"uint8",
+		"uint16",
+		"uint32",
+		"float32",
+		"float64",
+		"bool",
+		"int64",
+		"uint64",
+		"r42",
+	])("is_dtype(%s, %s) -> true", (dtype) => {
+		expect(is_dtype(dtype, dtype)).toBe(true);
 	});
 });

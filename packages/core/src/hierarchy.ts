@@ -7,7 +7,14 @@ import type {
 	Scalar,
 } from "./metadata.js";
 import { create_codec_pipeline } from "./codecs.js";
-import { encode_chunk_key, json_decode_object, v2_marker } from "./util.js";
+import {
+	type DataTypeQuery,
+	encode_chunk_key,
+	is_dtype,
+	json_decode_object,
+	type NarrowDataType,
+	v2_marker,
+} from "./util.js";
 import { KeyError } from "./errors.js";
 
 export class Location<Store> {
@@ -135,5 +142,28 @@ export class Array<
 			this.#attributes = this.#metadata.attributes;
 		}
 		return this.#attributes ?? {};
+	}
+
+	/**
+	 * A helper method to narrow `zarr.Array` Dtype.
+	 *
+	 * ```typescript
+	 * let arr: zarr.Array<DataType, FetchStore> = zarr.open(store, { kind: "array" });
+	 *
+	 * // Option 1: narrow by scalar type (e.g. "bool", "raw", "bigint", "number")
+	 * if (arr.is("bigint")) {
+	 *   // zarr.Array<"int64" | "uint64", FetchStore>
+	 * }
+	 *
+	 * // Option 3: exact match
+	 * if (arr.is("float32")) {
+	 *   // zarr.Array<"float32", FetchStore, "/">
+	 * }
+	 * ```
+	 */
+	is<Query extends DataTypeQuery>(
+		query: Query,
+	): this is Array<NarrowDataType<Dtype, Query>, Store> {
+		return is_dtype(this.dtype, query);
 	}
 }
