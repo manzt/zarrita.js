@@ -3,6 +3,5 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"emitDeclarationOnly": true
-	},
-	"include": ["index.ts", "src/**/*.ts", "__tests__/**/*.ts"]
+	}
 }
