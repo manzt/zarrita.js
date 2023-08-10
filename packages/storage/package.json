@@ -18,7 +18,6 @@
 		}
 	},
 	"dependencies": {
-		"@types/node": "^20.4.5",
 		"reference-spec-reader": "^0.1.3",
 		"unzipit": "^1.3.6"
 	}

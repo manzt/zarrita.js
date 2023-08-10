@@ -20,8 +20,5 @@
 		"@zarrita/storage": "workspace:^",
 		"@zarrita/typedarray": "workspace:^",
 		"numcodecs": "^0.2.2"
-	},
-	"devDependencies": {
-		"@types/node": "^16.10.2"
 	}
 }
