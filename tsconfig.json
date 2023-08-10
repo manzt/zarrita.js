@@ -12,10 +12,10 @@
 	},
 	"files": [],
 	"references": [
-		{ "path": "./packages/core" },
-		{ "path": "./packages/ndarray" },
-		{ "path": "./packages/storage" },
-		{ "path": "./packages/typedarray" },
-		{ "path": "./packages/indexing" }
+		{ "path": "packages/typedarray" },
+		{ "path": "packages/storage" },
+		{ "path": "packages/core" },
+		{ "path": "packages/indexing" },
+		{ "path": "packages/ndarray" }
 	]
 }
