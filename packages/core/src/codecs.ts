@@ -1,143 +1,107 @@
 import type { Codec } from "numcodecs";
-import type { ArrayMetadata, Chunk, DataType, TypedArray } from "./metadata.js";
-import { byteswap_inplace, get_ctr, get_strides } from "./util.js";
+import type { ArrayMetadata, Chunk, DataType } from "./metadata.js";
 
-const LITTLE_ENDIAN_OS = system_is_little_endian();
+import { TransposeCodec } from "./codecs/transpose.js";
+import { EndianCodec } from "./codecs/endian.js";
 
-function system_is_little_endian(): boolean {
-	const a = new Uint32Array([0x12345678]);
-	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
-	return !(b[0] === 0x12);
-}
+type CodecEntry = {
+	fromConfig: (config: Record<string, any>, meta: ArrayMetadata) => Codec;
+	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
+};
 
-function bytes_per_element(data_type: DataType): number {
-	const mapping: any = {
-		int8: 1,
-		int16: 2,
-		int32: 4,
-		int64: 8,
-		uint8: 1,
-		uint16: 2,
-		uint32: 4,
-		uint64: 8,
-		float32: 4,
-		float64: 8,
-	};
-	let b = mapping[data_type];
-	if (!b) throw new Error(`Unknown data type: ${data_type}`);
-	return b;
-}
-
-class EndianCodec {
-	constructor(
-		public configuration: { endian: "little" | "big" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
-
-	static fromConfig(
-		configuration: { endian: "little" | "big"; bytes_per_element: number },
-		array_metadata: ArrayMetadata<DataType>,
-	): EndianCodec {
-		return new EndianCodec(configuration, array_metadata);
-	}
-
-	encode(bytes: Uint8Array): Uint8Array {
-		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
-		}
-		return bytes;
-	}
-
-	decode(bytes: Uint8Array): Uint8Array {
-		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
-		}
-		return bytes;
-	}
-}
-
-class TransposeCodec {
-	constructor(
-		public configuration: { order: "C" | "F" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
-
-	static fromConfig(
-		configuration: { order: "C" | "F" },
-		array_metadata: ArrayMetadata<DataType>,
-	): TransposeCodec {
-		return new TransposeCodec(configuration, array_metadata);
-	}
-
-	encode(bytes: Uint8Array): Uint8Array {
-		return bytes;
-	}
-
-	decode(bytes: Uint8Array): Uint8Array {
-		return bytes;
-	}
-}
-
-type InitCodec = (config: Record<string, any>, meta: ArrayMetadata) => Codec;
-type CodecImporter = () => Promise<{ fromConfig: InitCodec }>;
-
-function create_default_registry(): Map<string, CodecImporter> {
+function create_default_registry(): Map<
+	string,
+	() => Promise<CodecEntry>
+> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
 		.set("gzip", () => import("numcodecs/gzip").then((m) => m.default))
 		.set("lz4", () => import("numcodecs/lz4").then((m) => m.default))
 		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
-		.set("endian", () => EndianCodec)
-		.set("transpose", () => TransposeCodec);
+		.set("transpose", () => TransposeCodec)
+		.set("endian", () => EndianCodec);
 }
 
 export const registry = create_default_registry();
 
-export function create_codec_pipeline(
-	array_metadata: ArrayMetadata<DataType>,
-	codec_registry: typeof registry = registry,
+export function create_codec_pipeline<Dtype extends DataType>(
+	array_metadata: ArrayMetadata<Dtype>,
 ) {
-	let codecs: Promise<Codec>[] | undefined;
-
-	// allows us to laziy load codecs only if they are required
-	function init_codecs() {
-		let metadata = array_metadata.codecs;
-		return metadata.map(async (meta) => {
-			let Codec = await codec_registry.get(meta.name)?.();
-			if (!Codec) {
-				throw new Error(`Unknown codec: ${meta.name}`);
-			}
-			return Codec.fromConfig(meta.configuration, array_metadata);
-		});
-	}
-
+	let codecs: Awaited<ReturnType<typeof load_codecs>>;
 	return {
-		async encode<Dtype extends DataType>(
-			data: TypedArray<Dtype>,
-		): Promise<Uint8Array> {
-			if (!codecs) codecs = init_codecs();
-			let bytes = new Uint8Array(data.buffer);
-			for await (const codec of codecs) {
+		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
+			if (!codecs) codecs = await load_codecs(array_metadata);
+			for (const codec of codecs.array_to_array) {
+				chunk = await codec.encode(chunk);
+			}
+			let bytes = await codecs.array_to_bytes.encode(chunk);
+			for (const codec of codecs.bytes_to_bytes) {
 				bytes = await codec.encode(bytes);
 			}
-			return bytes as unknown as Uint8Array;
+			return bytes;
 		},
-		async decode(bytes: Uint8Array): Promise<Chunk<DataType>> {
-			if (!codecs) codecs = init_codecs();
-			for (let i = codecs.length - 1; i >= 0; i--) {
-				let codec = await codecs[i];
-				bytes = await codec.decode(bytes);
+		async decode(bytes: Uint8Array): Promise<Chunk<Dtype>> {
+			if (!codecs) codecs = await load_codecs(array_metadata);
+			for (let i = codecs.bytes_to_bytes.length - 1; i >= 0; i--) {
+				bytes = await codecs.bytes_to_bytes[i].decode(bytes);
 			}
-			let ctr = get_ctr(array_metadata.data_type);
-			return {
-				data: new ctr(bytes.buffer),
-				shape: array_metadata.chunk_grid.configuration.chunk_shape,
-				stride: get_strides(
-					array_metadata.chunk_grid.configuration.chunk_shape,
-					"C",
-				),
-			};
+			let chunk = await codecs.array_to_bytes.decode(bytes);
+			for (let i = codecs.array_to_array.length - 1; i >= 0; i--) {
+				chunk = await codecs.array_to_array[i].decode(chunk);
+			}
+			return chunk;
 		},
 	};
+}
+
+type ArrayToArrayCodec<D extends DataType> = {
+	encode: (data: Chunk<D>) => Promise<Chunk<D>> | Chunk<D>;
+	decode: (data: Chunk<D>) => Promise<Chunk<D>> | Chunk<D>;
+};
+
+type ArrayToBytesCodec<D extends DataType> = {
+	encode: (data: Chunk<D>) => Promise<Uint8Array> | Uint8Array;
+	decode: (data: Uint8Array) => Promise<Chunk<D>> | Chunk<D>;
+};
+
+type BytesToBytesCodec = {
+	encode: (data: Uint8Array) => Promise<Uint8Array>;
+	decode: (data: Uint8Array) => Promise<Uint8Array>;
+};
+
+async function load_codecs<D extends DataType>(
+	array_metadata: ArrayMetadata<D>,
+) {
+	let promises = array_metadata.codecs.map(async (meta) => {
+		let Codec = await registry.get(meta.name)?.();
+		if (!Codec) {
+			throw new Error(`Unknown codec: ${meta.name}`);
+		}
+		return { Codec, meta };
+	});
+	let array_to_array: ArrayToArrayCodec<D>[] = [];
+	let array_to_bytes: ArrayToBytesCodec<D> = EndianCodec.fromConfig({
+		endian: "little",
+	}, array_metadata);
+	let bytes_to_bytes: BytesToBytesCodec[] = [];
+	for await (let { Codec, meta } of promises) {
+		let codec = Codec.fromConfig(meta.configuration, array_metadata);
+		switch (codec.kind) {
+			case "array_to_array":
+				array_to_array.push(codec);
+				break;
+			case "array_to_bytes":
+				array_to_bytes = codec;
+				break;
+			default:
+				bytes_to_bytes.push(codec);
+		}
+	}
+	if (array_to_array.length === 0) {
+		array_to_array.push(
+			TransposeCodec.fromConfig({ order: "C" }, array_metadata),
+		);
+	}
+	return { array_to_array, array_to_bytes, bytes_to_bytes };
 }
