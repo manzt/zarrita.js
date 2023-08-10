@@ -1,15 +1,7 @@
 import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
-import type {
-	ArrayMetadata,
-	DataType,
-	GroupMetadata,
-	Scalar,
-} from "./metadata.js";
-import type { Chunk } from "./types.js";
-
+import type { ArrayMetadata, DataType, GroupMetadata, Scalar, Chunk } from "./metadata.js";
 import { create_codec_pipeline } from "./codecs.js";
-import { encode_chunk_key, json_decode_object } from "./util.js";
-import { v2_marker } from "./metadata.js";
+import { encode_chunk_key, json_decode_object, v2_marker } from "./util.js";
 import { KeyError } from "./errors.js";
 
 export class Location<Store> {
@@ -31,8 +23,12 @@ export class Location<Store> {
 	}
 }
 
-export function root<Store>(store: Store): Location<Store> {
-	return new Location(store);
+export function root<Store>(store: Store): Location<Store>;
+
+export function root(): Location<Map<string, Uint8Array>>;
+
+export function root<Store>(store?: any): Location<Store | Map<string, Uint8Array>> {
+	return new Location(store ?? new Map);
 }
 
 export class Group<

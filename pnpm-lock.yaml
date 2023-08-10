@@ -39,12 +39,25 @@ importers:
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
-      '@types/ndarray':
-        specifier: ^1.0.11
-        version: 1.0.11
       '@types/node':
         specifier: ^16.10.2
         version: 16.10.2
+
+  packages/indexing:
+    dependencies:
+      '@zarrita/core':
+        specifier: workspace:^
+        version: link:../core
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
+      '@zarrita/typedarray':
+        specifier: workspace:^
+        version: link:../typedarray
+    devDependencies:
+      '@types/ndarray':
+        specifier: ^1.0.11
+        version: 1.0.11
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
@@ -60,6 +73,9 @@ importers:
       '@zarrita/core':
         specifier: workspace:^
         version: link:../core
+      '@zarrita/indexing':
+        specifier: workspace:^
+        version: link:../indexing
       '@zarrita/storage':
         specifier: workspace:^
         version: link:../storage

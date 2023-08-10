@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import ndarray from "ndarray";
+import * as zarr from "@zarrita/core";
 
 import * as ops from "../src/ops.js";
 import { range, slice } from "../src/util.js";
-import { IndexError } from "../src/errors.js";
-import * as zarr from "../src/index.js";
+import { IndexError } from "../src/indexer.js";
 
 interface Context {
 	arr: zarr.Array<"int32", Map<string, Uint8Array>>;
@@ -14,7 +14,8 @@ export function run_suite(name: string, getter: any) {
 	const get = getter as typeof ops.get;
 
 	beforeEach<Context>(async (ctx) => {
-		let arr = await zarr.create(new Map<string, Uint8Array>(), {
+		let store = new Map<string, Uint8Array>();
+		let arr = await zarr.create(store, {
 			shape: [2, 3, 4],
 			data_type: "int32",
 			chunk_shape: [1, 2, 2],

@@ -1,13 +1,12 @@
 import type { Async, Readable } from "@zarrita/storage";
 import type { ArrayMetadata, DataType, GroupMetadata } from "./metadata.js";
-
 import { Array, Group, Location } from "./hierarchy.js";
 import { NodeNotFoundError } from "./errors.js";
 import {
+	json_decode_object,
 	v2_to_v3_array_metadata,
 	v2_to_v3_group_metadata,
-} from "./metadata.js";
-import { json_decode_object } from "./util.js";
+} from "./util.js";
 
 function open_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,

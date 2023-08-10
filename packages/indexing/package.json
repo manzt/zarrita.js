@@ -1,5 +1,5 @@
 {
-	"name": "@zarrita/ndarray",
+	"name": "@zarrita/indexing",
 	"type": "module",
 	"version": "0.0.0",
 	"sideEffects": false,
@@ -9,19 +9,18 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./index.js"
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/src/index.js"
 		}
 	},
 	"dependencies": {
-		"@types/ndarray": "^1.0.11",
 		"@zarrita/core": "workspace:^",
-		"@zarrita/indexing": "workspace:^",
 		"@zarrita/storage": "workspace:^",
-		"ndarray": "^1.0.19",
-		"ndarray-ops": "^1.2.2"
+		"@zarrita/typedarray": "workspace:^"
 	},
 	"devDependencies": {
-		"@zarrita/typedarray": "workspace:^"
+		"@types/ndarray": "^1.0.11",
+		"ndarray": "^1.0.19",
+		"ndarray-ops": "^1.2.2"
 	}
 }
