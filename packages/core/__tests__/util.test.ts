@@ -96,6 +96,23 @@ describe("is_dtype", () => {
 		["uint32", false],
 		["float32", false],
 		["float64", false],
+		["bool", true],
+		["int64", false],
+		["uint64", false],
+		["r42", false],
+	])("is_dtype(%s, 'boolean') -> %s", (dtype, expected) => {
+		expect(is_dtype(dtype, "boolean")).toBe(expected);
+	});
+
+	test.each<[DataType, boolean]>([
+		["int8", false],
+		["int16", false],
+		["int32", false],
+		["uint8", false],
+		["uint16", false],
+		["uint32", false],
+		["float32", false],
+		["float64", false],
 		["bool", false],
 		["int64", true],
 		["uint64", true],

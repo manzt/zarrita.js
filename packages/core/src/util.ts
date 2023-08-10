@@ -185,6 +185,7 @@ export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
 
 export type DataTypeQuery =
 	| DataType
+	| "boolean"
 	| "number"
 	| "bigint"
 	| "raw";
@@ -201,12 +202,19 @@ export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,
 	query: Query,
 ): dtype is NarrowDataType<DataType, Query> {
-	if (query !== "raw" && query !== "number" && query !== "bigint") {
+	if (
+		query !== "raw" &&
+		query !== "number" &&
+		query !== "bigint" &&
+		query !== "boolean"
+	) {
 		return dtype === query;
 	}
+	const is_boolean = dtype === "bool";
+	if (query === "boolean") return is_boolean;
 	const is_raw = dtype.startsWith("r");
 	if (query === "raw") return is_raw;
 	const is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;
-	return !is_raw && !is_bigint && !(dtype === "bool");
+	return !is_raw && !is_bigint && !is_boolean;
 }
