@@ -16,7 +16,6 @@
 		{ "path": "./packages/ndarray" },
 		{ "path": "./packages/storage" },
 		{ "path": "./packages/typedarray" },
-		{ "path": "./packages/v2" },
-		{ "path": "./packages/v3" }
+		{ "path": "./packages/indexing" }
 	]
 }
