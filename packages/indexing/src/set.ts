@@ -93,7 +93,11 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			}
 			// encode chunk
-			const encoded_chunk_data = await arr.codec_pipeline.encode(cdata);
+			const encoded_chunk_data = await arr.codec_pipeline.encode({
+				data: cdata,
+				shape: arr.chunk_shape,
+				stride: stride,
+			});
 			// store
 			await arr.store.set(chunk_path, encoded_chunk_data);
 		});
