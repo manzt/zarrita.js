@@ -42,7 +42,7 @@ describe("Array", () => {
 			fill_value: arr.fill_value,
 			attrs: await arr.attrs(),
 			path: arr.path,
-			codec_pipeline: arr.codec,
+			codec: arr.codec,
 			store: arr.store,
 		}).toMatchInlineSnapshot(`
 			{
@@ -53,7 +53,7 @@ describe("Array", () => {
 			    5,
 			    5,
 			  ],
-			  "codec_pipeline": {
+			  "codec": {
 			    "decode": [Function],
 			    "encode": [Function],
 			  },
