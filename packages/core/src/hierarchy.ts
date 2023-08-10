@@ -23,8 +23,12 @@ export class Location<Store> {
 	}
 }
 
-export function root<Store>(store: Store): Location<Store> {
-	return new Location(store);
+export function root<Store>(store: Store): Location<Store>;
+
+export function root(): Location<Map<string, Uint8Array>>;
+
+export function root<Store>(store?: any): Location<Store | Map<string, Uint8Array>> {
+	return new Location(store ?? new Map);
 }
 
 export class Group<

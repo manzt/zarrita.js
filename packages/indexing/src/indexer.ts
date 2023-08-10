@@ -1,4 +1,4 @@
-import type { Indices, Slice } from "./util.js";
+import type { Indices, Slice } from "./types.js";
 import { product, range, slice } from "./util.js";
 
 export class IndexError extends Error {

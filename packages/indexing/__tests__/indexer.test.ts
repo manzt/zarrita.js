@@ -4,7 +4,7 @@ import {
 	BasicIndexer,
 	normalize_integer_selection,
 	normalize_selection,
-} from "../src/indexing.js";
+} from "../src/indexer.js";
 import { slice } from "../src/util.js";
 
 describe("normalize_selection", () => {

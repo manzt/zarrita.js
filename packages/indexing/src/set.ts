@@ -2,7 +2,8 @@ import { KeyError } from "@zarrita/core";
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 
-import { create_queue, get_ctr, get_strides } from "./util.js";
+import { get_ctr, get_strides } from "@zarrita/core";
+import { create_queue } from "./util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type { Indices, Prepare, SetFromChunk, SetOptions, SetScalar, Slice } from "./types.js";
 

@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as url from "node:url";
 
 import { get } from "../index.js";
-import { range } from "../../core/src/util.js";
+import { range } from "../../indexing/src/util.js";
 
 import * as zarr from "@zarrita/core";
 import {

@@ -1,12 +1,12 @@
 import { beforeEach, expect, it } from "vitest";
-
 import ndarray from "ndarray";
 // @ts-ignore
 import { assign } from "ndarray-ops";
+import { type Chunk, get_strides } from "@zarrita/core";
 
-import type { Chunk, Projection } from "../src/types.js";
+import type { Projection } from "../src/types.js";
 import * as ops from "../src/ops.js";
-import { get_strides, slice } from "../src/util.js";
+import { slice } from "../src/util.js";
 
 function to_c({ data, shape, stride }: Chunk<"int32">) {
 	let size = shape.reduce((a, b) => a * b, 1);

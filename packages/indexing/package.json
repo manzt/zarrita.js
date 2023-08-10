@@ -9,13 +9,18 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/src/index.js"
 		}
 	},
 	"dependencies": {
 		"@zarrita/core": "workspace:^",
 		"@zarrita/storage": "workspace:^",
 		"@zarrita/typedarray": "workspace:^"
+	},
+	"devDependencies": {
+		"@types/ndarray": "^1.0.11",
+		"ndarray": "^1.0.19",
+		"ndarray-ops": "^1.2.2"
 	}
 }
