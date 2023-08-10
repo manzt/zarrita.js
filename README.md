@@ -41,9 +41,9 @@ import { FetchStore } from "@zarrita/storage";
 const store = new FetchStore("http://localhost:8080/data.zarr");
 
 // open array from root (note that dtype is unknown)
-const arr = await zarr.open.v2(store, { kind: "array" }); // zarr.Array<DataType, FetchStore, "/">
+const arr = await zarr.open.v2(store, { kind: "array" }); // zarr.Array<DataType, FetchStore>
 
-arr; // zarr.Array<DataType, FetchStore, "/">
+arr; // zarr.Array<DataType, FetchStore>
 arr.shape; // [5, 10]
 arr.chunk_shape; // [2, 5]
 arr.dtype; // "int32"
