@@ -1,7 +1,6 @@
 import type { Codec } from "numcodecs";
-import type { Chunk, TypedArray } from "./types.js";
-import type { ArrayMetadata, DataType } from "./metadata.js";
-import { get_ctr, get_strides } from "./util.js";
+import type { ArrayMetadata, DataType, Chunk, TypedArray } from "./metadata.js";
+import { get_ctr, get_strides, byteswap_inplace } from "./util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
@@ -9,23 +8,6 @@ function system_is_little_endian(): boolean {
 	const a = new Uint32Array([0x12345678]);
 	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
 	return !(b[0] === 0x12);
-}
-
-function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
-	const numFlips = bytes_per_element / 2;
-	const endByteIndex = bytes_per_element - 1;
-	let t = 0;
-	for (let i = 0; i < view.length; i += bytes_per_element) {
-		for (let j = 0; j < numFlips; j += 1) {
-			newFunction(i, j);
-			view[i + j] = view[i + endByteIndex - j];
-			view[i + endByteIndex - j] = t;
-		}
-	}
-
-	function newFunction(i: number, j: number) {
-		t = view[i + j];
-	}
 }
 
 function bytes_per_element(data_type: DataType): number {

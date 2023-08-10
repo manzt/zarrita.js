@@ -1,6 +1,12 @@
-import type { Indices, Slice } from "./types.js";
-import { IndexError } from "./errors.js";
+import type { Indices, Slice } from "./util.js";
 import { product, range, slice } from "./util.js";
+
+export class IndexError extends Error {
+	constructor(msg: string) {
+		super(msg);
+		this.name = "IndexError";
+	}
+}
 
 function err_too_many_indices(
 	selection: (number | Slice)[],
@@ -211,8 +217,8 @@ export class BasicIndexer {
 				return new (typeof dim_sel === "number"
 					? IntDimIndexer
 					: SliceDimIndexer)({
-					// ts inference not strong enough to know correct chunk
-					dim_sel: dim_sel as any,
+					// @ts-expect-error ts inference not strong enough to know correct chunk
+					dim_sel: dim_sel,
 					dim_len: shape[i],
 					dim_chunk_len: chunk_shape[i],
 				});

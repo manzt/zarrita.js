@@ -1,19 +1,18 @@
-import type { ArrayMetadata, DataType } from "./metadata.js";
-import type {
-	ChunkQueue,
-	DataTypeQuery,
-	Indices,
-	NarrowDataType,
-	Slice,
-	TypedArray,
-	TypedArrayConstructor,
-} from "./types.js";
-
 import {
 	BoolArray,
 	ByteStringArray as _ByteStringArray,
 	UnicodeStringArray as _UnicodeStringArray,
 } from "@zarrita/typedarray";
+
+import type {
+	ArrayMetadata,
+	ArrayMetadataV2,
+	GroupMetadata,
+	GroupMetadataV2,
+	DataType,
+	TypedArrayConstructor,
+	CodecMetadata,
+} from "./metadata.js";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
@@ -25,40 +24,17 @@ export function json_decode_object(bytes: Uint8Array) {
 	return JSON.parse(str);
 }
 
-function system_is_little_endian(): boolean {
-	const a = new Uint32Array([0x12345678]);
-	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
-	return !(b[0] === 0x12);
-}
-
-export const LITTLE_ENDIAN_OS = system_is_little_endian();
-
-export const should_byteswap = (dtype: DataType) =>
-	LITTLE_ENDIAN_OS && dtype[0] === ">";
-
-export function byteswap_inplace(src: TypedArray<DataType>) {
-	if (src instanceof _UnicodeStringArray) {
-		src = (src as any)._data as Int32Array;
-	}
-	if (!("BYTES_PER_ELEMENT" in src)) {
-		return;
-	}
-	const b = src.BYTES_PER_ELEMENT;
-	const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
-	const numFlips = b / 2;
-	const endByteIndex = b - 1;
+export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
+	const numFlips = bytes_per_element / 2;
+	const endByteIndex = bytes_per_element - 1;
 	let t = 0;
-	for (let i = 0; i < flipper.length; i += b) {
+	for (let i = 0; i < view.length; i += bytes_per_element) {
 		for (let j = 0; j < numFlips; j += 1) {
-			t = flipper[i + j];
-			flipper[i + j] = flipper[i + endByteIndex - j];
-			flipper[i + endByteIndex - j] = t;
+			t = view[i + j];
+			view[i + j] = view[i + endByteIndex - j];
+			view[i + endByteIndex - j] = t;
 		}
 	}
-}
-
-export function ensure_array<T>(maybe_arr: T | T[]): T[] {
-	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
 }
 
 const CONSTRUCTORS = {
@@ -110,164 +86,6 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-/** Similar to python's `range` function. Supports positive ranges only. */
-export function* range(
-	start: number,
-	stop?: number,
-	step = 1,
-): Iterable<number> {
-	if (stop === undefined) {
-		stop = start;
-		start = 0;
-	}
-	for (let i = start; i < stop; i += step) {
-		yield i;
-	}
-}
-
-/**
- * python-like itertools.product generator
- * https://gist.github.com/cybercase/db7dde901d7070c98c48
- */
-export function* product<T extends Array<Iterable<any>>>(
-	...iterables: T
-): IterableIterator<
-	{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never }
-> {
-	if (iterables.length === 0) {
-		return;
-	}
-	// make a list of iterators from the iterables
-	const iterators = iterables.map((it) => it[Symbol.iterator]());
-	const results = iterators.map((it) => it.next());
-	if (results.some((r) => r.done)) {
-		throw new Error("Input contains an empty iterator.");
-	}
-	for (let i = 0;;) {
-		if (results[i].done) {
-			// reset the current iterator
-			iterators[i] = iterables[i][Symbol.iterator]();
-			results[i] = iterators[i].next();
-			// advance, and exit if we've reached the end
-			if (++i >= iterators.length) {
-				return;
-			}
-		} else {
-			yield results.map(({ value }) => value) as any;
-			i = 0;
-		}
-		results[i] = iterators[i].next();
-	}
-}
-
-// https://github.com/python/cpython/blob/263c0dd16017613c5ea2fbfc270be4de2b41b5ad/Objects/sliceobject.c#L376-L519
-function slice_indices(
-	start: number | null,
-	stop: number | null,
-	step: number | null,
-	length: number,
-): Indices {
-	if (step === 0) {
-		throw new Error("slice step cannot be zero");
-	}
-	step = step ?? 1;
-	const step_is_negative = step < 0;
-
-	/* Find lower and upper bounds for start and stop. */
-	const [lower, upper] = step_is_negative ? [-1, length - 1] : [0, length];
-
-	/* Compute start. */
-	if (start === null) {
-		start = step_is_negative ? upper : lower;
-	} else {
-		if (start < 0) {
-			start += length;
-			if (start < lower) {
-				start = lower;
-			}
-		} else if (start > upper) {
-			start = upper;
-		}
-	}
-
-	/* Compute stop. */
-	if (stop === null) {
-		stop = step_is_negative ? lower : upper;
-	} else {
-		if (stop < 0) {
-			stop += length;
-			if (stop < lower) {
-				stop = lower;
-			}
-		} else if (stop > upper) {
-			stop = upper;
-		}
-	}
-
-	return [start, stop, step];
-}
-
-/** @category Utilty */
-export function slice(stop: number | null): Slice;
-export function slice(
-	start: number | null,
-	stop?: number | null,
-	step?: number | null,
-): Slice;
-export function slice(
-	start: number | null,
-	stop?: number | null,
-	step: number | null = null,
-): Slice {
-	if (stop === undefined) {
-		stop = start;
-		start = null;
-	}
-	return {
-		start,
-		stop,
-		step,
-		indices(length: number) {
-			return slice_indices(this.start, this.stop, this.step, length);
-		},
-	};
-}
-
-/** Built-in "queue" for awaiting promises. */
-export function create_queue(): ChunkQueue {
-	const promises: Promise<void>[] = [];
-	return {
-		add: (fn) => promises.push(fn()),
-		onIdle: () => Promise.all(promises),
-	};
-}
-
-export function is_dtype<Query extends DataTypeQuery>(
-	dtype: DataType,
-	query: Query,
-): dtype is NarrowDataType<DataType, Query> {
-	// fuzzy match, e.g. 'u4'
-	if (query.length < 3) {
-		return dtype === `|${query}` || dtype === `>${query}` ||
-			dtype === `<${query}`;
-	}
-	if (query !== "string" && query !== "number" && query !== "bigint") {
-		return dtype === query;
-	}
-
-	let prefix = dtype[1];
-	let nbytes = dtype.slice(2);
-
-	let is_string = prefix === "S" || prefix === "U";
-	if (query === "string") return is_string;
-
-	let is_bigint = (prefix === "u" || prefix === "i") && nbytes === "8";
-	if (query === "bigint") return is_bigint;
-
-	// number
-	return !is_string && !is_bigint;
-}
-
 export function encode_chunk_key(
 	chunk_coords: number[],
 	{ name, configuration }: ArrayMetadata["chunk_key_encoding"],
@@ -279,4 +97,85 @@ export function encode_chunk_key(
 		return chunk_coords.join(configuration.separator) || "0";
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
+}
+
+export function coerce_dtype(
+	dtype: string,
+): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+	let data_type = {
+		"|b1": "bool",
+		"|i1": "int8",
+		"|u1": "uint8",
+		"<i2": "int16",
+		">i2": "int16",
+		"<u2": "uint16",
+		">u2": "uint16",
+		"<i4": "int32",
+		">i4": "int32",
+		"<u4": "uint32",
+		">u4": "uint32",
+		"<i8": "int64",
+		">i8": "int64",
+		"<u8": "uint64",
+		">u8": "uint64",
+		"<f4": "float32",
+		">f4": "float32",
+		"<f8": "float64",
+		">f8": "float64",
+	}[dtype];
+	if (!data_type) {
+		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
+	}
+	if (dtype[0] === "|") {
+		return { data_type } as any;
+	}
+	return { data_type, endian: dtype[0] === "<" ? "little" : "big" } as any;
+}
+
+export const v2_marker = Symbol("v2");
+
+export function v2_to_v3_array_metadata(
+	meta: ArrayMetadataV2,
+): ArrayMetadata<DataType> {
+	let codecs: CodecMetadata[] = [];
+	let d = coerce_dtype(meta.dtype);
+	if ("endian" in d && d.endian === "big") {
+		codecs.push({ name: "endian", configuration: { endian: "big" } });
+	}
+	for (let { id, ...configuration } of meta.filters ?? []) {
+		codecs.push({ name: id, configuration });
+	}
+	if (meta.compressor) {
+		let { id, ...configuration } = meta.compressor;
+		codecs.push({ name: id, configuration });
+	}
+	return {
+		zarr_format: 3,
+		node_type: "array",
+		shape: meta.shape,
+		data_type: d.data_type,
+		chunk_grid: {
+			name: "regular",
+			configuration: {
+				chunk_shape: meta.chunks,
+			},
+		},
+		chunk_key_encoding: {
+			name: "v2",
+			configuration: {
+				separator: meta.dimension_separator ?? ".",
+			},
+		},
+		codecs,
+		fill_value: meta.fill_value,
+		attributes: { [v2_marker]: true },
+	};
+}
+
+export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
+	return {
+		zarr_format: 3,
+		node_type: "group",
+		attributes: { [v2_marker]: true },
+	};
 }

@@ -5,7 +5,6 @@ import MemStore from "@zarrita/storage/mem";
 
 import * as zarr from "../src/index.js";
 import { json_decode_object, range } from "../src/util.js";
-let { get, set } = zarr.ops;
 
 test("create root group", async () => {
 	let h = zarr.root(new MemStore());

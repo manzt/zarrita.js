@@ -1,3 +1,9 @@
+import type {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
+
 /** @category Number */
 export type Int8 = "int8";
 /** @category Number */
@@ -108,83 +114,30 @@ export type GroupMetadataV2 = {
 	zarr_format: 2;
 };
 
-export function coerce_dtype(
-	dtype: string,
-): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
-	let data_type = {
-		"|b1": "bool",
-		"|i1": "int8",
-		"|u1": "uint8",
-		"<i2": "int16",
-		">i2": "int16",
-		"<u2": "uint16",
-		">u2": "uint16",
-		"<i4": "int32",
-		">i4": "int32",
-		"<u4": "uint32",
-		">u4": "uint32",
-		"<i8": "int64",
-		">i8": "int64",
-		"<u8": "uint64",
-		">u8": "uint64",
-		"<f4": "float32",
-		">f4": "float32",
-		"<f8": "float64",
-		">f8": "float64",
-	}[dtype];
-	if (!data_type) {
-		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
-	}
-	if (dtype[0] === "|") {
-		return { data_type } as any;
-	}
-	return { data_type, endian: dtype[0] === "<" ? "little" : "big" } as any;
-}
+export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
+	: D extends Int16 ? Int16Array
+	: D extends Int32 ? Int32Array
+	: D extends Int64 ? BigInt64Array
+	: D extends Uint8 ? Uint8Array
+	: D extends Uint16 ? Uint16Array
+	: D extends Uint32 ? Uint32Array
+	: D extends Uint64 ? BigUint64Array
+	: D extends Float32 ? Float32Array
+	: D extends Float64 ? Float64Array
+	: D extends Bool ? BoolArray
+	: D extends Raw ? ByteStringArray | UnicodeStringArray
+	: never;
 
-export const v2_marker = Symbol("v2");
+export type TypedArrayConstructor<D extends DataType> = {
+	new (length: number): TypedArray<D>;
+	new (array: ArrayLike<Scalar<D>> | ArrayBufferLike): TypedArray<D>;
+	// TODO: implement for Bool/Unicode arrays
+	// new(buffer: ArrayBufferLike, byteOffset?: number, length?: number): TypedArray<D>
+	// new(elements: Iterable<Scalar<D>>): TypedArray<D>
+};
 
-export function v2_to_v3_array_metadata(
-	meta: ArrayMetadataV2,
-): ArrayMetadata<DataType> {
-	let codecs: CodecMetadata[] = [];
-	let d = coerce_dtype(meta.dtype);
-	if ("endian" in d && d.endian === "big") {
-		codecs.push({ name: "endian", configuration: { endian: "big" } });
-	}
-	for (let { id, ...configuration } of meta.filters ?? []) {
-		codecs.push({ name: id, configuration });
-	}
-	if (meta.compressor) {
-		let { id, ...configuration } = meta.compressor;
-		codecs.push({ name: id, configuration });
-	}
-	return {
-		zarr_format: 3,
-		node_type: "array",
-		shape: meta.shape,
-		data_type: d.data_type,
-		chunk_grid: {
-			name: "regular",
-			configuration: {
-				chunk_shape: meta.chunks,
-			},
-		},
-		chunk_key_encoding: {
-			name: "v2",
-			configuration: {
-				separator: meta.dimension_separator ?? ".",
-			},
-		},
-		codecs,
-		fill_value: meta.fill_value,
-		attributes: { [v2_marker]: true },
-	};
-}
-
-export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
-	return {
-		zarr_format: 3,
-		node_type: "group",
-		attributes: { [v2_marker]: true },
-	};
-}
+export type Chunk<Dtype extends DataType> = {
+	data: TypedArray<Dtype>;
+	shape: number[];
+	stride: number[];
+};

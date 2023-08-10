@@ -52,6 +52,18 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
 
+  packages/indexing:
+    dependencies:
+      '@zarrita/core':
+        specifier: workspace:^
+        version: link:../core
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
+      '@zarrita/typedarray':
+        specifier: workspace:^
+        version: link:../typedarray
+
   packages/ndarray:
     dependencies:
       '@types/ndarray':
