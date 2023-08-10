@@ -11,13 +11,13 @@
 - Supports **C-order** & **F-order** arrays
 - Handles **little endian** or **big endian** data-types
 - Handles **number**, **bigint**, **string**, and **boolean** data-types
-- Configurable compression via
+- Configurable codes via
   [`numcodecs`](https://github.com/manzt/numcodecs.js)
 - Allows _very_ flexible storage
 - Provides rich, in-editor **type information** via
   [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
 
-## Project philosphy
+## Zarr building blocks
 
 **zarrita's** API is almost entirely
 [_tree-shakeable_](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking),
@@ -31,34 +31,25 @@ This design choice differs from existing implemenations of Zarr in JavaScript,
 and allows **zarrita** to be both minimal _and_ more feature-complete if
 necessary.
 
-## Example (v2):
+## Example:
 
 ```javascript
-import * as zarr from "zarrita/v2";
-import FetchStore from "zarrita/storage/fetch";
-
-// must add codecs to global registry if compression is used
-import Blosc from "numcodecs/blosc";
-zarr.registry.set(Blosc.codecId, () => Blosc);
+import * as zarr from "@zarrita/core";
+import { FetchStore } from "@zarrita/storage";
 
 // intialize store
 const store = new FetchStore("http://localhost:8080/data.zarr");
 
 // open array from root (note that dtype is unknown)
-const arr = await zarr.get_array(store); // zarr.Array<DataType, FetchStore, "/">
+const arr = await zarr.open.v2(store, { kind: "array" }); // zarr.Array<DataType, FetchStore, "/">
 
-// custom type-gaurd to assert dtype
-if (!arr.is("i4")) {
-	throw Error("Expected '>i4' or '<i4' dtype!");
-}
-
-arr; // zarr.Array<"<i4" | ">i4", FetchStore, "/">
+arr; // zarr.Array<DataType, FetchStore, "/">
 arr.shape; // [5, 10]
 arr.chunk_shape; // [2, 5]
-arr.dtype; // "<i4"
+arr.dtype; // "int32"
 
 // read chunk
-const chunk = await arr.get_chunk([0, 0]); // Chunk<"<i4" | ">i4">
+const chunk = await arr.get_chunk([0, 0]);
 console.log(chunk);
 // {
 //   data: Int32Array(10) [
@@ -71,7 +62,7 @@ console.log(chunk);
 // read combined chunks/selections
 
 // Option 1: Builtin getter, no dependencies
-import { get } from "zarrita/ops";
+import { get, slice } from "@zarrita/indexing";
 const full = await get(arr); // { data: Int32Array, shape: number[], stride: number[] }
 
 // Option 2: scijs/ndarray getter, includes `ndarray` and `ndarray-ops` dependencies
@@ -112,8 +103,8 @@ console.log(region);
 ### In Browser (or Deno)
 
 ```javascript
-import * as zarr from "https://esm.sh/zarrita/v2";
-import { get } from "https://esm.sh/zarrita/ops";
+import * as zarr from "https://esm.sh/@zarrita/core";
+import { get } from "https://esm.sh/@zarrita/indexing";
 ```
 
 ### In Node.js or Application Bundles
@@ -121,13 +112,13 @@ import { get } from "https://esm.sh/zarrita/ops";
 Import using ES module syntax as a namespace:
 
 ```javascript
-import * as zarr from "zarrita/v2";
+import * as zarr from "@zarrita/core";
 ```
 
 or with targeted named imports:
 
 ```javascript
-import { get_array } from "zarrita/v2";
+import { open } from "@zarrita/core";
 ```
 
 ## Development
@@ -136,5 +127,6 @@ This library uses the [`pnpm`](https://pnpm.io/) package manager.
 
 ```bash
 pnpm install
+pnpm build
 pnpm test
 ```
