@@ -3,5 +3,6 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"emitDeclarationOnly": true
-	}
+	},
+	"include": ["index.js", "__tests__/**/*"]
 }
