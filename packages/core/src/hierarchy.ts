@@ -79,7 +79,7 @@ export class Array<
 	Dtype extends DataType,
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
-	codec_pipeline: ReturnType<typeof create_codec_pipeline>;
+	codec: ReturnType<typeof create_codec_pipeline>;
 	#metadata: ArrayMetadata<Dtype>;
 	#attributes: Record<string, any> | undefined;
 
@@ -89,7 +89,7 @@ export class Array<
 		metadata: ArrayMetadata<Dtype>,
 	) {
 		super(store, path);
-		this.codec_pipeline = create_codec_pipeline(metadata);
+		this.codec = create_codec_pipeline(metadata);
 		this.#metadata = metadata;
 		if (typeof metadata.attributes === "object") {
 			this.#attributes = metadata.attributes;
@@ -112,7 +112,7 @@ export class Array<
 		if (!maybe_bytes) {
 			throw new KeyError(chunk_path);
 		}
-		return this.codec_pipeline.decode(maybe_bytes);
+		return this.codec.decode(maybe_bytes);
 	}
 
 	get shape() {

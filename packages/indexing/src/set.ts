@@ -93,7 +93,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			}
 			// encode chunk
-			const encoded_chunk_data = await arr.codec_pipeline.encode({
+			const encoded_chunk_data = await arr.codec.encode({
 				data: cdata,
 				shape: arr.chunk_shape,
 				stride: stride,

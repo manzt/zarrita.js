@@ -1,4 +1,5 @@
 import type { Async, Readable, Writeable } from "@zarrita/storage";
+
 import type {
 	ArrayMetadata,
 	Attributes,
