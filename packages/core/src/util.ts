@@ -7,11 +7,11 @@ import {
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
+	CodecMetadata,
+	DataType,
 	GroupMetadata,
 	GroupMetadataV2,
-	DataType,
 	TypedArrayConstructor,
-	CodecMetadata,
 } from "./metadata.js";
 
 export function json_encode_object(o: Record<string, any>): Uint8Array {

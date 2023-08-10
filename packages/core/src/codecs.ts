@@ -1,6 +1,6 @@
 import type { Codec } from "numcodecs";
-import type { ArrayMetadata, DataType, Chunk, TypedArray } from "./metadata.js";
-import { get_ctr, get_strides, byteswap_inplace } from "./util.js";
+import type { ArrayMetadata, Chunk, DataType, TypedArray } from "./metadata.js";
+import { byteswap_inplace, get_ctr, get_strides } from "./util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 

@@ -2,7 +2,9 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "tsc --build",
-		"test": "vitest"
+		"test": "vitest",
+		"fmt": "deno fmt --use-tabs packages",
+		"lint": "deno fmt --use-tabs packages --check"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.26.2",

@@ -1,4 +1,4 @@
-import type { Slice, Indices, ChunkQueue } from "./types.js";
+import type { ChunkQueue, Indices, Slice } from "./types.js";
 
 export function ensure_array<T>(maybe_arr: T | T[]): T[] {
 	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
@@ -126,7 +126,6 @@ export function slice(
 		},
 	};
 }
-
 
 /** Built-in "queue" for awaiting promises. */
 export function create_queue(): ChunkQueue {

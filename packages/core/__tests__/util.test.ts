@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { DataType } from "../src/index.js";
-import { get_ctr, get_strides, byteswap_inplace } from "../src/util.js";
+import { byteswap_inplace, get_ctr, get_strides } from "../src/util.js";
 
 import {
 	BoolArray,

@@ -282,7 +282,7 @@ describe("get v2", () => {
 			    1,
 			  ],
 			}
-		`)
+		`);
 	});
 
 	it("reads 3d.contiguous.i2", async () => {

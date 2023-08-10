@@ -1,4 +1,4 @@
-import type { TypedArray, DataType, Scalar, Chunk } from "@zarrita/core";
+import type { Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 
 export type Indices = [start: number, stop: number, step: number];
 

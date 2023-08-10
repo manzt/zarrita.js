@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import * as url from "node:url";
 import * as path from "node:path";
 import { FileSystemStore } from "@zarrita/storage";
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
 
 import { open } from "../src/open.js";
 import { root } from "../src/hierarchy.js";

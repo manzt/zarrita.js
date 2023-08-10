@@ -125,7 +125,12 @@ describe("ndarray", () => {
 		});
 		let res = await get(arr);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual([
+			"a",
+			"b",
+			"cc",
+			"d",
+		]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -135,7 +140,12 @@ describe("ndarray", () => {
 		});
 		let res = await get(arr);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual([
+			"a",
+			"b",
+			"cc",
+			"d",
+		]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -145,7 +155,12 @@ describe("ndarray", () => {
 		});
 		let res = await get(arr);
 		expect(res.data).toBeInstanceOf(ByteStringArray);
-		expect(Array.from(res.data as ByteStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as ByteStringArray)).toStrictEqual([
+			"a",
+			"b",
+			"cc",
+			"d",
+		]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -155,7 +170,12 @@ describe("ndarray", () => {
 		});
 		let res = await get(arr);
 		expect(res.data).toBeInstanceOf(BoolArray);
-		expect(Array.from(res.data as BoolArray)).toStrictEqual([true, false, true, false]);
+		expect(Array.from(res.data as BoolArray)).toStrictEqual([
+			true,
+			false,
+			true,
+			false,
+		]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
