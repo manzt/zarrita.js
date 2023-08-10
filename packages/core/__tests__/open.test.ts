@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as url from "node:url";
 import * as path from "node:path";
 import { FileSystemStore } from "@zarrita/storage";
-import { ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
 
 import { open } from "../src/open.js";
 import { root } from "../src/hierarchy.js";
@@ -301,16 +301,10 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		let chunk = await arr.get_chunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
 			{
-			  "data": BoolArray {
-			    "_bytes": Uint8Array [
-			      1,
-			      0,
-			      1,
-			      0,
-			    ],
-			  },
+			  "data": BoolArray {},
 			  "shape": [
 			    4,
 			  ],
@@ -318,6 +312,14 @@ describe("v2", () => {
 			    1,
 			  ],
 			}
+		`);
+		expect(Array.from(chunk.data as BoolArray)).toMatchInlineSnapshot(`
+			[
+			  true,
+			  false,
+			  true,
+			  false,
+			]
 		`);
 	});
 
@@ -1050,16 +1052,10 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		let chunk = await arr.get_chunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
 			{
-			  "data": BoolArray {
-			    "_bytes": Uint8Array [
-			      1,
-			      0,
-			      1,
-			      0,
-			    ],
-			  },
+			  "data": BoolArray {},
 			  "shape": [
 			    4,
 			  ],
@@ -1067,6 +1063,14 @@ describe("v3", () => {
 			    1,
 			  ],
 			}
+		`);
+		expect(Array.from(chunk.data as any)).toMatchInlineSnapshot(`
+			[
+			  true,
+			  false,
+			  true,
+			  false,
+			]
 		`);
 	});
 

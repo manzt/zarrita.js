@@ -247,14 +247,7 @@ describe("get v2", () => {
 		let res = await get_v2("/1d.contiguous.b1");
 		expect(res).toMatchInlineSnapshot(`
 			{
-			  "data": BoolArray {
-			    "_bytes": Uint8Array [
-			      1,
-			      0,
-			      1,
-			      0,
-			    ],
-			  },
+			  "data": BoolArray {},
 			  "shape": [
 			    4,
 			  ],
