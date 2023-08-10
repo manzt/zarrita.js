@@ -8,7 +8,7 @@ import type {
 	Slice,
 } from "./types.js";
 
-import { KeyError, get_ctr, get_strides } from "@zarrita/core";
+import { get_ctr, get_strides, KeyError } from "@zarrita/core";
 import { BasicIndexer } from "./indexer.js";
 import { create_queue } from "./util.js";
 

@@ -3,7 +3,13 @@ import ndarray from "ndarray";
 import ops from "ndarray-ops";
 
 import { get_with_setter, set_with_setter } from "@zarrita/indexing";
-import type { Indices, Projection, GetOptions, Slice, SetOptions } from "@zarrita/indexing";
+import type {
+	GetOptions,
+	Indices,
+	Projection,
+	SetOptions,
+	Slice,
+} from "@zarrita/indexing";
 import type * as core from "@zarrita/core";
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 

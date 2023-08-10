@@ -5,7 +5,14 @@ import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 import { get_ctr, get_strides } from "@zarrita/core";
 import { create_queue } from "./util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
-import type { Indices, Prepare, SetFromChunk, SetOptions, SetScalar, Slice } from "./types.js";
+import type {
+	Indices,
+	Prepare,
+	SetFromChunk,
+	SetOptions,
+	SetScalar,
+	Slice,
+} from "./types.js";
 
 function flip(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };

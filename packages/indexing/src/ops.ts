@@ -3,7 +3,13 @@ import type * as core from "@zarrita/core";
 import { BoolArray } from "@zarrita/typedarray";
 import { get as get_with_setter } from "./get.js";
 import { set as set_with_setter } from "./set.js";
-import type { Indices, Slice, GetOptions, SetOptions, Projection } from "./types.js";
+import type {
+	GetOptions,
+	Indices,
+	Projection,
+	SetOptions,
+	Slice,
+} from "./types.js";
 
 // setting fns rely on some TypedArray apis not supported with our custom arrays
 type SupportedDataType = core.NumberDataType | core.BigintDataType | core.Bool;
@@ -42,7 +48,12 @@ export async function get<
 	selection: Sel | null = null,
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ) {
-	return get_with_setter<D, Store, core.Chunk<D>, Sel>(arr, selection, opts, setter);
+	return get_with_setter<D, Store, core.Chunk<D>, Sel>(
+		arr,
+		selection,
+		opts,
+		setter,
+	);
 }
 
 /** @category Utility */
@@ -63,7 +74,9 @@ function compat<D extends SupportedDataType>(
 	// ensure strides are computed
 	return {
 		// @ts-expect-error
-		data: arr.data instanceof BoolArray ? new Uint8Array(arr.data.buffer) : arr.data,
+		data: arr.data instanceof BoolArray
+			? new Uint8Array(arr.data.buffer)
+			: arr.data,
 		shape: arr.shape,
 		stride: arr.stride,
 	};
@@ -76,7 +89,7 @@ function cast_scalar<D extends core.DataType>(
 	// @ts-expect-error
 	if (arr.data instanceof BoolArray) return value ? 1 : 0;
 	return value as any;
-};
+}
 
 function indices_len(start: number, stop: number, step: number) {
 	if (step < 0 && stop < start) {
