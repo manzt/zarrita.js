@@ -841,14 +841,7 @@ describe("v2", () => {
 
 	it("opens group from root", async () => {
 		let grp = await open(store, { kind: "group" });
-		expect(grp).toMatchInlineSnapshot(`
-			Group {
-			  "path": "/",
-			  "store": FileSystemStore {
-			    "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v2/data.zarr",
-			  },
-			}
-		`);
+		expect(grp.path).toBe("/");
 	});
 
 	it("throws when group is not found", async () => {
@@ -865,36 +858,8 @@ describe("v2", () => {
 		let a2 = await open.v2(grp.resolve("1d.chunked.i2"), {
 			kind: "array",
 		});
-		expect([grp, a1, a2]).toMatchInlineSnapshot(`
-			[
-			  Group {
-			    "path": "/",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v2/data.zarr",
-			    },
-			  },
-			  Array {
-			    "codec_pipeline": {
-			      "decode": [Function],
-			      "encode": [Function],
-			    },
-			    "path": "/1d.chunked.i2",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v2/data.zarr",
-			    },
-			  },
-			  Array {
-			    "codec_pipeline": {
-			      "decode": [Function],
-			      "encode": [Function],
-			    },
-			    "path": "/1d.chunked.i2",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v2/data.zarr",
-			    },
-			  },
-			]
-		`);
+		expect(a1.path).toBe("/1d.chunked.i2");
+		expect(a2.path).toBe("/1d.chunked.i2");
 	});
 });
 
@@ -1586,14 +1551,7 @@ describe("v3", () => {
 
 	it("opens group from root", async () => {
 		let grp = await open.v3(store, { kind: "group" });
-		expect(grp).toMatchInlineSnapshot(`
-			Group {
-			  "path": "/",
-			  "store": FileSystemStore {
-			    "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v3/data.zarr",
-			  },
-			}
-		`);
+		expect(grp.path).toBe("/");
 	});
 
 	it("throws when group not found", async () => {
@@ -1610,35 +1568,7 @@ describe("v3", () => {
 		let a2 = await open.v3(grp.resolve("1d.chunked.i2"), {
 			kind: "array",
 		});
-		expect([grp, a1, a2]).toMatchInlineSnapshot(`
-			[
-			  Group {
-			    "path": "/",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v3/data.zarr",
-			    },
-			  },
-			  Array {
-			    "codec_pipeline": {
-			      "decode": [Function],
-			      "encode": [Function],
-			    },
-			    "path": "/1d.chunked.i2",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v3/data.zarr",
-			    },
-			  },
-			  Array {
-			    "codec_pipeline": {
-			      "decode": [Function],
-			      "encode": [Function],
-			    },
-			    "path": "/1d.chunked.i2",
-			    "store": FileSystemStore {
-			      "root": "/Users/manzt/github/manzt/zarrita.js/fixtures/v3/data.zarr",
-			    },
-			  },
-			]
-		`);
+		expect(a1.path).toBe("/1d.chunked.i2");
+		expect(a2.path).toBe("/1d.chunked.i2");
 	});
 });
