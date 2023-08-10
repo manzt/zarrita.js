@@ -8,7 +8,8 @@
 		"allowSyntheticDefaultImports": true,
 		"verbatimModuleSyntax": true,
 		"skipLibCheck": true,
-		"allowJs": false
+		"allowJs": true,
+		"checkJs": true
 	},
 	"files": [],
 	"references": [

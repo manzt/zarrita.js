@@ -33,12 +33,6 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
     devDependencies:
-      '@changesets/cli':
-        specifier: ^2.26.1
-        version: 2.26.2
-      '@svitejs/changesets-changelog-github-compact':
-        specifier: ^1.1.0
-        version: 1.1.0
       '@types/node':
         specifier: ^16.10.2
         version: 16.10.2
