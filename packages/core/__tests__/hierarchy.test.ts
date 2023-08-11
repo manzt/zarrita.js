@@ -7,7 +7,7 @@ import type {
 	DataType,
 	Int8,
 	NumberDataType,
-	Raw,
+	StringDataType,
 } from "../src/metadata.js";
 
 const array_metadata = {
@@ -81,8 +81,8 @@ describe("Array", () => {
 		if (arr.is("bool")) {
 			expectTypeOf(arr.dtype).toMatchTypeOf<Bool>();
 		}
-		if (arr.is("raw")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<Raw>();
+		if (arr.is("string")) {
+			expectTypeOf(arr.dtype).toMatchTypeOf<StringDataType>();
 		}
 		if (arr.is("int8")) {
 			expectTypeOf(arr.dtype).toMatchTypeOf<Int8>();

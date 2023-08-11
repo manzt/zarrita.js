@@ -13,7 +13,7 @@ import type {
 	GroupMetadata,
 	GroupMetadataV2,
 	NumberDataType,
-	Raw,
+	StringDataType,
 	TypedArrayConstructor,
 } from "./metadata.js";
 
@@ -54,9 +54,31 @@ const CONSTRUCTORS = {
 	bool: BoolArray,
 };
 
+const V2_STRING_REGEX = /v2:([US])(\d+)/;
+
 export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
+	let match = data_type.match(V2_STRING_REGEX);
+	if (match) {
+		let [, kind, chars] = match;
+		if (kind === "U") {
+			class UnicodeStringArray extends _UnicodeStringArray {
+				constructor(x: any) {
+					super(x, Number(chars));
+				}
+			}
+			return UnicodeStringArray as any;
+		}
+		if (kind === "S") {
+			class ByteStringArray extends _ByteStringArray {
+				constructor(x: any) {
+					super(x, Number(chars));
+				}
+			}
+			return ByteStringArray as any;
+		}
+	}
 	let ctr = (CONSTRUCTORS as any)[data_type];
 	if (!ctr) {
 		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
@@ -102,37 +124,37 @@ export function encode_chunk_key(
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
+const endian_regex = /^([<|>])(.*)$/;
+
 export function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+	let match = dtype.match(endian_regex);
+	if (!match) {
+		throw new Error(`Invalid dtype: ${dtype}`);
+	}
+	let [, endian, rest] = match;
 	let data_type = {
-		"|b1": "bool",
-		"|i1": "int8",
-		"|u1": "uint8",
-		"<i2": "int16",
-		">i2": "int16",
-		"<u2": "uint16",
-		">u2": "uint16",
-		"<i4": "int32",
-		">i4": "int32",
-		"<u4": "uint32",
-		">u4": "uint32",
-		"<i8": "int64",
-		">i8": "int64",
-		"<u8": "uint64",
-		">u8": "uint64",
-		"<f4": "float32",
-		">f4": "float32",
-		"<f8": "float64",
-		">f8": "float64",
-	}[dtype];
+		"b1": "bool",
+		"i1": "int8",
+		"u1": "uint8",
+		"i2": "int16",
+		"u2": "uint16",
+		"i4": "int32",
+		"u4": "uint32",
+		"i8": "int64",
+		"u8": "uint64",
+		"f4": "float32",
+		"f8": "float64",
+	}[rest] ??
+		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
 	if (!data_type) {
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
 	}
-	if (dtype[0] === "|") {
+	if (endian === "|") {
 		return { data_type } as any;
 	}
-	return { data_type, endian: dtype[0] === "<" ? "little" : "big" } as any;
+	return { data_type, endian: endian === "<" ? "little" : "big" } as any;
 }
 
 export const v2_marker = Symbol("v2");
@@ -191,14 +213,14 @@ export type DataTypeQuery =
 	| "boolean"
 	| "number"
 	| "bigint"
-	| "raw";
+	| "string";
 
 export type NarrowDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
 > = Query extends "number" ? NumberDataType
 	: Query extends "bigint" ? BigintDataType
-	: Query extends "raw" ? Raw
+	: Query extends "string" ? StringDataType
 	: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
@@ -206,18 +228,18 @@ export function is_dtype<Query extends DataTypeQuery>(
 	query: Query,
 ): dtype is NarrowDataType<DataType, Query> {
 	if (
-		query !== "raw" &&
 		query !== "number" &&
 		query !== "bigint" &&
-		query !== "boolean"
+		query !== "boolean" &&
+		query !== "string"
 	) {
 		return dtype === query;
 	}
 	const is_boolean = dtype === "bool";
 	if (query === "boolean") return is_boolean;
-	const is_raw = dtype.startsWith("r");
-	if (query === "raw") return is_raw;
+	const is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
+	if (query === "string") return is_string;
 	const is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;
-	return !is_raw && !is_bigint && !is_boolean;
+	return !is_string && !is_bigint && !is_boolean;
 }

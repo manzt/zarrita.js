@@ -22,7 +22,7 @@ function bytes_per_element(data_type: DataType): number {
 		float32: 4,
 		float64: 8,
 	};
-	let b = mapping[data_type];
+	let b = mapping[data_type] ?? data_type.startsWith("v2:U") ? 4 : undefined;
 	if (!b) {
 		throw new Error(`Unknown or unsupported data type: ${data_type}`);
 	}

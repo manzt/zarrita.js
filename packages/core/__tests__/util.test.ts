@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { DataType } from "../src/index.js";
+import type { DataType } from "../src/metadata.js";
 import {
 	byteswap_inplace,
 	get_ctr,
@@ -9,12 +9,12 @@ import {
 
 import {
 	BoolArray,
-	// ByteStringArray,
-	// UnicodeStringArray,
+	ByteStringArray,
+	UnicodeStringArray,
 } from "@zarrita/typedarray";
 
 describe("get_ctr", () => {
-	test.each([
+	test.each<[DataType, any]>([
 		["int8", Int8Array],
 		["int16", Int16Array],
 		["int32", Int32Array],
@@ -26,8 +26,10 @@ describe("get_ctr", () => {
 		["float32", Float32Array],
 		["float64", Float64Array],
 		["bool", BoolArray],
+		["v2:U6", UnicodeStringArray],
+		["v2:S6", ByteStringArray],
 	])(`%s -> %o`, (dtype, ctr) => {
-		const T = get_ctr(dtype as DataType);
+		const T = get_ctr(dtype);
 		expect(new T(1)).toBeInstanceOf(ctr);
 	});
 
@@ -82,7 +84,8 @@ describe("is_dtype", () => {
 		["bool", false],
 		["int64", false],
 		["uint64", false],
-		["r42", false],
+		["v2:U6", false],
+		["v2:S6", false],
 	])("is_dtype(%s, 'number') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "number")).toBe(expected);
 	});
@@ -99,7 +102,8 @@ describe("is_dtype", () => {
 		["bool", true],
 		["int64", false],
 		["uint64", false],
-		["r42", false],
+		["v2:U6", false],
+		["v2:S6", false],
 	])("is_dtype(%s, 'boolean') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "boolean")).toBe(expected);
 	});
@@ -116,7 +120,8 @@ describe("is_dtype", () => {
 		["bool", false],
 		["int64", true],
 		["uint64", true],
-		["r42", false],
+		["v2:U6", false],
+		["v2:S6", false],
 	])("is_dtype(%s, 'bigint') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "bigint")).toBe(expected);
 	});
@@ -133,9 +138,10 @@ describe("is_dtype", () => {
 		["bool", false],
 		["int64", false],
 		["uint64", false],
-		["r42", true],
-	])("is_dtype(%s, 'raw') -> %s", (dtype, expected) => {
-		expect(is_dtype(dtype, "raw")).toBe(expected);
+		["v2:U6", true],
+		["v2:S6", true],
+	])("is_dtype(%s, 'string') -> %s", (dtype, expected) => {
+		expect(is_dtype(dtype, "string")).toBe(expected);
 	});
 
 	test.each<DataType>([
@@ -150,7 +156,8 @@ describe("is_dtype", () => {
 		"bool",
 		"int64",
 		"uint64",
-		"r42",
+		"v2:U6",
+		"v2:S6",
 	])("is_dtype(%s, %s) -> true", (dtype) => {
 		expect(is_dtype(dtype, dtype)).toBe(true);
 	});
