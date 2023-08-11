@@ -817,7 +817,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+	it("reads 3d.chunked.mixed.i2.F", async () => {
 		let arr = await open.v2(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
@@ -1529,7 +1529,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+	it("reads 3d.chunked.mixed.i2.F", async () => {
 		let arr = await open.v3(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});

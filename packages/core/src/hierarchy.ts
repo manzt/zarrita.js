@@ -82,6 +82,7 @@ export class Array<
 	codec: ReturnType<typeof create_codec_pipeline>;
 	#metadata: ArrayMetadata<Dtype>;
 	#attributes: Record<string, any> | undefined;
+	_order: "C" | "F";
 
 	constructor(
 		store: Store,
@@ -94,6 +95,12 @@ export class Array<
 		if (typeof metadata.attributes === "object") {
 			this.#attributes = metadata.attributes;
 		}
+		const maybe_transpose_codec = metadata.codecs.find(
+			(c) => c.name === "transpose",
+		);
+		this._order = maybe_transpose_codec?.configuration?.order === "F"
+			? "F"
+			: "C";
 	}
 
 	chunk_key(chunk_coords: number[]): string {

@@ -126,12 +126,6 @@ export class TransposeCodec<D extends DataType> {
 	}
 
 	decode(arr: Chunk<D>): Chunk<D> {
-		if (get_order(arr) === this.configuration.order) {
-			return arr;
-		}
-		return convert_array_order(
-			arr,
-			this.configuration.order === "C" ? "F" : "C",
-		);
+		return arr;
 	}
 }

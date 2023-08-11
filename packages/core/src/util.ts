@@ -141,8 +141,11 @@ export function v2_to_v3_array_metadata(
 	meta: ArrayMetadataV2,
 ): ArrayMetadata<DataType> {
 	let codecs: CodecMetadata[] = [];
-	let d = coerce_dtype(meta.dtype);
-	if ("endian" in d && d.endian === "big") {
+	let dtype = coerce_dtype(meta.dtype);
+	if (meta.order === "F") {
+		codecs.push({ name: "transpose", configuration: { order: "F" } });
+	}
+	if ("endian" in dtype && dtype.endian === "big") {
 		codecs.push({ name: "endian", configuration: { endian: "big" } });
 	}
 	for (let { id, ...configuration } of meta.filters ?? []) {
@@ -156,7 +159,7 @@ export function v2_to_v3_array_metadata(
 		zarr_format: 3,
 		node_type: "array",
 		shape: meta.shape,
-		data_type: d.data_type,
+		data_type: dtype.data_type,
 		chunk_grid: {
 			name: "regular",
 			configuration: {
