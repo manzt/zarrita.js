@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { parse } from "reference-spec-reader";
 import { fetch_range, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, Async, Readable } from "./types.js";

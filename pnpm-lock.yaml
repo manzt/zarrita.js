@@ -86,8 +86,8 @@ importers:
   packages/storage:
     dependencies:
       reference-spec-reader:
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       unzipit:
         specifier: ^1.3.6
         version: 1.3.6
@@ -1983,8 +1983,8 @@ packages:
       strip-indent: 3.0.0
     dev: true
 
-  /reference-spec-reader@0.1.3:
-    resolution: {integrity: sha512-TakIzIgSuer/X8a9UGFN2LnO5+hmAjMdwhbBIpeeBhU/Uc47qP5SCskG1Yj2g/FMkFCBX2UHfrhzlpdCrMEP+g==}
+  /reference-spec-reader@0.2.0:
+    resolution: {integrity: sha512-q0mfCi5yZSSHXpCyxjgQeaORq3tvDsxDyzaadA/5+AbAUwRyRuuTh0aRQuE/vAOt/qzzxidJ5iDeu1cLHaNBlQ==}
     dev: false
 
   /regenerator-runtime@0.13.11:
