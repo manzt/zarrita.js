@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /markdown-examples
+      link: /guide/get-started
     - theme: alt
       text: View on GitHub
       link: https://github.com/manzt/zarrita.js
@@ -28,4 +28,3 @@ features:
     icon: 🦺
     details: Built in TypeScript, offering rich type information.
 ---
-
