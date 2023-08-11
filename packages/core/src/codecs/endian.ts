@@ -57,12 +57,15 @@ export class EndianCodec<D extends DataType> {
 			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
 		}
 		let ctr = get_ctr(this.array_metadata.data_type);
+		let maybe_transpose_codec = this.array_metadata.codecs.find((c) =>
+			c.name === "transpose"
+		);
 		return {
 			data: new ctr(bytes.buffer) as any,
 			shape: this.array_metadata.chunk_grid.configuration.chunk_shape,
 			stride: get_strides(
 				this.array_metadata.chunk_grid.configuration.chunk_shape,
-				"C", // TODO: this should be configurable?
+				maybe_transpose_codec?.configuration.order === "F" ? "F" : "C",
 			),
 		};
 	}
