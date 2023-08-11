@@ -36,20 +36,20 @@ export async function get<
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
 > {
+	const queue = opts.create_queue?.() ?? create_queue();
+	const TypedArrayContstructor = get_ctr(arr.dtype);
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
 		chunk_shape: arr.chunk_shape,
 	});
-	const TypedArrayContstructor = get_ctr(arr.dtype);
 
 	// Setup output array
 	const out = setter.prepare(
 		new TypedArrayContstructor(indexer.shape.reduce((a, b) => a * b, 1)),
 		indexer.shape,
-		get_strides(indexer.shape, "C"),
+		get_strides(indexer.shape, opts.order ?? arr._order),
 	);
-	const queue = opts.create_queue ? opts.create_queue() : create_queue();
 
 	// iterator over chunks
 	for (const { chunk_coords, mapping } of indexer) {

@@ -261,7 +261,7 @@ describe("ndarray", () => {
 		expect(res.stride).toStrictEqual([9, 3, 1]);
 	});
 
-	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+	it("reads 3d.chunked.mixed.i2.F", async () => {
 		let arr = await zarr.open.v2(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});

@@ -655,7 +655,7 @@ describe("get v3", () => {
 		expect(res.stride).toStrictEqual([9, 3, 1]);
 	});
 
-	it.skip("reads 3d.chunked.mixed.i2.F", async () => {
+	it("reads 3d.chunked.mixed.i2.F", async () => {
 		let res = await read_complete_v3("/3d.chunked.mixed.i2.F");
 		// deno-fmt-ignore
 		expect(res.data).toStrictEqual(new Int16Array([
@@ -667,7 +667,7 @@ describe("get v3", () => {
 		expect(res.stride).toStrictEqual([1, 3, 9]);
 	});
 
-	it.skip("reads 3d.chunked.mixed.i2.F -- force C", async () => {
+	it("reads 3d.chunked.mixed.i2.F -- force C", async () => {
 		let res = await read_complete_v3("/3d.chunked.mixed.i2.F", null, {
 			order: "C",
 		});
