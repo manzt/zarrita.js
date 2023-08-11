@@ -13,7 +13,7 @@ import type {
 	GroupMetadata,
 	GroupMetadataV2,
 	NumberDataType,
-	Raw,
+	StringDataType,
 	TypedArrayConstructor,
 } from "./metadata.js";
 
@@ -191,14 +191,14 @@ export type DataTypeQuery =
 	| "boolean"
 	| "number"
 	| "bigint"
-	| "raw";
+	| "string";
 
 export type NarrowDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
 > = Query extends "number" ? NumberDataType
 	: Query extends "bigint" ? BigintDataType
-	: Query extends "raw" ? Raw
+	: Query extends "string" ? StringDataType
 	: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
@@ -206,18 +206,18 @@ export function is_dtype<Query extends DataTypeQuery>(
 	query: Query,
 ): dtype is NarrowDataType<DataType, Query> {
 	if (
-		query !== "raw" &&
 		query !== "number" &&
 		query !== "bigint" &&
-		query !== "boolean"
+		query !== "boolean" &&
+		query !== "string"
 	) {
 		return dtype === query;
 	}
 	const is_boolean = dtype === "bool";
 	if (query === "boolean") return is_boolean;
-	const is_raw = dtype.startsWith("r");
-	if (query === "raw") return is_raw;
+	const is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
+	if (query === "string") return is_string;
 	const is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;
-	return !is_raw && !is_bigint && !is_boolean;
+	return !is_string && !is_bigint && !is_boolean;
 }

@@ -31,7 +31,12 @@ export type Float64 = "float64";
 export type Bool = "bool";
 
 /** @category Raw */
-export type Raw = `r${number}`;
+// export type Raw = `r${number}`;
+
+/** @category String */
+export type UnicodeStr = `v2:U${number}`;
+/** @category String */
+export type ByteStr = `v2:S${number}`;
 
 export type NumberDataType =
 	| Int8
@@ -45,26 +50,28 @@ export type NumberDataType =
 
 export type BigintDataType = Int64 | Uint64;
 
+export type StringDataType = UnicodeStr | ByteStr;
+
 export type DataType =
 	| NumberDataType
 	| BigintDataType
-	| Bool
-	| Raw;
+	| StringDataType
+	| Bool;
 
 export type Attributes = Record<string, unknown>;
 
 // Hack to get scalar type since is not defined on any typed arrays.
 export type Scalar<D extends DataType> = D extends Bool ? boolean
-	: D extends `${"u" | ""}int64` ? bigint
-	: D extends Raw ? string
-	: number;
+	: D extends BigintDataType ? bigint
+	: D extends StringDataType ? string
+	: D extends NumberDataType ? number
+	: never;
 
 export type CodecMetadata = {
 	name: string;
 	configuration: Record<string, unknown>;
 };
 
-/** Zarr v3 Array Metadata. Stored as JSON with key `zarr.json`. */
 /** Zarr v3 Array Metadata. Stored as JSON with key `zarr.json`. */
 export type ArrayMetadata<D extends DataType = DataType> = {
 	zarr_format: 3;
@@ -125,7 +132,8 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
-	: D extends Raw ? ByteStringArray | UnicodeStringArray
+	: D extends UnicodeStr ? UnicodeStringArray
+	: D extends ByteStr ? ByteStringArray
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {
