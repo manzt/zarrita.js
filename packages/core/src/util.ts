@@ -54,9 +54,31 @@ const CONSTRUCTORS = {
 	bool: BoolArray,
 };
 
+const V2_STRING_REGEX = /v2:([US])(\d+)/;
+
 export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
+	let match = data_type.match(V2_STRING_REGEX);
+	if (match) {
+		let [, kind, chars] = match;
+		if (kind === "U") {
+			class UnicodeStringArray extends _UnicodeStringArray {
+				constructor(x: any) {
+					super(x, Number(chars));
+				}
+			}
+			return UnicodeStringArray as any;
+		}
+		if (kind === "S") {
+			class ByteStringArray extends _ByteStringArray {
+				constructor(x: any) {
+					super(x, Number(chars));
+				}
+			}
+			return ByteStringArray as any;
+		}
+	}
 	let ctr = (CONSTRUCTORS as any)[data_type];
 	if (!ctr) {
 		throw new Error(`Unknown or unsupported data_type: ${data_type}`);

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { DataType } from "../src/index.js";
+import type { DataType } from "../src/metadata.js";
 import {
 	byteswap_inplace,
 	get_ctr,
@@ -9,12 +9,12 @@ import {
 
 import {
 	BoolArray,
-	// ByteStringArray,
-	// UnicodeStringArray,
+	ByteStringArray,
+	UnicodeStringArray,
 } from "@zarrita/typedarray";
 
 describe("get_ctr", () => {
-	test.each([
+	test.each<[DataType, any]>([
 		["int8", Int8Array],
 		["int16", Int16Array],
 		["int32", Int32Array],
@@ -26,8 +26,10 @@ describe("get_ctr", () => {
 		["float32", Float32Array],
 		["float64", Float64Array],
 		["bool", BoolArray],
+		["v2:U6", UnicodeStringArray],
+		["v2:S6", ByteStringArray],
 	])(`%s -> %o`, (dtype, ctr) => {
-		const T = get_ctr(dtype as DataType);
+		const T = get_ctr(dtype);
 		expect(new T(1)).toBeInstanceOf(ctr);
 	});
 

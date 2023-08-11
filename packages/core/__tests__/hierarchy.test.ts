@@ -7,7 +7,7 @@ import type {
 	DataType,
 	Int8,
 	NumberDataType,
-    StringDataType,
+	StringDataType,
 } from "../src/metadata.js";
 
 const array_metadata = {
