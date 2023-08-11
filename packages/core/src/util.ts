@@ -124,37 +124,37 @@ export function encode_chunk_key(
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
+const endian_regex = /^([<|>])(.*)$/;
+
 export function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+	let match = dtype.match(endian_regex);
+	if (!match) {
+		throw new Error(`Invalid dtype: ${dtype}`);
+	}
+	let [, endian, rest] = match;
 	let data_type = {
-		"|b1": "bool",
-		"|i1": "int8",
-		"|u1": "uint8",
-		"<i2": "int16",
-		">i2": "int16",
-		"<u2": "uint16",
-		">u2": "uint16",
-		"<i4": "int32",
-		">i4": "int32",
-		"<u4": "uint32",
-		">u4": "uint32",
-		"<i8": "int64",
-		">i8": "int64",
-		"<u8": "uint64",
-		">u8": "uint64",
-		"<f4": "float32",
-		">f4": "float32",
-		"<f8": "float64",
-		">f8": "float64",
-	}[dtype];
+		"b1": "bool",
+		"i1": "int8",
+		"u1": "uint8",
+		"i2": "int16",
+		"u2": "uint16",
+		"i4": "int32",
+		"u4": "uint32",
+		"i8": "int64",
+		"u8": "uint64",
+		"f4": "float32",
+		"f8": "float64",
+	}[rest] ??
+		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
 	if (!data_type) {
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
 	}
-	if (dtype[0] === "|") {
+	if (endian === "|") {
 		return { data_type } as any;
 	}
-	return { data_type, endian: dtype[0] === "<" ? "little" : "big" } as any;
+	return { data_type, endian: endian === "<" ? "little" : "big" } as any;
 }
 
 export const v2_marker = Symbol("v2");
