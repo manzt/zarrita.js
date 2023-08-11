@@ -1,7 +1,7 @@
 node_modules/
 *.zr3/
 dist/
-docs/
 *.tgz
 
 .venv
+docs/.vitepress/cache
