@@ -3,8 +3,8 @@
 	"scripts": {
 		"build": "tsc --build",
 		"test": "vitest",
-		"fmt": "deno fmt --use-tabs packages",
-		"lint": "deno fmt --use-tabs packages --check"
+		"fmt": "deno fmt --use-tabs packages docs",
+		"lint": "deno fmt --use-tabs packages docs --check"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.26.2",
