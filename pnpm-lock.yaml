@@ -28,7 +28,7 @@ importers:
     devDependencies:
       vitepress:
         specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4(@algolia/client-search@4.19.1)(search-insights@2.7.0)
+        version: 1.0.0-rc.4(@algolia/client-search@4.19.1)(@types/node@20.4.9)(search-insights@2.7.0)
       vitepress-plugin-tabs:
         specifier: ^0.3.0
         version: 0.3.0(vitepress@1.0.0-rc.4)(vue@3.3.4)
@@ -839,7 +839,7 @@ packages:
       vite: ^4.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 4.4.9
+      vite: 4.4.9(@types/node@20.4.9)
       vue: 3.3.4
     dev: true
 
@@ -2943,7 +2943,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vite@4.4.9:
+  /vite@4.4.9(@types/node@20.4.9):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -2971,6 +2971,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 20.4.9
       esbuild: 0.18.16
       postcss: 8.4.27
       rollup: 3.28.0
@@ -2984,11 +2985,11 @@ packages:
       vitepress: ^1.0.0-beta.2
       vue: ^3.3.4
     dependencies:
-      vitepress: 1.0.0-rc.4(@algolia/client-search@4.19.1)(search-insights@2.7.0)
+      vitepress: 1.0.0-rc.4(@algolia/client-search@4.19.1)(@types/node@20.4.9)(search-insights@2.7.0)
       vue: 3.3.4
     dev: true
 
-  /vitepress@1.0.0-rc.4(@algolia/client-search@4.19.1)(search-insights@2.7.0):
+  /vitepress@1.0.0-rc.4(@algolia/client-search@4.19.1)(@types/node@20.4.9)(search-insights@2.7.0):
     resolution: {integrity: sha512-JCQ89Bm6ECUTnyzyas3JENo00UDJeK8q1SUQyJYou+4Yz5BKEc/F3O21cu++DnUT2zXc0kvQ2Aj4BZCc/nioXQ==}
     hasBin: true
     dependencies:
@@ -3003,7 +3004,7 @@ packages:
       mark.js: 8.11.1
       minisearch: 6.1.0
       shiki: 0.14.3
-      vite: 4.4.9
+      vite: 4.4.9(@types/node@20.4.9)
       vue: 3.3.4
     transitivePeerDependencies:
       - '@algolia/client-search'
