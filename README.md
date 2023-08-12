@@ -11,8 +11,7 @@
 - Supports **C-order** & **F-order** arrays
 - Handles **little endian** or **big endian** data-types
 - Handles **number**, **bigint**, **string**, and **boolean** data-types
-- Configurable codes via
-  [`numcodecs`](https://github.com/manzt/numcodecs.js)
+- Configurable codes via [`numcodecs`](https://github.com/manzt/numcodecs.js)
 - Allows _very_ flexible storage
 - Provides rich, in-editor **type information** via
   [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)

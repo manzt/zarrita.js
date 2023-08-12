@@ -108,7 +108,7 @@ import { FetchStore } from "@zarrita/storage";
 const store = new FetchStore("http://localhost:8080/data.zarr");
 const node = await zarr.open(store);
 
-node // zarr.Array<DataType, FetchStore> | zarr.Group
+node; // zarr.Array<DataType, FetchStore> | zarr.Group
 ```
 
 ### Open a Group or an Array from another Node
@@ -145,9 +145,9 @@ import { FileSystemStore } from "@zarrita/storage";
 
 const store = new FileSystemStore("tempstore");
 const arr = await zarr.create(store, {
-  shape: [10, 10],
-  chunk_shape: [5, 5],
-  data_type: "int32",
+	shape: [10, 10],
+	chunk_shape: [5, 5],
+	data_type: "int32",
 });
 arr; // zarr.Array<"int32", FileSystemStore>
 ```
@@ -162,7 +162,7 @@ import { FileSystemStore } from "@zarrita/storage";
 
 const store = new FileSystemStore("tempstore");
 const group = await zarr.create(store, {
-  attributes: { answer: 42 },
+	attributes: { answer: 42 },
 });
 group; // zarr.Group
 ```

@@ -1,19 +1,23 @@
 # What is zarrita.js?
 
-**zarrita** is a minimal and modular implementation of Zarr in TypeScript.
+**zarrita** is a modular Zarr implementation in TypeScript.
 
-- Zero dependencies (optionally scijs/ndarray)
-- Supports v2 or v3 protocols
 - Runs natively in Node, Browsers, and Deno (ESM)
-- Supports C-order & F-order arrays
-- Handles little endian or big endian data-types
-- Handles number, bigint, string, and boolean data-types
-- Configurable codes via numcodecs
-- Allows very flexible storage
+- Supports v2/v3 protocols, C & F-order arrays, and diverse data-types
+- Allows flexible storage backends and compression codecs
 - Provides rich, in-editor type information via template literal types
 
-## Project philosophy
+## Zarr building blocks
 
-**zarrita**'s API is almost entirely [tree-shakeable](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking), meaning users are able to pick and choose only the features of Zarr which are necessary for an applications. At its core, the zarr.Array class allows reading individual chunks. "Fancy-indexing" and "slicing" are accomplished via (optional) functions which operate on zarr.Array objects, and thus you only "pay" for these features if used (when bundling for the web).
+**zarrita**'s API is almost entirely
+[tree-shakeable](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking),
+meaning users are able to pick and choose only the features of Zarr which are
+necessary for an applications. At its core, the `zarr.Array` class allows
+reading individual chunks. "Fancy-indexing" and "slicing" are accomplished via
+(optional) functions which operate on `zarr.Array` objects.
 
-This design choice differs from existing implemenations of Zarr in JavaScript, and allows zarrita to be both minimal and more feature-complete if necessary.
+Thus, you only _pay_ for these features if used (when bundling for the web).
+
+This design choice differs from existing implemenations of Zarr in JavaScript,
+and allows **zarrita** to be both minimal and more feature-complete if
+necessary.

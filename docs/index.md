@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "zarrita.js"
   # text: ""
-  tagline: building blocks for JavaScript
+  tagline: Zarr building blocks for JavaScript
   actions:
     - theme: brand
       text: Get Started
@@ -17,7 +17,7 @@ hero:
 features:
   - title: Modular design
     icon: 🧩
-    details: Zarr for your application needs, with v3 & v2 support.
+    details: Tailor Zarr for your application needs, with v3 & v2 support.
   - title: Multi-platform ESM
     icon: 🌍
     details: Native support for browsers, Node.js, Bun, and Deno.
