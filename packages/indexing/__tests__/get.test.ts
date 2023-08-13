@@ -21,7 +21,7 @@ async function get_v2(
 	let root = path.resolve(__dirname, "../../../fixtures/v2/data.zarr");
 	let store = zarr.root(new FSStore(root));
 	let arr = await zarr.open.v2(store.resolve(abs_path), { kind: "array" });
-	return get(arr as any, ...args);
+	return get(arr, ...args);
 }
 
 describe("get v2", () => {
@@ -218,28 +218,28 @@ describe("get v2", () => {
 	it("1d.contiguous.U13.le", async () => {
 		let res = await get_v2("/1d.contiguous.U13.le");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("1d.contiguous.U13.be", async () => {
 		let res = await get_v2("/1d.contiguous.U13.be");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("1d.contiguous.U7", async () => {
 		let res = await get_v2("/1d.contiguous.U7");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("1d.contiguous.S7", async () => {
 		let res = await get_v2("/1d.contiguous.S7");
 		expect(res.data).toBeInstanceOf(ByteStringArray);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -393,7 +393,12 @@ describe("get v2", () => {
 
 	it("2d.chunked.U7", async () => {
 		let res = await get_v2("/2d.chunked.U7");
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual([
+			"a",
+			"b",
+			"cc",
+			"d",
+		]);
 		expect(res.shape).toStrictEqual([2, 2]);
 	});
 
@@ -535,7 +540,7 @@ describe("get v2", () => {
 	});
 });
 
-async function read_complete_v3(
+async function get_v3(
 	abs_path: string,
 	...args: any[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
@@ -547,55 +552,55 @@ async function read_complete_v3(
 
 describe("get v3", () => {
 	it("reads 1d.contiguous.gzip.i2", async () => {
-		let res = await read_complete_v3("/1d.contiguous.gzip.i2");
+		let res = await get_v3("/1d.contiguous.gzip.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.blosc.i2", async () => {
-		let res = await read_complete_v3("/1d.contiguous.blosc.i2");
+		let res = await get_v3("/1d.contiguous.blosc.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.raw.i2", async () => {
-		let res = await read_complete_v3("/1d.contiguous.raw.i2");
+		let res = await get_v3("/1d.contiguous.raw.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.i4", async () => {
-		let res = await read_complete_v3("/1d.contiguous.i4");
+		let res = await get_v3("/1d.contiguous.i4");
 		expect(res.data).toStrictEqual(new Int32Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.u1", async () => {
-		let res = await read_complete_v3("/1d.contiguous.u1");
+		let res = await get_v3("/1d.contiguous.u1");
 		expect(res.data).toStrictEqual(new Uint8Array([255, 0, 255, 0]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.f4.le", async () => {
-		let res = await read_complete_v3("/1d.contiguous.f4.le");
+		let res = await get_v3("/1d.contiguous.f4.le");
 		expect(res.data).toStrictEqual(new Float32Array([-1000.5, 0, 1000.5, 0]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.f4.be", async () => {
-		let res = await read_complete_v3("/1d.contiguous.f4.be");
+		let res = await get_v3("/1d.contiguous.f4.be");
 		expect(res.data).toStrictEqual(new Float32Array([-1000.5, 0, 1000.5, 0]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.f8", async () => {
-		let res = await read_complete_v3("/1d.contiguous.f8");
+		let res = await get_v3("/1d.contiguous.f8");
 		expect(res.data).toStrictEqual(new Float64Array([1.5, 2.5, 3.5, 4.5]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.contiguous.b1", async () => {
-		let res = await read_complete_v3("/1d.contiguous.b1");
+		let res = await get_v3("/1d.contiguous.b1");
 		expect(res.data).toBeInstanceOf(BoolArray);
 		expect(Array.from(res.data as BoolArray)).toStrictEqual([
 			true,
@@ -607,56 +612,56 @@ describe("get v3", () => {
 	});
 
 	it("reads 2d.contiguous.i2", async () => {
-		let res = await read_complete_v3("/2d.contiguous.i2");
+		let res = await get_v3("/2d.contiguous.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([2, 2]);
 	});
 
 	it("reads 3d.contiguous.i2", async () => {
-		let res = await read_complete_v3("/3d.contiguous.i2");
+		let res = await get_v3("/3d.contiguous.i2");
 		expect(res.data).toStrictEqual(new Int16Array(range(27)));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 	});
 
 	it("reads 1d.chunked.i2", async () => {
-		let res = await read_complete_v3("/1d.chunked.i2");
+		let res = await get_v3("/1d.chunked.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([4]);
 	});
 
 	it("reads 1d.chunked.ragged.i2", async () => {
-		let res = await read_complete_v3("/1d.chunked.ragged.i2");
+		let res = await get_v3("/1d.chunked.ragged.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4, 5]));
 		expect(res.shape).toStrictEqual([5]);
 	});
 
 	it("reads 2d.chunked.i2", async () => {
-		let res = await read_complete_v3("/2d.chunked.i2");
+		let res = await get_v3("/2d.chunked.i2");
 		expect(res.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(res.shape).toStrictEqual([2, 2]);
 	});
 
 	it("reads 2d.chunked.ragged.i2", async () => {
-		let res = await read_complete_v3("/2d.chunked.ragged.i2");
+		let res = await get_v3("/2d.chunked.ragged.i2");
 		expect(res.data).toStrictEqual(new Int16Array(range(1, 10)));
 		expect(res.shape).toStrictEqual([3, 3]);
 	});
 
 	it("reads 3d.chunked.i2", async () => {
-		let res = await read_complete_v3("/3d.chunked.i2");
+		let res = await get_v3("/3d.chunked.i2");
 		expect(res.data).toStrictEqual(new Int16Array(range(27)));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 	});
 
 	it("reads 3d.chunked.mixed.i2.C", async () => {
-		let res = await read_complete_v3("/3d.chunked.mixed.i2.C");
+		let res = await get_v3("/3d.chunked.mixed.i2.C");
 		expect(res.data).toStrictEqual(new Int16Array(range(27)));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 		expect(res.stride).toStrictEqual([9, 3, 1]);
 	});
 
 	it("reads 3d.chunked.mixed.i2.F", async () => {
-		let res = await read_complete_v3("/3d.chunked.mixed.i2.F");
+		let res = await get_v3("/3d.chunked.mixed.i2.F");
 		// deno-fmt-ignore
 		expect(res.data).toStrictEqual(new Int16Array([
 			0,  9, 18,  3, 12, 21,  6, 15, 24,
@@ -668,7 +673,7 @@ describe("get v3", () => {
 	});
 
 	it("reads 3d.chunked.mixed.i2.F -- force C", async () => {
-		let res = await read_complete_v3("/3d.chunked.mixed.i2.F", null, {
+		let res = await get_v3("/3d.chunked.mixed.i2.F", null, {
 			order: "C",
 		});
 		expect(res.data).toStrictEqual(new Int16Array(range(27)));
