@@ -215,28 +215,28 @@ describe("get v2", () => {
 		`);
 	});
 
-	it.skip("1d.contiguous.U13.le", async () => {
+	it("1d.contiguous.U13.le", async () => {
 		let res = await get_v2("/1d.contiguous.U13.le");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
-	it.skip("1d.contiguous.U13.be", async () => {
+	it("1d.contiguous.U13.be", async () => {
 		let res = await get_v2("/1d.contiguous.U13.be");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
-	it.skip("1d.contiguous.U7", async () => {
+	it("1d.contiguous.U7", async () => {
 		let res = await get_v2("/1d.contiguous.U7");
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
-	it.skip("1d.contiguous.S7", async () => {
+	it("1d.contiguous.S7", async () => {
 		let res = await get_v2("/1d.contiguous.S7");
 		expect(res.data).toBeInstanceOf(ByteStringArray);
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
@@ -391,7 +391,7 @@ describe("get v2", () => {
 		`);
 	});
 
-	it.skip("2d.chunked.U7", async () => {
+	it("2d.chunked.U7", async () => {
 		let res = await get_v2("/2d.chunked.U7");
 		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([2, 2]);

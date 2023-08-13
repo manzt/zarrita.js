@@ -112,10 +112,12 @@ export class ByteStringArray {
 	}
 
 	/**
+	 * @private
+	 *
 	 * @param {string} s
 	 * @returns {Uint8Array}
 	 */
-	#encode(s) {
+	_encode(s) {
 		return new TextEncoder().encode(s);
 	}
 
@@ -131,7 +133,7 @@ export class ByteStringArray {
 			this.chars,
 		);
 		view.fill(0); // clear current
-		view.set(this.#encode(value));
+		view.set(this._encode(value));
 	}
 
 	/**
@@ -139,7 +141,7 @@ export class ByteStringArray {
 	 * @returns {void}
 	 */
 	fill(value) {
-		const encoded = this.#encode(value);
+		const encoded = this._encode(value);
 		for (let i = 0; i < this.length; i++) {
 			this.#bytes.set(encoded, i * this.chars);
 		}
@@ -191,10 +193,12 @@ export class UnicodeStringArray {
 	}
 
 	/**
+	 * @private
+	 *
 	 * @param {string} s
 	 * @returns {Int32Array}
 	 */
-	#encode(s) {
+	_encode(s) {
 		let out = new Int32Array(this.chars);
 		for (let i = 0; i < this.chars; i++) {
 			out[i] = s.codePointAt(i) ?? 0;
@@ -224,7 +228,7 @@ export class UnicodeStringArray {
 		const offset = this.chars * idx;
 		const view = this.#data.subarray(offset, offset + this.chars);
 		view.fill(0); // clear current
-		view.set(this.#encode(value));
+		view.set(this._encode(value));
 	}
 
 	/**
@@ -232,7 +236,7 @@ export class UnicodeStringArray {
 	 * @returns {void}
 	 */
 	fill(value) {
-		const encoded = this.#encode(value);
+		const encoded = this._encode(value);
 		for (let i = 0; i < this.length; i++) {
 			this.#data.set(encoded, i * this.chars);
 		}
