@@ -15,29 +15,22 @@ import type {
 	Slice,
 } from "./types.js";
 
-type CompatScalar<D extends core.DataType> = D extends core.Bool ? number
-	: D extends core.ByteStr ? Uint8Array
-	: D extends core.UnicodeStr ? Int32Array
-	: core.Scalar<D>;
-
-type CompatTypedArray<D extends core.DataType> = D extends
-	core.ByteStr | core.Bool ? Uint8Array
-	: D extends core.UnicodeStr ? Int32Array
-	: core.TypedArray<D>;
+type CompatDataType<D extends core.DataType> = D extends core.Bool ? core.Uint8
+	: D;
 
 type TypedArrayProxy<D extends core.DataType> = {
-	[prop: number]: CompatScalar<D>;
+	[prop: number]: core.Scalar<D>;
 	subarray(from: number, to?: number): TypedArrayProxy<D>;
 	set(source: TypedArrayProxy<D>, offset: number): void;
-	fill(value: CompatScalar<D>, start: number, end: number): void;
+	fill(value: core.Scalar<D>, start: number, end: number): void;
 };
 
 type CompatChunk<D extends core.DataType> = {
-	data: TypedArrayProxy<D>;
+	data: TypedArrayProxy<CompatDataType<D>>;
 	stride: number[];
 };
 
-function data_proxy<D extends core.StringDataType>(
+function string_array_proxy<D extends core.StringDataType>(
 	arr: core.TypedArray<D>,
 ): TypedArrayProxy<D> {
 	const StringArrayConstructor = arr.constructor.bind(null, arr.chars);
@@ -49,7 +42,7 @@ function data_proxy<D extends core.StringDataType>(
 			}
 			if (prop === "subarray") {
 				return (from: number, to: number = arr.length) => {
-					return data_proxy(
+					return string_array_proxy(
 						new StringArrayConstructor(
 							target.buffer,
 							target.byteOffset + arr.BYTES_PER_ELEMENT * from,
@@ -89,7 +82,7 @@ function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
 		arr.data instanceof ByteStringArray ||
 		arr.data instanceof UnicodeStringArray
 	) {
-		data = data_proxy(arr.data);
+		data = string_array_proxy(arr.data);
 	}
 	return {
 		data,
@@ -97,20 +90,16 @@ function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
 	};
 }
 
+type CompatScalar<D extends core.DataType> = core.Scalar<CompatDataType<D>>;
+
 function cast_scalar<D extends core.DataType>(
 	arr: core.Chunk<D>,
 	value: core.Scalar<D>,
 ): CompatScalar<D> {
 	if (arr.data instanceof BoolArray) {
-		return (value ? 1 : 0) as CompatScalar<D>;
+		return (value ? 1 : 0) as any;
 	}
-	if (
-		arr.data instanceof ByteStringArray ||
-		arr.data instanceof UnicodeStringArray
-	) {
-		return value;
-	}
-	return value as CompatScalar<D>;
+	return value as any;
 }
 
 export const setter = {
