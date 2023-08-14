@@ -1,6 +1,10 @@
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 import type * as core from "@zarrita/core";
-import { BoolArray } from "@zarrita/typedarray";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
 import { get as get_with_setter } from "./get.js";
 import { set as set_with_setter } from "./set.js";
 import type {
@@ -11,25 +15,109 @@ import type {
 	Slice,
 } from "./types.js";
 
-// setting fns rely on some TypedArray apis not supported with our custom arrays
-type SupportedDataType = core.NumberDataType | core.BigintDataType | core.Bool;
+type CompatDataType<D extends core.DataType> = D extends core.Bool ? core.Uint8
+	: D;
+
+type TypedArrayProxy<D extends core.DataType> = {
+	[prop: number]: core.Scalar<D>;
+	subarray(from: number, to?: number): TypedArrayProxy<D>;
+	set(source: TypedArrayProxy<D>, offset: number): void;
+	fill(value: core.Scalar<D>, start: number, end: number): void;
+};
+
+type CompatChunk<D extends core.DataType> = {
+	data: TypedArrayProxy<CompatDataType<D>>;
+	stride: number[];
+};
+
+function string_array_proxy<D extends core.StringDataType>(
+	arr: core.TypedArray<D>,
+): TypedArrayProxy<D> {
+	const StringArrayConstructor = arr.constructor.bind(null, arr.chars);
+	return new Proxy(arr, {
+		get(target, prop: string) {
+			let idx = +prop;
+			if (!Number.isNaN(idx)) {
+				return target.get(idx);
+			}
+			if (prop === "subarray") {
+				return (from: number, to: number = arr.length) => {
+					return string_array_proxy(
+						new StringArrayConstructor(
+							target.buffer,
+							target.byteOffset + arr.BYTES_PER_ELEMENT * from,
+							to - from,
+						),
+					);
+				};
+			}
+			if (prop === "set") {
+				return (source: typeof target, offset: number) => {
+					for (let i = 0; i < source.length; i++) {
+						target.set(offset + i, source.get(i));
+					}
+				};
+			}
+			if (prop === "fill") {
+				return (value: string, start: number, end: number) => {
+					for (let i = start; i < end; i++) {
+						target.set(i, value);
+					}
+				};
+			}
+			return Reflect.get(target, prop);
+		},
+		set(target, idx: string, value: string) {
+			target.set(Number(idx), value);
+			return true;
+		},
+	}) as any;
+}
+
+function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
+	let data: any = arr.data;
+	if (arr.data instanceof BoolArray) {
+		data = new Uint8Array(arr.data.buffer);
+	} else if (
+		arr.data instanceof ByteStringArray ||
+		arr.data instanceof UnicodeStringArray
+	) {
+		data = string_array_proxy(arr.data);
+	}
+	return {
+		data,
+		stride: arr.stride,
+	};
+}
+
+type CompatScalar<D extends core.DataType> = core.Scalar<CompatDataType<D>>;
+
+function cast_scalar<D extends core.DataType>(
+	arr: core.Chunk<D>,
+	value: core.Scalar<D>,
+): CompatScalar<D> {
+	if (arr.data instanceof BoolArray) {
+		return (value ? 1 : 0) as any;
+	}
+	return value as any;
+}
 
 export const setter = {
-	prepare<D extends SupportedDataType>(
+	prepare<D extends core.DataType>(
 		data: core.TypedArray<D>,
 		shape: number[],
 		stride: number[],
 	) {
 		return { data, shape, stride };
 	},
-	set_scalar<D extends SupportedDataType>(
+	set_scalar<D extends core.DataType>(
 		dest: core.Chunk<D>,
 		sel: (number | Indices)[],
 		value: core.Scalar<D>,
 	) {
 		set_scalar(compat(dest), sel, cast_scalar(dest, value));
 	},
-	set_from_chunk<D extends SupportedDataType>(
+	set_from_chunk<D extends core.DataType>(
 		dest: core.Chunk<D>,
 		src: core.Chunk<D>,
 		mapping: Projection[],
@@ -40,7 +128,7 @@ export const setter = {
 
 /** @category Utility */
 export async function get<
-	D extends SupportedDataType,
+	D extends core.DataType,
 	Store extends Readable | Async<Readable>,
 	Sel extends (null | Slice | number)[],
 >(
@@ -58,7 +146,7 @@ export async function get<
 
 /** @category Utility */
 export async function set<
-	D extends SupportedDataType,
+	D extends core.DataType,
 >(
 	arr: core.Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
 	selection: (null | Slice | number)[] | null,
@@ -66,29 +154,6 @@ export async function set<
 	opts: SetOptions = {},
 ) {
 	return set_with_setter<D, core.Chunk<D>>(arr, selection, value, opts, setter);
-}
-
-function compat<D extends SupportedDataType>(
-	arr: core.Chunk<D>,
-): core.Chunk<D extends core.Bool ? core.Uint8 : D> {
-	// ensure strides are computed
-	return {
-		// @ts-expect-error
-		data: arr.data instanceof BoolArray
-			? new Uint8Array(arr.data.buffer)
-			: arr.data,
-		shape: arr.shape,
-		stride: arr.stride,
-	};
-}
-
-function cast_scalar<D extends core.DataType>(
-	arr: core.Chunk<D>,
-	value: core.Scalar<D>,
-): core.Scalar<D extends core.Bool ? core.Uint8 : D> {
-	// @ts-expect-error
-	if (arr.data instanceof BoolArray) return value ? 1 : 0;
-	return value as any;
 }
 
 function indices_len(start: number, stop: number, step: number) {
@@ -99,10 +164,10 @@ function indices_len(start: number, stop: number, step: number) {
 	return 0;
 }
 
-function set_scalar<D extends core.NumberDataType | core.BigintDataType>(
-	out: Pick<core.Chunk<D>, "data" | "stride">,
+function set_scalar<D extends core.DataType>(
+	out: CompatChunk<D>,
 	out_selection: (Indices | number)[],
-	value: core.Scalar<D>,
+	value: CompatScalar<D>,
 ) {
 	if (out_selection.length === 0) {
 		out.data[0] = value;
@@ -112,8 +177,8 @@ function set_scalar<D extends core.NumberDataType | core.BigintDataType>(
 	const [curr_stride, ...stride] = out.stride;
 
 	if (typeof slice === "number") {
-		const data = out.data.subarray(curr_stride * slice) as core.TypedArray<D>;
-		set_scalar({ data, stride }, slices, value);
+		const data = out.data.subarray(curr_stride * slice);
+		set_scalar({ data, stride } as unknown as CompatChunk<D>, slices, value);
 		return;
 	}
 
@@ -121,7 +186,6 @@ function set_scalar<D extends core.NumberDataType | core.BigintDataType>(
 	const len = indices_len(from, to, step);
 	if (slices.length === 0) {
 		if (step === 1 && curr_stride === 1) {
-			// @ts-ignore
 			out.data.fill(value, from, from + len);
 		} else {
 			for (let i = 0; i < len; i++) {
@@ -131,16 +195,14 @@ function set_scalar<D extends core.NumberDataType | core.BigintDataType>(
 		return;
 	}
 	for (let i = 0; i < len; i++) {
-		const data = out.data.subarray(
-			curr_stride * (from + step * i),
-		) as core.TypedArray<D>;
-		set_scalar({ data, stride }, slices, value);
+		const data = out.data.subarray(curr_stride * (from + step * i));
+		set_scalar({ data, stride } as unknown as CompatChunk<D>, slices, value);
 	}
 }
 
-function set_from_chunk<D extends core.NumberDataType | core.BigintDataType>(
-	dest: Pick<core.Chunk<D>, "data" | "stride">,
-	src: Pick<core.Chunk<D>, "data" | "stride">,
+function set_from_chunk<D extends core.DataType>(
+	dest: CompatChunk<D>,
+	src: CompatChunk<D>,
 	projections: Projection[],
 ) {
 	const [proj, ...projs] = projections;
@@ -154,7 +216,7 @@ function set_from_chunk<D extends core.NumberDataType | core.BigintDataType>(
 		}
 		set_from_chunk(
 			{
-				data: dest.data.subarray(dstride * proj.to) as core.TypedArray<D>,
+				data: dest.data.subarray(dstride * proj.to),
 				stride: dstrides,
 			},
 			src,
@@ -169,7 +231,7 @@ function set_from_chunk<D extends core.NumberDataType | core.BigintDataType>(
 			return;
 		}
 		let view = {
-			data: src.data.subarray(sstride * proj.from) as core.TypedArray<D>,
+			data: src.data.subarray(sstride * proj.from),
 			stride: sstrides,
 		};
 		set_from_chunk(dest, view, projs);
@@ -184,7 +246,7 @@ function set_from_chunk<D extends core.NumberDataType | core.BigintDataType>(
 		if (
 			step === 1 && sstep === 1 && dstride === 1 && sstride === 1
 		) {
-			dest.data.set(src.data.subarray(sfrom, sfrom + len) as any, from);
+			dest.data.set(src.data.subarray(sfrom, sfrom + len), from);
 		} else {
 			for (let i = 0; i < len; i++) {
 				dest.data[dstride * (from + step * i)] =

@@ -1,5 +1,4 @@
 import ndarray from "ndarray";
-// @ts-expect-error
 import ops from "ndarray-ops";
 
 import { get_with_setter, set_with_setter } from "@zarrita/indexing";
@@ -20,7 +19,7 @@ export const setter = {
 		selection: (number | Indices)[],
 		value: core.Scalar<D>,
 	) {
-		ops.assigns(view(dest, selection), value);
+		(ops.assigns as any)(view(dest, selection), value);
 	},
 	set_from_chunk<D extends core.DataType>(
 		dest: ndarray.NdArray<core.TypedArray<D>>,

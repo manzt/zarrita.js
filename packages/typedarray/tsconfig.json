@@ -4,5 +4,5 @@
 		"outDir": "dist",
 		"emitDeclarationOnly": true
 	},
-	"include": ["index.js", "__tests__/**/*"]
+	"include": ["index.js", "src/**/*", "__tests__/**/*"]
 }
