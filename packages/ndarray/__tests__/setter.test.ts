@@ -361,7 +361,7 @@ describe("setter", () => {
 		]));
 	});
 
-	it.skip("set_from_chunk - F order", async () => {
+	it("set_from_chunk - F order", async () => {
 		let dest = setter.prepare(
 			new Float32Array(2 * 3 * 4),
 			[2, 3, 4],
@@ -393,7 +393,7 @@ describe("setter", () => {
 		]));
 	});
 
-	it.skip(
+	it(
 		"set_from_chunk - dest=F order, src=C order",
 		async () => {
 			let dest = setter.prepare(
@@ -428,7 +428,7 @@ describe("setter", () => {
 		},
 	);
 
-	it.skip(
+	it(
 		"set_from_chunk - dest=C order, src=F order",
 		async () => {
 			let dest = setter.prepare(
