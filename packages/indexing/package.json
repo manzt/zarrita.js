@@ -20,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@types/ndarray": "^1.0.11",
+		"@types/ndarray-ops": "^1.2.4",
 		"ndarray": "^1.0.19",
 		"ndarray-ops": "^1.2.2"
 	}

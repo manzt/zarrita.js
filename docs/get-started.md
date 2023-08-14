@@ -67,4 +67,3 @@ import { get } from "@zarrita/ndarray";
 const full = await get(arr); // ndarray.Ndarray<Int32Array>
 const region = await get(arr, [null, zarr.slice(6)]); // ndarray.Ndarray<Int32Array>
 ```
-

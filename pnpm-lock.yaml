@@ -63,6 +63,9 @@ importers:
       '@types/ndarray':
         specifier: ^1.0.11
         version: 1.0.11
+      '@types/ndarray-ops':
+        specifier: ^1.2.4
+        version: 1.2.4
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
@@ -75,6 +78,9 @@ importers:
       '@types/ndarray':
         specifier: ^1.0.11
         version: 1.0.11
+      '@types/ndarray-ops':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@zarrita/core':
         specifier: workspace:^
         version: link:../core
@@ -808,6 +814,11 @@ packages:
   /@types/minimist@1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: true
+
+  /@types/ndarray-ops@1.2.4:
+    resolution: {integrity: sha512-vobA1pL04LynGY0hkjYUSvqbig26gHKQ/Woi5EuHFP6mh/xUTkUo+O+lpLjPNWOjrA+Vs3kQ6r2Lsvcv4vvonA==}
+    dependencies:
+      '@types/ndarray': 1.0.11
 
   /@types/ndarray@1.0.11:
     resolution: {integrity: sha512-hOZVTN24zDHwCHaW7mF9n1vHJt83fZhNZ0YYRBwQGhA96yBWWDPTDDlqJatagHIOJB0a4xoNkNc+t/Cxd+6qUA==}
