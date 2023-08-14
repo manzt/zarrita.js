@@ -10,12 +10,38 @@ export class BoolArray {
 	 * @constructor
 	 * @overload
 	 * @param {ArrayBuffer} buffer
+	 * @param {number=} byteOffset
+	 * @param {number=} length
 	 *
 	 * @constructor
-	 * @param {number | ArrayBuffer} x
+	 * @overload
+	 * @param {Iterable<boolean>} arr
+	 *
+	 * @constructor
+	 * @param {number | Iterable<boolean> | ArrayBuffer} x
+	 * @param {number} [byteOffset]
+	 * @param {number} [length]
 	 */
-	constructor(x) {
-		this.#bytes = new Uint8Array(/** @type {any} */ (x));
+	constructor(x, byteOffset, length) {
+		if (typeof x === "number") {
+			this.#bytes = new Uint8Array(x);
+		} else if (x instanceof ArrayBuffer) {
+			this.#bytes = new Uint8Array(x, byteOffset, length);
+		} else {
+			this.#bytes = new Uint8Array(Array.from(x, (v) => (v ? 1 : 0)));
+		}
+	}
+
+	get BYTES_PER_ELEMENT() {
+		return 1;
+	}
+
+	get byteOffset() {
+		return this.#bytes.byteOffset;
+	}
+
+	get byteLength() {
+		return this.#bytes.byteLength;
 	}
 
 	/** @type {ArrayBuffer} */
@@ -33,7 +59,8 @@ export class BoolArray {
 	 * @returns {boolean}
 	 */
 	get(idx) {
-		return this.#bytes[idx] === 1;
+		let value = this.#bytes[idx];
+		return typeof value === "number" ? value !== 0 : value;
 	}
 
 	/**
@@ -70,22 +97,53 @@ export class ByteStringArray {
 	/**
 	 * @constructor
 	 * @overload
-	 * @param {number} size
 	 * @param {number} chars
+	 * @param {number} size
 	 *
 	 * @constructor
 	 * @overload
-	 * @param {ArrayBuffer} buffer
 	 * @param {number} chars
+	 * @param {ArrayBuffer} buffer
+	 * @param {number=} byteOffset
+	 * @param {number=} length
 	 *
 	 * @constructor
-	 * @param {number | ArrayBuffer} x
+	 * @overload
 	 * @param {number} chars
+	 * @param {Iterable<string>} arr
+	 *
+	 * @constructor
+	 * @param {number} chars
+	 * @param {number | ArrayBuffer | Iterable<string>} x
+	 * @param {number=} byteOffset
+	 * @param {number=} length
 	 */
-	constructor(x, chars) {
-		// @ts-expect-error typescript doesn't like the overloads
-		this.#bytes = new Uint8Array(typeof x === "number" ? x * chars : x);
+	constructor(chars, x, byteOffset, length) {
 		this.chars = chars;
+		if (typeof x === "number") {
+			this.#bytes = new Uint8Array(x * chars);
+		} else if (x instanceof ArrayBuffer) {
+			if (length) length = length * chars;
+			this.#bytes = new Uint8Array(x, byteOffset, length);
+		} else {
+			let values = Array.from(x);
+			this.#bytes = new Uint8Array(values.length * chars);
+			for (let i = 0; i < values.length; i++) {
+				this.set(i, values[i]);
+			}
+		}
+	}
+
+	get BYTES_PER_ELEMENT() {
+		return this.chars;
+	}
+
+	get byteOffset() {
+		return this.#bytes.byteOffset;
+	}
+
+	get byteLength() {
+		return this.#bytes.byteLength;
 	}
 
 	/** @type {ArrayBuffer} */
@@ -95,7 +153,7 @@ export class ByteStringArray {
 
 	/** @type {number} */
 	get length() {
-		return this.#bytes.buffer.byteLength / this.chars;
+		return this.byteLength / this.BYTES_PER_ELEMENT;
 	}
 
 	/**
@@ -105,7 +163,7 @@ export class ByteStringArray {
 	get(idx) {
 		const view = new Uint8Array(
 			this.buffer,
-			this.chars * idx,
+			this.byteOffset + this.chars * idx,
 			this.chars,
 		);
 		return new TextDecoder().decode(view).replace(/\x00/g, "");
@@ -129,7 +187,7 @@ export class ByteStringArray {
 	set(idx, value) {
 		const view = new Uint8Array(
 			this.buffer,
-			this.chars * idx,
+			this.byteOffset + this.chars * idx,
 			this.chars,
 		);
 		view.fill(0); // clear current
@@ -158,28 +216,60 @@ export class ByteStringArray {
 export class UnicodeStringArray {
 	/** @type {Int32Array} */
 	#data;
-	BYTES_PER_ELEMENT = 4;
-	byteOffset = 0;
 
 	/**
 	 * @constructor
 	 * @overload
-	 * @param {number} size
 	 * @param {number} chars
+	 * @param {number} size
 	 *
 	 * @constructor
 	 * @overload
-	 * @param {ArrayBuffer} buffer
 	 * @param {number} chars
+	 * @param {ArrayBuffer} buffer
+	 * @param {number=} byteOffset
+	 * @param {number=} length
 	 *
 	 * @constructor
-	 * @param {number | ArrayBuffer} x
+	 * @overload
 	 * @param {number} chars
+	 * @param {Iterable<string>} arr
+	 *
+	 * @constructor
+	 * @param {number} chars
+	 * @param {number | ArrayBuffer | Iterable<string>} x
+	 * @param {number} [byteOffset]
+	 * @param {number} [length]
 	 */
-	constructor(x, chars) {
-		// @ts-expect-error
-		this.#data = new Int32Array(typeof x === "number" ? x * chars : x);
+	constructor(chars, x, byteOffset, length) {
 		this.chars = chars;
+		if (typeof x === "number") {
+			this.#data = new Int32Array(x * chars);
+		} else if (x instanceof ArrayBuffer) {
+			if (length) length *= chars;
+			this.#data = new Int32Array(x, byteOffset, length);
+		} else {
+			const values = x;
+			const encode = this._encode.bind(this);
+			this.#data = new Int32Array((function* () {
+				for (let str of values) {
+					let int32 = encode(str);
+					yield* int32;
+				}
+			})());
+		}
+	}
+
+	get BYTES_PER_ELEMENT() {
+		return this.chars * this.#data.BYTES_PER_ELEMENT;
+	}
+
+	get byteOffset() {
+		return this.#data.byteOffset;
+	}
+
+	get byteLength() {
+		return this.#data.byteLength;
 	}
 
 	/** @type {ArrayBuffer} */

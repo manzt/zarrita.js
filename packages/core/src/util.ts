@@ -1,7 +1,7 @@
 import {
 	BoolArray,
-	ByteStringArray as _ByteStringArray,
-	UnicodeStringArray as _UnicodeStringArray,
+	ByteStringArray,
+	UnicodeStringArray,
 } from "@zarrita/typedarray";
 
 import type {
@@ -62,22 +62,11 @@ export function get_ctr<D extends DataType>(
 	let match = data_type.match(V2_STRING_REGEX);
 	if (match) {
 		let [, kind, chars] = match;
-		if (kind === "U") {
-			class UnicodeStringArray extends _UnicodeStringArray {
-				constructor(x: any) {
-					super(x, Number(chars));
-				}
-			}
-			return UnicodeStringArray as any;
-		}
-		if (kind === "S") {
-			class ByteStringArray extends _ByteStringArray {
-				constructor(x: any) {
-					super(x, Number(chars));
-				}
-			}
-			return ByteStringArray as any;
-		}
+		// @ts-expect-error
+		return (kind === "U" ? UnicodeStringArray : ByteStringArray).bind(
+			null,
+			Number(chars),
+		);
 	}
 	let ctr = (CONSTRUCTORS as any)[data_type];
 	if (!ctr) {
