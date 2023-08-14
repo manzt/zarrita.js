@@ -261,15 +261,15 @@ export class UnicodeStringArray {
 	}
 
 	get BYTES_PER_ELEMENT() {
-		return this.chars * this._data.BYTES_PER_ELEMENT;
-	}
-
-	get byteOffset() {
-		return this._data.byteOffset;
+		return this._data.BYTES_PER_ELEMENT * this.chars;
 	}
 
 	get byteLength() {
 		return this._data.byteLength;
+	}
+
+	get byteOffset() {
+		return this._data.byteOffset;
 	}
 
 	/** @type {ArrayBuffer} */

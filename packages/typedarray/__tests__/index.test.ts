@@ -278,18 +278,16 @@ describe("UnicodeStringArray", () => {
 		}).toStrictEqual({
 			length: 2,
 			BYTES_PER_ELEMENT: chars * 4,
-			byteOffset: 1 * chars * 4,
-			byteLength: 2 * chars * 4,
+			byteOffset: chars * 4,
+			byteLength: chars * 4 * 2,
 			data: ["Hej Världen!", "Xin chào thế giới"],
 		});
 	});
 
 	test("new (values: Iterable<string>) -> UnicodeStringArray", () => {
-		let arr = new UnicodeStringArray(20, [
-			"¡Hola mundo!",
-			"Hej Världen!",
-			"Xin chào thế giới",
-		]);
+		let chars = 20;
+		let data = ["¡Hola mundo!", "Hej Världen!", "Xin chào thế giới"];
+		let arr = new UnicodeStringArray(20, data);
 		expect({
 			length: arr.length,
 			BYTES_PER_ELEMENT: arr.BYTES_PER_ELEMENT,
@@ -300,13 +298,26 @@ describe("UnicodeStringArray", () => {
 				arr.byteOffset,
 				arr.byteLength / Int32Array.BYTES_PER_ELEMENT,
 			),
+			encoded_sub_view: new Int32Array(
+				arr.buffer,
+				arr.byteOffset + arr.BYTES_PER_ELEMENT,
+				chars,
+			),
 		}).toStrictEqual({
-			length: 3,
-			BYTES_PER_ELEMENT: 20 * 4,
+			length: data.length,
+			BYTES_PER_ELEMENT: chars * Int32Array.BYTES_PER_ELEMENT,
 			byteOffset: 0,
-			byteLength: 3 * 20 * 4,
+			byteLength: data.length * chars * Int32Array.BYTES_PER_ELEMENT,
 			// deno-fmt-ignore
-			encoded: new Int32Array([161, 72, 111, 108, 97, 32, 109, 117, 110, 100, 111, 33, 0, 0, 0, 0, 0, 0, 0, 0, 72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0, 88, 105, 110, 32, 99, 104, 224, 111, 32, 116, 104, 7871, 32, 103, 105, 7899, 105, 0, 0, 0]),
+			encoded: new Int32Array([
+				161, 72, 111, 108, 97, 32, 109, 117, 110, 100, 111, 33, 0, 0, 0, 0, 0, 0, 0, 0,
+				72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0,
+				88, 105, 110, 32, 99, 104, 224, 111, 32, 116, 104, 7871, 32, 103, 105, 7899, 105, 0, 0, 0,
+			]),
+			// deno-fmt-ignore
+			encoded_sub_view: new Int32Array([
+				72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0,
+			]),
 		});
 	});
 
