@@ -37,63 +37,48 @@ type CompatChunk<D extends core.DataType> = {
 	stride: number[];
 };
 
-function encode_string<D extends core.StringDataType>(
-	arr: core.TypedArray<D>,
-	value: unknown,
-): CompatTypedArray<D> {
-	if (typeof value !== "string") {
-		throw new Error(`Expected string, got ${typeof value}`);
-	}
-	// @ts-expect-error
-	return arr._encode(value);
-}
-
 function data_proxy<D extends core.StringDataType>(
 	arr: core.TypedArray<D>,
 ): TypedArrayProxy<D> {
-	let TypedArrayConstructor = arr.constructor as any;
-	return new Proxy(
-		new (arr instanceof ByteStringArray ? Uint8Array : Int32Array)(
-			arr.buffer,
-		),
-		{
-			get(target: Uint8Array | Int32Array, prop: string) {
-				let idx = +prop;
-				if (!Number.isNaN(idx)) {
-					return target.subarray(idx * arr.chars, (idx + 1) * arr.chars);
-				}
-				if (prop === "subarray") {
-					return (from: number, to: number = target.length) => {
-						let view = target.subarray(from * arr.chars, to * arr.chars);
-						return view;
-						// TODO this should work?
-						// r?eturn data_proxy(new TypedArrayConstructor(view.buffer));
-					};
-				}
-				if (prop === "set") {
-					return (source: CompatTypedArray<D>, offset: number) => {
-						target.set(source, offset * arr.chars);
-					};
-				}
-				if (prop === "fill") {
-					return (value: CompatTypedArray<D>, start: number, end: number) => {
-						for (let i = start; i < end; i++) {
-							target.set(value, i * arr.chars);
-						}
-					};
-				}
-				return Reflect.get(target, prop);
-			},
-			set(
-				target: Uint8Array | Int32Array,
-				prop: string,
-				value: Uint8Array | Int32Array,
-			) {
-				target.set(value, Number(prop) * arr.chars);
-				return true;
-			},
+	const StringArrayConstructor = arr.constructor.bind(null, arr.chars);
+	return new Proxy(arr, {
+		get(target, prop: string) {
+			let idx = +prop;
+			if (!Number.isNaN(idx)) {
+				return target.get(idx);
+			}
+			if (prop === "subarray") {
+				return (from: number, to: number = arr.length) => {
+					return data_proxy(
+						new StringArrayConstructor(
+							target.buffer,
+							target.byteOffset + arr.BYTES_PER_ELEMENT * from,
+							to - from,
+						),
+					);
+				};
+			}
+			if (prop === "set") {
+				return (source: typeof target, offset: number) => {
+					for (let i = 0; i < source.length; i++) {
+						target.set(offset + i, source.get(i));
+					}
+				};
+			}
+			if (prop === "fill") {
+				return (value: string, start: number, end: number) => {
+					for (let i = start; i < end; i++) {
+						target.set(i, value);
+					}
+				};
+			}
+			return Reflect.get(target, prop);
 		},
-	) as any;
+		set(target, idx: string, value: string) {
+			target.set(Number(idx), value);
+			return true;
+		},
+	}) as any;
 }
 
 function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
@@ -123,7 +108,7 @@ function cast_scalar<D extends core.DataType>(
 		arr.data instanceof ByteStringArray ||
 		arr.data instanceof UnicodeStringArray
 	) {
-		return encode_string(arr.data, value) as CompatScalar<D>;
+		return value;
 	}
 	return value as CompatScalar<D>;
 }

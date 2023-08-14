@@ -92,7 +92,7 @@ export class BoolArray {
 
 export class ByteStringArray {
 	/** @type {Uint8Array} */
-	#bytes;
+	_data;
 
 	/**
 	 * @constructor
@@ -121,13 +121,13 @@ export class ByteStringArray {
 	constructor(chars, x, byteOffset, length) {
 		this.chars = chars;
 		if (typeof x === "number") {
-			this.#bytes = new Uint8Array(x * chars);
+			this._data = new Uint8Array(x * chars);
 		} else if (x instanceof ArrayBuffer) {
 			if (length) length = length * chars;
-			this.#bytes = new Uint8Array(x, byteOffset, length);
+			this._data = new Uint8Array(x, byteOffset, length);
 		} else {
 			let values = Array.from(x);
-			this.#bytes = new Uint8Array(values.length * chars);
+			this._data = new Uint8Array(values.length * chars);
 			for (let i = 0; i < values.length; i++) {
 				this.set(i, values[i]);
 			}
@@ -139,16 +139,16 @@ export class ByteStringArray {
 	}
 
 	get byteOffset() {
-		return this.#bytes.byteOffset;
+		return this._data.byteOffset;
 	}
 
 	get byteLength() {
-		return this.#bytes.byteLength;
+		return this._data.byteLength;
 	}
 
 	/** @type {ArrayBuffer} */
 	get buffer() {
-		return this.#bytes.buffer;
+		return this._data.buffer;
 	}
 
 	/** @type {number} */
@@ -201,7 +201,7 @@ export class ByteStringArray {
 	fill(value) {
 		const encoded = this._encode(value);
 		for (let i = 0; i < this.length; i++) {
-			this.#bytes.set(encoded, i * this.chars);
+			this._data.set(encoded, i * this.chars);
 		}
 	}
 
@@ -215,7 +215,7 @@ export class ByteStringArray {
 
 export class UnicodeStringArray {
 	/** @type {Int32Array} */
-	#data;
+	_data;
 
 	/**
 	 * @constructor
@@ -244,14 +244,14 @@ export class UnicodeStringArray {
 	constructor(chars, x, byteOffset, length) {
 		this.chars = chars;
 		if (typeof x === "number") {
-			this.#data = new Int32Array(x * chars);
+			this._data = new Int32Array(x * chars);
 		} else if (x instanceof ArrayBuffer) {
 			if (length) length *= chars;
-			this.#data = new Int32Array(x, byteOffset, length);
+			this._data = new Int32Array(x, byteOffset, length);
 		} else {
 			const values = x;
 			const encode = this._encode.bind(this);
-			this.#data = new Int32Array((function* () {
+			this._data = new Int32Array((function* () {
 				for (let str of values) {
 					let int32 = encode(str);
 					yield* int32;
@@ -261,25 +261,25 @@ export class UnicodeStringArray {
 	}
 
 	get BYTES_PER_ELEMENT() {
-		return this.chars * this.#data.BYTES_PER_ELEMENT;
+		return this.chars * this._data.BYTES_PER_ELEMENT;
 	}
 
 	get byteOffset() {
-		return this.#data.byteOffset;
+		return this._data.byteOffset;
 	}
 
 	get byteLength() {
-		return this.#data.byteLength;
+		return this._data.byteLength;
 	}
 
 	/** @type {ArrayBuffer} */
 	get buffer() {
-		return this.#data.buffer;
+		return this._data.buffer;
 	}
 
 	/** @type {number} */
 	get length() {
-		return this.#data.length / this.chars;
+		return this._data.length / this.chars;
 	}
 
 	/**
@@ -304,7 +304,7 @@ export class UnicodeStringArray {
 		const offset = this.chars * idx;
 		let result = "";
 		for (let i = 0; i < this.chars; i++) {
-			result += String.fromCodePoint(this.#data[offset + i]);
+			result += String.fromCodePoint(this._data[offset + i]);
 		}
 		return result.replace(/\u0000/g, "");
 	}
@@ -316,7 +316,7 @@ export class UnicodeStringArray {
 	 */
 	set(idx, value) {
 		const offset = this.chars * idx;
-		const view = this.#data.subarray(offset, offset + this.chars);
+		const view = this._data.subarray(offset, offset + this.chars);
 		view.fill(0); // clear current
 		view.set(this._encode(value));
 	}
@@ -328,7 +328,7 @@ export class UnicodeStringArray {
 	fill(value) {
 		const encoded = this._encode(value);
 		for (let i = 0; i < this.length; i++) {
-			this.#data.set(encoded, i * this.chars);
+			this._data.set(encoded, i * this.chars);
 		}
 	}
 

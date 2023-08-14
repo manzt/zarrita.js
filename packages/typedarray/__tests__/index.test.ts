@@ -298,7 +298,7 @@ describe("UnicodeStringArray", () => {
 			encoded: new Int32Array(
 				arr.buffer,
 				arr.byteOffset,
-				arr.BYTES_PER_ELEMENT * arr.length / 4,
+				arr.byteLength / Int32Array.BYTES_PER_ELEMENT,
 			),
 		}).toStrictEqual({
 			length: 3,
