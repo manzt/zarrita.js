@@ -59,22 +59,22 @@ classDiagram
     class indexing {
         - get(arr: zarr.Array, selection)
         - set(arr: zarr.Array, selection, view)
-        - fancy-indexing/slicing
-        - strided arrays
+        - slice and index multiple chunks
+        - returns strided arrays
     }
 
     class ndarray {
         - get(arr: zarr.Array, selection)
         - set(arr: zarr.Array,  selection, view)
-        - fancy-indexing/slicing
-        - scijs/ndarray obj
+        - slice and index multiple chunks
+        - returns scijs/ndarray objects
     }
 
     class core {
         - open(store: Readable)
         - create(store: Writeable)
-        - zarr.Array
-        - zarr.Group
+        - zarr.Array and zarr.Group
+        - access and decode individual chunks
     }
 
     class storage {
