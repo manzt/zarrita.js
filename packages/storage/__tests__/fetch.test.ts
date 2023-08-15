@@ -86,14 +86,14 @@ describe("FetchStore", () => {
 			  "zarr_format": 3,
 			}
 		`);
-	})
+	});
 
 	it("returns undefined for missing file", async () => {
 		let store = new FetchStore(href);
 		expect(await store.get("/missing.json")).toBeUndefined();
 	});
 
-	it("it forwards request options to fetch", async () => {
+	it("forwards request options to fetch", async () => {
 		let headers = { "x-test": "test" };
 		let store = new FetchStore(href);
 		let spy = vi.spyOn(globalThis, "fetch");
@@ -101,12 +101,26 @@ describe("FetchStore", () => {
 		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
 	});
 
-	it("it forwards request options to fetch when configured globally", async () => {
+	it("forwards request options to fetch when configured globally", async () => {
 		let headers = { "x-test": "test" };
 		let store = new FetchStore(href, { headers });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json");
 		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
+	});
+
+	it("overrides request options", async () => {
+		let opts: RequestInit = {
+			headers: { "x-test": "root", "x-test2": "root" },
+			cache: "no-cache",
+		};
+		let store = new FetchStore(href, opts);
+		let spy = vi.spyOn(globalThis, "fetch");
+		await store.get("/zarr.json", { headers: { "x-test": "override" } });
+		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", {
+			headers: { "x-test": "override" },
+			cache: "no-cache",
+		});
 	});
 
 	it("checks if key exists", async () => {
