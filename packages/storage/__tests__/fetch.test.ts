@@ -1,7 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import FetchStore from "../src/fetch.js";
-import { beforeEach } from "node:test";
 
 describe("FetchStore", () => {
 	beforeAll(() => {
