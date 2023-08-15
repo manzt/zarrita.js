@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>zarrita.js</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@zarrita/core": "./packages/core/dist/src/index.js",
+          "@zarrita/typedarray": "./packages/typedarray/index.js",
+          "@zarrita/indexing": "./packages/indexing/dist/src/index.js",
+          "@zarrita/storage/fetch": "./packages/storage/dist/src/fetch.js",
+          "numcodecs/blosc": "./packages/core/node_modules/numcodecs/blosc.js",
+          "numcodecs/lz4": "./packages/core/node_modules/numcodecs/lz4.js",
+          "numcodecs/zlib": "./packages/core/node_modules/numcodecs/zlib.js",
+          "numcodecs/zstd": "./packages/core/node_modules/numcodecs/zstd.js",
+          "numcodecs/gzip": "./packages/core/node_modules/numcodecs/gzip.js"
+        }
+      }
+    </script>
+  </head>
+  <script type="module">
+    import * as zarr from "@zarrita/core";
+    import { get } from "@zarrita/indexing";
+    import FetchStore from "@zarrita/storage/fetch";
+
+    let store = zarr.root(new FetchStore(new URL("fixtures", import.meta.url)));
+
+    {
+      let grp = await zarr.open.v2(store.resolve("v2/data.zarr"), {
+        kind: "group",
+      });
+      for (let fixture of [
+        "1d.chunked.i2",
+        "1d.chunked.ragged.i2",
+        "1d.contiguous.S7",
+        "1d.contiguous.U13.be",
+        "1d.contiguous.U13.le",
+        "1d.contiguous.U7",
+        "1d.contiguous.b1",
+        "1d.contiguous.blosc.i2",
+        "1d.contiguous.f4.be",
+        "1d.contiguous.f4.le",
+        "1d.contiguous.f8",
+        "1d.contiguous.i4",
+        "1d.contiguous.lz4.i2",
+        "1d.contiguous.raw.i2",
+        "1d.contiguous.u1",
+        "1d.contiguous.zlib.i2",
+        "1d.contiguous.zstd.i2",
+        "2d.chunked.U7",
+        "2d.chunked.i2",
+        "2d.chunked.ragged.i2",
+        "2d.contiguous.i2",
+        "3d.chunked.i2",
+        "3d.chunked.mixed.i2.C",
+        "3d.chunked.mixed.i2.F",
+        "3d.contiguous.i2",
+      ]) {
+        let arr = await zarr.open.v2(grp.resolve(fixture), { kind: "array" });
+        let { data, shape, stride } = await get(arr);
+        let pre = document.createElement("pre");
+        pre.textContent = `\
+{
+  path: ${JSON.stringify(arr.path)},
+  data: ${data.constructor.name}(${JSON.stringify(Array.from(data))}),
+  shape: ${JSON.stringify(shape)},
+  stride: ${JSON.stringify(stride)},
+}`;
+        document.body.appendChild(pre);
+      }
+    }
+
+    {
+      let grp = await zarr.open.v3(store.resolve("v3/data.zarr"), {
+        kind: "group",
+      });
+      for (let fixture of [
+        "1d.chunked.i2",
+        "1d.chunked.ragged.i2",
+        "1d.contiguous.b1",
+        "1d.contiguous.blosc.i2",
+        "1d.contiguous.f4.be",
+        "1d.contiguous.f4.le",
+        "1d.contiguous.f8",
+        "1d.contiguous.gzip.i2",
+        "1d.contiguous.i4",
+        "1d.contiguous.raw.i2",
+        "1d.contiguous.u1",
+        "2d.chunked.i2",
+        "2d.chunked.ragged.i2",
+        "2d.contiguous.i2",
+        "3d.chunked.i2",
+        "3d.chunked.mixed.i2.C",
+        "3d.chunked.mixed.i2.F",
+        "3d.contiguous.i2",
+      ]) {
+        let arr = await zarr.open.v3(grp.resolve(fixture), { kind: "array" });
+        let { data, shape, stride } = await get(arr);
+        let pre = document.createElement("pre");
+        pre.textContent = `\
+{
+  path: ${JSON.stringify(arr.path)},
+  data: ${data.constructor.name}(${JSON.stringify(Array.from(data))}),
+  shape: ${JSON.stringify(shape)},
+  stride: ${JSON.stringify(stride)},
+}`;
+        document.body.appendChild(pre);
+      }
+    }
+  </script>
+  <body></body>
+</html>
