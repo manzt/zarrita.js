@@ -42,7 +42,7 @@ class FetchStore implements Async<Readable<RequestInit>> {
 	}
 
 	has(key: AbsolutePath): Promise<boolean> {
-		// TODO: make parameter, use HEAD request if possible.
+		// TODO: make parameter, use HEAD request if possible?
 		return this.get(key).then((res) => res !== undefined);
 	}
 }

@@ -37,6 +37,57 @@ describe("FetchStore", () => {
 		`);
 	});
 
+	it("reads multi-part path", async () => {
+		let store = new FetchStore(href);
+		let bytes = await store.get("/1d.chunked.i2/zarr.json");
+		expect(bytes).toBeInstanceOf(Uint8Array);
+		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        2,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": "/",
+			    },
+			    "name": "default",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "endian": "little",
+			      },
+			      "name": "endian",
+			    },
+			    {
+			      "configuration": {
+			        "blocksize": 0,
+			        "clevel": 5,
+			        "cname": "zstd",
+			        "shuffle": "noshuffle",
+			        "typesize": 4,
+			      },
+			      "name": "blosc",
+			    },
+			  ],
+			  "data_type": "int16",
+			  "dimension_names": null,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    4,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	})
+
 	it("returns undefined for missing file", async () => {
 		let store = new FetchStore(href);
 		expect(await store.get("/missing.json")).toBeUndefined();
@@ -56,5 +107,11 @@ describe("FetchStore", () => {
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json");
 		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
+	});
+
+	it("checks if key exists", async () => {
+		let store = new FetchStore(href);
+		expect(await store.has("/zarr.json")).toBe(true);
+		expect(await store.has("/missing.json")).toBe(false);
 	});
 });
