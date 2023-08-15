@@ -59,14 +59,14 @@ classDiagram
     class indexing {
         - get(arr: zarr.Array, selection)
         - set(arr: zarr.Array, selection, view)
-        - Fancy-indexing/Slicing
-        - Strided arrays
+        - fancy-indexing/slicing
+        - strided arrays
     }
 
     class ndarray {
         - get(arr: zarr.Array, selection)
         - set(arr: zarr.Array,  selection, view)
-        - Fancy-indexing/Slicing
+        - fancy-indexing/slicing
         - scijs/ndarray obj
     }
 
@@ -80,6 +80,11 @@ classDiagram
     class storage {
         - Readable
         - Writeable
+        - Map()
+        - FetchStore()
+        - FileSystemStore()
+        - ReferenceStore()
+        - ZipStore()
     }
 ```
 
