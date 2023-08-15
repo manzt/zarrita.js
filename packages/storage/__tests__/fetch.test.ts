@@ -1,18 +1,10 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import FetchStore from "../src/fetch.js";
 
 describe("FetchStore", () => {
-	beforeAll(() => {
-		const originalFetch = globalThis.fetch;
-		globalThis.fetch = vi.fn(async (...args) => {
-			return originalFetch(...args);
-		});
-	});
-
-	beforeEach(() => {
-		// @ts-expect-error
-		globalThis.fetch.resetMocks();
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	it("reads a file from string url", async () => {
@@ -153,9 +145,9 @@ describe("FetchStore", () => {
 	});
 	it("it forwards request options to fetch", async () => {
 		let store = new FetchStore("http://localhost:51204/fixtures/v3/data.zarr");
-		expect(await store.get("/zarr.json", { headers: { "x-test": "test" } }))
-			.toBeInstanceOf(Uint8Array);
-		expect(globalThis.fetch).toHaveBeenCalledWith(
+		let spy = vi.spyOn(globalThis, "fetch");
+		await store.get("/zarr.json", { headers: { "x-test": "test" } });
+		expect(spy).toHaveBeenCalledWith(
 			"http://localhost:51204/fixtures/v3/data.zarr/zarr.json",
 			{ headers: { "x-test": "test" } },
 		);
@@ -164,8 +156,9 @@ describe("FetchStore", () => {
 		let store = new FetchStore("http://localhost:51204/fixtures/v3/data.zarr", {
 			headers: { "x-test": "foo" },
 		});
-		expect(await store.get("/zarr.json")).toBeInstanceOf(Uint8Array);
-		expect(globalThis.fetch).toHaveBeenCalledWith(
+		let spy = vi.spyOn(globalThis, "fetch");
+		await store.get("/zarr.json");
+		expect(spy).toHaveBeenCalledWith(
 			"http://localhost:51204/fixtures/v3/data.zarr/zarr.json",
 			{ headers: { "x-test": "foo" } },
 		);
