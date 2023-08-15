@@ -2,7 +2,11 @@ import { parse } from "reference-spec-reader";
 import { fetch_range, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, Async, Readable } from "./types.js";
 
-type ReferenceEntry = string | [url: string | null] | [url: string | null, offset: number, length: number];
+type ReferenceEntry = string | [url: string | null] | [
+	url: string | null,
+	offset: number,
+	length: number,
+];
 
 interface ReferenceStoreOptions {
 	target?: string | URL;
