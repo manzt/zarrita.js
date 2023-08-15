@@ -2,7 +2,7 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "tsc --build",
-		"test": "vitest",
+		"test": "vitest --api",
 		"fmt": "deno fmt --use-tabs packages docs",
 		"lint": "deno fmt --use-tabs packages docs --check"
 	},

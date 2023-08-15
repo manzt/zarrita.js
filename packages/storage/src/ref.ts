@@ -2,23 +2,27 @@ import { parse } from "reference-spec-reader";
 import { fetch_range, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, Async, Readable } from "./types.js";
 
+type ReferenceEntry = string | [url: string | null] | [url: string | null, offset: number, length: number];
+
 interface ReferenceStoreOptions {
 	target?: string | URL;
 }
 
 /** @experimental */
 class ReferenceStore implements Async<Readable<RequestInit>> {
-	private target?: string | URL;
+	#refs: Map<string, ReferenceEntry>;
+	#opts: ReferenceStoreOptions;
 
 	constructor(
-		private refs: ReturnType<typeof parse>,
+		refs: Map<string, ReferenceEntry>,
 		opts: ReferenceStoreOptions = {},
 	) {
-		this.target = opts.target;
+		this.#refs = refs;
+		this.#opts = opts;
 	}
 
 	async get(key: AbsolutePath, opts: RequestInit = {}) {
-		let ref = this.refs.get(strip_prefix(key));
+		let ref = this.#refs.get(strip_prefix(key));
 
 		if (!ref) return;
 
@@ -30,7 +34,7 @@ class ReferenceStore implements Async<Readable<RequestInit>> {
 		}
 
 		let [urlOrNull, offset, size] = ref;
-		let url = urlOrNull ?? this.target;
+		let url = urlOrNull ?? this.#opts.target;
 		if (!url) {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
@@ -47,16 +51,16 @@ class ReferenceStore implements Async<Readable<RequestInit>> {
 	}
 
 	async has(key: AbsolutePath) {
-		return this.refs.has(strip_prefix(key));
+		return this.#refs.has(strip_prefix(key));
 	}
 
-	static fromSpec(spec: Record<string, any>, opts: ReferenceStoreOptions = {}) {
+	static fromSpec(spec: Record<string, any>, opts?: ReferenceStoreOptions) {
 		let refs = parse(spec);
 		return new ReferenceStore(refs, opts);
 	}
 
-	static async fromUrl(refUrl: string | URL, opts: ReferenceStoreOptions = {}) {
-		let spec = await fetch(refUrl as string).then((res) => res.json());
+	static async fromUrl(url: string | URL, opts?: ReferenceStoreOptions) {
+		let spec = await fetch(url).then((res) => res.json());
 		return ReferenceStore.fromSpec(spec, opts);
 	}
 }

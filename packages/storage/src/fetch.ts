@@ -17,20 +17,23 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
  * Must polyfill `fetch` for use in Node.js.
  *
  * ```typescript
- * import * as zarr from "zarrita/v2";
+ * import * as zarr from "@zarrita/core";
  * const store = new FetchStore("http://localhost:8080/data.zarr");
- * const arr = await zarr.get_array(store);
+ * const arr = await zarr.get(store, { kind: "array" });
  * ```
  */
 class FetchStore implements Async<Readable<RequestInit>> {
-	constructor(public url: string | URL) {}
+	constructor(
+		public url: string | URL,
+		public options: RequestInit = {},
+	) {}
 
 	async get(
 		key: AbsolutePath,
 		opts: RequestInit = {},
 	): Promise<Uint8Array | undefined> {
 		const { href } = resolve(this.url, key);
-		const res = await fetch(href, opts);
+		const res = await fetch(href, { ...this.options, ...opts });
 		if (res.status === 404 || res.status === 403) {
 			return undefined;
 		}
