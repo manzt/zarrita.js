@@ -1,29 +1,48 @@
-import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
-import type {
-	ArrayMetadata,
-	Chunk,
-	DataType,
-	GroupMetadata,
-	Scalar,
-} from "./metadata.js";
 import { create_codec_pipeline } from "./codecs.js";
 import {
-	type DataTypeQuery,
 	encode_chunk_key,
 	is_dtype,
 	json_decode_object,
-	type NarrowDataType,
 	v2_marker,
 } from "./util.js";
 import { KeyError } from "./errors.js";
 
-export class Location<Store> {
-	constructor(
-		public readonly store: Store,
-		public readonly path: AbsolutePath = "/",
-	) {}
+/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("@zarrita/storage").Readable} Readable */
+/** @typedef {import("@zarrita/storage").Writeable} Writeable */
+/**
+ * @template {Record<string, any>} T
+ * @typedef {import("@zarrita/storage").Async<T>} Async
+ */
 
-	resolve(path: string): Location<Store> {
+/**
+ * A navigable location in a Zarr store.
+ * @template Store
+ */
+export class Location {
+	/**
+	 * @param {Store} store
+	 * @param {import("@zarrita/storage").AbsolutePath} path
+	 */
+	constructor(store, path = "/") {
+		this.store = store;
+		this.path = path;
+	}
+
+	/**
+	 * @param {string} path
+	 * @returns {Location<Store>}
+	 *
+	 * @example
+	 * ```javascript
+	 * let root = new Location(new Map);
+	 * let bar = root.resolve("foo").resolve("bar");
+	 * bar.path; // "/foo/bar"
+	 * bar.resolve("..").path; // "/foo"
+	 * bar.resolve("/baz").path; // "/baz"
+	 * ```
+	 */
+	resolve(path) {
 		// reuse URL resolution logic built into the browser
 		// handles relative paths, absolute paths, etc.
 		let root = new URL(
@@ -31,36 +50,60 @@ export class Location<Store> {
 		);
 		return new Location(
 			this.store,
-			new URL(path, root).pathname as AbsolutePath,
+			/** @type {import("@zarrita/storage").AbsolutePath} */ (new URL(path, root).pathname)
 		);
 	}
 }
 
-export function root<Store>(store: Store): Location<Store>;
-
-export function root(): Location<Map<string, Uint8Array>>;
-
-export function root<Store>(
-	store?: any,
-): Location<Store | Map<string, Uint8Array>> {
-	return new Location(store ?? new Map());
+/**
+ * @template Store
+ * @overload
+ * @param {Store} store
+ * @returns {Location<Store>}
+ */
+/**
+ * @overload
+ * @returns {Location<Map<string, Uint8Array>>}
+ */
+/**
+ * @template Store
+ * @param {Store} [store]
+ * @returns {Location<Store | Map<string, Uint8Array>>}
+ */
+export function root(store) {
+	return new Location(store ?? new Map);
 }
 
-export class Group<
-	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
-> extends Location<Store> {
-	#metadata: GroupMetadata;
-	#attributes: Record<string, any> | undefined;
+/**
+ * A Zarr group.
+ *
+ * @template {Readable | Async<Readable>} Store
+ * @extends {Location<Store>}
+ */
+export class Group extends Location {
+	/** @type {import("./metadata.js").GroupMetadata} */
+	#metadata;
+	/** @type {Record<string, any> | undefined} */
+	#attributes;
 
-	constructor(
-		store: Store,
-		path: AbsolutePath,
-		metadata: GroupMetadata,
-	) {
+	/**
+	 * @param {Store} store
+	 * @param {import("@zarrita/storage").AbsolutePath} path
+	 * @param {import("./metadata.js").GroupMetadata} metadata
+	 */
+	constructor(store, path, metadata) {
 		super(store, path);
 		this.#metadata = metadata;
 	}
 
+	/**
+	 * Access the metadata for this group.
+	 *
+	 * For v2, this loads and caches the JSON from `.zattrs`.
+	 * For v3, this returns the (already loaded) metadata from the `zarr.json` file.
+	 *
+	 * @returns {Promise<import("./metadata.js").Attributes>}
+	 */
 	async attrs() {
 		if (
 			this.#attributes === undefined &&
@@ -75,20 +118,29 @@ export class Group<
 	}
 }
 
-export class Array<
-	Dtype extends DataType,
-	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
-> extends Location<Store> {
-	codec: ReturnType<typeof create_codec_pipeline>;
-	#metadata: ArrayMetadata<Dtype>;
-	#attributes: Record<string, any> | undefined;
-	_order: "C" | "F";
+/**
+ * A Zarr array.
+ *
+ * @template {DataType} Dtype
+ * @template {Readable | Async<Readable>} Store
+ * @extends {Location<Store>}
+ */
+export class Array extends Location {
+	/** @type {ReturnType<typeof create_codec_pipeline>} */
+	codec;
+	/** @type {import("./metadata.js").ArrayMetadata<Dtype>} */
+	#metadata;
+	/** @type {Record<string, any> | undefined} */
+	#attributes;
+	/** @type {"C" | "F"} */
+	_order;
 
-	constructor(
-		store: Store,
-		path: AbsolutePath,
-		metadata: ArrayMetadata<Dtype>,
-	) {
+	/**
+	 * @param {Store} store
+	 * @param {import("@zarrita/storage").AbsolutePath} path
+	 * @param {import("./metadata.js").ArrayMetadata<Dtype>} metadata
+	 */
+	constructor(store, path, metadata) {
 		super(store, path);
 		this.codec = create_codec_pipeline(metadata);
 		this.#metadata = metadata;
@@ -103,17 +155,27 @@ export class Array<
 			: "C";
 	}
 
-	chunk_key(chunk_coords: number[]): string {
+	/**
+	 * @param {number[]} chunk_coords
+	 * @returns {string}
+	 */
+	chunk_key(chunk_coords) {
 		return encode_chunk_key(
 			chunk_coords,
 			this.#metadata.chunk_key_encoding,
 		);
 	}
 
-	async get_chunk(
-		chunk_coords: number[],
-		options?: Parameters<Store["get"]>[1],
-	): Promise<Chunk<Dtype>> {
+	/**
+	 * Load and decode the chunk at the given coordinates.
+	 *
+	 * @raises {KeyError} if the chunk does not exist
+	 *
+	 * @param {number[]} chunk_coords
+	 * @param {Parameters<Store["get"]>[1]} [options]
+	 * @returns {Promise<import("./metadata.js").Chunk<Dtype>>}
+	 */
+	async get_chunk(chunk_coords, options) {
 		let chunk_path = this.resolve(this.chunk_key(chunk_coords)).path;
 		let maybe_bytes = await this.store.get(chunk_path, options);
 		if (!maybe_bytes) {
@@ -126,18 +188,27 @@ export class Array<
 		return this.#metadata.shape;
 	}
 
+	/**	The chunk shape of the array. */
 	get chunk_shape() {
 		return this.#metadata.chunk_grid.configuration.chunk_shape;
 	}
 
-	get dtype(): Dtype {
+	get dtype() {
 		return this.#metadata.data_type;
 	}
 
-	get fill_value(): Scalar<Dtype> | null {
+	get fill_value() {
 		return this.#metadata.fill_value;
 	}
 
+	/**
+	 * Access the metadata for this array.
+	 *
+	 * For v2, this loads and caches the JSON from `.zattrs`.
+	 * For v3, this returns the (already loaded) metadata from the `zarr.json` file.
+	 *
+	 * @returns {Promise<import("./metadata.js").Attributes>}
+	 */
 	async attrs() {
 		if (
 			this.#attributes === undefined &&
@@ -154,6 +225,11 @@ export class Array<
 	/**
 	 * A helper method to narrow `zarr.Array` Dtype.
 	 *
+	 * @template {import("./util.js").DataTypeQuery} Query
+	 * @param {Query} query
+	 * @returns {this is zarr.Array<import("./util.js").NarrowDataType<Dtype, Query>, Store>}
+	 *
+	 * @example
 	 * ```typescript
 	 * let arr: zarr.Array<DataType, FetchStore> = zarr.open(store, { kind: "array" });
 	 *
@@ -168,9 +244,7 @@ export class Array<
 	 * }
 	 * ```
 	 */
-	is<Query extends DataTypeQuery>(
-		query: Query,
-	): this is Array<NarrowDataType<Dtype, Query>, Store> {
+	is(query) {
 		return is_dtype(this.dtype, query);
 	}
 }
