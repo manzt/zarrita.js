@@ -4,30 +4,30 @@ import {
 	UnicodeStringArray,
 } from "@zarrita/typedarray";
 
-import type {
-	ArrayMetadata,
-	ArrayMetadataV2,
-	BigintDataType,
-	CodecMetadata,
-	DataType,
-	GroupMetadata,
-	GroupMetadataV2,
-	NumberDataType,
-	StringDataType,
-	TypedArrayConstructor,
-} from "./metadata.js";
-
-export function json_encode_object(o: Record<string, any>): Uint8Array {
+/**
+ * @param {Record<string, any>} o
+ * @returns {Uint8Array}
+ */
+export function json_encode_object(o) {
 	const str = JSON.stringify(o, null, 2);
 	return new TextEncoder().encode(str);
 }
 
-export function json_decode_object(bytes: Uint8Array) {
+/**
+ * @param {Uint8Array} bytes
+ * @returns {any}
+ */
+export function json_decode_object(bytes) {
 	const str = new TextDecoder().decode(bytes);
 	return JSON.parse(str);
 }
 
-export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
+/**
+ * @param {Uint8Array} view
+ * @param {number} bytes_per_element
+ * @returns {void}
+ */
+export function byteswap_inplace(view, bytes_per_element) {
 	const numFlips = bytes_per_element / 2;
 	const endByteIndex = bytes_per_element - 1;
 	let t = 0;
@@ -56,9 +56,21 @@ const CONSTRUCTORS = {
 
 const V2_STRING_REGEX = /v2:([US])(\d+)/;
 
-export function get_ctr<D extends DataType>(
-	data_type: D,
-): TypedArrayConstructor<D> {
+/**
+ * @template {import("./metadata.js").DataType} D
+ * @param {D | import("./metadata.js").TypedArray<D>} data_type
+ * @returns {import("./metadata.js").TypedArrayConstructor<D>}
+ */
+export function get_ctr(data_type) {
+	if (typeof data_type !== "string") {
+		if (
+			data_type instanceof UnicodeStringArray ||
+			data_type instanceof ByteStringArray
+		) {
+			return data_type.constructor.bind(null, data_type.chars);
+		}
+		return /** @type {any} */ (data_type.constructor);
+	}
 	let match = data_type.match(V2_STRING_REGEX);
 	if (match) {
 		let [, kind, chars] = match;
@@ -68,21 +80,30 @@ export function get_ctr<D extends DataType>(
 			Number(chars),
 		);
 	}
-	let ctr = (CONSTRUCTORS as any)[data_type];
+	let ctr = /** @type {Record<string, any>}*/ (CONSTRUCTORS)[data_type];
 	if (!ctr) {
 		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
 	}
-	return ctr as any;
+	return ctr;
 }
 
-/** Compute strides for 'C' or 'F' ordered array from shape */
-export function get_strides(shape: readonly number[], order: "C" | "F") {
+/**
+ * Compute strides for 'C' or 'F' ordered array from shape
+ * @param {readonly number[]} shape
+ * @param {"C" | "F"} order
+ */
+export function get_strides(shape, order) {
 	return (order === "C" ? row_major_stride : col_major_stride)(shape);
 }
 
-function row_major_stride(shape: readonly number[]) {
+/**
+ * @param {readonly number[]} shape
+ * @returns {number[]}
+ */
+function row_major_stride(shape) {
 	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
+	/** @type {number[]} */
+	const stride = globalThis.Array(ndim);
 	for (let i = ndim - 1, step = 1; i >= 0; i--) {
 		stride[i] = step;
 		step *= shape[i];
@@ -90,9 +111,14 @@ function row_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-function col_major_stride(shape: readonly number[]) {
+/**
+ * @param {readonly number[]} shape
+ * @returns {number[]}
+ */
+function col_major_stride(shape) {
 	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
+	/** @type {number[]} */
+	const stride = globalThis.Array(ndim);
 	for (let i = 0, step = 1; i < ndim; i++) {
 		stride[i] = step;
 		step *= shape[i];
@@ -100,10 +126,12 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-export function encode_chunk_key(
-	chunk_coords: number[],
-	{ name, configuration }: ArrayMetadata["chunk_key_encoding"],
-): string {
+/**
+ * @param {readonly number[]} chunk_coords
+ * @param {import("./metadata.js").ArrayMetadata["chunk_key_encoding"]} chunk_grid
+ * @returns {string}
+ */
+export function encode_chunk_key(chunk_coords, { name, configuration }) {
 	if (name === "default") {
 		return ["c", ...chunk_coords].join(configuration.separator);
 	}
@@ -115,9 +143,11 @@ export function encode_chunk_key(
 
 const endian_regex = /^([<|>])(.*)$/;
 
-export function coerce_dtype(
-	dtype: string,
-): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+/**
+ * @param {string} dtype
+ * @returns {{ data_type: import("./metadata.js").DataType } | { data_type: import("./metadata.js").DataType; endian: "little" | "big" }}
+ */
+export function coerce_dtype(dtype) {
 	let match = dtype.match(endian_regex);
 	if (!match) {
 		throw new Error(`Invalid dtype: ${dtype}`);
@@ -141,17 +171,25 @@ export function coerce_dtype(
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
 	}
 	if (endian === "|") {
-		return { data_type } as any;
+		return /** @type {{ data_type: import("./metadata.js").DataType }} */ ({
+			data_type,
+		});
 	}
-	return { data_type, endian: endian === "<" ? "little" : "big" } as any;
+	return /** @type {{ data_type: import("./metadata.js").DataType, endian: "little" | "big" }} */ ({
+		data_type,
+		endian: endian === "<" ? "little" : "big",
+	});
 }
 
 export const v2_marker = Symbol("v2");
 
-export function v2_to_v3_array_metadata(
-	meta: ArrayMetadataV2,
-): ArrayMetadata<DataType> {
-	let codecs: CodecMetadata[] = [];
+/**
+ * @param {import("./metadata.js").ArrayMetadataV2} meta
+ * @returns {import("./metadata.js").ArrayMetadata<import("./metadata.js").DataType>}
+ */
+export function v2_to_v3_array_metadata(meta) {
+	/** @type {import("./metadata.js").CodecMetadata[]} */
+	let codecs = [];
 	let dtype = coerce_dtype(meta.dtype);
 	if (meta.order === "F") {
 		codecs.push({ name: "transpose", configuration: { order: "F" } });
@@ -189,7 +227,11 @@ export function v2_to_v3_array_metadata(
 	};
 }
 
-export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
+/**
+ * @param {import("./metadata.js").GroupMetadataV2} _meta
+ * @returns {import("./metadata.js").GroupMetadata}
+ */
+export function v2_to_v3_group_metadata(_meta) {
 	return {
 		zarr_format: 3,
 		node_type: "group",
@@ -197,25 +239,22 @@ export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
 	};
 }
 
-export type DataTypeQuery =
-	| DataType
-	| "boolean"
-	| "number"
-	| "bigint"
-	| "string";
+/** @typedef {import("./metadata.js").DataType | "boolean" | "number" | "bigint" | "string"} DataTypeQuery */
 
-export type NarrowDataType<
-	Dtype extends DataType,
-	Query extends DataTypeQuery,
-> = Query extends "number" ? NumberDataType
-	: Query extends "bigint" ? BigintDataType
-	: Query extends "string" ? StringDataType
-	: Extract<Query, Dtype>;
+/**
+ * @template {import("./metadata.js").DataType} Dtype
+ * @template {DataTypeQuery} Query
+ * @typedef {Query extends "number" ? import('./metadata.js').NumberDataType : Query extends "bigint" ? import('./metadata.js').BigintDataType : Query extends "string" ? import('./metadata.js').StringDataType : Extract<Query, Dtype>} NarrowDataType
+ */
 
-export function is_dtype<Query extends DataTypeQuery>(
-	dtype: DataType,
-	query: Query,
-): dtype is NarrowDataType<DataType, Query> {
+/**
+ * @template {import("./metadata.js").DataType} D
+ * @template {DataTypeQuery} Query
+ * @param {D} dtype
+ * @param {Query} query
+ * @returns {dtype is NarrowDataType<D, Query> }
+ */
+export function is_dtype(dtype, query) {
 	if (
 		query !== "number" &&
 		query !== "bigint" &&

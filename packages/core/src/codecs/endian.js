@@ -1,16 +1,25 @@
-import type { ArrayMetadata, Chunk, DataType } from "../metadata.js";
 import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
-function system_is_little_endian(): boolean {
+/**
+ * Returns true if the system is little endian.
+ * @returns {boolean}
+ */
+function system_is_little_endian() {
 	const a = new Uint32Array([0x12345678]);
 	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
 	return !(b[0] === 0x12);
 }
 
-function bytes_per_element(data_type: DataType): number {
-	const mapping: any = {
+/**
+ * Returns the number of bytes per element for the given data type.	
+ * @param {import("../metadata.js").DataType} data_type
+ * @returns {number}
+ */
+function bytes_per_element(data_type) {
+	/** @type {Record<string, number>} */
+	const mapping = {
 		int8: 1,
 		int16: 2,
 		int32: 4,
@@ -29,22 +38,38 @@ function bytes_per_element(data_type: DataType): number {
 	return b;
 }
 
-export class EndianCodec<D extends DataType> {
+/**
+ * @template {import("../metadata.js").DataType} D
+ */
+export class EndianCodec {
 	kind = "array_to_bytes";
 
-	constructor(
-		public configuration: { endian: "little" | "big" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
+	/**
+	 * @param {{ endian: "little" | "big" }} configuration
+	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 */
+	constructor(configuration, array_metadata) {
+		/** @type {{ endian: "little" | "big" }} */
+		this.configuration = configuration;
+		/** @type {import("../metadata.js").ArrayMetadata<D>} */
+		this.array_metadata = array_metadata;
+	}
 
-	static fromConfig<D extends DataType>(
-		configuration: { endian: "little" | "big" },
-		array_metadata: ArrayMetadata<D>,
-	): EndianCodec<D> {
+	/**
+	 * @template {import("../metadata.js").DataType} D
+	 * @param {{ endian: "little" | "big" }} configuration
+	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 * @returns {EndianCodec<D>}
+	 */
+	static fromConfig(configuration, array_metadata) {
 		return new EndianCodec(configuration, array_metadata);
 	}
 
-	encode(arr: Chunk<D>): Uint8Array {
+	/**
+	 * @param {import("../metadata.js").Chunk<D>} arr
+	 * @returns {Uint8Array}
+	 */
+	encode(arr) {
 		let bytes = new Uint8Array(arr.data.buffer);
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
 			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
@@ -52,7 +77,11 @@ export class EndianCodec<D extends DataType> {
 		return bytes;
 	}
 
-	decode(bytes: Uint8Array): Chunk<D> {
+	/**
+	 * @param {Uint8Array} bytes
+	 * @returns {import("../metadata.js").Chunk<D>}
+	 */
+	decode(bytes) {
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
 			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
 		}
@@ -61,7 +90,7 @@ export class EndianCodec<D extends DataType> {
 			c.name === "transpose"
 		);
 		return {
-			data: new ctr(bytes.buffer) as any,
+			data: new ctr(bytes.buffer),
 			shape: this.array_metadata.chunk_grid.configuration.chunk_shape,
 			stride: get_strides(
 				this.array_metadata.chunk_grid.configuration.chunk_shape,
