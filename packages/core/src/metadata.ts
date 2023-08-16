@@ -146,3 +146,18 @@ export type Chunk<Dtype extends DataType> = {
 	shape: number[];
 	stride: number[];
 };
+
+export type DataTypeQuery =
+	| DataType
+	| "boolean"
+	| "number"
+	| "bigint"
+	| "string";
+
+export type NarrowDataType<
+	Dtype extends DataType,
+	Query extends DataTypeQuery,
+> = Query extends "number" ? NumberDataType
+	: Query extends "bigint" ? BigintDataType
+	: Query extends "string" ? StringDataType
+	: Extract<Query, Dtype>;

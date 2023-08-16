@@ -106,7 +106,10 @@ async function load_codecs(array_metadata) {
 	/** @type {ArrayToArrayCodec<D>[]} */
 	let array_to_array = [];
 	/** @type {ArrayToBytesCodec<D>} */
-	let array_to_bytes = EndianCodec.fromConfig({ endian: "little" }, array_metadata);
+	let array_to_bytes = EndianCodec.fromConfig(
+		{ endian: "little" },
+		array_metadata,
+	);
 	/** @type {BytesToBytesCodec[]} */
 	let bytes_to_bytes = [];
 	for await (let { Codec, meta } of promises) {

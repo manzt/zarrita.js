@@ -239,20 +239,12 @@ export function v2_to_v3_group_metadata(_meta) {
 	};
 }
 
-/** @typedef {import("./metadata.js").DataType | "boolean" | "number" | "bigint" | "string"} DataTypeQuery */
-
-/**
- * @template {import("./metadata.js").DataType} Dtype
- * @template {DataTypeQuery} Query
- * @typedef {Query extends "number" ? import('./metadata.js').NumberDataType : Query extends "bigint" ? import('./metadata.js').BigintDataType : Query extends "string" ? import('./metadata.js').StringDataType : Extract<Query, Dtype>} NarrowDataType
- */
-
 /**
  * @template {import("./metadata.js").DataType} D
- * @template {DataTypeQuery} Query
+ * @template {import("./metadata.js").DataTypeQuery} Query
  * @param {D} dtype
  * @param {Query} query
- * @returns {dtype is NarrowDataType<D, Query> }
+ * @returns {dtype is import("./metadata.js").NarrowDataType<D, Query>}
  */
 export function is_dtype(dtype, query) {
 	if (
@@ -261,6 +253,7 @@ export function is_dtype(dtype, query) {
 		query !== "boolean" &&
 		query !== "string"
 	) {
+		// @ts-expect-error
 		return dtype === query;
 	}
 	const is_boolean = dtype === "bool";

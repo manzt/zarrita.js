@@ -1,5 +1,9 @@
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "@zarrita/typedarray";
-import { get_strides, get_ctr } from "../util.js";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
+import { get_ctr, get_strides } from "../util.js";
 
 /**
  * @template {import("../metadata.js").DataType} D

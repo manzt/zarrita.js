@@ -13,7 +13,7 @@
 	"exports": {
 		".": {
 			"types": "./dist/src/index.d.ts",
-			"import": "./dist/src/index.js"
+			"import": "./src/index.js"
 		}
 	},
 	"dependencies": {

@@ -13,7 +13,7 @@ function system_is_little_endian() {
 }
 
 /**
- * Returns the number of bytes per element for the given data type.	
+ * Returns the number of bytes per element for the given data type.
  * @param {import("../metadata.js").DataType} data_type
  * @returns {number}
  */

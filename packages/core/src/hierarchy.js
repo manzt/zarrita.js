@@ -50,7 +50,10 @@ export class Location {
 		);
 		return new Location(
 			this.store,
-			/** @type {import("@zarrita/storage").AbsolutePath} */ (new URL(path, root).pathname)
+			/** @type {import("@zarrita/storage").AbsolutePath} */ (new URL(
+				path,
+				root,
+			).pathname),
 		);
 	}
 }
@@ -71,7 +74,7 @@ export class Location {
  * @returns {Location<Store | Map<string, Uint8Array>>}
  */
 export function root(store) {
-	return new Location(store ?? new Map);
+	return new Location(store ?? new Map());
 }
 
 /**
@@ -225,9 +228,9 @@ export class Array extends Location {
 	/**
 	 * A helper method to narrow `zarr.Array` Dtype.
 	 *
-	 * @template {import("./util.js").DataTypeQuery} Query
+	 * @template {import("./metadata.js").DataTypeQuery} Query
 	 * @param {Query} query
-	 * @returns {this is zarr.Array<import("./util.js").NarrowDataType<Dtype, Query>, Store>}
+	 * @returns {this is Array<import("./metadata.js").NarrowDataType<Dtype, Query>, Store>}
 	 *
 	 * @example
 	 * ```typescript
