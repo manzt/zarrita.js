@@ -14,7 +14,7 @@ function system_is_little_endian() {
 
 /**
  * Returns the number of bytes per element for the given data type.
- * @param {import("../metadata.js").DataType} data_type
+ * @param {import("../types.js").DataType} data_type
  * @returns {number}
  */
 function bytes_per_element(data_type) {
@@ -39,26 +39,26 @@ function bytes_per_element(data_type) {
 }
 
 /**
- * @template {import("../metadata.js").DataType} D
+ * @template {import("../types.js").DataType} D
  */
 export class EndianCodec {
 	kind = "array_to_bytes";
 
 	/**
 	 * @param {{ endian: "little" | "big" }} configuration
-	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 * @param {import("../types.js").ArrayMetadata<D>} array_metadata
 	 */
 	constructor(configuration, array_metadata) {
 		/** @type {{ endian: "little" | "big" }} */
 		this.configuration = configuration;
-		/** @type {import("../metadata.js").ArrayMetadata<D>} */
+		/** @type {import("../types.js").ArrayMetadata<D>} */
 		this.array_metadata = array_metadata;
 	}
 
 	/**
-	 * @template {import("../metadata.js").DataType} D
+	 * @template {import("../types.js").DataType} D
 	 * @param {{ endian: "little" | "big" }} configuration
-	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 * @param {import("../types.js").ArrayMetadata<D>} array_metadata
 	 * @returns {EndianCodec<D>}
 	 */
 	static fromConfig(configuration, array_metadata) {
@@ -66,7 +66,7 @@ export class EndianCodec {
 	}
 
 	/**
-	 * @param {import("../metadata.js").Chunk<D>} arr
+	 * @param {import("../types.js").Chunk<D>} arr
 	 * @returns {Uint8Array}
 	 */
 	encode(arr) {
@@ -79,7 +79,7 @@ export class EndianCodec {
 
 	/**
 	 * @param {Uint8Array} bytes
-	 * @returns {import("../metadata.js").Chunk<D>}
+	 * @returns {import("../types.js").Chunk<D>}
 	 */
 	decode(bytes) {
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {

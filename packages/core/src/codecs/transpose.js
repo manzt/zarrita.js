@@ -6,12 +6,12 @@ import {
 import { get_ctr, get_strides } from "../util.js";
 
 /**
- * @template {import("../metadata.js").DataType} D
- * @typedef{{ [x: number]: import("../metadata.js").Scalar<D> }} TypedArrayProxy
+ * @template {import("../types.js").DataType} D
+ * @typedef{{ [x: number]: import("../types.js").Scalar<D> }} TypedArrayProxy
  */
 /**
- * @template {import("../metadata.js").DataType} D
- * @param {import("../metadata.js").TypedArray<D>} arr
+ * @template {import("../types.js").DataType} D
+ * @param {import("../types.js").TypedArray<D>} arr
  * @returns {TypedArrayProxy<D>}
  */
 function proxy(arr) {
@@ -34,10 +34,10 @@ function proxy(arr) {
 }
 
 /**
- * @template {import("../metadata.js").DataType} D
- * @param {import("../metadata.js").Chunk<D>} chunk
+ * @template {import("../types.js").DataType} D
+ * @param {import("../types.js").Chunk<D>} chunk
  * @param {"C" | "F"} order
- * @returns {import("../metadata.js").Chunk<D>}
+ * @returns {import("../types.js").Chunk<D>}
  */
 function empty_like(chunk, order) {
 	let TypedArray = get_ctr(chunk.data);
@@ -49,10 +49,10 @@ function empty_like(chunk, order) {
 }
 
 /**
- * @template {import("../metadata.js").DataType} D
- * @param {import("../metadata.js").Chunk<D>} src
+ * @template {import("../types.js").DataType} D
+ * @param {import("../types.js").Chunk<D>} src
  * @param {"C" | "F"} target
- * @returns {import("../metadata.js").Chunk<D>}
+ * @returns {import("../types.js").Chunk<D>}
  */
 function convert_array_order(src, target) {
 	let out = empty_like(src, target);
@@ -86,7 +86,7 @@ function convert_array_order(src, target) {
 }
 
 /**
- * @param {import("../metadata.js").Chunk<import("../metadata.js").DataType>} arr
+ * @param {import("../types.js").Chunk<import("../types.js").DataType>} arr
  * @returns {"C" | "F"}
  */
 function get_order(arr) {
@@ -97,26 +97,26 @@ function get_order(arr) {
 }
 
 /**
- * @template {import("../metadata.js").DataType} D
+ * @template {import("../types.js").DataType} D
  */
 export class TransposeCodec {
 	kind = "array_to_array";
 
 	/**
 	 * @param {{ order: "C" | "F" }} configuration
-	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 * @param {import("../types.js").ArrayMetadata<D>} array_metadata
 	 */
 	constructor(configuration, array_metadata) {
 		/** @type {{ order: "C" | "F" }} */
 		this.configuration = configuration;
-		/** @type {import("../metadata.js").ArrayMetadata<D>} */
+		/** @type {import("../types.js").ArrayMetadata<D>} */
 		this.array_metadata = array_metadata;
 	}
 
 	/**
-	 * @template {import("../metadata.js").DataType} D
+	 * @template {import("../types.js").DataType} D
 	 * @param {{ order: "C" | "F" }} configuration
-	 * @param {import("../metadata.js").ArrayMetadata<D>} array_metadata
+	 * @param {import("../types.js").ArrayMetadata<D>} array_metadata
 	 * @returns {TransposeCodec<D>}
 	 */
 	static fromConfig(configuration, array_metadata) {
@@ -124,8 +124,8 @@ export class TransposeCodec {
 	}
 
 	/**
-	 * @param {import("../metadata.js").Chunk<D>} arr
-	 * @returns {import("../metadata.js").Chunk<D>}
+	 * @param {import("../types.js").Chunk<D>} arr
+	 * @returns {import("../types.js").Chunk<D>}
 	 */
 	encode(arr) {
 		if (get_order(arr) === this.configuration.order) {
@@ -135,8 +135,8 @@ export class TransposeCodec {
 	}
 
 	/**
-	 * @param {import("../metadata.js").Chunk<D>} arr
-	 * @returns {import("../metadata.js").Chunk<D>}
+	 * @param {import("../types.js").Chunk<D>} arr
+	 * @returns {import("../types.js").Chunk<D>}
 	 */
 	decode(arr) {
 		return arr;

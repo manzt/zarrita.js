@@ -2,11 +2,11 @@ import { TransposeCodec } from "./codecs/transpose.js";
 import { EndianCodec } from "./codecs/endian.js";
 
 /** @typedef {import("numcodecs").Codec} Codec */
-/** @typedef {import("./metadata.js").DataType} DataType */
-/** @typedef {import("./metadata.js").ArrayMetadata} ArrayMetadata */
+/** @typedef {import("./types.js").DataType} DataType */
+/** @typedef {import("./types.js").ArrayMetadata} ArrayMetadata */
 /**
  * @template {DataType} D
- * @typedef {import("./metadata.js").Chunk<D>} Chunk
+ * @typedef {import("./types.js").Chunk<D>} Chunk
  */
 /**
  * @typedef {{
@@ -30,15 +30,15 @@ function create_default_registry() {
 export const registry = create_default_registry();
 
 /**
- * @template {import("./metadata.js").DataType} Dtype
- * @param {import("./metadata.js").ArrayMetadata<Dtype>} array_metadata
+ * @template {import("./types.js").DataType} Dtype
+ * @param {import("./types.js").ArrayMetadata<Dtype>} array_metadata
  */
 export function create_codec_pipeline(array_metadata) {
 	/** @type {Awaited<ReturnType<typeof load_codecs>>} */
 	let codecs;
 	return {
 		/**
-		 * @param {import("./metadata.js").Chunk<Dtype>} chunk
+		 * @param {import("./types.js").Chunk<Dtype>} chunk
 		 * @returns {Promise<Uint8Array>}
 		 */
 		async encode(chunk) {
@@ -54,7 +54,7 @@ export function create_codec_pipeline(array_metadata) {
 		},
 		/**
 		 * @param {Uint8Array} bytes
-		 * @returns {Promise<import("./metadata.js").Chunk<Dtype>>}
+		 * @returns {Promise<import("./types.js").Chunk<Dtype>>}
 		 */
 		async decode(bytes) {
 			if (!codecs) codecs = await load_codecs(array_metadata);
@@ -93,7 +93,7 @@ export function create_codec_pipeline(array_metadata) {
 
 /**
  * @template {DataType} D
- * @param {import("./metadata.js").ArrayMetadata<D>} array_metadata
+ * @param {import("./types.js").ArrayMetadata<D>} array_metadata
  */
 async function load_codecs(array_metadata) {
 	let promises = array_metadata.codecs.map(async (meta) => {

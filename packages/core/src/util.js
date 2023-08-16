@@ -57,9 +57,9 @@ const CONSTRUCTORS = {
 const V2_STRING_REGEX = /v2:([US])(\d+)/;
 
 /**
- * @template {import("./metadata.js").DataType} D
- * @param {D | import("./metadata.js").TypedArray<D>} data_type
- * @returns {import("./metadata.js").TypedArrayConstructor<D>}
+ * @template {import("./types.js").DataType} D
+ * @param {D | import("./types.js").TypedArray<D>} data_type
+ * @returns {import("./types.js").TypedArrayConstructor<D>}
  */
 export function get_ctr(data_type) {
 	if (typeof data_type !== "string") {
@@ -128,7 +128,7 @@ function col_major_stride(shape) {
 
 /**
  * @param {readonly number[]} chunk_coords
- * @param {import("./metadata.js").ArrayMetadata["chunk_key_encoding"]} chunk_grid
+ * @param {import("./types.js").ArrayMetadata["chunk_key_encoding"]} chunk_grid
  * @returns {string}
  */
 export function encode_chunk_key(chunk_coords, { name, configuration }) {
@@ -145,7 +145,7 @@ const endian_regex = /^([<|>])(.*)$/;
 
 /**
  * @param {string} dtype
- * @returns {{ data_type: import("./metadata.js").DataType } | { data_type: import("./metadata.js").DataType; endian: "little" | "big" }}
+ * @returns {{ data_type: import("./types.js").DataType } | { data_type: import("./types.js").DataType; endian: "little" | "big" }}
  */
 export function coerce_dtype(dtype) {
 	let match = dtype.match(endian_regex);
@@ -171,11 +171,11 @@ export function coerce_dtype(dtype) {
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
 	}
 	if (endian === "|") {
-		return /** @type {{ data_type: import("./metadata.js").DataType }} */ ({
+		return /** @type {{ data_type: import("./types.js").DataType }} */ ({
 			data_type,
 		});
 	}
-	return /** @type {{ data_type: import("./metadata.js").DataType, endian: "little" | "big" }} */ ({
+	return /** @type {{ data_type: import("./types.js").DataType, endian: "little" | "big" }} */ ({
 		data_type,
 		endian: endian === "<" ? "little" : "big",
 	});
@@ -184,11 +184,11 @@ export function coerce_dtype(dtype) {
 export const v2_marker = Symbol("v2");
 
 /**
- * @param {import("./metadata.js").ArrayMetadataV2} meta
- * @returns {import("./metadata.js").ArrayMetadata<import("./metadata.js").DataType>}
+ * @param {import("./types.js").ArrayMetadataV2} meta
+ * @returns {import("./types.js").ArrayMetadata<import("./types.js").DataType>}
  */
 export function v2_to_v3_array_metadata(meta) {
-	/** @type {import("./metadata.js").CodecMetadata[]} */
+	/** @type {import("./types.js").CodecMetadata[]} */
 	let codecs = [];
 	let dtype = coerce_dtype(meta.dtype);
 	if (meta.order === "F") {
@@ -228,8 +228,8 @@ export function v2_to_v3_array_metadata(meta) {
 }
 
 /**
- * @param {import("./metadata.js").GroupMetadataV2} _meta
- * @returns {import("./metadata.js").GroupMetadata}
+ * @param {import("./types.js").GroupMetadataV2} _meta
+ * @returns {import("./types.js").GroupMetadata}
  */
 export function v2_to_v3_group_metadata(_meta) {
 	return {
@@ -240,11 +240,11 @@ export function v2_to_v3_group_metadata(_meta) {
 }
 
 /**
- * @template {import("./metadata.js").DataType} D
- * @template {import("./metadata.js").DataTypeQuery} Query
+ * @template {import("./types.js").DataType} D
+ * @template {import("./types.js").DataTypeQuery} Query
  * @param {D} dtype
  * @param {Query} query
- * @returns {dtype is import("./metadata.js").NarrowDataType<D, Query>}
+ * @returns {dtype is import("./types.js").NarrowDataType<D, Query>}
  */
 export function is_dtype(dtype, query) {
 	if (

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { DataType } from "../src/metadata.js";
+import type { DataType } from "../src/types.js";
 import {
 	byteswap_inplace,
 	get_ctr,

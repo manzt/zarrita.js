@@ -1,7 +1,7 @@
 import { json_encode_object } from "./util.js";
 import { Array, Group, Location } from "./hierarchy.js";
 
-/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("./types.js").DataType} DataType */
 /** @typedef {import("@zarrita/storage").Readable} Readable */
 /** @typedef {import("@zarrita/storage").Writeable} Writeable */
 /**
@@ -16,8 +16,8 @@ import { Array, Group, Location } from "./hierarchy.js";
  *   shape: number[];
  *   chunk_shape: number[];
  *   data_type: Dtype;
- *   codecs?: import("./metadata.js").CodecMetadata[];
- *   fill_value?: import("./metadata.js").Scalar<Dtype>;
+ *   codecs?: import("./types.js").CodecMetadata[];
+ *   fill_value?: import("./types.js").Scalar<Dtype>;
  *   chunk_separator?: "." | "/";
  *   attributes?: Record<string, any>;
  * }} CreateArrayOptions
@@ -73,7 +73,7 @@ export async function create(location, options = {}) {
  * @param {CreateGroupOptions} options
  */
 async function create_group(location, options) {
-	/** @satisfies {import("./metadata.js").GroupMetadata} */
+	/** @satisfies {import("./types.js").GroupMetadata} */
 	let metadata = {
 		zarr_format: 3,
 		node_type: "group",
@@ -94,7 +94,7 @@ async function create_group(location, options) {
  * @returns {Promise<Array<Dtype, Store>>}
  */
 async function create_array(location, options) {
-	/** @satisfies {import("./metadata.js").ArrayMetadata<Dtype>} */
+	/** @satisfies {import("./types.js").ArrayMetadata<Dtype>} */
 	let metadata = {
 		zarr_format: 3,
 		node_type: "array",

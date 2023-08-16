@@ -7,7 +7,7 @@ import {
 } from "./util.js";
 import { KeyError } from "./errors.js";
 
-/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("./types.js").DataType} DataType */
 /** @typedef {import("@zarrita/storage").Readable} Readable */
 /** @typedef {import("@zarrita/storage").Writeable} Writeable */
 /**
@@ -84,7 +84,7 @@ export function root(store) {
  * @extends {Location<Store>}
  */
 export class Group extends Location {
-	/** @type {import("./metadata.js").GroupMetadata} */
+	/** @type {import("./types.js").GroupMetadata} */
 	#metadata;
 	/** @type {Record<string, any> | undefined} */
 	#attributes;
@@ -92,7 +92,7 @@ export class Group extends Location {
 	/**
 	 * @param {Store} store
 	 * @param {import("@zarrita/storage").AbsolutePath} path
-	 * @param {import("./metadata.js").GroupMetadata} metadata
+	 * @param {import("./types.js").GroupMetadata} metadata
 	 */
 	constructor(store, path, metadata) {
 		super(store, path);
@@ -105,7 +105,7 @@ export class Group extends Location {
 	 * For v2, this loads and caches the JSON from `.zattrs`.
 	 * For v3, this returns the (already loaded) metadata from the `zarr.json` file.
 	 *
-	 * @returns {Promise<import("./metadata.js").Attributes>}
+	 * @returns {Promise<import("./types.js").Attributes>}
 	 */
 	async attrs() {
 		if (
@@ -131,7 +131,7 @@ export class Group extends Location {
 export class Array extends Location {
 	/** @type {ReturnType<typeof create_codec_pipeline>} */
 	codec;
-	/** @type {import("./metadata.js").ArrayMetadata<Dtype>} */
+	/** @type {import("./types.js").ArrayMetadata<Dtype>} */
 	#metadata;
 	/** @type {Record<string, any> | undefined} */
 	#attributes;
@@ -141,7 +141,7 @@ export class Array extends Location {
 	/**
 	 * @param {Store} store
 	 * @param {import("@zarrita/storage").AbsolutePath} path
-	 * @param {import("./metadata.js").ArrayMetadata<Dtype>} metadata
+	 * @param {import("./types.js").ArrayMetadata<Dtype>} metadata
 	 */
 	constructor(store, path, metadata) {
 		super(store, path);
@@ -176,7 +176,7 @@ export class Array extends Location {
 	 *
 	 * @param {number[]} chunk_coords
 	 * @param {Parameters<Store["get"]>[1]} [options]
-	 * @returns {Promise<import("./metadata.js").Chunk<Dtype>>}
+	 * @returns {Promise<import("./types.js").Chunk<Dtype>>}
 	 */
 	async get_chunk(chunk_coords, options) {
 		let chunk_path = this.resolve(this.chunk_key(chunk_coords)).path;
@@ -210,7 +210,7 @@ export class Array extends Location {
 	 * For v2, this loads and caches the JSON from `.zattrs`.
 	 * For v3, this returns the (already loaded) metadata from the `zarr.json` file.
 	 *
-	 * @returns {Promise<import("./metadata.js").Attributes>}
+	 * @returns {Promise<import("./types.js").Attributes>}
 	 */
 	async attrs() {
 		if (
@@ -228,9 +228,9 @@ export class Array extends Location {
 	/**
 	 * A helper method to narrow `zarr.Array` Dtype.
 	 *
-	 * @template {import("./metadata.js").DataTypeQuery} Query
+	 * @template {import("./types.js").DataTypeQuery} Query
 	 * @param {Query} query
-	 * @returns {this is Array<import("./metadata.js").NarrowDataType<Dtype, Query>, Store>}
+	 * @returns {this is Array<import("./types.js").NarrowDataType<Dtype, Query>, Store>}
 	 *
 	 * @example
 	 * ```typescript

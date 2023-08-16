@@ -8,7 +8,7 @@ import type {
 	Int8,
 	NumberDataType,
 	StringDataType,
-} from "../src/metadata.js";
+} from "../src/types.js";
 
 const array_metadata = {
 	zarr_format: 3,

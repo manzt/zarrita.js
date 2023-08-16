@@ -6,7 +6,7 @@ import {
 	v2_to_v3_group_metadata,
 } from "./util.js";
 
-/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("./types.js").DataType} DataType */
 /** @typedef {import("@zarrita/storage").Readable} Readable */
 /**
  * @template {Record<string, any>} T
@@ -110,7 +110,7 @@ async function _open_v3(location) {
 	if (!meta) {
 		throw new NodeNotFoundError(path);
 	}
-	/** @type {import("./metadata.js").ArrayMetadata<DataType> | import("./metadata.js").GroupMetadata} */
+	/** @type {import("./types.js").ArrayMetadata<DataType> | import("./types.js").GroupMetadata} */
 	let meta_doc = json_decode_object(meta);
 	return meta_doc.node_type === "array"
 		? new Array(store, location.path, meta_doc)
