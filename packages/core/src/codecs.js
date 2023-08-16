@@ -1,18 +1,22 @@
-import type { Codec } from "numcodecs";
-import type { ArrayMetadata, Chunk, DataType } from "./metadata.js";
-
 import { TransposeCodec } from "./codecs/transpose.js";
 import { EndianCodec } from "./codecs/endian.js";
 
-type CodecEntry = {
-	fromConfig: (config: Record<string, any>, meta: ArrayMetadata) => Codec;
-	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
-};
+/** @typedef {import("numcodecs").Codec} Codec */
+/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("./metadata.js").ArrayMetadata} ArrayMetadata */
+/**
+ * @template {DataType} D
+ * @typedef {import("./metadata.js").Chunk<D>} Chunk
+ */
+/**
+ * @typedef {{
+ *   fromConfig(config: Record<string, any>, meta: ArrayMetadata): Codec;
+ *   kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
+ * }} CodecEntry
+ */
 
-function create_default_registry(): Map<
-	string,
-	() => Promise<CodecEntry>
-> {
+/** @returns {Map<string, () => Promise<CodecEntry>>} */
+function create_default_registry() {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
 		.set("gzip", () => import("numcodecs/gzip").then((m) => m.default))
@@ -25,12 +29,19 @@ function create_default_registry(): Map<
 
 export const registry = create_default_registry();
 
-export function create_codec_pipeline<Dtype extends DataType>(
-	array_metadata: ArrayMetadata<Dtype>,
-) {
-	let codecs: Awaited<ReturnType<typeof load_codecs>>;
+/**
+ * @template {import("./metadata.js").DataType} Dtype
+ * @param {import("./metadata.js").ArrayMetadata<Dtype>} array_metadata
+ */
+export function create_codec_pipeline(array_metadata) {
+	/** @type {Awaited<ReturnType<typeof load_codecs>>} */
+	let codecs;
 	return {
-		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
+		/**
+		 * @param {import("./metadata.js").Chunk<Dtype>} chunk
+		 * @returns {Promise<Uint8Array>}
+		 */
+		async encode(chunk) {
 			if (!codecs) codecs = await load_codecs(array_metadata);
 			for (const codec of codecs.array_to_array) {
 				chunk = await codec.encode(chunk);
@@ -41,7 +52,11 @@ export function create_codec_pipeline<Dtype extends DataType>(
 			}
 			return bytes;
 		},
-		async decode(bytes: Uint8Array): Promise<Chunk<Dtype>> {
+		/**
+		 * @param {Uint8Array} bytes
+		 * @returns {Promise<import("./metadata.js").Chunk<Dtype>>}
+		 */
+		async decode(bytes) {
 			if (!codecs) codecs = await load_codecs(array_metadata);
 			for (let i = codecs.bytes_to_bytes.length - 1; i >= 0; i--) {
 				bytes = await codecs.bytes_to_bytes[i].decode(bytes);
@@ -55,24 +70,32 @@ export function create_codec_pipeline<Dtype extends DataType>(
 	};
 }
 
-type ArrayToArrayCodec<D extends DataType> = {
-	encode: (data: Chunk<D>) => Promise<Chunk<D>> | Chunk<D>;
-	decode: (data: Chunk<D>) => Promise<Chunk<D>> | Chunk<D>;
-};
+/**
+ * @template {DataType} D
+ * @typedef {{
+ *   encode(data: Chunk<D>): Promise<Chunk<D>> | Chunk<D>;
+ *   decode(data: Chunk<D>): Promise<Chunk<D>> | Chunk<D>;
+ * }} ArrayToArrayCodec
+ */
+/**
+ * @template {DataType} D
+ * @typedef {{
+ *   encode(data: Chunk<D>): Promise<Uint8Array> | Uint8Array;
+ *   decode(data: Uint8Array): Promise<Chunk<D>> | Chunk<D>;
+ * }} ArrayToBytesCodec
+ */
+/**
+ * @typedef {{
+ *   encode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
+ *   decode(data: Uint8Array): Promise<Uint8Array> | Uint8Array;
+ * }} BytesToBytesCodec
+ */
 
-type ArrayToBytesCodec<D extends DataType> = {
-	encode: (data: Chunk<D>) => Promise<Uint8Array> | Uint8Array;
-	decode: (data: Uint8Array) => Promise<Chunk<D>> | Chunk<D>;
-};
-
-type BytesToBytesCodec = {
-	encode: (data: Uint8Array) => Promise<Uint8Array>;
-	decode: (data: Uint8Array) => Promise<Uint8Array>;
-};
-
-async function load_codecs<D extends DataType>(
-	array_metadata: ArrayMetadata<D>,
-) {
+/**
+ * @template {DataType} D
+ * @param {import("./metadata.js").ArrayMetadata<D>} array_metadata
+ */
+async function load_codecs(array_metadata) {
 	let promises = array_metadata.codecs.map(async (meta) => {
 		let Codec = await registry.get(meta.name)?.();
 		if (!Codec) {
@@ -80,11 +103,12 @@ async function load_codecs<D extends DataType>(
 		}
 		return { Codec, meta };
 	});
-	let array_to_array: ArrayToArrayCodec<D>[] = [];
-	let array_to_bytes: ArrayToBytesCodec<D> = EndianCodec.fromConfig({
-		endian: "little",
-	}, array_metadata);
-	let bytes_to_bytes: BytesToBytesCodec[] = [];
+	/** @type {ArrayToArrayCodec<D>[]} */
+	let array_to_array = [];
+	/** @type {ArrayToBytesCodec<D>} */
+	let array_to_bytes = EndianCodec.fromConfig({ endian: "little" }, array_metadata);
+	/** @type {BytesToBytesCodec[]} */
+	let bytes_to_bytes = [];
 	for await (let { Codec, meta } of promises) {
 		let codec = Codec.fromConfig(meta.configuration, array_metadata);
 		switch (codec.kind) {
