@@ -1,76 +1,84 @@
-import type { Async, Readable, Writeable } from "@zarrita/storage";
-
-import type {
-	ArrayMetadata,
-	Attributes,
-	CodecMetadata,
-	DataType,
-	GroupMetadata,
-	Scalar,
-} from "./metadata.js";
 import { json_encode_object } from "./util.js";
 import { Array, Group, Location } from "./hierarchy.js";
 
-export interface CreateGroupOptions {
-	attributes?: Record<string, any>;
-}
+/** @typedef {import("./metadata.js").DataType} DataType */
+/** @typedef {import("@zarrita/storage").Readable} Readable */
+/** @typedef {import("@zarrita/storage").Writeable} Writeable */
+/**
+ * @template {Record<string, any>} T
+ * @typedef {import("@zarrita/storage").Async<T>} Async
+ */
 
-export interface CreateArrayOptions<Dtype extends DataType> {
-	shape: number[];
-	chunk_shape: number[];
-	data_type: Dtype;
-	codecs?: CodecMetadata[];
-	fill_value?: Scalar<Dtype>;
-	chunk_separator?: "." | "/";
-	attributes?: Attributes;
-}
+/** @typedef {{ attributes?: Record<string, any> }} CreateGroupOptions */
+/**
+ * @template {DataType} Dtype
+ * @typedef {{
+ *   shape: number[];
+ *   chunk_shape: number[];
+ *   data_type: Dtype;
+ *   codecs?: import("./metadata.js").CodecMetadata[];
+ *   fill_value?: import("./metadata.js").Scalar<Dtype>;
+ *   chunk_separator?: "." | "/";
+ *   attributes?: Record<string, any>;
+ * }} CreateArrayOptions
+ */
 
-export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Dtype extends DataType = DataType,
->(
-	location: Location<Store> | Store,
-): Promise<Group<Store>>;
-
-export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Dtype extends DataType = DataType,
->(
-	location: Location<Store> | Store,
-	options: CreateGroupOptions,
-): Promise<Group<Store>>;
-
-export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Dtype extends DataType,
->(
-	location: Location<Store> | Store,
-	options: CreateArrayOptions<Dtype>,
-): Promise<Array<Dtype, Store>>;
-
-export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Dtype extends DataType,
->(
-	location: Location<Store> | Store,
-	options: CreateArrayOptions<Dtype> | CreateGroupOptions = {},
-): Promise<Array<Dtype, Store> | Group<Store>> {
+/**
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ * @overload
+ * @param {Location<Store> | Store} location
+ * @returns {Promise<Group<Store>>}
+ */
+/**
+ * Create a group.
+ *
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ *
+ * @overload
+ * @param {Location<Store> | Store} location
+ * @param {CreateGroupOptions} options
+ * @returns {Promise<Group<Store>>}
+ */
+/**
+ * Create an array.
+ *
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ * @template {DataType} Dtype
+ *
+ * @overload
+ * @param {Location<Store> | Store} location
+ * @param {CreateArrayOptions<Dtype>} options
+ * @returns {Promise<Array<Dtype, Store>>}
+ */
+/**
+ * Create a new array or group.
+ *
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ * @template {DataType} Dtype
+ *
+ * @param {Location<Store> | Store} location
+ * @param {CreateArrayOptions<Dtype> | CreateGroupOptions} options
+ *
+ * @returns {Promise<Array<Dtype, Store> | Group<Store>>}
+ */
+export async function create(location, options = {}) {
 	let loc = "store" in location ? location : new Location(location);
-	if ("shape" in options) return create_array(loc, options) as any;
+	if ("shape" in options) return create_array(loc, options);
 	return create_group(loc, options);
 }
 
-async function create_group<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
->(
-	location: Location<Store>,
-	options: CreateGroupOptions = {},
-): Promise<Group<Store>> {
+/**
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ * @param {Location<Store>} location
+ * @param {CreateGroupOptions} options
+ */
+async function create_group(location, options) {
+	/** @satisfies {import("./metadata.js").GroupMetadata} */
 	let metadata = {
 		zarr_format: 3,
 		node_type: "group",
 		attributes: options.attributes ?? {},
-	} satisfies GroupMetadata;
+	};
 	await location.store.set(
 		location.resolve("zarr.json").path,
 		json_encode_object(metadata),
@@ -78,13 +86,15 @@ async function create_group<
 	return new Group(location.store, location.path, metadata);
 }
 
-async function create_array<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
-	Dtype extends DataType,
->(
-	location: Location<Store>,
-	options: CreateArrayOptions<Dtype>,
-): Promise<Array<DataType, Store>> {
+/**
+ * @template {(Readable & Writeable) | Async<Readable & Writeable>} Store
+ * @template {DataType} Dtype
+ * @param {Location<Store>} location
+ * @param {CreateArrayOptions<Dtype>} options
+ * @returns {Promise<Array<Dtype, Store>>}
+ */
+async function create_array(location, options) {
+	/** @satisfies {import("./metadata.js").ArrayMetadata<Dtype>} */
 	let metadata = {
 		zarr_format: 3,
 		node_type: "array",
@@ -105,7 +115,7 @@ async function create_array<
 		codecs: options.codecs ?? [],
 		fill_value: options.fill_value ?? null,
 		attributes: options.attributes ?? {},
-	} satisfies ArrayMetadata<Dtype>;
+	};
 	await location.store.set(
 		location.resolve("zarr.json").path,
 		json_encode_object(metadata),
