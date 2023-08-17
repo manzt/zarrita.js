@@ -13,7 +13,7 @@ const arr = await zarr.open.v2(store, { kind: "array" });
 ## Read a chunk
 
 ```js
-const chunk = await arr.get_chunk([0, 0]);
+const chunk = await arr.getChunk([0, 0]);
 // {
 //   data: Int32Array(10) [
 //      0,  1,  2,  3,  4,
