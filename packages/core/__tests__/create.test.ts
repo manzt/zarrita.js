@@ -4,13 +4,13 @@ import * as zarr from "../src/index.js";
 import { json_decode_object } from "../src/util.js";
 
 test("create root group", async () => {
-	let h = zarr.root();
 	let attributes = { hello: "world" };
-	let grp = await zarr.create(h, { attributes });
+	let grp = await zarr.create(new Map(), { attributes });
 	expect(grp.path).toBe("/");
 	expect(await grp.attrs()).toStrictEqual(attributes);
-	expect(h.store.has("/zarr.json")).true;
-	expect(json_decode_object(h.store.get("/zarr.json")!)).toMatchInlineSnapshot(`
+	expect(grp.store.has("/zarr.json")).true;
+	expect(json_decode_object(grp.store.get("/zarr.json")!))
+		.toMatchInlineSnapshot(`
 		{
 		  "attributes": {
 		    "hello": "world",
@@ -34,7 +34,7 @@ test("create array", async () => {
 	expect(a.path).toBe("/arthur/dent");
 	expect(a.shape).toStrictEqual([5, 10]);
 	expect(a.dtype).toBe("int32");
-	expect(a.chunk_shape).toStrictEqual([2, 5]);
+	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(await a.attrs()).toStrictEqual(attributes);
 	expect(json_decode_object(h.store.get("/arthur/dent/zarr.json")!))
 		.toMatchInlineSnapshot(`

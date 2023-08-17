@@ -1,11 +1,36 @@
 import { describe, expect, it } from "vitest";
 import ndarray from "ndarray";
 import { assign } from "ndarray-ops";
-import { type Chunk, type DataType, get_strides } from "@zarrita/core";
+import type { Chunk, DataType } from "@zarrita/core";
 
 import type { Projection } from "../src/types.js";
 import { setter } from "../src/ops.js";
 import { slice } from "../src/util.js";
+
+/** Compute strides for 'C' or 'F' ordered array from shape */
+function get_strides(shape: readonly number[], order: "C" | "F") {
+	return (order === "C" ? row_major_stride : col_major_stride)(shape);
+}
+
+function row_major_stride(shape: readonly number[]) {
+	const ndim = shape.length;
+	const stride: number[] = globalThis.Array(ndim);
+	for (let i = ndim - 1, step = 1; i >= 0; i--) {
+		stride[i] = step;
+		step *= shape[i];
+	}
+	return stride;
+}
+
+function col_major_stride(shape: readonly number[]) {
+	const ndim = shape.length;
+	const stride: number[] = globalThis.Array(ndim);
+	for (let i = 0, step = 1; i < ndim; i++) {
+		stride[i] = step;
+		step *= shape[i];
+	}
+	return stride;
+}
 
 function to_c<D extends DataType>({ data, shape, stride }: Chunk<D>): Chunk<D> {
 	let size = shape.reduce((a, b) => a * b, 1);

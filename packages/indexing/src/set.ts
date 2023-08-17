@@ -1,8 +1,7 @@
-import { KeyError } from "@zarrita/core";
+import { _internal_get_array_context, KeyError } from "@zarrita/core";
 import type { Async, Readable, Writeable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 
-import { get_ctr, get_strides } from "@zarrita/core";
 import { create_queue } from "./util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
@@ -14,7 +13,7 @@ import type {
 	Slice,
 } from "./types.js";
 
-function flip(m: IndexerProjection) {
+function flip_indexer_projection(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };
 	return { from: m.to, to: m.from };
 }
@@ -30,59 +29,68 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		set_from_chunk: SetFromChunk<Dtype, Arr>;
 	},
 ) {
+	const context = _internal_get_array_context(arr);
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
-		chunk_shape: arr.chunk_shape,
+		chunk_shape: arr.chunks,
 	});
 
 	// We iterate over all chunks which overlap the selection and thus contain data
 	// that needs to be replaced. Each chunk is processed in turn, extracting the
 	// necessary data from the value array and storing into the chunk array.
 
-	const chunk_size = arr.chunk_shape.reduce((a, b) => a * b, 1);
+	const chunk_size = arr.chunks.reduce((a, b) => a * b, 1);
 	const queue = opts.create_queue ? opts.create_queue() : create_queue();
-	const TypedArrayConstructor = get_ctr(arr.dtype);
 
 	// N.B., it is an important optimisation that we only visit chunks which overlap
 	// the selection. This minimises the number of iterations in the main for loop.
 	for (const { chunk_coords, mapping } of indexer) {
 		const chunk_selection = mapping.map((i) => i.from);
-		const flipped = mapping.map(flip);
+		const flipped = mapping.map(flip_indexer_projection);
 		queue.add(async () => {
 			// obtain key for chunk storage
-			const chunk_path = arr.resolve(arr.chunk_key(chunk_coords)).path;
+			const chunk_path =
+				arr.resolve(context.encode_chunk_key(chunk_coords)).path;
 
-			let cdata: TypedArray<Dtype>;
-			const shape = arr.chunk_shape;
-			const stride = get_strides(shape, arr._order);
+			let chunk_data: TypedArray<Dtype>;
+			const chunk_shape = arr.chunks.slice();
+			const chunk_stride = context.get_strides(chunk_shape);
 
-			if (is_total_slice(chunk_selection, arr.chunk_shape)) {
+			if (is_total_slice(chunk_selection, chunk_shape)) {
 				// totally replace
-				cdata = new TypedArrayConstructor(chunk_size);
+				chunk_data = new context.TypedArray(chunk_size);
 				// optimization: we are completely replacing the chunk, so no need
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
 					// Otherwise data just contiguous TypedArray
-					const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
+					const chunk = setter.prepare(
+						chunk_data,
+						chunk_shape.slice(),
+						chunk_stride.slice(),
+					);
 					setter.set_from_chunk(chunk, value, flipped);
 				} else {
 					// @ts-expect-error
-					cdata.fill(value as any);
+					chunk_data.fill(value as any);
 				}
 			} else {
 				// partially replace the contents of this chunk
-				cdata = await arr.get_chunk(chunk_coords)
+				chunk_data = await arr.getChunk(chunk_coords)
 					.then(({ data }) => data)
 					.catch((err) => {
 						if (!(err instanceof KeyError)) throw err;
-						const empty = new TypedArrayConstructor(chunk_size);
-						// @ts-ignore
+						const empty = new context.TypedArray(chunk_size);
+						// @ts-expect-error
 						if (arr.fill_value) empty.fill(arr.fill_value);
 						return empty;
 					});
 
-				const chunk = setter.prepare(cdata, shape.slice(), stride.slice());
+				const chunk = setter.prepare(
+					chunk_data,
+					chunk_shape.slice(),
+					chunk_stride.slice(),
+				);
 
 				// Modify chunk data
 				if (typeof value === "object") {
@@ -91,14 +99,14 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 					setter.set_scalar(chunk, chunk_selection, value);
 				}
 			}
-			// encode chunk
-			const encoded_chunk_data = await arr.codec.encode({
-				data: cdata,
-				shape: arr.chunk_shape,
-				stride: stride,
-			});
-			// store
-			await arr.store.set(chunk_path, encoded_chunk_data);
+			await arr.store.set(
+				chunk_path,
+				await context.codec.encode({
+					data: chunk_data,
+					shape: chunk_shape,
+					stride: chunk_stride,
+				}),
+			);
 		});
 	}
 	await queue.onIdle();
