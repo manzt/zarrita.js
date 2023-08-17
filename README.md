@@ -41,9 +41,9 @@ const region = await get(arr, [null, slice(6)]);
 
 zarrita's API is almost entirely tree-shakeable, meaning users are able to pick
 and choose only the features of Zarr which are necessary for an applications. At
-its core, the `zarr.Array` class allows accessing and decoding individual array chunks.
-"Fancy-indexing" and "slicing" are accomplished via (optional) functions which
-operate on `zarr.Array` objects.
+its core, the `zarr.Array` class allows accessing and decoding individual array
+chunks. "Fancy-indexing" and "slicing" are accomplished via (optional) functions
+which operate on `zarr.Array` objects.
 
 Thus, you only pay for these features if used (when bundling for the web). This
 design choice differs from existing implemenations of Zarr in JavaScript, and
