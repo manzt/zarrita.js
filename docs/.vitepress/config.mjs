@@ -1,5 +1,4 @@
 import { defineConfig } from "vitepress";
-import { tabsMarkdownPlugin } from "vitepress-plugin-tabs";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -47,10 +46,5 @@ export default defineConfig({
 				"Released under the <a style='text-decoration:underline;' href='https://github.com/manzt/zarrita.js/blob/main/LICENSE'>MIT License</a>.",
 			copyright: `Copyright 2020–${new Date().getUTCFullYear()} Trevor Manz`,
 		},
-	},
-	markdown: {
-		config(md) {
-			md.use(tabsMarkdownPlugin);
-		},
-	},
+	}
 });
