@@ -1,10 +1,9 @@
-# @zarrita/core
+# @zarrita/storage
 
-- Central component of Zarr.
-- Offers `open` (for `Readable` stores) and `create` (for `Writeable` stores)
-  functions.
-- Main function: Initialize `zarr.Array` or `zarr.Group` based on the path
-  hierarchy.
-- A `zarr.Array` allows loading and decompressing individual _chunks_ by their
-  coordinates – useful for applications needing direct chunk access like
-  tile-based viewers.
+- Provides a set of storage backends for Zarr.
+- Stores can be `Readable` and optionally `Writeable`.
+- Basic store example: JavaScript `Map` for in-memory storage.
+- Implements stores for the Node filesystem API and `fetch` API for reading Zarr
+  from file system and HTTP requests respectively.
+- Ideal for Zarr users in the browser: `FetchStore`.
+- Implement your own store!

@@ -115,7 +115,7 @@ export function encode_chunk_key(
 
 const endian_regex = /^([<|>])(.*)$/;
 
-export function coerce_dtype(
+function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
 	let match = dtype.match(endian_regex);

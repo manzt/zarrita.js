@@ -50,7 +50,7 @@ export function normalize_integer_selection(dim_sel: number, dim_len: number) {
 	return dim_sel;
 }
 
-export interface IntChunkDimProjection {
+interface IntChunkDimProjection {
 	dim_chunk_ix: number;
 	dim_chunk_sel: number;
 }
@@ -85,7 +85,7 @@ class IntDimIndexer {
 	}
 }
 
-export interface SliceChunkDimProjection {
+interface SliceChunkDimProjection {
 	dim_chunk_ix: number;
 	dim_chunk_sel: Indices;
 	dim_out_sel: Indices;
@@ -201,6 +201,7 @@ export type IndexerProjection = { from: number; to: null } | {
 	from: Indices;
 	to: Indices;
 };
+
 interface ChunkProjection {
 	chunk_coords: number[];
 	mapping: IndexerProjection[];

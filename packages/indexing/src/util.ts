@@ -1,9 +1,5 @@
 import type { ChunkQueue, Indices, Slice } from "./types.js";
 
-export function ensure_array<T>(maybe_arr: T | T[]): T[] {
-	return Array.isArray(maybe_arr) ? maybe_arr : [maybe_arr];
-}
-
 /** Similar to python's `range` function. Supports positive ranges only. */
 export function* range(
 	start: number,

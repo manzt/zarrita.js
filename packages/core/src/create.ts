@@ -11,11 +11,11 @@ import type {
 import { json_encode_object } from "./util.js";
 import { Array, Group, Location } from "./hierarchy.js";
 
-export interface CreateGroupOptions {
+interface CreateGroupOptions {
 	attributes?: Record<string, any>;
 }
 
-export interface CreateArrayOptions<Dtype extends DataType> {
+interface CreateArrayOptions<Dtype extends DataType> {
 	shape: number[];
 	chunk_shape: number[];
 	data_type: Dtype;
