@@ -46,5 +46,5 @@ export default defineConfig({
 				"Released under the <a style='text-decoration:underline;' href='https://github.com/manzt/zarrita.js/blob/main/LICENSE'>MIT License</a>.",
 			copyright: `Copyright 2020–${new Date().getUTCFullYear()} Trevor Manz`,
 		},
-	}
+	},
 });
