@@ -1,10 +1,10 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
-  "changelog": [
-    "@svitejs/changesets-changelog-github-compact",
-    { "repo": "manzt/zarrita.js" }
-  ],
-  "commit": false,
-  "access": "public",
-  "baseBranch": "main"
+	"$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
+	"changelog": [
+		"@svitejs/changesets-changelog-github-compact",
+		{ "repo": "manzt/zarrita.js" }
+	],
+	"commit": false,
+	"access": "public",
+	"baseBranch": "main"
 }
