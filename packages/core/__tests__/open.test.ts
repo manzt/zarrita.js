@@ -25,7 +25,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zlib.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -47,7 +47,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -69,7 +69,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.lz4.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -91,7 +91,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zstd.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -113,7 +113,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -135,7 +135,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int32Array [
 			    1,
@@ -157,7 +157,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Uint8Array [
 			    255,
@@ -179,7 +179,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float32Array [
 			    -1000.5,
@@ -201,7 +201,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float32Array [
 			    -1000.5,
@@ -223,7 +223,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float64Array [
 			    1.5,
@@ -245,7 +245,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U13.le"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(chunk.data as UnicodeStringArray)).toStrictEqual([
 			"a",
@@ -260,7 +260,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U13.be"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(chunk.data as UnicodeStringArray)).toStrictEqual([
 			"a",
@@ -275,7 +275,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U7"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
 		expect(Array.from(chunk.data as UnicodeStringArray)).toStrictEqual([
 			"a",
@@ -290,7 +290,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.S7"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(ByteStringArray);
 		expect(Array.from(chunk.data as ByteStringArray)).toStrictEqual([
 			"a",
@@ -305,7 +305,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk).toMatchInlineSnapshot(`
 			{
 			  "data": BoolArray {},
@@ -331,7 +331,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0, 0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -355,7 +355,7 @@ describe("v2", () => {
 		let arr = await open.v2(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0, 0, 0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0, 0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    0,
@@ -405,8 +405,8 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0]),
-			arr.get_chunk([1]),
+			arr.getChunk([0]),
+			arr.getChunk([1]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -443,9 +443,9 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0]),
-			arr.get_chunk([1]),
-			arr.get_chunk([2]),
+			arr.getChunk([0]),
+			arr.getChunk([1]),
+			arr.getChunk([2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -494,10 +494,10 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0]),
-			arr.get_chunk([0, 1]),
-			arr.get_chunk([1, 0]),
-			arr.get_chunk([1, 1]),
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -562,10 +562,10 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let [c1, c2, c3, c4] = await Promise.all([
-			arr.get_chunk([0, 0]),
-			arr.get_chunk([0, 1]),
-			arr.get_chunk([1, 0]),
-			arr.get_chunk([1, 1]),
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
 		]);
 		expect(Array.from(c1.data as UnicodeStringArray)).toStrictEqual(["a"]);
 		expect(c1.shape).toStrictEqual([1, 1]);
@@ -582,10 +582,10 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0]),
-			arr.get_chunk([0, 1]),
-			arr.get_chunk([1, 0]),
-			arr.get_chunk([1, 1]),
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -662,10 +662,10 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
-			arr.get_chunk([0, 0, 2]),
-			arr.get_chunk([1, 1, 1]),
-			arr.get_chunk([2, 2, 2]),
+			arr.getChunk([0, 0, 0]),
+			arr.getChunk([0, 0, 2]),
+			arr.getChunk([1, 1, 1]),
+			arr.getChunk([2, 2, 2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -738,9 +738,9 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
-			arr.get_chunk([0, 0, 1]),
-			arr.get_chunk([0, 0, 2]),
+			arr.getChunk([0, 0, 0]),
+			arr.getChunk([0, 0, 1]),
+			arr.getChunk([0, 0, 2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -822,9 +822,9 @@ describe("v2", () => {
 			kind: "array",
 		});
 		let [c1, c2, c3] = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
-			arr.get_chunk([0, 0, 1]),
-			arr.get_chunk([0, 0, 2]),
+			arr.getChunk([0, 0, 0]),
+			arr.getChunk([0, 0, 1]),
+			arr.getChunk([0, 0, 2]),
 		]);
 		let shape = [3, 3, 1];
 		let stride = [1, 3, 9];
@@ -880,7 +880,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.gzip.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -902,7 +902,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -924,7 +924,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -946,7 +946,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int32Array [
 			    1,
@@ -968,7 +968,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Uint8Array [
 			    255,
@@ -990,7 +990,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float32Array [
 			    -1000.5,
@@ -1012,7 +1012,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float32Array [
 			    -1000.5,
@@ -1034,7 +1034,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
 			{
 			  "data": Float64Array [
 			    1.5,
@@ -1056,7 +1056,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
-		let chunk = await arr.get_chunk([0]);
+		let chunk = await arr.getChunk([0]);
 		expect(chunk).toMatchInlineSnapshot(`
 			{
 			  "data": BoolArray {},
@@ -1082,7 +1082,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0, 0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    1,
@@ -1106,7 +1106,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
-		expect(await arr.get_chunk([0, 0, 0])).toMatchInlineSnapshot(`
+		expect(await arr.getChunk([0, 0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    0,
@@ -1155,7 +1155,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("/1d.chunked.i2"), {
 			kind: "array",
 		});
-		let chunks = await Promise.all([arr.get_chunk([0]), arr.get_chunk([1])]);
+		let chunks = await Promise.all([arr.getChunk([0]), arr.getChunk([1])]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
 			  {
@@ -1191,9 +1191,9 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0]),
-			arr.get_chunk([1]),
-			arr.get_chunk([2]),
+			arr.getChunk([0]),
+			arr.getChunk([1]),
+			arr.getChunk([2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -1242,10 +1242,10 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0]),
-			arr.get_chunk([0, 1]),
-			arr.get_chunk([1, 0]),
-			arr.get_chunk([1, 1]),
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -1310,10 +1310,10 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0]),
-			arr.get_chunk([0, 1]),
-			arr.get_chunk([1, 0]),
-			arr.get_chunk([1, 1]),
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -1390,9 +1390,9 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0, 2]),
-			arr.get_chunk([1, 1, 1]),
-			arr.get_chunk([2, 2, 2]),
+			arr.getChunk([0, 0, 2]),
+			arr.getChunk([1, 1, 1]),
+			arr.getChunk([2, 2, 2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -1450,9 +1450,9 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let chunks = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
-			arr.get_chunk([0, 0, 1]),
-			arr.get_chunk([0, 0, 2]),
+			arr.getChunk([0, 0, 0]),
+			arr.getChunk([0, 0, 1]),
+			arr.getChunk([0, 0, 2]),
 		]);
 		expect(chunks).toMatchInlineSnapshot(`
 			[
@@ -1534,9 +1534,9 @@ describe("v3", () => {
 			kind: "array",
 		});
 		let [c1, c2, c3] = await Promise.all([
-			arr.get_chunk([0, 0, 0]),
-			arr.get_chunk([0, 0, 1]),
-			arr.get_chunk([0, 0, 2]),
+			arr.getChunk([0, 0, 0]),
+			arr.getChunk([0, 0, 1]),
+			arr.getChunk([0, 0, 2]),
 		]);
 		let shape = [3, 3, 1];
 		let stride = [1, 3, 9];

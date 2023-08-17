@@ -5,17 +5,23 @@ import type {
 	DataType,
 	GroupMetadata,
 	Scalar,
+	TypedArrayConstructor,
 } from "./metadata.js";
-import { create_codec_pipeline } from "./codecs.js";
 import {
 	type DataTypeQuery,
-	encode_chunk_key,
 	is_dtype,
 	json_decode_object,
 	type NarrowDataType,
 	v2_marker,
 } from "./util.js";
 import { KeyError } from "./errors.js";
+import { create_codec_pipeline } from "./codecs.js";
+import {
+	create_chunk_key_encoder,
+	get_array_order,
+	get_ctr,
+	get_strides,
+} from "./util.js";
 
 export class Location<Store> {
 	constructor(
@@ -36,10 +42,26 @@ export class Location<Store> {
 	}
 }
 
+function lazy_attrs(
+	location: Location<Readable | Async<Readable>>,
+	metadata: { attributes: Record<string, unknown> },
+) {
+	async function get(): Promise<Record<string, unknown>> {
+		if (v2_marker in metadata.attributes) {
+			let attrs = await location.store.get(location.resolve(".zattrs").path);
+			return (attrs && json_decode_object(attrs)) || {};
+		}
+		return metadata.attributes;
+	}
+	let attrs: Record<string, unknown> | undefined;
+	return async () => {
+		if (attrs === undefined) attrs = await get();
+		return attrs;
+	};
+}
+
 export function root<Store>(store: Store): Location<Store>;
-
 export function root(): Location<Map<string, Uint8Array>>;
-
 export function root<Store>(
 	store?: any,
 ): Location<Store | Map<string, Uint8Array>> {
@@ -49,40 +71,59 @@ export function root<Store>(
 export class Group<
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
-	#metadata: GroupMetadata;
-	#attributes: Record<string, any> | undefined;
-
+	readonly attrs: () => Promise<Record<string, unknown>>;
 	constructor(
 		store: Store,
 		path: AbsolutePath,
 		metadata: GroupMetadata,
 	) {
 		super(store, path);
-		this.#metadata = metadata;
+		this.attrs = lazy_attrs(this, metadata);
 	}
+}
 
-	async attrs() {
-		if (
-			this.#attributes === undefined &&
-			v2_marker in this.#metadata.attributes
-		) {
-			let attrs = await this.store.get(this.resolve(".zattrs").path);
-			this.#attributes = (attrs && json_decode_object(attrs)) || {};
-		} else {
-			this.#attributes = this.#metadata.attributes;
-		}
-		return this.#attributes ?? {};
-	}
+const CONTEXT_MARKER = Symbol("zarrita.context");
+
+export function get_context<T>(obj: { [CONTEXT_MARKER]: T }): T {
+	return obj[CONTEXT_MARKER];
+}
+
+function create_context<D extends DataType>(
+	metadata: ArrayMetadata<D>,
+): ArrayContext<D> {
+	let native_order = get_array_order(metadata);
+	return {
+		codec: create_codec_pipeline(metadata),
+		encode_chunk_key: create_chunk_key_encoder(metadata.chunk_key_encoding),
+		TypedArray: get_ctr(metadata.data_type),
+		fill_value: metadata.fill_value,
+		get_strides(shape: number[], order?: "C" | "F") {
+			return get_strides(shape, order ?? native_order);
+		},
+	};
+}
+
+/** For internal use only, and is subject to change. */
+interface ArrayContext<D extends DataType> {
+	/** The codec pipeline for this array. */
+	codec: ReturnType<typeof create_codec_pipeline<D>>;
+	/** Encode a chunk key from chunk coordinates. */
+	encode_chunk_key(chunk_coords: number[]): string;
+	/** The TypedArray constructor for this array chunks. */
+	TypedArray: TypedArrayConstructor<D>;
+	/** A function to get the strides for a given shape, using the array order */
+	get_strides(shape: number[], order?: "C" | "F"): number[];
+	/** The fill value for this array. */
+	fill_value: Scalar<D> | null;
 }
 
 export class Array<
 	Dtype extends DataType,
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
-	codec: ReturnType<typeof create_codec_pipeline>;
 	#metadata: ArrayMetadata<Dtype>;
-	#attributes: Record<string, any> | undefined;
-	_order: "C" | "F";
+	readonly attrs: () => Promise<Record<string, unknown>>;
+	[CONTEXT_MARKER]: ArrayContext<Dtype>;
 
 	constructor(
 		store: Store,
@@ -90,65 +131,34 @@ export class Array<
 		metadata: ArrayMetadata<Dtype>,
 	) {
 		super(store, path);
-		this.codec = create_codec_pipeline(metadata);
 		this.#metadata = metadata;
-		if (typeof metadata.attributes === "object") {
-			this.#attributes = metadata.attributes;
-		}
-		const maybe_transpose_codec = metadata.codecs.find(
-			(c) => c.name === "transpose",
-		);
-		this._order = maybe_transpose_codec?.configuration?.order === "F"
-			? "F"
-			: "C";
-	}
-
-	chunk_key(chunk_coords: number[]): string {
-		return encode_chunk_key(
-			chunk_coords,
-			this.#metadata.chunk_key_encoding,
-		);
-	}
-
-	async get_chunk(
-		chunk_coords: number[],
-		options?: Parameters<Store["get"]>[1],
-	): Promise<Chunk<Dtype>> {
-		let chunk_path = this.resolve(this.chunk_key(chunk_coords)).path;
-		let maybe_bytes = await this.store.get(chunk_path, options);
-		if (!maybe_bytes) {
-			throw new KeyError(chunk_path);
-		}
-		return this.codec.decode(maybe_bytes);
+		this.attrs = lazy_attrs(this, metadata);
+		this[CONTEXT_MARKER] = create_context(metadata);
 	}
 
 	get shape() {
 		return this.#metadata.shape;
 	}
 
-	get chunk_shape() {
+	get chunks() {
 		return this.#metadata.chunk_grid.configuration.chunk_shape;
 	}
 
-	get dtype(): Dtype {
+	get dtype() {
 		return this.#metadata.data_type;
 	}
 
-	get fill_value(): Scalar<Dtype> | null {
-		return this.#metadata.fill_value;
-	}
-
-	async attrs() {
-		if (
-			this.#attributes === undefined &&
-			v2_marker in this.#metadata.attributes
-		) {
-			let attrs = await this.store.get(this.resolve(".zattrs").path);
-			this.#attributes = (attrs && json_decode_object(attrs)) || {};
-		} else {
-			this.#attributes = this.#metadata.attributes;
+	async getChunk(
+		chunk_coords: number[],
+		options?: Parameters<Store["get"]>[1],
+	): Promise<Chunk<Dtype>> {
+		let chunk_key = this[CONTEXT_MARKER].encode_chunk_key(chunk_coords);
+		let chunk_path = this.resolve(chunk_key).path;
+		let maybe_bytes = await this.store.get(chunk_path, options);
+		if (!maybe_bytes) {
+			throw new KeyError(chunk_path);
 		}
-		return this.#attributes ?? {};
+		return this[CONTEXT_MARKER].codec.decode(maybe_bytes);
 	}
 
 	/**

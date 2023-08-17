@@ -37,28 +37,21 @@ describe("Array", () => {
 		let arr = new Array(new Map(), "/", array_metadata);
 		expect({
 			shape: arr.shape,
-			chunk_shape: arr.chunk_shape,
+			chunks: arr.chunks,
 			dtype: arr.dtype,
-			fill_value: arr.fill_value,
 			attrs: await arr.attrs(),
 			path: arr.path,
-			codec: arr.codec,
 			store: arr.store,
 		}).toMatchInlineSnapshot(`
 			{
 			  "attrs": {
 			    "answer": 42,
 			  },
-			  "chunk_shape": [
+			  "chunks": [
 			    5,
 			    5,
 			  ],
-			  "codec": {
-			    "decode": [Function],
-			    "encode": [Function],
-			  },
 			  "dtype": "int8",
-			  "fill_value": 0,
 			  "path": "/",
 			  "shape": [
 			    10,

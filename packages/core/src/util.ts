@@ -100,17 +100,24 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-export function encode_chunk_key(
-	chunk_coords: number[],
+export function create_chunk_key_encoder(
 	{ name, configuration }: ArrayMetadata["chunk_key_encoding"],
-): string {
+): (chunk_coords: number[]) => string {
 	if (name === "default") {
-		return ["c", ...chunk_coords].join(configuration.separator);
+		return (chunk_coords) =>
+			["c", ...chunk_coords].join(configuration.separator);
 	}
 	if (name === "v2") {
-		return chunk_coords.join(configuration.separator) || "0";
+		return (chunk_coords) => chunk_coords.join(configuration.separator) || "0";
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
+}
+
+export function get_array_order(meta: ArrayMetadata<DataType>): "C" | "F" {
+	const maybe_transpose_codec = meta.codecs.find(
+		(c) => c.name === "transpose",
+	);
+	return maybe_transpose_codec?.configuration?.order === "F" ? "F" : "C";
 }
 
 const endian_regex = /^([<|>])(.*)$/;

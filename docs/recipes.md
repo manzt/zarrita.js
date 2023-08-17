@@ -11,7 +11,7 @@ const arr = await zarr.open(store, { kind: "array" });
 
 arr; // zarr.Array<DataType, FetchStore>
 arr.shape; // [5, 10]
-arr.chunk_shape; // [2, 5]
+arr.chunks; // [2, 5]
 arr.dtype; // "int32"
 ```
 
@@ -74,8 +74,8 @@ import { FileSystemStore } from "@zarrita/storage";
 const store = new FileSystemStore("tempstore");
 const arr = await zarr.create(store, {
 	shape: [10, 10],
-	chunk_shape: [5, 5],
-	data_type: "int32",
+	chunks: [5, 5],
+	dtype: "int32",
 });
 arr; // zarr.Array<"int32", FileSystemStore>
 ```

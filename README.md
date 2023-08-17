@@ -23,7 +23,7 @@ const store = new FetchStore("http://localhost:8080/data.zarr");
 const arr = await zarr.open.v2(store, { kind: "array" }); // zarr.Array<DataType, FetchStore>
 
 // read chunk
-const chunk = await arr.get_chunk([0, 0]);
+const chunk = await arr.getChunk([0, 0]);
 
 // Option 1: Builtin getter, no dependencies
 import { get, slice } from "@zarrita/indexing";
@@ -34,7 +34,7 @@ import { get } from "@zarrita/ndarray";
 const full = await get(arr); // ndarray.Ndarray<Int32Array>
 
 // read region
-const region = await get(arr, [null, zarr.slice(6)]);
+const region = await get(arr, [null, slice(6)]);
 ```
 
 ### Zarr building blocks
