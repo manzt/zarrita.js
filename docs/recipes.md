@@ -1,6 +1,6 @@
 # Recipes
 
-## Open an Array
+## Open an Array <Badge type="tip" text="v2 & v3" />
 
 ```js
 import * as zarr from "@zarrita/core";
@@ -15,7 +15,7 @@ arr.chunks; // [2, 5]
 arr.dtype; // "int32"
 ```
 
-## Open a Group
+## Open a Group <Badge type="tip" text="v2 & v3" />
 
 ```js
 import * as zarr from "@zarrita/core";
@@ -27,7 +27,7 @@ const group = await zarr.open(store, { kind: "group" });
 group; // zarr.Group
 ```
 
-## Open a Group or an Array
+## Open a Group or Array <Badge type="tip" text="v2 & v3" />
 
 ```js
 import * as zarr from "@zarrita/core";
@@ -39,7 +39,7 @@ const node = await zarr.open(store);
 node; // zarr.Array<DataType, FetchStore> | zarr.Group
 ```
 
-## Open a Group or an Array from another Node
+## Open a Group or an Array from another Node <Badge type="tip" text="v2 & v3" />
 
 ```js
 import * as zarr from "@zarrita/core";
@@ -51,7 +51,7 @@ const node = await zarr.open(store);
 const arr = await zarr.open(node.resolve("path/to/foo"), { kind: "array" });
 ```
 
-## Open Array or Group with strict version
+## Open Array or Group with strict version <Badge type="tip" text="v2 & v3" />
 
 You can enforce version with `open.v2` or `open.v3` respectively.
 
@@ -63,7 +63,7 @@ const store = new FetchStore("http://localhost:8080/data.zarr");
 const arr = await zarr.open.v2(store, { kind: "array" });
 ```
 
-## Create an Array (v3)
+## Create an Array <Badge type="tip" text="v3" />
 
 Requires the `store` to implement `Writeable`.
 
@@ -80,7 +80,7 @@ const arr = await zarr.create(store, {
 arr; // zarr.Array<"int32", FileSystemStore>
 ```
 
-## Create an Group (v3)
+## Create a Group <Badge type="tip" text="v3" />
 
 Requires the `store` to implement `Writeable`.
 

@@ -13,7 +13,8 @@
 	"excludes": [
 		"**/node_modules",
 		"**/*-lock.json",
-		"fixtures/**/*"
+		"fixtures/**/*",
+		"**/CHANGELOG.md"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.86.2.wasm",

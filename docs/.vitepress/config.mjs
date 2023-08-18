@@ -1,4 +1,5 @@
 import { defineConfig } from "vitepress";
+import { tabsMarkdownPlugin } from "vitepress-plugin-tabs";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -25,13 +26,13 @@ export default defineConfig({
 				],
 			},
 			{
-				text: "API Reference",
+				text: "Packages",
 				collapsed: false,
 				items: [
-					{ text: "@zarrita/core", link: "/core" },
-					{ text: "@zarrita/storage", link: "/storage" },
-					{ text: "@zarrita/indexing", link: "/indexing" },
-					{ text: "@zarrita/ndarray", link: "/ndarray" },
+					{ text: "@zarrita/core", link: "/packages/core" },
+					{ text: "@zarrita/storage", link: "/packages/storage" },
+					{ text: "@zarrita/indexing", link: "/packages/indexing" },
+					{ text: "@zarrita/ndarray", link: "/packages/ndarray" },
 				],
 			},
 		],
@@ -45,6 +46,11 @@ export default defineConfig({
 			message:
 				"Released under the <a style='text-decoration:underline;' href='https://github.com/manzt/zarrita.js/blob/main/LICENSE'>MIT License</a>.",
 			copyright: `Copyright 2020–${new Date().getUTCFullYear()} Trevor Manz`,
+		},
+	},
+	markdown: {
+		config(md) {
+			md.use(tabsMarkdownPlugin);
 		},
 	},
 });

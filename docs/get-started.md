@@ -1,69 +1,165 @@
 # Getting Started
 
-## Open an Array
+**zarrita** supports a variety of environments, including the browser, Node.js,
+and Deno.
 
-```js
+## Zarr in vanilla HTML
+
+In vanilla HTML, you can load **zarrita** from a CDN such as
+[jsDelivr](https://www.jsdelivr.com/) or [esm.sh](https://esm.sh) or you can
+download it locally. We recommend using the CDN-hosted ES module bundle as it
+automatically loads the other dependencies.
+
+::: tabs
+
+== jsDelivr
+
+```html
+<!DOCTYPE html>
+<script type="module">
+  import * as zarr from "https://cdn.jsdelivr.net/npm/@zarrita/core@0.0.1/+esm";
+  import { get } from "https://cdn.jsdelivr.net/npm/@zarrita/indexing@0.0.1/+esm";
+  import FetchStore from "https://cdn.jsdelivr.net/npm/@zarrita/storage@0.0.1/fetch/+esm";
+
+  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
+
+  const arr = await zarr.open(store, { kind: "array" });
+  // {
+  //   store: FetchStore,
+  //   path: "/",
+  //   dtype: "uint8",
+  //   shape: [512, 512, 3],
+  //   chunks: [100, 100, 1],
+  // }
+
+  const view = await get(arr, [null, null, 0]);
+  // {
+  //   data: Uint8Array,
+  //   shape: [512, 512],
+  //   stride: [512, 1],
+  // }
+</script>
+```
+
+== esm.sh
+
+```html
+<!DOCTYPE html>
+<script type="module">
+  import * as zarr from "https://esm.sh/@zarrita/core@0.0.1";
+  import { get } from "https://esm.sh/@zarrita/indexing@0.0.1";
+  import FetchStore from "https://esm.sh/@zarrita/storage@0.0.1/fetch";
+
+  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
+
+  const arr = await zarr.open(store, { kind: "array" });
+  // {
+  //   store: FetchStore,
+  //   path: "/",
+  //   dtype: "uint8",
+  //   shape: [512, 512, 3],
+  //   chunks: [100, 100, 1],
+  // }
+
+  const view = await get(arr, [null, null, 0]);
+  // {
+  //   data: Uint8Array,
+  //   shape: [512, 512],
+  //   stride: [512, 1],
+  // }
+</script>
+```
+
+== unpkg + import map
+
+```html
+<!DOCTYPE html>
+<script type="importmap">
+  {
+    "imports": {
+      "@zarrita/core": "https://unpkg.com/@zarrita/core@0.0.1/dist/src/index.js",
+      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@0.0.1/index.js",
+      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@0.0.1/dist/src/index.js",
+      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@0.0.1/dist/src/fetch.js",
+      "numcodecs/blosc": "https://unpkg.com/numcodecs@0.2/blosc",
+      "numcodecs/lz4": "https://unpkg.com/numcodecs@0.2/lz4",
+      "numcodecs/zlib": "https://unpkg.com/numcodecs@0.2/zlib",
+      "numcodecs/zstd": "https://unpkg.com/numcodecs@0.2/zstd",
+      "numcodecs/gzip": "https://unpkg.com/numcodecs@0.2/gzip"
+    }
+  }
+</script>
+<script type="module">
+  import * as zarr from "@zarrita/core";
+  import { get } from "@zarrita/indexing";
+  import FetchStore from "@zarrita/storage/fetch";
+
+  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
+
+  const arr = await zarr.open(store, { kind: "array" });
+  // {
+  //   store: FetchStore,
+  //   path: "/",
+  //   dtype: "uint8",
+  //   shape: [512, 512, 3],
+  //   chunks: [100, 100, 1],
+  // }
+
+  const view = await get(arr, [null, null, 0]);
+  // {
+  //   data: Uint8Array,
+  //   shape: [512, 512],
+  //   stride: [512, 1],
+  // }
+</script>
+```
+
+:::
+
+## Installing from npm
+
+If you're developing an application with Node.js, you can install **zarrita**
+via yarn, npm, pnpm:
+
+::: tabs key:pkg
+
+== yarn
+
+```sh
+yarn add @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+```
+
+== npm
+
+```sh
+npm install @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+```
+
+== pnpm
+
+```sh
+pnpm add @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+```
+
+:::
+
+You can then load **zarrita** modules into your app as:
+
+```javascript
 import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
-
-const store = new FetchStore("http://localhost:8080/data.zarr");
-const arr = await zarr.open.v2(store, { kind: "array" });
+const arr = await zarr.open(store);
 ```
 
-## Read a chunk
+or instead, import specific exports:
 
-```js
-const chunk = await arr.getChunk([0, 0]);
-// {
-//   data: Int32Array(10) [
-//      0,  1,  2,  3,  4,
-//     10, 11, 12, 13, 14,
-//   ],
-//   shape: [ 2, 5 ],
-// }
+```javascript
+import { open } from "@zarrita/core";
+const arr = await open(store);
 ```
 
-## Read entire dataset
+::: info
 
-```js
-import { get } from "@zarrita/indexing";
+Bundlers like Rollup are smart enough to tree-shake namespace imports, so the
+above code will result in the same final bundle.
 
-const full = await get(arr); // ndarray.Ndarray<Int32Array>
-// {
-//   data: Int32Array(50) [
-//      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-//     10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-//     20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-//     30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-//     40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-//   ],
-//   shape: [ 5, 10 ],
-//   stride: [ 10, 1 ]
-// }
-```
-
-## Read a selection
-
-```js
-const region = await get(arr, [null, zarr.slice(6)]);
-// {
-//   data: Int32Array(30) [
-//      0,  1,  2,  3,  4,  5,
-//     10, 11, 12, 13, 14, 15,
-//     20, 21, 22, 23, 24, 25,
-//     30, 31, 32, 33, 34, 35,
-//     40, 41, 42, 43, 44, 45,
-//   ],
-//   shape: [ 5, 6 ],
-//   stride: [ 6, 1 ]
-// }
-```
-
-## Read as a `scijs/ndarray`
-
-```js
-import { get } from "@zarrita/ndarray";
-
-const full = await get(arr); // ndarray.Ndarray<Int32Array>
-const region = await get(arr, [null, zarr.slice(6)]); // ndarray.Ndarray<Int32Array>
-```
+:::
