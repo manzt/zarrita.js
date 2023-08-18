@@ -25,12 +25,8 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://cdn.jsdelivr.net/npm/@zarrita/core@0.0.1/+esm";
-  import { get } from "https://cdn.jsdelivr.net/npm/@zarrita/indexing@0.0.1/+esm";
-  import FetchStore from "https://cdn.jsdelivr.net/npm/@zarrita/storage@0.0.1/fetch/+esm";
-
-  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
-
+  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@0.3.0/+esm";
+  const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
   //   store: FetchStore,
@@ -39,8 +35,7 @@ automatically loads the other dependencies.
   //   shape: [512, 512, 3],
   //   chunks: [100, 100, 1],
   // }
-
-  const view = await get(arr, [null, null, 0]);
+  const view = await zarr.get(arr, [null, null, 0]);
   // {
   //   data: Uint8Array,
   //   shape: [512, 512],
@@ -54,12 +49,8 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://esm.sh/@zarrita/core@0.0.1";
-  import { get } from "https://esm.sh/@zarrita/indexing@0.0.1";
-  import FetchStore from "https://esm.sh/@zarrita/storage@0.0.1/fetch";
-
-  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
-
+  import * as zarr from "https://esm.sh/zarrita@0.3.0";
+  const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
   //   store: FetchStore,
@@ -68,8 +59,7 @@ automatically loads the other dependencies.
   //   shape: [512, 512, 3],
   //   chunks: [100, 100, 1],
   // }
-
-  const view = await get(arr, [null, null, 0]);
+  const view = await zarr.get(arr, [null, null, 0]);
   // {
   //   data: Uint8Array,
   //   shape: [512, 512],
@@ -85,6 +75,7 @@ automatically loads the other dependencies.
 <script type="importmap">
   {
     "imports": {
+      "zarrita": "https://unpkg.com/zarrita@0.3.0",
       "@zarrita/core": "https://unpkg.com/@zarrita/core@0.0.1/dist/src/index.js",
       "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@0.0.1/index.js",
       "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@0.0.1/dist/src/index.js",
@@ -98,12 +89,8 @@ automatically loads the other dependencies.
   }
 </script>
 <script type="module">
-  import * as zarr from "@zarrita/core";
-  import { get } from "@zarrita/indexing";
-  import FetchStore from "@zarrita/storage/fetch";
-
-  const store = new FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
-
+  import * as zarr from "zarrita";
+  const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
   //   store: FetchStore,
@@ -112,8 +99,7 @@ automatically loads the other dependencies.
   //   shape: [512, 512, 3],
   //   chunks: [100, 100, 1],
   // }
-
-  const view = await get(arr, [null, null, 0]);
+  const view = await zarr.get(arr, [null, null, 0]);
   // {
   //   data: Uint8Array,
   //   shape: [512, 512],
@@ -134,19 +120,19 @@ via yarn, npm, pnpm:
 == yarn
 
 ```sh
-yarn add @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+yarn add zarrita
 ```
 
 == npm
 
 ```sh
-npm install @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+npm install zarrita
 ```
 
 == pnpm
 
 ```sh
-pnpm add @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
+pnpm add zarrita
 ```
 
 :::
@@ -154,14 +140,14 @@ pnpm add @zarrita/core # @zarrita/storage @zarrita/indexing @zarrita/ndarray
 You can then load **zarrita** modules into your app as:
 
 ```javascript
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 const arr = await zarr.open(store);
 ```
 
 or instead, import specific exports:
 
 ```javascript
-import { open } from "@zarrita/core";
+import { open } from "zarrita";
 const arr = await open(store);
 ```
 

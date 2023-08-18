@@ -16,25 +16,24 @@
 ## Usage
 
 ```javascript
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 import { FetchStore } from "@zarrita/storage";
 
 const store = new FetchStore("http://localhost:8080/data.zarr");
-const arr = await zarr.open.v2(store, { kind: "array" }); // zarr.Array<DataType, FetchStore>
+const arr = await zarr.open(store, { kind: "array" }); // zarr.Array<DataType, FetchStore>
 
 // read chunk
 const chunk = await arr.getChunk([0, 0]);
 
 // Option 1: Builtin getter, no dependencies
-import { get, slice } from "@zarrita/indexing";
-const full = await get(arr); // { data: Int32Array, shape: number[], stride: number[] }
+const full = await zarr.get(arr); // { data: Int32Array, shape: number[], stride: number[] }
 
 // Option 2: scijs/ndarray getter, includes `ndarray` and `ndarray-ops` dependencies
 import { get } from "@zarrita/ndarray";
 const full = await get(arr); // ndarray.Ndarray<Int32Array>
 
 // read region
-const region = await get(arr, [null, slice(6)]);
+const region = await get(arr, [null, zarr.slice(6)]);
 ```
 
 ### Zarr building blocks
@@ -91,8 +90,7 @@ classDiagram
 ### In Browser (or Deno)
 
 ```javascript
-import * as zarr from "https://esm.sh/@zarrita/core";
-import { get } from "https://esm.sh/@zarrita/indexing";
+import * as zarr from "https://esm.sh/zarrita";
 ```
 
 ### In Node.js or Application Bundles
@@ -100,13 +98,13 @@ import { get } from "https://esm.sh/@zarrita/indexing";
 Import using ES module syntax as a namespace:
 
 ```javascript
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 ```
 
 or with targeted named imports:
 
 ```javascript
-import { open } from "@zarrita/core";
+import { open } from "zarrita";
 ```
 
 ## Development

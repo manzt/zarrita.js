@@ -5,12 +5,10 @@ Simple recipes for using **zarrita**.
 ## Open an Array <Badge type="tip" text="v2 & v3" />
 
 ```js
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-const store = new FetchStore("http://localhost:8080/data.zarr");
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 const arr = await zarr.open(store, { kind: "array" });
-
 arr; // zarr.Array<DataType, FetchStore>
 arr.shape; // [5, 10]
 arr.chunks; // [2, 5]
@@ -20,36 +18,30 @@ arr.dtype; // "int32"
 ## Open a Group <Badge type="tip" text="v2 & v3" />
 
 ```js
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-const store = new FetchStore("http://localhost:8080/data.zarr");
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 const group = await zarr.open(store, { kind: "group" });
-
 group; // zarr.Group
 ```
 
 ## Open a Group or Array <Badge type="tip" text="v2 & v3" />
 
 ```js
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-const store = new FetchStore("http://localhost:8080/data.zarr");
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 const node = await zarr.open(store);
-
 node; // zarr.Array<DataType, FetchStore> | zarr.Group
 ```
 
 ## Open a Group or an Array from another Node <Badge type="tip" text="v2 & v3" />
 
 ```js
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-const store = new FetchStore("http://localhost:8080/data.zarr");
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 const node = await zarr.open(store);
-
 const arr = await zarr.open(node.resolve("path/to/foo"), { kind: "array" });
 ```
 
@@ -58,10 +50,9 @@ const arr = await zarr.open(node.resolve("path/to/foo"), { kind: "array" });
 You can enforce version with `open.v2` or `open.v3` respectively.
 
 ```js
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-const store = new FetchStore("http://localhost:8080/data.zarr");
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 const arr = await zarr.open.v2(store, { kind: "array" });
 ```
 
@@ -70,7 +61,7 @@ const arr = await zarr.open.v2(store, { kind: "array" });
 Requires the `store` to implement `Writeable`.
 
 ```js
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 import { FileSystemStore } from "@zarrita/storage";
 
 const store = new FileSystemStore("tempstore");
@@ -87,7 +78,7 @@ arr; // zarr.Array<"int32", FileSystemStore>
 Requires the `store` to implement `Writeable`.
 
 ```js
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 import { FileSystemStore } from "@zarrita/storage";
 
 const store = new FileSystemStore("tempstore");
