@@ -1,18 +1,18 @@
 {
-  "name": "zarrita",
-  "type": "module",
-  "version": "0.2.3",
-  "sideEffects": false,
-  "main": "index.js",
-  "exports": {
-    ".": {
-      "require": "./dist/index.d.ts",
-      "import": "./index.js"
-    }
-  },
-  "dependencies": {
-    "@zarrita/core": "workspace:^",
-    "@zarrita/indexing": "workspace:^",
-    "@zarrita/storage": "workspace:^"
-  }
+	"name": "zarrita",
+	"type": "module",
+	"version": "0.2.3",
+	"sideEffects": false,
+	"main": "index.js",
+	"exports": {
+		".": {
+			"require": "./dist/index.d.ts",
+			"import": "./index.js"
+		}
+	},
+	"dependencies": {
+		"@zarrita/core": "workspace:^",
+		"@zarrita/indexing": "workspace:^",
+		"@zarrita/storage": "workspace:^"
+	}
 }

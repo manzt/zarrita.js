@@ -1,4 +1,4 @@
-import { it, expect } from "vitest";
+import { expect, it } from "vitest";
 
 import * as mod from "./index.js";
 
@@ -29,5 +29,4 @@ it("exports all the things", () => {
 		  "slice": [Function],
 		}
 	`);
-})
-
+});
