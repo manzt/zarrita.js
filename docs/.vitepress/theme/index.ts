@@ -7,6 +7,6 @@ import "./style.css";
 export default {
 	...Theme,
 	enhanceApp({ app }) {
-		enhanceAppWithTabs(app)
-	}
+		enhanceAppWithTabs(app);
+	},
 };

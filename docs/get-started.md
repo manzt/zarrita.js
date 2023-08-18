@@ -1,6 +1,7 @@
 # Getting Started
 
-**zarrita** supports a variety of environments, including the browser, Node.js, and Deno.
+**zarrita** supports a variety of environments, including the browser, Node.js,
+and Deno.
 
 ## Zarr in vanilla HTML
 
@@ -70,6 +71,7 @@ automatically loads the other dependencies.
 ```
 
 == unpkg + import map
+
 ```html
 <!DOCTYPE html>
 <script type="importmap">
@@ -111,11 +113,13 @@ automatically loads the other dependencies.
   // }
 </script>
 ```
+
 :::
 
 ## Installing from npm
 
-If you're developing an application with Node.js, you can install **zarrita** via yarn, npm, pnpm:
+If you're developing an application with Node.js, you can install **zarrita**
+via yarn, npm, pnpm:
 
 ::: tabs key:pkg
 
@@ -159,4 +163,3 @@ Bundlers like Rollup are smart enough to tree-shake namespace imports, so the
 above code will result in the same final bundle.
 
 :::
-
