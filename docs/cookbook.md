@@ -1,4 +1,6 @@
-# Recipes
+# Cookbook
+
+Simple recipes for using **zarrita**.
 
 ## Open an Array <Badge type="tip" text="v2 & v3" />
 

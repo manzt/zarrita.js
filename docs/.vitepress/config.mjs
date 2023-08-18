@@ -22,7 +22,8 @@ export default defineConfig({
 				items: [
 					{ text: "What is zarrita.js?", link: "/what-is-zarrita" },
 					{ text: "Get Started", link: "/get-started" },
-					{ text: "Recipes", link: "/recipes" },
+					{ text: "Slicing and Indexing", link: "/slicing" },
+					{ text: "Cookbook", link: "/cookbook" },
 				],
 			},
 			{
