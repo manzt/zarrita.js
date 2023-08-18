@@ -3,6 +3,21 @@
 **zarrita** supports a variety of environments, including the browser, Node.js,
 and Deno.
 
+## Try Zarr online
+
+You can try out **zarrita** on [Observable](https://observablehq.com/d/35b6921f8cb3aeef)! The
+[example notebook](https://observablehq.com/d/35b6921f8cb3aeef) has all the dependencies 
+loaded for you to poke around with the API and try loading some of your own data.
+
+```javascript
+const store = new FetchStore(url);
+const arr = await zarr.open(store, { kind: "array" });
+const view = await get(arr, [null, null, 0]);
+draw(view);
+```
+
+<img width="257" alt="astronaut" src="https://github.com/manzt/anywidget/assets/24403730/2df28db6-be69-48f2-9001-8c00d12888ad">
+
 ## Zarr in vanilla HTML
 
 In vanilla HTML, you can load **zarrita** from a CDN such as
