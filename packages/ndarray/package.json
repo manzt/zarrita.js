@@ -7,6 +7,7 @@
 		"build": "tsc",
 		"clean": "rm -rf dist"
 	},
+	"main": "index.js",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
