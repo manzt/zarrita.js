@@ -25,13 +25,13 @@ export default defineConfig({
 				],
 			},
 			{
-				text: "API Reference",
+				text: "Packages",
 				collapsed: false,
 				items: [
-					{ text: "@zarrita/core", link: "/core" },
-					{ text: "@zarrita/storage", link: "/storage" },
-					{ text: "@zarrita/indexing", link: "/indexing" },
-					{ text: "@zarrita/ndarray", link: "/ndarray" },
+					{ text: "@zarrita/core", link: "/packages/core" },
+					{ text: "@zarrita/storage", link: "/packages/storage" },
+					{ text: "@zarrita/indexing", link: "/packages/indexing" },
+					{ text: "@zarrita/ndarray", link: "/packages/ndarray" },
 				],
 			},
 		],

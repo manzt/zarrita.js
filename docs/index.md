@@ -32,16 +32,15 @@ features:
     details: Built in TypeScript, offering rich type information.
 
   - title: "@zarrita/core"
-    details: Open arrays and groups
-    link: /core
-    # linkText:
+    link: /packages/core
+    linkText: Open arrays and groups
   - title: "@zarrita/storage"
-    details: Pick a storage backend
-    link: /storage
+    link: /packages/storage
+    linkText: Pick a storage backend
   - title: "@zarrita/indexing"
-    details: Slice and index arrays
-    link: /indexing
+    linkText: Slice and index arrays
+    link: /packages/indexing
   - title: "@zarrita/ndarray"
-    details: Load arrays with scijs/ndarray
-    link: /ndarray
+    linkText: Load with scijs/ndarray
+    link: /packages/ndarray
 ---

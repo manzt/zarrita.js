@@ -100,7 +100,7 @@ let arr = await zarr.open.v2(root.resolve("foo/bar"), { kind: "array" });
 
 To load individual **array** chunks on demand base on their key, use the
 `Array.getChunk` method. This feature is useful in applications where you want
-to load chunks on-demand (i.e. a tiled image viewer).
+to load chunks lazily (i.e. a tiled image viewer).
 
 ```javascript
 const chunk = await arr.getChunk([0, 0]);

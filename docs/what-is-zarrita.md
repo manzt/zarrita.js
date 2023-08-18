@@ -13,46 +13,36 @@
 
 ## Zarr building blocks
 
-**zarrita**'s API is almost entirely
-[tree-shakeable](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking),
-meaning users are able to pick and choose only the features of Zarr which are
-necessary for an applications. At its core, the `zarr.Array` class allows
-reading individual chunks. "Fancy-indexing" and "slicing" are accomplished via
-(optional) functions which operate on `zarr.Array` objects.
+**zarrita** is a collection of
+[ECMAScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+(ESM). Each module exports independent **functions** to interact with Zarr
+entities like stores, arrays, and groups.
 
-Thus, you only _pay_ for these features if used (when bundling for the web).
-This design choice differs from existing implemenations of Zarr in JavaScript,
-and allows **zarrita** to be both minimal and more feature-complete if
-necessary.
+The choice of ESM exports over a class-based methods allows for better static
+analysis by bundlers, enabling unused features in **zarrita** to be
+[tree-shaken](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking).
+This design differs from existing implementations of Zarr in JavaScript and
+allows **zarrita** to be both <u>minimal and feature complete</u> if necessary.
 
 ## Project overview
 
-### @zarrita/storage
+**zarrita** is broken down into several packages to create and interact with
+Zarr.
 
-- Provides a set of storage backends for Zarr.
-- Stores can be `Readable` and optionally `Writeable`.
-- Basic store example: JavaScript `Map` for in-memory storage.
-- Implements stores for the Node filesystem API and `fetch` API for reading Zarr
-  from file system and HTTP requests respectively.
-- Ideal for Zarr users in the browser: `FetchStore`.
-- Implement your own store!
+### [@zarrita/storage](/packages/storage)
 
-### @zarrita/core
+- A collection of useful of storage backends for Zarr.
+- Implement your own `Readable` and (optionally `Writeable`) stores.
 
-- Central component of Zarr.
-- Offers `open` (for `Readable` stores) and `create` (for `Writeable` stores)
-  functions.
-- Main function: Initialize `zarr.Array` or `zarr.Group` based on the path
-  hierarchy.
-- A `zarr.Array` allows loading and decompressing individual _chunks_ by their
-  coordinates – useful for applications needing direct chunk access like
-  tile-based viewers.
+### [@zarrita/core](/packages/core)
 
-### @zarrita/indexing
+- Navigate a storage hierarchy and `open` or `create` **groups** and **arrays**.
+- Load individual array **chunks** on-demand based on their key.
 
-- Operates on core `zarr.Array` for advanced indexing and slicing.
+### [@zarrita/indexing](/packages/indexing)
+
+- Slice and index an **array**, stitching together one or more chunks.
 - Offers an ergonomic API familiar to Zarr/numpy users.
-- Returns objects with strided TypedArrays
 
 ```javascript
 const region = await get(arr, [null, null]);
@@ -63,7 +53,7 @@ const region = await get(arr, [null, null]);
 // }
 ```
 
-### @zarrita/ndarray
+### [@zarrita/ndarray](/packages/ndarray)
 
 - Similar to `@zarrita/indexing` but returns `scijs/ndarray` objects.
 - Ideal for applications already using or require `scijs/ndarray` objects.
