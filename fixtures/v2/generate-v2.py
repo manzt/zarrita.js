@@ -2,8 +2,8 @@ import zarr
 import numpy as np
 from numcodecs import Zlib, Blosc, LZ4, Zstd
 
-store = zarr.DirectoryStore('data.zarr');
-root = zarr.open_group(store);
+store = zarr.DirectoryStore('data.zarr')
+root = zarr.open_group(store)
 
 # 1d.contiguous.zlib.i2
 root.create_dataset("1d.contiguous.zlib.i2", data=[1, 2, 3, 4], dtype='i2', chunks=(4,), compressor=Zlib())
@@ -83,3 +83,5 @@ root.create_dataset('3d.chunked.mixed.i2.C', data=np.arange(27).reshape(3,3,3), 
 
 # 3d.chunked.mixed.i2.F
 root.create_dataset('3d.chunked.mixed.i2.F', data=np.arange(27).reshape(3,3,3), order="F", dtype='i2', chunks=(3,3,1))
+
+zarr.consolidate_metadata(store)

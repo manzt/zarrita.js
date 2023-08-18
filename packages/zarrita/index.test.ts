@@ -27,6 +27,7 @@ it("exports all the things", () => {
 		  "root": [Function],
 		  "set": [Function],
 		  "slice": [Function],
+		  "withConsolidated": [Function],
 		}
 	`);
 });
