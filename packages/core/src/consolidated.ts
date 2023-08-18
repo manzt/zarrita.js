@@ -1,41 +1,53 @@
-import type { Async, Readable } from "@zarrita/storage";
+import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
+
+import { Array, Group } from "./hierarchy.js";
+import { v2_to_v3_array_metadata, v2_to_v3_group_metadata } from "./util.js";
+import type { ArrayMetadataV2, GroupMetadataV2 } from "./metadata.js";
 
 type ConsolidatedMetadata = {
-	metadata: Record<string, Record<string, any>>;
+	metadata: Record<string, any>;
 	zarr_consolidated_format: 1;
 };
 
-type ConslidatedStore<Store> = Omit<Store, "metadata"> & {
-	metadata: ConsolidatedMetadata;
-};
-
 /** Proxies requests to the underlying store. */
-export async function withConsolidated<Store extends Async<Readable>>(
+export async function openConsolidated<Store extends Async<Readable>>(
 	store: Store,
-): Promise<ConslidatedStore<Store>> {
+) {
 	let meta_bytes = await store.get("/.zmetadata");
 	if (!meta_bytes) throw new Error("No consolidated metadata found.");
-	let meta: ConsolidatedMetadata = JSON.parse(
+	let { metadata }: ConsolidatedMetadata = JSON.parse(
 		new TextDecoder().decode(meta_bytes),
 	);
-	let encoder = new TextEncoder();
-	return new Proxy(store as any, {
-		get(target: Store, prop: string) {
-			if (prop === "metadata") {
-				return meta.metadata;
+	let nodes = Object
+		.entries(metadata)
+		.reduce(
+			(acc, [path, content]) => {
+				let parts = path.split("/");
+				let file_name = parts.pop()!;
+				let key: AbsolutePath = `/${parts.join("/")}`;
+				if (!acc[key]) acc[key] = {};
+				if (file_name === ".zarray") {
+					acc[key].meta = content;
+				} else if (file_name === ".zgroup") {
+					acc[key].meta = content;
+				} else if (file_name === ".zattrs") {
+					acc[key].attrs = content;
+				}
+				return acc;
+			},
+			{} as Record<
+				AbsolutePath,
+				{ meta?: ArrayMetadataV2 | GroupMetadataV2; attrs?: any }
+			>,
+		);
+	return Object.entries(nodes)
+		.map(([path, { meta, attrs }]) => {
+			if (!meta) throw new Error("No metadata found.");
+			if ("shape" in meta) {
+				let metadata = v2_to_v3_array_metadata(meta, attrs);
+				return new Array(store, path as AbsolutePath, metadata);
 			}
-			if (prop === "get") {
-				// Intercept metadata requests
-				return (...args: Parameters<Store["get"]>) => {
-					let prefix = args[0].slice(1);
-					if (prefix in meta.metadata) {
-						let str = JSON.stringify(meta.metadata[prefix]);
-						return Promise.resolve(encoder.encode(str));
-					}
-					return target.get(args[0], args[1]);
-				};
-			}
-			return Reflect.get(target, prop);
-		},
-	});
+			let metadata = v2_to_v3_group_metadata(meta, attrs);
+			return new Group(store, path as AbsolutePath, metadata);
+		});
 }

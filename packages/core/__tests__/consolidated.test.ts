@@ -1,531 +1,157 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
 
 import { FetchStore, FileSystemStore } from "@zarrita/storage";
-import { withConsolidated } from "../src/consolidated.js";
+import { openConsolidated } from "../src/consolidated.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-describe("withConsolidated", () => {
+describe("openConsolidated", () => {
 	it("works with FileSystemStore", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withConsolidated(new FileSystemStore(root));
-		expect(store.metadata).toMatchInlineSnapshot(`
-			{
-			  ".zgroup": {
-			    "zarr_format": 2,
-			  },
-			  "1d.chunked.i2/.zarray": {
-			    "chunks": [
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
+		let nodes = await openConsolidated(new FileSystemStore(root));
+		expect(
+			nodes.map((node) => ({
+				kind: node.kind,
+				path: node.path,
+				attrs: node.attrs,
+			})),
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "attrs": {
+			      "answer": 42,
 			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			    "kind": "group",
+			    "path": "/",
 			  },
-			  "1d.chunked.ragged.i2/.zarray": {
-			    "chunks": [
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      5,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.chunked.i2",
 			  },
-			  "1d.contiguous.S7/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|S7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.chunked.ragged.i2",
 			  },
-			  "1d.contiguous.U13.be/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": ">U13",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.S7",
 			  },
-			  "1d.contiguous.U13.le/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U13",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U13.be",
 			  },
-			  "1d.contiguous.U7/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U13.le",
 			  },
-			  "1d.contiguous.b1/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|b1",
-			    "fill_value": false,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U7",
 			  },
-			  "1d.contiguous.blosc.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.b1",
 			  },
-			  "1d.contiguous.f4.be/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": ">f4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.blosc.i2",
 			  },
-			  "1d.contiguous.f4.le/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<f4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f4.be",
 			  },
-			  "1d.contiguous.f8/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<f8",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f4.le",
 			  },
-			  "1d.contiguous.i4/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f8",
 			  },
-			  "1d.contiguous.lz4.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "acceleration": 1,
-			      "id": "lz4",
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.i4",
 			  },
-			  "1d.contiguous.raw.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": null,
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.lz4.i2",
 			  },
-			  "1d.contiguous.u1/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|u1",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.raw.i2",
 			  },
-			  "1d.contiguous.zlib.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "id": "zlib",
-			      "level": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.u1",
 			  },
-			  "1d.contiguous.zstd.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "id": "zstd",
-			      "level": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.zlib.i2",
 			  },
-			  "2d.chunked.U7/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.zstd.i2",
 			  },
-			  "2d.chunked.i2/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.U7",
 			  },
-			  "2d.chunked.ragged.i2/.zarray": {
-			    "chunks": [
-			      2,
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.i2",
 			  },
-			  "2d.contiguous.i2/.zarray": {
-			    "chunks": [
-			      2,
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.ragged.i2",
 			  },
-			  "3d.chunked.i2/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.contiguous.i2",
 			  },
-			  "3d.chunked.mixed.i2.C/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.i2",
 			  },
-			  "3d.chunked.mixed.i2.F/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "F",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.mixed.i2.C",
 			  },
-			  "3d.contiguous.i2/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.mixed.i2.F",
 			  },
-			}
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.contiguous.i2",
+			  },
+			]
 		`);
 	});
 
@@ -533,532 +159,179 @@ describe("withConsolidated", () => {
 		// `vitest --api` exposes the port 51204
 		// ref: https://vitest.dev/config/#api
 		let href = "http://localhost:51204/fixtures/v2/data.zarr";
-		let store = await withConsolidated(new FetchStore(href));
-		expect(store.metadata).toMatchInlineSnapshot(`
-			{
-			  ".zgroup": {
-			    "zarr_format": 2,
-			  },
-			  "1d.chunked.i2/.zarray": {
-			    "chunks": [
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
+		let nodes = await openConsolidated(new FetchStore(href));
+		expect(
+			nodes.map((node) => ({
+				kind: node.kind,
+				path: node.path,
+				attrs: node.attrs,
+			})),
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "attrs": {
+			      "answer": 42,
 			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			    "kind": "group",
+			    "path": "/",
 			  },
-			  "1d.chunked.ragged.i2/.zarray": {
-			    "chunks": [
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      5,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.chunked.i2",
 			  },
-			  "1d.contiguous.S7/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|S7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.chunked.ragged.i2",
 			  },
-			  "1d.contiguous.U13.be/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": ">U13",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.S7",
 			  },
-			  "1d.contiguous.U13.le/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U13",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U13.be",
 			  },
-			  "1d.contiguous.U7/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U13.le",
 			  },
-			  "1d.contiguous.b1/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|b1",
-			    "fill_value": false,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.U7",
 			  },
-			  "1d.contiguous.blosc.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.b1",
 			  },
-			  "1d.contiguous.f4.be/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": ">f4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.blosc.i2",
 			  },
-			  "1d.contiguous.f4.le/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<f4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f4.be",
 			  },
-			  "1d.contiguous.f8/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<f8",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f4.le",
 			  },
-			  "1d.contiguous.i4/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i4",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.f8",
 			  },
-			  "1d.contiguous.lz4.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "acceleration": 1,
-			      "id": "lz4",
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.i4",
 			  },
-			  "1d.contiguous.raw.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": null,
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.lz4.i2",
 			  },
-			  "1d.contiguous.u1/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "|u1",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.raw.i2",
 			  },
-			  "1d.contiguous.zlib.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "id": "zlib",
-			      "level": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.u1",
 			  },
-			  "1d.contiguous.zstd.i2/.zarray": {
-			    "chunks": [
-			      4,
-			    ],
-			    "compressor": {
-			      "id": "zstd",
-			      "level": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      4,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.zlib.i2",
 			  },
-			  "2d.chunked.U7/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<U7",
-			    "fill_value": "",
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/1d.contiguous.zstd.i2",
 			  },
-			  "2d.chunked.i2/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.U7",
 			  },
-			  "2d.chunked.ragged.i2/.zarray": {
-			    "chunks": [
-			      2,
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.i2",
 			  },
-			  "2d.contiguous.i2/.zarray": {
-			    "chunks": [
-			      2,
-			      2,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      2,
-			      2,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.chunked.ragged.i2",
 			  },
-			  "3d.chunked.i2/.zarray": {
-			    "chunks": [
-			      1,
-			      1,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/2d.contiguous.i2",
 			  },
-			  "3d.chunked.mixed.i2.C/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.i2",
 			  },
-			  "3d.chunked.mixed.i2.F/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      1,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "F",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.mixed.i2.C",
 			  },
-			  "3d.contiguous.i2/.zarray": {
-			    "chunks": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "compressor": {
-			      "blocksize": 0,
-			      "clevel": 5,
-			      "cname": "lz4",
-			      "id": "blosc",
-			      "shuffle": 1,
-			    },
-			    "dtype": "<i2",
-			    "fill_value": 0,
-			    "filters": null,
-			    "order": "C",
-			    "shape": [
-			      3,
-			      3,
-			      3,
-			    ],
-			    "zarr_format": 2,
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.chunked.mixed.i2.F",
 			  },
-			}
+			  {
+			    "attrs": {},
+			    "kind": "array",
+			    "path": "/3d.contiguous.i2",
+			  },
+			]
 		`);
 	});
 
-	it("should avoid reading metadata from the underlying store", async () => {
+	it("loads data", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = new FileSystemStore(root);
-		let consolidated = await withConsolidated(store);
-		let spy = vi.spyOn(store, "get");
-		let meta_bytes = await consolidated.get("/.zgroup");
-		expect(spy).not.toHaveBeenCalled();
-		expect(meta_bytes).toBeDefined();
+		let nodes = await openConsolidated(new FileSystemStore(root));
+		let arr = nodes.find((node) => node.path === "/3d.chunked.mixed.i2.C");
+		expect(await (arr as any).getChunk([0, 0, 0])).toMatchInlineSnapshot(`
+			{
+			  "data": Int16Array [
+			    0,
+			    3,
+			    6,
+			    9,
+			    12,
+			    15,
+			    18,
+			    21,
+			    24,
+			  ],
+			  "shape": [
+			    3,
+			    3,
+			    1,
+			  ],
+			  "stride": [
+			    3,
+			    1,
+			    1,
+			  ],
+			}
+		`);
 	});
 });

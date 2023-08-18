@@ -21,6 +21,29 @@ describe("v2", () => {
 		),
 	);
 
+	it("opens group with attrs", async () => {
+		let group = await open.v2(store);
+		expect(group.attrs).toMatchInlineSnapshot(`
+			{
+			  "answer": 42,
+			}
+		`);
+	});
+
+	it("opens group (force) attrs", async () => {
+		let group = await open.v2(store, { attrs: true });
+		expect(group.attrs).toMatchInlineSnapshot(`
+			{
+			  "answer": 42,
+			}
+		`);
+	});
+
+	it("opens group (force) no attrs", async () => {
+		let group = await open.v2(store, { attrs: false });
+		expect(group.attrs).toMatchInlineSnapshot("{}");
+	});
+
 	it("reads 1d.contiguous.zlib.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zlib.i2"), {
 			kind: "array",

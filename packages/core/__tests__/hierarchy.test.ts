@@ -39,7 +39,7 @@ describe("Array", () => {
 			shape: arr.shape,
 			chunks: arr.chunks,
 			dtype: arr.dtype,
-			attrs: await arr.attrs(),
+			attrs: arr.attrs,
 			path: arr.path,
 			store: arr.store,
 		}).toMatchInlineSnapshot(`
@@ -91,7 +91,7 @@ describe("Group", () => {
 			attributes: { answer: 42 },
 		});
 		expect({
-			attrs: await grp.attrs(),
+			attrs: grp.attrs,
 			path: grp.path,
 			store: grp.store,
 		}).toMatchInlineSnapshot(`

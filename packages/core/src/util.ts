@@ -157,6 +157,7 @@ export const v2_marker = Symbol("v2");
 
 export function v2_to_v3_array_metadata(
 	meta: ArrayMetadataV2,
+	attributes: Record<string, unknown> = {},
 ): ArrayMetadata<DataType> {
 	let codecs: CodecMetadata[] = [];
 	let dtype = coerce_dtype(meta.dtype);
@@ -192,15 +193,18 @@ export function v2_to_v3_array_metadata(
 		},
 		codecs,
 		fill_value: meta.fill_value,
-		attributes: { [v2_marker]: true },
+		attributes,
 	};
 }
 
-export function v2_to_v3_group_metadata(_meta: GroupMetadataV2): GroupMetadata {
+export function v2_to_v3_group_metadata(
+	_meta: GroupMetadataV2,
+	attributes: Record<string, unknown> = {},
+): GroupMetadata {
 	return {
 		zarr_format: 3,
 		node_type: "group",
-		attributes: { [v2_marker]: true },
+		attributes,
 	};
 }
 

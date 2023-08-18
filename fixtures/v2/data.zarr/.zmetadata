@@ -1,5 +1,8 @@
 {
     "metadata": {
+        ".zattrs": {
+            "answer": 42
+        },
         ".zgroup": {
             "zarr_format": 2
         },

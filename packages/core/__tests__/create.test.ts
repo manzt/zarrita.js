@@ -7,7 +7,7 @@ test("create root group", async () => {
 	let attributes = { hello: "world" };
 	let grp = await zarr.create(new Map(), { attributes });
 	expect(grp.path).toBe("/");
-	expect(await grp.attrs()).toStrictEqual(attributes);
+	expect(grp.attrs).toStrictEqual(attributes);
 	expect(grp.store.has("/zarr.json")).true;
 	expect(json_decode_object(grp.store.get("/zarr.json")!))
 		.toMatchInlineSnapshot(`
@@ -35,7 +35,7 @@ test("create array", async () => {
 	expect(a.shape).toStrictEqual([5, 10]);
 	expect(a.dtype).toBe("int32");
 	expect(a.chunks).toStrictEqual([2, 5]);
-	expect(await a.attrs()).toStrictEqual(attributes);
+	expect(a.attrs).toStrictEqual(attributes);
 	expect(json_decode_object(h.store.get("/arthur/dent/zarr.json")!))
 		.toMatchInlineSnapshot(`
 		{

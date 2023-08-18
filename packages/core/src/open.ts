@@ -1,5 +1,10 @@
 import type { Async, Readable } from "@zarrita/storage";
-import type { ArrayMetadata, DataType, GroupMetadata } from "./metadata.js";
+import type {
+	ArrayMetadata,
+	Attributes,
+	DataType,
+	GroupMetadata,
+} from "./metadata.js";
 import { Array, Group, Location } from "./hierarchy.js";
 import { NodeNotFoundError } from "./errors.js";
 import {
@@ -8,40 +13,46 @@ import {
 	v2_to_v3_group_metadata,
 } from "./util.js";
 
+async function load_attrs(
+	location: Location<Readable | Async<Readable>>,
+): Promise<Attributes> {
+	let meta_bytes = await location.store.get(location.resolve(".zattrs").path);
+	if (!meta_bytes) return {};
+	return json_decode_object(meta_bytes);
+}
+
 function open_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,
-	options: { kind: "group" },
+	options: { kind: "group"; attrs?: boolean },
 ): Promise<Group<Store>>;
 
 function open_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,
-	options: { kind: "array" },
+	options: { kind: "array"; attrs?: boolean },
 ): Promise<Array<DataType, Store>>;
 
 function open_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,
-	options: { kind: "auto" },
-): Promise<Array<DataType, Store> | Group<Store>>;
-
-function open_v2<Store extends Readable | Async<Readable>>(
-	location: Location<Store> | Store,
+	options?: { kind?: "array" | "group"; attrs?: boolean },
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 async function open_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,
-	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
+	options: { kind?: "array" | "group"; attrs?: boolean } = {},
 ) {
 	let loc = "store" in location ? location : new Location(location);
-	if (options.kind === "array") return open_array_v2(loc);
-	if (options.kind === "group") return open_group_v2(loc);
-	return open_array_v2(loc).catch((err) => {
-		if (err instanceof NodeNotFoundError) return open_group_v2(loc);
+	let attrs = options.attrs === false ? {} : await load_attrs(loc);
+	if (options.kind === "array") return open_array_v2(loc, attrs);
+	if (options.kind === "group") return open_group_v2(loc, attrs);
+	return open_array_v2(loc, attrs).catch((err) => {
+		if (err instanceof NodeNotFoundError) return open_group_v2(loc, attrs);
 		throw err;
 	});
 }
 
 async function open_array_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store>,
+	attrs: Attributes,
 ) {
 	let { path } = location.resolve(".zarray");
 	let meta = await location.store.get(path);
@@ -51,12 +62,13 @@ async function open_array_v2<Store extends Readable | Async<Readable>>(
 	return new Array(
 		location.store,
 		location.path,
-		v2_to_v3_array_metadata(json_decode_object(meta)),
+		v2_to_v3_array_metadata(json_decode_object(meta), attrs),
 	);
 }
 
 async function open_group_v2<Store extends Readable | Async<Readable>>(
 	location: Location<Store>,
+	attrs: Attributes,
 ) {
 	let { path } = location.resolve(".zgroup");
 	let meta = await location.store.get(path);
@@ -66,7 +78,7 @@ async function open_group_v2<Store extends Readable | Async<Readable>>(
 	return new Group(
 		location.store,
 		location.path,
-		v2_to_v3_group_metadata(json_decode_object(meta)),
+		v2_to_v3_group_metadata(json_decode_object(meta), attrs),
 	);
 }
 
@@ -98,20 +110,15 @@ function open_v3<Store extends Readable | Async<Readable>>(
 
 function open_v3<Store extends Readable | Async<Readable>>(
 	location: Location<Store> | Store,
-	options: { kind: "auto" },
-): Promise<Array<DataType, Store> | Group<Store>>;
-
-function open_v3<Store extends Readable | Async<Readable>>(
-	location: Location<Store> | Store,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 async function open_v3<Store extends Readable | Async<Readable>>(
 	location: Location<Store>,
-	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
+	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
 	let node = await _open_v3(loc);
-	if (options.kind === "auto") return node;
+	if (options.kind === undefined) return node;
 	if (options.kind === "array" && node instanceof Array) return node;
 	if (options.kind === "group" && node instanceof Group) return node;
 	let kind = node instanceof Array ? "array" : "group";

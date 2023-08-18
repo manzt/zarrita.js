@@ -15,6 +15,7 @@ it("exports all the things", () => {
 		  "create": [Function],
 		  "get": [Function],
 		  "open": [Function],
+		  "openConsolidated": [Function],
 		  "registry": Map {
 		    "blosc" => [Function],
 		    "gzip" => [Function],
@@ -27,7 +28,6 @@ it("exports all the things", () => {
 		  "root": [Function],
 		  "set": [Function],
 		  "slice": [Function],
-		  "withConsolidated": [Function],
 		}
 	`);
 });
