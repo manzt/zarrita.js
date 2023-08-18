@@ -1,7 +1,7 @@
 {
 	"name": "zarrita",
 	"type": "module",
-	"version": "0.2.3",
+	"version": "0.3.0",
 	"sideEffects": false,
 	"main": "index.js",
 	"exports": {
