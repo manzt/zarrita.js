@@ -115,6 +115,18 @@ importers:
 
   packages/typedarray: {}
 
+  packages/zarrita:
+    dependencies:
+      '@zarrita/core':
+        specifier: workspace:^
+        version: link:../core
+      '@zarrita/indexing':
+        specifier: workspace:^
+        version: link:../indexing
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
+
 packages:
 
   /@algolia/autocomplete-core@1.9.3(@algolia/client-search@4.19.1)(algoliasearch@4.19.1)(search-insights@2.7.0):

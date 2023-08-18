@@ -3,6 +3,7 @@
 	"type": "module",
 	"version": "0.0.1",
 	"sideEffects": false,
+	"main": "dist/src/index.js",
 	"scripts": {
 		"check": "tsc --noEmit",
 		"build": "tsc",

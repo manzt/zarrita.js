@@ -7,7 +7,11 @@ export default defineConfig({
 	base: "/zarrita.js/",
 	description: "Zarr building blocks for JavaScript",
 	head: [
-		["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+		["link", {
+			rel: "icon",
+			type: "image/svg+xml",
+			href: "/zarrita.js/logo.svg",
+		}],
 	],
 	themeConfig: {
 		logo: "/logo.svg",
