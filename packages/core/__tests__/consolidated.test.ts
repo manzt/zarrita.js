@@ -2,313 +2,55 @@ import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
 
-import { FetchStore, FileSystemStore } from "@zarrita/storage";
+import { FileSystemStore } from "@zarrita/storage";
 import { openConsolidated } from "../src/consolidated.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 describe("openConsolidated", () => {
-	it("works with FileSystemStore", async () => {
+	it("loads consolidated metadata", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let nodes = await openConsolidated(new FileSystemStore(root));
-		expect(
-			nodes.map((node) => ({
-				kind: node.kind,
-				path: node.path,
-				attrs: node.attrs,
-			})),
-		).toMatchInlineSnapshot(`
-			[
-			  {
-			    "attrs": {
-			      "answer": 42,
-			    },
-			    "kind": "group",
-			    "path": "/",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.chunked.ragged.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.S7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U13.be",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U13.le",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.b1",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.blosc.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f4.be",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f4.le",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f8",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.i4",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.lz4.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.raw.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.u1",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.zlib.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.zstd.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.U7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.ragged.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.contiguous.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.mixed.i2.C",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.mixed.i2.F",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.contiguous.i2",
-			  },
-			]
+		let h = await openConsolidated(new FileSystemStore(root));
+		let map = new Map(
+			[...h.contents.values()].map((entry) => [entry.path, entry.kind]),
+		);
+		expect(map).toMatchInlineSnapshot(`
+			Map {
+			  "/" => "group",
+			  "/1d.chunked.i2" => "array",
+			  "/1d.chunked.ragged.i2" => "array",
+			  "/1d.contiguous.S7" => "array",
+			  "/1d.contiguous.U13.be" => "array",
+			  "/1d.contiguous.U13.le" => "array",
+			  "/1d.contiguous.U7" => "array",
+			  "/1d.contiguous.b1" => "array",
+			  "/1d.contiguous.blosc.i2" => "array",
+			  "/1d.contiguous.f4.be" => "array",
+			  "/1d.contiguous.f4.le" => "array",
+			  "/1d.contiguous.f8" => "array",
+			  "/1d.contiguous.i4" => "array",
+			  "/1d.contiguous.lz4.i2" => "array",
+			  "/1d.contiguous.raw.i2" => "array",
+			  "/1d.contiguous.u1" => "array",
+			  "/1d.contiguous.zlib.i2" => "array",
+			  "/1d.contiguous.zstd.i2" => "array",
+			  "/2d.chunked.U7" => "array",
+			  "/2d.chunked.i2" => "array",
+			  "/2d.chunked.ragged.i2" => "array",
+			  "/2d.contiguous.i2" => "array",
+			  "/3d.chunked.i2" => "array",
+			  "/3d.chunked.mixed.i2.C" => "array",
+			  "/3d.chunked.mixed.i2.F" => "array",
+			  "/3d.contiguous.i2" => "array",
+			}
 		`);
 	});
 
-	it("works with FetchStore", async () => {
-		// `vitest --api` exposes the port 51204
-		// ref: https://vitest.dev/config/#api
-		let href = "http://localhost:51204/fixtures/v2/data.zarr";
-		let nodes = await openConsolidated(new FetchStore(href));
-		expect(
-			nodes.map((node) => ({
-				kind: node.kind,
-				path: node.path,
-				attrs: node.attrs,
-			})),
-		).toMatchInlineSnapshot(`
-			[
-			  {
-			    "attrs": {
-			      "answer": 42,
-			    },
-			    "kind": "group",
-			    "path": "/",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.chunked.ragged.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.S7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U13.be",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U13.le",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.U7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.b1",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.blosc.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f4.be",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f4.le",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.f8",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.i4",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.lz4.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.raw.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.u1",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.zlib.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/1d.contiguous.zstd.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.U7",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.chunked.ragged.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/2d.contiguous.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.i2",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.mixed.i2.C",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.chunked.mixed.i2.F",
-			  },
-			  {
-			    "attrs": {},
-			    "kind": "array",
-			    "path": "/3d.contiguous.i2",
-			  },
-			]
-		`);
-	});
-
-	it("loads data", async () => {
+	it("loads chunk data from underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let nodes = await openConsolidated(new FileSystemStore(root));
-		let arr = nodes.find((node) => node.path === "/3d.chunked.mixed.i2.C");
-		expect(await (arr as any).getChunk([0, 0, 0])).toMatchInlineSnapshot(`
+		let h = await openConsolidated(new FileSystemStore(root));
+		let arr = h.open("/3d.chunked.mixed.i2.C", { kind: "array" });
+		expect(await arr.getChunk([0, 0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
 			    0,
@@ -333,5 +75,14 @@ describe("openConsolidated", () => {
 			  ],
 			}
 		`);
+	});
+
+	it("loads and navigates from root", async () => {
+		let path_root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let h = await openConsolidated(new FileSystemStore(path_root));
+		let grp = h.root();
+		expect(grp.kind).toBe("group");
+		let arr = h.open(grp.resolve("1d.chunked.i2"), { kind: "array" });
+		expect(arr.kind).toBe("array");
 	});
 });

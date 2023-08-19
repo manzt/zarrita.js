@@ -198,7 +198,7 @@ export function v2_to_v3_array_metadata(
 }
 
 export function v2_to_v3_group_metadata(
-	_meta: GroupMetadataV2,
+	_meta: unknown,
 	attributes: Record<string, unknown> = {},
 ): GroupMetadata {
 	return {
