@@ -1,4 +1,4 @@
-import type { Async, Readable, Writeable } from "@zarrita/storage";
+import type { Mutable, Readable } from "@zarrita/storage";
 import type * as core from "@zarrita/core";
 import {
 	BoolArray,
@@ -129,7 +129,7 @@ export const setter = {
 /** @category Utility */
 export async function get<
 	D extends core.DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable,
 	Sel extends (null | Slice | number)[],
 >(
 	arr: core.Array<D, Store>,
@@ -148,7 +148,7 @@ export async function get<
 export async function set<
 	D extends core.DataType,
 >(
-	arr: core.Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	arr: core.Array<D, Mutable>,
 	selection: (null | Slice | number)[] | null,
 	value: core.Scalar<D> | core.Chunk<D>,
 	opts: SetOptions = {},

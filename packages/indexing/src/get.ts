@@ -1,4 +1,4 @@
-import type { Async, Readable } from "@zarrita/storage";
+import type { Readable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 import type {
 	GetOptions,
@@ -21,7 +21,7 @@ function unwrap<D extends DataType>(
 
 export async function get<
 	D extends DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable,
 	Arr extends Chunk<D>,
 	Sel extends (null | Slice | number)[],
 >(
