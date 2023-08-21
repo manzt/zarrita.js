@@ -21,6 +21,29 @@ describe("v2", () => {
 		),
 	);
 
+	it("loads .zattrs by default", async () => {
+		let group = await open.v2(store);
+		expect(group.attrs).toMatchInlineSnapshot(`
+			{
+			  "answer": 42,
+			}
+		`);
+	});
+
+	it("loads .zattrs when specified", async () => {
+		let group = await open.v2(store, { attrs: true });
+		expect(group.attrs).toMatchInlineSnapshot(`
+			{
+			  "answer": 42,
+			}
+		`);
+	});
+
+	it("skips loading .zattrs when disabled", async () => {
+		let group = await open.v2(store, { attrs: false });
+		expect(group.attrs).toMatchInlineSnapshot("{}");
+	});
+
 	it("reads 1d.contiguous.zlib.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zlib.i2"), {
 			kind: "array",

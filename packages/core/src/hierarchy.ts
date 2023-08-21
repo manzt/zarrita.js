@@ -7,13 +7,7 @@ import type {
 	Scalar,
 	TypedArrayConstructor,
 } from "./metadata.js";
-import {
-	type DataTypeQuery,
-	is_dtype,
-	json_decode_object,
-	type NarrowDataType,
-	v2_marker,
-} from "./util.js";
+import { type DataTypeQuery, is_dtype, type NarrowDataType } from "./util.js";
 import { KeyError } from "./errors.js";
 import { create_codec_pipeline } from "./codecs.js";
 import {
@@ -42,24 +36,6 @@ export class Location<Store> {
 	}
 }
 
-function lazy_attrs(
-	location: Location<Readable | Async<Readable>>,
-	metadata: { attributes: Record<string, unknown> },
-) {
-	async function get(): Promise<Record<string, unknown>> {
-		if (v2_marker in metadata.attributes) {
-			let attrs = await location.store.get(location.resolve(".zattrs").path);
-			return (attrs && json_decode_object(attrs)) || {};
-		}
-		return metadata.attributes;
-	}
-	let attrs: Record<string, unknown> | undefined;
-	return async () => {
-		if (attrs === undefined) attrs = await get();
-		return attrs;
-	};
-}
-
 export function root<Store>(store: Store): Location<Store>;
 export function root(): Location<Map<string, Uint8Array>>;
 export function root<Store>(
@@ -71,14 +47,18 @@ export function root<Store>(
 export class Group<
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
-	readonly attrs: () => Promise<Record<string, unknown>>;
+	readonly kind = "group";
+	#metadata: GroupMetadata;
 	constructor(
 		store: Store,
 		path: AbsolutePath,
 		metadata: GroupMetadata,
 	) {
 		super(store, path);
-		this.attrs = lazy_attrs(this, metadata);
+		this.#metadata = metadata;
+	}
+	get attrs() {
+		return this.#metadata.attributes;
 	}
 }
 
@@ -121,8 +101,8 @@ export class Array<
 	Dtype extends DataType,
 	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
 > extends Location<Store> {
+	readonly kind = "array";
 	#metadata: ArrayMetadata<Dtype>;
-	readonly attrs: () => Promise<Record<string, unknown>>;
 	[CONTEXT_MARKER]: ArrayContext<Dtype>;
 
 	constructor(
@@ -132,8 +112,11 @@ export class Array<
 	) {
 		super(store, path);
 		this.#metadata = metadata;
-		this.attrs = lazy_attrs(this, metadata);
 		this[CONTEXT_MARKER] = create_context(metadata);
+	}
+
+	get attrs() {
+		return this.#metadata.attributes;
 	}
 
 	get shape() {
