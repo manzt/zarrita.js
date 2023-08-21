@@ -1,24 +1,36 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { AbsolutePath, Async, Writeable } from "./types.js";
+import type { AbsolutePath, AsyncMutable, GetOptions } from "./types.js";
 import { strip_prefix } from "./util.js";
 
-class FileSystemStore implements Async<Writeable> {
+class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
-	get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+	async get(
+		key: AbsolutePath,
+		options?: GetOptions,
+	): Promise<Uint8Array | undefined> {
 		const fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.readFile(fp)
-			.then((buf) => new Uint8Array(buf.buffer))
-			.catch((err) => {
-				// return undefined is no file or directory
-				if (err.code === "ENOENT") return undefined;
-				throw err;
-			});
+		let filehandle: fs.promises.FileHandle | undefined;
+		try {
+			filehandle = await fs.promises.open(fp, "r");
+			if (options?.length !== undefined && options?.offset !== undefined) {
+				let data = Buffer.alloc(options.length);
+				await filehandle.read(data, 0, options.length, options.offset);
+				return data;
+			}
+			return filehandle.readFile();
+		} catch (err: any) {
+			// return undefined is no file or directory
+			if (err?.code === "ENOENT") return undefined;
+			throw err;
+		} finally {
+			await filehandle?.close();
+		}
 	}
 
-	has(key: AbsolutePath): Promise<boolean> {
+	async has(key: AbsolutePath): Promise<boolean> {
 		const fp = path.join(this.root, strip_prefix(key));
 		return fs.promises.access(fp).then(() => true).catch(() => false);
 	}

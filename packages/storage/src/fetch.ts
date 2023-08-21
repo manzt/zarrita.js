@@ -1,4 +1,5 @@
-import type { AbsolutePath, Async, Readable } from "./types.js";
+import type { AbsolutePath, AsyncReadable, GetOptions } from "./types.js";
+import { fetch_range } from "./util.js";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;
@@ -22,28 +23,34 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
  * const arr = await zarr.get(store, { kind: "array" });
  * ```
  */
-class FetchStore implements Async<Readable<RequestInit>> {
+class FetchStore implements AsyncReadable<RequestInit> {
+	#overrides: RequestInit;
+
 	constructor(
 		public url: string | URL,
-		public options: RequestInit = {},
-	) {}
+		options: { overrides?: RequestInit } = {},
+	) {
+		this.#overrides = options.overrides ?? {};
+	}
 
 	async get(
 		key: AbsolutePath,
-		opts: RequestInit = {},
+		{ offset, length, ...overrides }: GetOptions<RequestInit> = {},
 	): Promise<Uint8Array | undefined> {
-		const { href } = resolve(this.url, key);
-		const res = await fetch(href, { ...this.options, ...opts });
-		if (res.status === 404 || res.status === 403) {
+		const href = resolve(this.url, key).href;
+		const response = await fetch_range(href, offset, length, {
+			...this.#overrides,
+			...overrides,
+			headers: {
+				...this.#overrides.headers,
+				...overrides.headers,
+			},
+		});
+		if (response.status === 404 || response.status === 403) {
 			return undefined;
 		}
-		const value = await res.arrayBuffer();
+		const value = await response.arrayBuffer();
 		return new Uint8Array(value);
-	}
-
-	has(key: AbsolutePath): Promise<boolean> {
-		// TODO: make parameter, use HEAD request if possible?
-		return this.get(key).then((res) => res !== undefined);
 	}
 }
 

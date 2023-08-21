@@ -1,4 +1,4 @@
-import type { Async, Readable } from "@zarrita/storage";
+import type { Readable } from "@zarrita/storage";
 import type {
 	ArrayMetadata,
 	Attributes,
@@ -14,29 +14,29 @@ import {
 } from "./util.js";
 
 async function load_attrs(
-	location: Location<Readable | Async<Readable>>,
+	location: Location<Readable>,
 ): Promise<Attributes> {
 	let meta_bytes = await location.store.get(location.resolve(".zattrs").path);
 	if (!meta_bytes) return {};
 	return json_decode_object(meta_bytes);
 }
 
-function open_v2<Store extends Readable | Async<Readable>>(
+function open_v2<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "group"; attrs?: boolean },
 ): Promise<Group<Store>>;
 
-function open_v2<Store extends Readable | Async<Readable>>(
+function open_v2<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "array"; attrs?: boolean },
 ): Promise<Array<DataType, Store>>;
 
-function open_v2<Store extends Readable | Async<Readable>>(
+function open_v2<Store extends Readable>(
 	location: Location<Store> | Store,
 	options?: { kind?: "array" | "group"; attrs?: boolean },
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
-async function open_v2<Store extends Readable | Async<Readable>>(
+async function open_v2<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind?: "array" | "group"; attrs?: boolean } = {},
 ) {
@@ -51,7 +51,7 @@ async function open_v2<Store extends Readable | Async<Readable>>(
 	});
 }
 
-async function open_array_v2<Store extends Readable | Async<Readable>>(
+async function open_array_v2<Store extends Readable>(
 	location: Location<Store>,
 	attrs: Attributes,
 ) {
@@ -67,7 +67,7 @@ async function open_array_v2<Store extends Readable | Async<Readable>>(
 	);
 }
 
-async function open_group_v2<Store extends Readable | Async<Readable>>(
+async function open_group_v2<Store extends Readable>(
 	location: Location<Store>,
 	attrs: Attributes,
 ) {
@@ -83,7 +83,7 @@ async function open_group_v2<Store extends Readable | Async<Readable>>(
 	);
 }
 
-async function _open_v3<Store extends Readable | Async<Readable>>(
+async function _open_v3<Store extends Readable>(
 	location: Location<Store>,
 ) {
 	let { store, path } = location.resolve("zarr.json");
@@ -99,21 +99,25 @@ async function _open_v3<Store extends Readable | Async<Readable>>(
 		: new Group(store, location.path, meta_doc);
 }
 
-function open_v3<Store extends Readable | Async<Readable>>(
+function open_v3<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "group" },
 ): Promise<Group<Store>>;
 
-function open_v3<Store extends Readable | Async<Readable>>(
+function open_v3<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
-function open_v3<Store extends Readable | Async<Readable>>(
+function open_v3<Store extends Readable>(
 	location: Location<Store> | Store,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
-async function open_v3<Store extends Readable | Async<Readable>>(
+function open_v3<Store extends Readable>(
+	location: Location<Store> | Store,
+): Promise<Array<DataType, Store> | Group<Store>>;
+
+async function open_v3<Store extends Readable>(
 	location: Location<Store>,
 	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
@@ -126,26 +130,26 @@ async function open_v3<Store extends Readable | Async<Readable>>(
 	throw new Error(`Expected node of kind ${options.kind}, found ${kind}.`);
 }
 
-export function open<Store extends Readable | Async<Readable>>(
+export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "group" },
 ): Promise<Group<Store>>;
 
-export function open<Store extends Readable | Async<Readable>>(
+export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
-export function open<Store extends Readable | Async<Readable>>(
+export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "auto" },
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
-export function open<Store extends Readable | Async<Readable>>(
+export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
-export async function open<Store extends Readable | Async<Readable>>(
+export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
 ): Promise<Array<DataType, Store> | Group<Store>> {
