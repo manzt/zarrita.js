@@ -21,7 +21,7 @@ describe("v2", () => {
 		),
 	);
 
-	it("opens group with attrs", async () => {
+	it("loads .zattrs by default", async () => {
 		let group = await open.v2(store);
 		expect(group.attrs).toMatchInlineSnapshot(`
 			{
@@ -30,7 +30,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("opens group (force) attrs", async () => {
+	it("loads .zattrs when specified", async () => {
 		let group = await open.v2(store, { attrs: true });
 		expect(group.attrs).toMatchInlineSnapshot(`
 			{
@@ -39,7 +39,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("opens group (force) no attrs", async () => {
+	it("skips loading .zattrs when disabled", async () => {
 		let group = await open.v2(store, { attrs: false });
 		expect(group.attrs).toMatchInlineSnapshot("{}");
 	});

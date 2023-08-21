@@ -41,7 +41,8 @@ async function open_v2<Store extends Readable | Async<Readable>>(
 	options: { kind?: "array" | "group"; attrs?: boolean } = {},
 ) {
 	let loc = "store" in location ? location : new Location(location);
-	let attrs = options.attrs === false ? {} : await load_attrs(loc);
+	let attrs = {};
+	if (options.attrs ?? true) attrs = await load_attrs(loc);
 	if (options.kind === "array") return open_array_v2(loc, attrs);
 	if (options.kind === "group") return open_group_v2(loc, attrs);
 	return open_array_v2(loc, attrs).catch((err) => {
