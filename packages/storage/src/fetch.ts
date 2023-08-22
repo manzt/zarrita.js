@@ -31,8 +31,14 @@ async function fetch_suffix(
 	url: URL,
 	suffix_length: number,
 	init: RequestInit,
+	use_suffix_request: boolean,
 ): Promise<Response> {
-	// TODO: option to support suffix request instead of two requests
+	if (use_suffix_request) {
+		return fetch(url, {
+			...init,
+			headers: { ...init.headers, Range: `bytes=-${suffix_length}` },
+		});
+	}
 	let response = await fetch(url, { ...init, method: "HEAD" });
 	if (!response.ok) {
 		// will be picked up by handle_response
@@ -55,12 +61,14 @@ async function fetch_suffix(
  */
 class FetchStore implements AsyncReadable<RequestInit> {
 	#overrides: RequestInit;
+	#use_suffix_request: boolean;
 
 	constructor(
 		public url: string | URL,
-		options: { overrides?: RequestInit } = {},
+		options: { overrides?: RequestInit; useSuffixRequest?: boolean } = {},
 	) {
 		this.#overrides = options.overrides ?? {};
+		this.#use_suffix_request = options.useSuffixRequest ?? false;
 	}
 
 	#merge_init(overrides: RequestInit) {
@@ -92,7 +100,12 @@ class FetchStore implements AsyncReadable<RequestInit> {
 		let init = this.#merge_init(options);
 		let response: Response;
 		if ("suffixLength" in range) {
-			response = await fetch_suffix(url, range.suffixLength, init);
+			response = await fetch_suffix(
+				url,
+				range.suffixLength,
+				init,
+				this.#use_suffix_request,
+			);
 		} else {
 			response = await fetch_range(url, range.offset, range.length, init);
 		}
