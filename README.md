@@ -7,8 +7,8 @@
 - **Zero dependencies** (optionally
   [`scijs/ndarray`](https://github.com/scijs/ndarray))
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
-- Supports **v2** or **v3** protocols, C & F-order arrays, and diverse
-  data-types
+- Supports **v2** or **v3** protocols, C & F-order arrays, diverse
+  data-types, and  [ZEP2 Sharding](https://zarr.dev/zeps/draft/ZEP0002.html)
 - Allows flexible **storage** backends and **compression** codecs
 - Provides rich, in-editor **type information** via
   [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
@@ -116,3 +116,15 @@ pnpm install
 pnpm build
 pnpm test
 ```
+
+The tests are run with [Vitest](https://github.com/vitest-dev/vitest), which is a Node.js test runner.
+To try our a development version of **zarrita** in the browser, run `pnpm build` and start a web-server
+in the root of the repository:
+
+```sh
+python3 -m http.server .
+# navigate to localhost:8000
+```
+
+You can edit the contents of `index.html` and refresh the page.
+
