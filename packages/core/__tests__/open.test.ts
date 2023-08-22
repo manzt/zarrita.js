@@ -1672,7 +1672,7 @@ describe("v3", () => {
 			    1,
 			  ],
 			}
-		`)
+		`);
 	});
 
 	it("reads 1d.contiguous.compressed.sharded.f4", async () => {
@@ -1740,19 +1740,22 @@ describe("v3", () => {
 		[[3, 0], 13],
 		[[3, 1], 14],
 		[[3, 2], 15],
-		[[3, 3], 16],	        
-	])(`chunk_coord: %j – 2d.contiguous.compressed.sharded.i2`, async ([i, j], expected) => {
-		let arr = await open.v3(
-			store.resolve("2d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		let chunk = await arr.getChunk([i, j]);
-		expect(chunk).toStrictEqual({
-			data: new Int16Array([expected]),
-			shape: [1, 1],
-			stride: [1, 1],
-		});
-	});
+		[[3, 3], 16],
+	])(
+		`chunk_coord: %j – 2d.contiguous.compressed.sharded.i2`,
+		async ([i, j], expected) => {
+			let arr = await open.v3(
+				store.resolve("2d.chunked.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			let chunk = await arr.getChunk([i, j]);
+			expect(chunk).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		},
+	);
 
 	// TODO: fix me
 	it.skip.each<[chunk_coord: [number, number], value: number]>([
@@ -1771,18 +1774,21 @@ describe("v3", () => {
 		[[3, 0], 13],
 		[[3, 1], 14],
 		[[3, 2], 15],
-		[[3, 3], 16],	        
-	])(`chunk_coord: %j – 2d.contiguous.compressed.sharded.filled.i2`, async (chunk_coord, expected) => {
-		let arr = await open.v3(
-			store.resolve("2d.chunked.compressed.sharded.filled.i2"),
-			{ kind: "array" },
-		);
-		expect(await arr.getChunk(chunk_coord)).toStrictEqual({
-			data: new Int16Array([expected]),
-			shape: [1, 1],
-			stride: [1, 1],
-		});
-	});
+		[[3, 3], 16],
+	])(
+		`chunk_coord: %j – 2d.contiguous.compressed.sharded.filled.i2`,
+		async (chunk_coord, expected) => {
+			let arr = await open.v3(
+				store.resolve("2d.chunked.compressed.sharded.filled.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		},
+	);
 
 	// TODO: fix me
 	it.skip.each<[chunk_coord: [number, number, number], value: number]>([
@@ -1792,16 +1798,18 @@ describe("v3", () => {
 		[[1, 1, 1], 21],
 		[[1, 3, 2], 30],
 		[[3, 3, 3], 63],
-	])(`chunk_coord: %j – 3d.chunked.compressed.sharded.i2`, async (chunk_coords, expected) => {
-		let arr = await open.v3(
-			store.resolve("3d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		expect(await arr.getChunk(chunk_coords)).toStrictEqual({
-			data: new Int16Array([expected]),
-			shape: [1, 1, 1],
-			stride: [1, 1, 1],
-		});
-	});
-	
+	])(
+		`chunk_coord: %j – 3d.chunked.compressed.sharded.i2`,
+		async (chunk_coords, expected) => {
+			let arr = await open.v3(
+				store.resolve("3d.chunked.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1, 1],
+				stride: [1, 1, 1],
+			});
+		},
+	);
 });
