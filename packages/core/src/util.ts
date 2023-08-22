@@ -59,6 +59,9 @@ const V2_STRING_REGEX = /v2:([US])(\d+)/;
 export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
+	if (data_type === "v2:object:string") {
+		return globalThis.Array as any;
+	}
 	let match = data_type.match(V2_STRING_REGEX);
 	if (match) {
 		let [, kind, chars] = match;
@@ -122,7 +125,15 @@ const endian_regex = /^([<|>])(.*)$/;
 
 function coerce_dtype(
 	dtype: string,
+	meta: ArrayMetadataV2,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+	if (
+		dtype === "|O" &&
+		meta.filters?.[0]?.id === "vlen-utf8"
+	) {
+		return { data_type: "v2:object:string" };
+	}
+
 	let match = dtype.match(endian_regex);
 	if (!match) {
 		throw new Error(`Invalid dtype: ${dtype}`);
@@ -158,13 +169,13 @@ export function v2_to_v3_array_metadata(
 	attributes: Record<string, unknown> = {},
 ): ArrayMetadata<DataType> {
 	let codecs: CodecMetadata[] = [];
-	let dtype = coerce_dtype(meta.dtype);
+	let dtype = coerce_dtype(meta.dtype, meta);
 	if (meta.order === "F") {
 		codecs.push({ name: "transpose", configuration: { order: "F" } });
 	}
 	if ("endian" in dtype && dtype.endian === "big") {
 		codecs.push({ name: "endian", configuration: { endian: "big" } });
-	}
+	} 
 	for (let { id, ...configuration } of meta.filters ?? []) {
 		codecs.push({ name: id, configuration });
 	}

@@ -4,6 +4,7 @@ import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { EndianCodec } from "./codecs/endian.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
+import { VLenUTF8 } from "./codecs/vlen-utf8.js";
 
 type ChunkMetadata<D extends DataType> = {
 	data_type: D;
@@ -28,7 +29,8 @@ function create_default_registry(): Map<
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
 		.set("transpose", () => TransposeCodec)
 		.set("endian", () => EndianCodec)
-		.set("crc32c", () => Crc32cCodec);
+		.set("crc32c", () => Crc32cCodec)
+		.set("vlen-utf8", () => VLenUTF8);
 }
 
 export const registry = create_default_registry();
@@ -87,7 +89,7 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 		return { Codec, meta };
 	});
 	let array_to_array: ArrayToArrayCodec<D>[] = [];
-	let array_to_bytes: ArrayToBytesCodec<D> = EndianCodec.fromConfig({
+	let array_to_bytes: ArrayToBytesCodec<D> = (EndianCodec.fromConfig as any)({
 		endian: "little",
 	}, chunk_meta);
 	let bytes_to_bytes: BytesToBytesCodec[] = [];
@@ -103,6 +105,8 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 			default:
 				bytes_to_bytes.push(codec);
 		}
+	}
+	if (!array_to_bytes) {
 	}
 	return { array_to_array, array_to_bytes, bytes_to_bytes };
 }

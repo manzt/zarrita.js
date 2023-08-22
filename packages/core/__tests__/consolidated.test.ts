@@ -38,6 +38,7 @@ describe("openConsolidated", () => {
 			  "/2d.chunked.i2" => "array",
 			  "/2d.chunked.ragged.i2" => "array",
 			  "/2d.contiguous.i2" => "array",
+			  "/3d.chunked.O" => "array",
 			  "/3d.chunked.i2" => "array",
 			  "/3d.chunked.mixed.i2.C" => "array",
 			  "/3d.chunked.mixed.i2.F" => "array",
@@ -85,4 +86,5 @@ describe("openConsolidated", () => {
 		let arr = h.open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
 	});
+
 });

@@ -35,8 +35,12 @@ export type Bool = "bool";
 
 /** @category String */
 export type UnicodeStr = `v2:U${number}`;
+
 /** @category String */
 export type ByteStr = `v2:S${number}`;
+
+/** @category Object */
+export type ObjectStr = "v2:object:string";
 
 export type NumberDataType =
 	| Int8
@@ -50,7 +54,7 @@ export type NumberDataType =
 
 export type BigintDataType = Int64 | Uint64;
 
-export type StringDataType = UnicodeStr | ByteStr;
+export type StringDataType = UnicodeStr | ByteStr | ObjectStr;
 
 export type DataType =
 	| NumberDataType
@@ -134,6 +138,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Bool ? BoolArray
 	: D extends UnicodeStr ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
+	: D extends ObjectStr ? Array<string>
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {
