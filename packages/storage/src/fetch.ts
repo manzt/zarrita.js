@@ -13,6 +13,36 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
+async function handle_response(
+	response: Response,
+): Promise<Uint8Array | undefined> {
+	if (response.status === 404 || response.status === 403) {
+		return undefined;
+	}
+	if (response.status == 200 || response.status == 206) {
+		return new Uint8Array(await response.arrayBuffer());
+	}
+	throw new Error(
+		`Unexpected response status ${response.status} ${response.statusText}`,
+	);
+}
+
+async function fetch_suffix(
+	url: URL,
+	suffix_length: number,
+	init: RequestInit,
+): Promise<Response> {
+	// TODO: option to support suffix request instead of two requests
+	let response = await fetch(url, { ...init, method: "HEAD" });
+	if (!response.ok) {
+		// will be picked up by handle_response
+		return response;
+	}
+	let content_length = response.headers.get("Content-Length");
+	let length = Number(content_length);
+	return fetch_range(url, length - suffix_length, length, init);
+}
+
 /**
  * Readonly store based in the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
  * Must polyfill `fetch` for use in Node.js.
@@ -50,10 +80,7 @@ class FetchStore implements AsyncReadable<RequestInit> {
 	): Promise<Uint8Array | undefined> {
 		let href = resolve(this.url, key).href;
 		let response = await fetch(href, this.#merge_init(options));
-		if (response.status === 404 || response.status === 403) {
-			return undefined;
-		}
-		return new Uint8Array(await response.arrayBuffer());
+		return handle_response(response);
 	}
 
 	async getRange(
@@ -65,27 +92,11 @@ class FetchStore implements AsyncReadable<RequestInit> {
 		let init = this.#merge_init(options);
 		let response: Response;
 		if ("suffixLength" in range) {
-			// TODO: option to support suffix request instead of two requests
-			let head_response = await fetch(url, { ...init, method: "HEAD" });
-			if (head_response.status === 404 || head_response.status === 403) {
-				return undefined;
-			}
-			let length = Number(head_response.headers.get("Content-Length"));
-			response = await fetch_range(
-				url,
-				length - range.suffixLength,
-				length - 1,
-				init,
-			);
+			response = await fetch_suffix(url, range.suffixLength, init);
 		} else {
 			response = await fetch_range(url, range.offset, range.length, init);
 		}
-
-		if (response.status === 404 || response.status === 403) {
-			return undefined;
-		}
-
-		return new Uint8Array(await response.arrayBuffer());
+		return handle_response(response);
 	}
 }
 
