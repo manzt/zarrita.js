@@ -1,4 +1,4 @@
-import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
+import type { AbsolutePath, Readable } from "@zarrita/storage";
 
 import { Array, Group, Location } from "./hierarchy.js";
 import {
@@ -15,7 +15,7 @@ type ConsolidatedMetadata = {
 };
 
 async function get_consolidated_metadata(
-	store: Async<Readable>,
+	store: Readable,
 ): Promise<ConsolidatedMetadata> {
 	let bytes = await store.get("/.zmetadata");
 	if (!bytes) throw new Error("No consolidated metadata found.");
@@ -27,7 +27,7 @@ async function get_consolidated_metadata(
 }
 
 /** Proxies requests to the underlying store. */
-export async function openConsolidated<Store extends Async<Readable>>(
+export async function openConsolidated<Store extends Readable>(
 	store: Store,
 ) {
 	let { metadata } = await get_consolidated_metadata(store);
@@ -72,7 +72,7 @@ export async function openConsolidated<Store extends Async<Readable>>(
 	return new ConsolidatedHierarchy(nodes);
 }
 
-class ConsolidatedHierarchy<Store extends Readable | Async<Readable>> {
+class ConsolidatedHierarchy<Store extends Readable> {
 	constructor(
 		public contents: Map<AbsolutePath, Array<DataType, Store> | Group<Store>>,
 	) {}

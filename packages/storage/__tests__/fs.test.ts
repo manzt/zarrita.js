@@ -52,4 +52,16 @@ describe("FileSystemStore", () => {
 		expect(await store.has("/foo-exists")).toBe(true);
 		expect(await store.has("/foo-does-not-exist")).toBe(false);
 	});
+
+	it("reads partial", async () => {
+		const store = new FileSystemStore(store_path);
+		await fs.writeFile(path.join(store_path, "foo-partial"), "Hello, World!");
+		const bytes = await store.getRange("/foo-partial", {
+			offset: 7,
+			length: 5,
+		});
+		expect(new TextDecoder().decode(bytes)).toBe("World");
+		const bytes2 = await store.getRange("/foo-partial", { suffixLength: 6 });
+		expect(new TextDecoder().decode(bytes2)).toBe("World!");
+	});
 });

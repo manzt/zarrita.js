@@ -1,4 +1,4 @@
-import type { Async, Readable, Writeable } from "@zarrita/storage";
+import type { Mutable } from "@zarrita/storage";
 
 import type {
 	ArrayMetadata,
@@ -26,14 +26,14 @@ interface CreateArrayOptions<Dtype extends DataType> {
 }
 
 export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Store extends Mutable,
 	Dtype extends DataType = DataType,
 >(
 	location: Location<Store> | Store,
 ): Promise<Group<Store>>;
 
 export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Store extends Mutable,
 	Dtype extends DataType = DataType,
 >(
 	location: Location<Store> | Store,
@@ -41,7 +41,7 @@ export async function create<
 ): Promise<Group<Store>>;
 
 export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Store extends Mutable,
 	Dtype extends DataType,
 >(
 	location: Location<Store> | Store,
@@ -49,7 +49,7 @@ export async function create<
 ): Promise<Array<Dtype, Store>>;
 
 export async function create<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Store extends Mutable,
 	Dtype extends DataType,
 >(
 	location: Location<Store> | Store,
@@ -60,9 +60,7 @@ export async function create<
 	return create_group(loc, options);
 }
 
-async function create_group<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
->(
+async function create_group<Store extends Mutable>(
 	location: Location<Store>,
 	options: CreateGroupOptions = {},
 ): Promise<Group<Store>> {
@@ -79,7 +77,7 @@ async function create_group<
 }
 
 async function create_array<
-	Store extends (Readable & Writeable) | Async<Readable & Writeable>,
+	Store extends Mutable,
 	Dtype extends DataType,
 >(
 	location: Location<Store>,

@@ -10,7 +10,7 @@ import type {
 	Slice,
 } from "@zarrita/indexing";
 import type * as core from "@zarrita/core";
-import type { Async, Readable, Writeable } from "@zarrita/storage";
+import type { Mutable, Readable } from "@zarrita/storage";
 
 export const setter = {
 	prepare: ndarray,
@@ -34,7 +34,7 @@ export const setter = {
 /** @category Utility */
 export async function get<
 	D extends core.DataType,
-	Store extends Readable | Async<Readable>,
+	Store extends Readable,
 	Sel extends (null | Slice | number)[],
 >(
 	arr: core.Array<D, Store>,
@@ -51,7 +51,7 @@ export async function get<
 
 /** @category Utility */
 export async function set<D extends core.DataType>(
-	arr: core.Array<D, (Readable & Writeable) | Async<Readable & Writeable>>,
+	arr: core.Array<D, Mutable>,
 	selection: (null | Slice | number)[] | null,
 	value: core.Scalar<D> | ndarray.NdArray<core.TypedArray<D>>,
 	opts: SetOptions = {},

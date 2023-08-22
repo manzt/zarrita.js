@@ -1,24 +1,52 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { AbsolutePath, Async, Writeable } from "./types.js";
+import type { AbsolutePath, AsyncMutable, RangeQuery } from "./types.js";
 import { strip_prefix } from "./util.js";
 
-class FileSystemStore implements Async<Writeable> {
+class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
-	get(key: AbsolutePath): Promise<Uint8Array | undefined> {
-		const fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.readFile(fp)
-			.then((buf) => new Uint8Array(buf.buffer))
-			.catch((err) => {
-				// return undefined is no file or directory
-				if (err.code === "ENOENT") return undefined;
-				throw err;
-			});
+	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+		let fp = path.join(this.root, strip_prefix(key));
+		return fs.promises.readFile(fp).catch((err) => {
+			if (err.code === "ENOENT") return undefined;
+			throw err;
+		});
 	}
 
-	has(key: AbsolutePath): Promise<boolean> {
+	async getRange(
+		key: AbsolutePath,
+		range: RangeQuery,
+	): Promise<Uint8Array | undefined> {
+		let fp = path.join(this.root, strip_prefix(key));
+		let filehandle: fs.promises.FileHandle | undefined;
+		try {
+			filehandle = await fs.promises.open(fp, "r");
+			if ("suffixLength" in range) {
+				let stats = await filehandle.stat();
+				let data = Buffer.alloc(range.suffixLength);
+				await filehandle.read(
+					data,
+					0,
+					range.suffixLength,
+					stats.size - range.suffixLength,
+				);
+				return data;
+			}
+			let data = Buffer.alloc(range.length);
+			await filehandle.read(data, 0, range.length, range.offset);
+			return data;
+		} catch (err: any) {
+			// return undefined is no file or directory
+			if (err?.code === "ENOENT") return undefined;
+			throw err;
+		} finally {
+			await filehandle?.close();
+		}
+	}
+
+	async has(key: AbsolutePath): Promise<boolean> {
 		const fp = path.join(this.root, strip_prefix(key));
 		return fs.promises.access(fp).then(() => true).catch(() => false);
 	}

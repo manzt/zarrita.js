@@ -1,4 +1,4 @@
-import type { AbsolutePath, Async, Readable } from "@zarrita/storage";
+import type { AbsolutePath, Readable } from "@zarrita/storage";
 import type {
 	ArrayMetadata,
 	Chunk,
@@ -45,7 +45,7 @@ export function root<Store>(
 }
 
 export class Group<
-	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
+	Store extends Readable,
 > extends Location<Store> {
 	readonly kind = "group";
 	#metadata: GroupMetadata;
@@ -99,7 +99,7 @@ interface ArrayContext<D extends DataType> {
 
 export class Array<
 	Dtype extends DataType,
-	Store extends Readable | Async<Readable> = Readable | Async<Readable>,
+	Store extends Readable = Readable,
 > extends Location<Store> {
 	readonly kind = "array";
 	#metadata: ArrayMetadata<Dtype>;

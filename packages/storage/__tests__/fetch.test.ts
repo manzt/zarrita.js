@@ -103,29 +103,39 @@ describe("FetchStore", () => {
 
 	it("forwards request options to fetch when configured globally", async () => {
 		let headers = { "x-test": "test" };
-		let store = new FetchStore(href, { headers });
+		let store = new FetchStore(href, { overrides: { headers } });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json");
 		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
 	});
 
-	it("overrides request options", async () => {
-		let opts: RequestInit = {
+	it("merges request options", async () => {
+		let overrides: RequestInit = {
 			headers: { "x-test": "root", "x-test2": "root" },
 			cache: "no-cache",
 		};
-		let store = new FetchStore(href, opts);
+		let store = new FetchStore(href, { overrides });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json", { headers: { "x-test": "override" } });
 		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", {
-			headers: { "x-test": "override" },
+			headers: { "x-test": "override", "x-test2": "root" },
 			cache: "no-cache",
 		});
 	});
 
-	it("checks if key exists", async () => {
+	it("reads partial - suffixLength", async () => {
 		let store = new FetchStore(href);
-		expect(await store.has("/zarr.json")).toBe(true);
-		expect(await store.has("/missing.json")).toBe(false);
+		let bytes = await store.getRange("/zarr.json", { suffixLength: 50 });
+		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
+			'"utes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"group\\"}"',
+		);
+	});
+
+	it("reads partial - offset, length", async () => {
+		let store = new FetchStore(href);
+		let bytes = await store.getRange("/zarr.json", { offset: 4, length: 50 });
+		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
+			'"tributes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"gro"',
+		);
 	});
 });

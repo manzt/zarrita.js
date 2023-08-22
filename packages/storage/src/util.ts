@@ -1,11 +1,5 @@
 import type { AbsolutePath } from "./types.js";
 
-function range_header(offset: number, size: number) {
-	return {
-		Range: `bytes=${offset}-${offset + size - 1}`,
-	};
-}
-
 export function strip_prefix<Path extends AbsolutePath>(
 	path: Path,
 ): Path extends AbsolutePath<infer Rest> ? Rest : never {
@@ -28,21 +22,21 @@ export function uri2href(url: string | URL) {
 	throw Error("Protocol not supported, got: " + JSON.stringify(protocol));
 }
 
-type FetchConfig = { url: string | URL; offset?: number; size?: number };
-
 export function fetch_range(
-	config: FetchConfig,
+	url: string | URL,
+	offset?: number,
+	length?: number,
 	opts: RequestInit = {},
 ) {
-	if (config.offset !== undefined && config.size !== undefined) {
+	if (offset !== undefined && length !== undefined) {
 		// merge request opts
 		opts = {
 			...opts,
 			headers: {
 				...opts.headers,
-				...range_header(config.offset, config.size),
+				Range: `bytes=${offset}-${offset + length - 1}`,
 			},
 		};
 	}
-	return fetch(config.url as string, opts);
+	return fetch(url, opts);
 }

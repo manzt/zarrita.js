@@ -2,7 +2,7 @@ import { unzip } from "unzipit";
 import { fetch_range, strip_prefix } from "./util.js";
 
 import type { Reader, ZipInfo } from "unzipit";
-import type { AbsolutePath, Async, Readable } from "./types.js";
+import type { AbsolutePath, AsyncReadable } from "./types.js";
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}
@@ -39,7 +39,7 @@ export class HTTPRangeReader implements Reader {
 		if (size === 0) {
 			return new Uint8Array(0);
 		}
-		const req = await fetch_range({ url: this.url, offset, size });
+		const req = await fetch_range(this.url, offset, size);
 		if (!req.ok) {
 			throw new Error(
 				`failed http request ${this.url}, status: ${req.status} offset: ${offset} size: ${size}: ${req.statusText}`,
@@ -50,7 +50,7 @@ export class HTTPRangeReader implements Reader {
 }
 
 /** @experimental */
-class ZipFileStore<R extends Reader> implements Async<Readable> {
+class ZipFileStore<R extends Reader> implements AsyncReadable {
 	private info: Promise<ZipInfo>;
 	constructor(reader: R) {
 		this.info = unzip(reader);

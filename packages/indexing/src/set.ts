@@ -1,5 +1,5 @@
 import { _internal_get_array_context, KeyError } from "@zarrita/core";
-import type { Async, Readable, Writeable } from "@zarrita/storage";
+import type { Mutable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 
 import { create_queue } from "./util.js";
@@ -19,7 +19,7 @@ function flip_indexer_projection(m: IndexerProjection) {
 }
 
 export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
-	arr: Array<Dtype, (Readable & Writeable) | Async<Readable & Writeable>>,
+	arr: Array<Dtype, Mutable>,
 	selection: (number | Slice | null)[] | null,
 	value: Scalar<Dtype> | Arr,
 	opts: SetOptions,
