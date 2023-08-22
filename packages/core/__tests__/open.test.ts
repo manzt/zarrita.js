@@ -1607,20 +1607,7 @@ describe("v3", () => {
 		let arr = await open.v3(store.resolve("1d.chunked.compressed.sharded.i2"), {
 			kind: "array",
 		});
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			  ],
-			  "shape": [
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
 
 	it("reads 1d.chunked.filled.compressed.sharded.i2", async () => {
@@ -1628,356 +1615,108 @@ describe("v3", () => {
 			store.resolve("1d.chunked.filled.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			  ],
-			  "shape": [
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.b1", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.b1"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		let chunk = await arr.getChunk(chunk_coord);
-		expect(chunk).toMatchInlineSnapshot(`
-			{
-			  "data": BoolArray {},
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
-		expect(Array.from(chunk.data as any)).toMatchInlineSnapshot(`
-			[
-			  true,
-			  false,
-			  true,
-			  false,
-			]
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.f4", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.f4"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Float32Array [
-			    -1000.5,
-			    0,
-			    1000.5,
-			    0,
-			  ],
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.f8", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.f8"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Float64Array [
-			    1.5,
-			    2.5,
-			    3.5,
-			    4.5,
-			  ],
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			    2,
-			    3,
-			    4,
-			  ],
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.i4", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.i4"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int32Array [
-			    1,
-			    2,
-			    3,
-			    4,
-			  ],
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 1d.contiguous.compressed.sharded.u1", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.u1"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Uint8Array [
-			    255,
-			    0,
-			    255,
-			    0,
-			  ],
-			  "shape": [
-			    4,
-			  ],
-			  "stride": [
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 2d.chunked.compressed.sharded.filled.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("2d.chunked.compressed.sharded.filled.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    0,
-			  ],
-			  "shape": [
-			    1,
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 2d.chunked.compressed.sharded.i2", async () => {
 		let arr = await open.v3(store.resolve("2d.chunked.compressed.sharded.i2"), {
 			kind: "array",
 		});
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			  ],
-			  "shape": [
-			    1,
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 2d.chunked.ragged.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("2d.chunked.ragged.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			  ],
-			  "shape": [
-			    1,
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 2d.contiguous.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("2d.contiguous.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    1,
-			    2,
-			    3,
-			    4,
-			  ],
-			  "shape": [
-			    2,
-			    2,
-			  ],
-			  "stride": [
-			    2,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 3d.chunked.compressed.sharded.i2", async () => {
 		let arr = await open.v3(store.resolve("3d.chunked.compressed.sharded.i2"), {
 			kind: "array",
 		});
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    0,
-			  ],
-			  "shape": [
-			    1,
-			    1,
-			    1,
-			  ],
-			  "stride": [
-			    1,
-			    1,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 3d.chunked.mixed.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("3d.chunked.mixed.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    0,
-			    3,
-			    6,
-			    9,
-			    12,
-			    15,
-			    18,
-			    21,
-			    24,
-			  ],
-			  "shape": [
-			    3,
-			    3,
-			    1,
-			  ],
-			  "stride": [
-			    3,
-			    1,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
+
 	it("reads 3d.contiguous.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("3d.contiguous.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		let chunk_coord = arr.chunks.map(() => 0);
-		expect(await arr.getChunk(chunk_coord)).toMatchInlineSnapshot(`
-			{
-			  "data": Int16Array [
-			    0,
-			    1,
-			    2,
-			    3,
-			    4,
-			    5,
-			    6,
-			    7,
-			    8,
-			    9,
-			    10,
-			    11,
-			    12,
-			    13,
-			    14,
-			    15,
-			    16,
-			    17,
-			    18,
-			    19,
-			    20,
-			    21,
-			    22,
-			    23,
-			    24,
-			    25,
-			    26,
-			  ],
-			  "shape": [
-			    3,
-			    3,
-			    3,
-			  ],
-			  "stride": [
-			    9,
-			    3,
-			    1,
-			  ],
-			}
-		`);
+		expect.fail("TODO");
 	});
 });
