@@ -15,7 +15,10 @@ class FileSystemStore implements AsyncMutable {
 		});
 	}
 
-	async getRange(key: AbsolutePath, range: RangeQuery): Promise<Uint8Array | undefined> {
+	async getRange(
+		key: AbsolutePath,
+		range: RangeQuery,
+	): Promise<Uint8Array | undefined> {
 		let fp = path.join(this.root, strip_prefix(key));
 		let filehandle: fs.promises.FileHandle | undefined;
 		try {
@@ -23,7 +26,12 @@ class FileSystemStore implements AsyncMutable {
 			if ("suffixLength" in range) {
 				let stats = await filehandle.stat();
 				let data = Buffer.alloc(range.suffixLength);
-				await filehandle.read(data, 0, range.suffixLength, stats.size - range.suffixLength);
+				await filehandle.read(
+					data,
+					0,
+					range.suffixLength,
+					stats.size - range.suffixLength,
+				);
 				return data;
 			}
 			let data = Buffer.alloc(range.length);

@@ -71,7 +71,12 @@ class FetchStore implements AsyncReadable<RequestInit> {
 				return undefined;
 			}
 			let length = Number(head_response.headers.get("Content-Length"));
-			response = await fetch_range(url, length - range.suffixLength, length - 1, init);
+			response = await fetch_range(
+				url,
+				length - range.suffixLength,
+				length - 1,
+				init,
+			);
 		} else {
 			response = await fetch_range(url, range.offset, range.length, init);
 		}
