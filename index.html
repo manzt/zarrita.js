@@ -57,7 +57,7 @@
         "3d.chunked.mixed.i2.F",
         "3d.contiguous.i2",
       ]) {
-        let arr = await zarr.open.v2(grp.resolve(fixture), { kind: "array" });
+        let arr = await zarr.open.v2(grp.resolve(fixture), { kind: "array", attrs: false });
         let { data, shape, stride } = await get(arr);
         let pre = document.createElement("pre");
         pre.textContent = `\
@@ -76,10 +76,18 @@
         kind: "group",
       });
       for (let fixture of [
+        "1d.chunked.compressed.sharded.i2",
+        "1d.chunked.filled.compressed.sharded.i2",
         "1d.chunked.i2",
         "1d.chunked.ragged.i2",
         "1d.contiguous.b1",
         "1d.contiguous.blosc.i2",
+        "1d.contiguous.compressed.sharded.b1",
+        "1d.contiguous.compressed.sharded.f4",
+        "1d.contiguous.compressed.sharded.f8",
+        "1d.contiguous.compressed.sharded.i2",
+        "1d.contiguous.compressed.sharded.i4",
+        "1d.contiguous.compressed.sharded.u1",
         "1d.contiguous.f4.be",
         "1d.contiguous.f4.le",
         "1d.contiguous.f8",
@@ -87,12 +95,19 @@
         "1d.contiguous.i4",
         "1d.contiguous.raw.i2",
         "1d.contiguous.u1",
+        "2d.chunked.compressed.sharded.filled.i2",
+        "2d.chunked.compressed.sharded.i2",
         "2d.chunked.i2",
+        "2d.chunked.ragged.compressed.sharded.i2",
         "2d.chunked.ragged.i2",
+        "2d.contiguous.compressed.sharded.i2",
         "2d.contiguous.i2",
+        "3d.chunked.compressed.sharded.i2",
         "3d.chunked.i2",
+        "3d.chunked.mixed.compressed.sharded.i2",
         "3d.chunked.mixed.i2.C",
         "3d.chunked.mixed.i2.F",
+        "3d.contiguous.compressed.sharded.i2",
         "3d.contiguous.i2",
       ]) {
         let arr = await zarr.open.v3(grp.resolve(fixture), { kind: "array" });
