@@ -29,7 +29,9 @@ function bytes_per_element<D extends DataType>(
 	return 4;
 }
 
-export class EndianCodec<D extends DataType> {
+type SupportedDataType = Exclude<DataType, "v2:object">;
+
+export class EndianCodec<D extends SupportedDataType> {
 	kind = "array_to_bytes";
 	#strides: number[];
 	#TypedArray: TypedArrayConstructor<D>;
@@ -48,7 +50,7 @@ export class EndianCodec<D extends DataType> {
 		this.#BYTES_PER_ELEMENT = new this.#TypedArray(0).BYTES_PER_ELEMENT;
 	}
 
-	static fromConfig<D extends DataType>(
+	static fromConfig<D extends SupportedDataType>(
 		configuration: { endian: "little" | "big" },
 		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	): EndianCodec<D> {

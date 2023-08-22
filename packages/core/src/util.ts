@@ -12,6 +12,7 @@ import type {
 	DataType,
 	GroupMetadata,
 	NumberDataType,
+	ObjectType,
 	Scalar,
 	StringDataType,
 	TypedArrayConstructor,
@@ -59,6 +60,9 @@ const V2_STRING_REGEX = /v2:([US])(\d+)/;
 export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
+	if (data_type === "v2:object") {
+		return globalThis.Array as any;
+	}
 	let match = data_type.match(V2_STRING_REGEX);
 	if (match) {
 		let [, kind, chars] = match;
@@ -123,6 +127,10 @@ const endian_regex = /^([<|>])(.*)$/;
 function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+	if (dtype === "|O") {
+		return { data_type: "v2:object" };
+	}
+
 	let match = dtype.match(endian_regex);
 	if (!match) {
 		throw new Error(`Invalid dtype: ${dtype}`);
@@ -211,6 +219,7 @@ export type DataTypeQuery =
 	| "boolean"
 	| "number"
 	| "bigint"
+	| "object"
 	| "string";
 
 export type NarrowDataType<
@@ -219,6 +228,7 @@ export type NarrowDataType<
 > = Query extends "number" ? NumberDataType
 	: Query extends "bigint" ? BigintDataType
 	: Query extends "string" ? StringDataType
+	: Query extends "object" ? ObjectType
 	: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
@@ -229,17 +239,20 @@ export function is_dtype<Query extends DataTypeQuery>(
 		query !== "number" &&
 		query !== "bigint" &&
 		query !== "boolean" &&
+		query !== "object" &&
 		query !== "string"
 	) {
 		return dtype === query;
 	}
-	const is_boolean = dtype === "bool";
+	let is_boolean = dtype === "bool";
 	if (query === "boolean") return is_boolean;
-	const is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
+	let is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
 	if (query === "string") return is_string;
-	const is_bigint = dtype === "int64" || dtype === "uint64";
+	let is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;
-	return !is_string && !is_bigint && !is_boolean;
+	let is_object = dtype === "v2:object";
+	if (query === "object") return is_object;
+	return !is_string && !is_bigint && !is_boolean && !is_object;
 }
 
 export type ShardingCodecMetadata = {

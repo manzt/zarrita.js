@@ -86,6 +86,7 @@ describe("is_dtype", () => {
 		["uint64", false],
 		["v2:U6", false],
 		["v2:S6", false],
+		["v2:object", false],
 	])("is_dtype(%s, 'number') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "number")).toBe(expected);
 	});
@@ -104,6 +105,7 @@ describe("is_dtype", () => {
 		["uint64", false],
 		["v2:U6", false],
 		["v2:S6", false],
+		["v2:object", false],
 	])("is_dtype(%s, 'boolean') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "boolean")).toBe(expected);
 	});
@@ -122,6 +124,7 @@ describe("is_dtype", () => {
 		["uint64", true],
 		["v2:U6", false],
 		["v2:S6", false],
+		["v2:object", false],
 	])("is_dtype(%s, 'bigint') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "bigint")).toBe(expected);
 	});
@@ -140,6 +143,7 @@ describe("is_dtype", () => {
 		["uint64", false],
 		["v2:U6", true],
 		["v2:S6", true],
+		["v2:object", false],
 	])("is_dtype(%s, 'string') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "string")).toBe(expected);
 	});
@@ -158,6 +162,7 @@ describe("is_dtype", () => {
 		"uint64",
 		"v2:U6",
 		"v2:S6",
+		"v2:object",
 	])("is_dtype(%s, %s) -> true", (dtype) => {
 		expect(is_dtype(dtype, dtype)).toBe(true);
 	});

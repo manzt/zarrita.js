@@ -419,6 +419,34 @@
             ],
             "zarr_format": 2
         },
+        "3d.chunked.O/.zarray": {
+            "chunks": [
+                1,
+                1,
+                2
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "|O",
+            "fill_value": 0,
+            "filters": [
+                {
+                    "id": "vlen-utf8"
+                }
+            ],
+            "order": "C",
+            "shape": [
+                2,
+                2,
+                2
+            ],
+            "zarr_format": 2
+        },
         "3d.chunked.i2/.zarray": {
             "chunks": [
                 1,

@@ -25,6 +25,7 @@ it("exports all the things", () => {
 		    "transpose" => [Function],
 		    "endian" => [Function],
 		    "crc32c" => [Function],
+		    "vlen-utf8" => [Function],
 		  },
 		  "root": [Function],
 		  "set": [Function],

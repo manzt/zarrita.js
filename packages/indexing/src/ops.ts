@@ -30,7 +30,40 @@ type CompatChunk<D extends core.DataType> = {
 	stride: number[];
 };
 
-function string_array_proxy<D extends core.StringDataType>(
+function object_array_proxy<T extends core.DataType>(
+	arr: T[],
+	offset = 0,
+	lengthArg?: number,
+): TypedArrayProxy<T> {
+	let length = lengthArg ?? arr.length - offset;
+	return new Proxy(arr, {
+		get(target, prop: string) {
+			let idx = +prop;
+			if (!Number.isNaN(idx)) {
+				return target[offset + idx];
+			}
+			if (prop === "subarray") {
+				return (from: number, to: number = length) => {
+					return object_array_proxy(target, offset + from, to - from);
+				};
+			}
+			if (prop === "set") {
+				return (source: typeof target, start: number) => {
+					for (let i = 0; i < source.length; i++) {
+						target[offset + start + i] = source[i];
+					}
+				};
+			}
+			return Reflect.get(target, prop);
+		},
+		set(target, idx: string, value: T) {
+			target[offset + Number(idx)] = value;
+			return true;
+		},
+	}) as any;
+}
+
+function string_array_proxy<D extends core.ByteStr | core.UnicodeStr>(
 	arr: core.TypedArray<D>,
 ): TypedArrayProxy<D> {
 	const StringArrayConstructor = arr.constructor.bind(null, arr.chars);
@@ -76,6 +109,7 @@ function string_array_proxy<D extends core.StringDataType>(
 
 function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
 	let data: any = arr.data;
+
 	if (arr.data instanceof BoolArray) {
 		data = new Uint8Array(arr.data.buffer);
 	} else if (
@@ -83,6 +117,8 @@ function compat<D extends core.DataType>(arr: core.Chunk<D>): CompatChunk<D> {
 		arr.data instanceof UnicodeStringArray
 	) {
 		data = string_array_proxy(arr.data);
+	} else if (arr.data instanceof globalThis.Array) {
+		data = object_array_proxy(arr.data);
 	}
 	return {
 		data,
