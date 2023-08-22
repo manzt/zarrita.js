@@ -26,12 +26,12 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		codecs: sharding_config.index_codecs,
 	});
 
-	let cache: Record<string, Chunk<"uint64">> = {};
+	let cache: Record<string, Chunk<"uint64"> | null> = {};
 	return async (chunk_coord: number[]) => {
 		let shard_coord = chunk_coord.map((d, i) => Math.floor(d / index_shape[i]));
 		let shard_path = location.resolve(encode_shard_key(shard_coord)).path;
 
-		let index: Chunk<"uint64">;
+		let index: Chunk<"uint64"> | null;
 		if (shard_path in cache) {
 			index = cache[shard_path];
 		} else {
@@ -40,18 +40,22 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 			let bytes = await get_range(shard_path, {
 				suffixLength: index_size + checksum_size,
 			});
-			if (!bytes) {
-				throw new Error("Index not found");
-			}
-			index = cache[shard_path] = await index_codec.decode(bytes);
+			index = cache[shard_path] = bytes
+				? await index_codec.decode(bytes)
+				: null;
 		}
 
-		let linear_offset = chunk_coord
-			.map((d, i) => d % index.shape[i])
-			.reduce((acc, sel, idx) => acc + sel * index.stride[idx], 0);
+		if (index === null) {
+			return undefined;
+		}
 
-		let offset = index.data[linear_offset];
-		let length = index.data[linear_offset + 1];
+		let { data, shape, stride } = index;
+		let linear_offset = chunk_coord
+			.map((d, i) => d % shape[i])
+			.reduce((acc, sel, idx) => acc + sel * stride[idx], 0);
+
+		let offset = data[linear_offset];
+		let length = data[linear_offset + 1];
 		// write null chunk when 2^64-1 indicates fill value
 		if (offset === MAX_BIG_UINT && length === MAX_BIG_UINT) {
 			return undefined;
