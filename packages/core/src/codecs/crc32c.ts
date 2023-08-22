@@ -8,6 +8,6 @@ export class Crc32cCodec {
 		throw new Error("Not implemented");
 	}
 	decode(arr: Uint8Array): Uint8Array {
-		return new Uint8Array(arr.subarray(0, arr.length - 4));
+		return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength - 4);
 	}
 }

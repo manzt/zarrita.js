@@ -138,7 +138,11 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 
 export type TypedArrayConstructor<D extends DataType> = {
 	new (length: number): TypedArray<D>;
-	new (array: ArrayLike<Scalar<D>> | ArrayBufferLike): TypedArray<D>;
+	new (
+		array: ArrayLike<Scalar<D>> | ArrayBufferLike,
+		byteOffset?: number,
+		length?: number,
+	): TypedArray<D>;
 };
 
 export type Chunk<Dtype extends DataType> = {

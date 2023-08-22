@@ -4,7 +4,6 @@ import type { ShardingCodecMetadata } from "../util.js";
 
 import { create_codec_pipeline } from "../codecs.js";
 import type { Readable } from "@zarrita/storage";
-import { KeyError } from "../errors.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
 
