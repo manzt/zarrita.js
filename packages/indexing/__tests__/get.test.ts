@@ -25,7 +25,6 @@ async function get_v2(
 }
 
 describe("get v2", () => {
-
 	it("1d.contiguous.zlib.i2", async () => {
 		expect(await get_v2("/1d.contiguous.zlib.i2")).toMatchInlineSnapshot(`
 			{
@@ -568,7 +567,6 @@ describe("get v2", () => {
 			stride: [4, 2, 1],
 		});
 	});
-
 });
 
 async function get_v3(
@@ -683,7 +681,6 @@ describe("get v3", () => {
 		expect(res.data).toStrictEqual(new Int16Array(range(27)));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 	});
-
 
 	it("3d.chunked.mixed.i2.C", async () => {
 		let res = await get_v3("/3d.chunked.mixed.i2.C");

@@ -74,7 +74,6 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 					);
 					setter.set_from_chunk(chunk, value, flipped);
 				} else {
-					// @ts-expect-error
 					chunk_data.fill(value as any);
 				}
 			} else {

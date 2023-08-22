@@ -30,7 +30,11 @@ type CompatChunk<D extends core.DataType> = {
 	stride: number[];
 };
 
-function object_array_proxy<T extends core.DataType>(arr: T[], offset = 0, lengthArg?: number): TypedArrayProxy<T> {
+function object_array_proxy<T extends core.DataType>(
+	arr: T[],
+	offset = 0,
+	lengthArg?: number,
+): TypedArrayProxy<T> {
 	let length = lengthArg ?? arr.length - offset;
 	return new Proxy(arr, {
 		get(target, prop: string) {
@@ -57,7 +61,6 @@ function object_array_proxy<T extends core.DataType>(arr: T[], offset = 0, lengt
 			return true;
 		},
 	}) as any;
-
 }
 
 function string_array_proxy<D extends core.ByteStr | core.UnicodeStr>(

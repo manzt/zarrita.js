@@ -29,7 +29,7 @@ function bytes_per_element<D extends DataType>(
 	return 4;
 }
 
-type SupportedDataType = Exclude<DataType, "v2:object:string">;
+type SupportedDataType = Exclude<DataType, "v2:object">;
 
 export class EndianCodec<D extends SupportedDataType> {
 	kind = "array_to_bytes";

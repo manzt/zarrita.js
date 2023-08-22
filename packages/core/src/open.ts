@@ -149,7 +149,6 @@ export function open<Store extends Readable>(
 
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "auto" },
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 export function open<Store extends Readable>(
@@ -158,7 +157,7 @@ export function open<Store extends Readable>(
 
 export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "auto" | "array" | "group" } = { kind: "auto" },
+	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	return open_v3(location, options as any).catch((err) => {
 		if (err instanceof NodeNotFoundError) {

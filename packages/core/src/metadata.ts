@@ -40,7 +40,7 @@ export type UnicodeStr = `v2:U${number}`;
 export type ByteStr = `v2:S${number}`;
 
 /** @category Object */
-export type ObjectStr = "v2:object:string";
+export type ObjectType = "v2:object";
 
 export type NumberDataType =
 	| Int8
@@ -54,12 +54,13 @@ export type NumberDataType =
 
 export type BigintDataType = Int64 | Uint64;
 
-export type StringDataType = UnicodeStr | ByteStr | ObjectStr;
+export type StringDataType = UnicodeStr | ByteStr;
 
 export type DataType =
 	| NumberDataType
 	| BigintDataType
 	| StringDataType
+	| ObjectType
 	| Bool;
 
 export type Attributes = Record<string, unknown>;
@@ -69,6 +70,7 @@ export type Scalar<D extends DataType> = D extends Bool ? boolean
 	: D extends BigintDataType ? bigint
 	: D extends StringDataType ? string
 	: D extends NumberDataType ? number
+	: D extends ObjectType ? any
 	: never;
 
 export type CodecMetadata = {
@@ -138,7 +140,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Bool ? BoolArray
 	: D extends UnicodeStr ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
-	: D extends ObjectStr ? Array<string>
+	: D extends ObjectType ? Array<any>
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {

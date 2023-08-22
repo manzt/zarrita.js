@@ -299,16 +299,15 @@ describe("v2", () => {
 			[[0, 0, 0], ["a", "aa"]],
 			[[1, 0, 0], ["b", "bb"]],
 			[[0, 1, 0], ["aaa", "aaaa"]],
-			[[1, 1, 0], ["bbb", "bbbb"]]
+			[[1, 1, 0], ["bbb", "bbbb"]],
 		])(`getChunk(%j) -> %j`, async (index, expected) => {
 			expect(await arr.getChunk(index)).toStrictEqual({
 				data: expected,
 				shape: [1, 1, 2],
 				stride: [2, 2, 1],
 			});
-		})
+		});
 	});
-
 
 	describe("3d.chunked.mixed.i2.C", async () => {
 		let arr = await open.v2(store.resolve("/3d.chunked.mixed.i2.C"), {
@@ -891,5 +890,4 @@ describe("v3", () => {
 			});
 		});
 	});
-
 });

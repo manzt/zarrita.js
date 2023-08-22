@@ -86,5 +86,4 @@ describe("openConsolidated", () => {
 		let arr = h.open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
 	});
-
 });
