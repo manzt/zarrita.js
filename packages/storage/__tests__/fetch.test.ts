@@ -123,11 +123,15 @@ describe("FetchStore", () => {
 		});
 	});
 
-	it("reads range", async () => {
+	it("reads partial - suffixLength", async () => {
 		let store = new FetchStore(href);
-		let bytes = await store.get("/zarr.json", { offset: 4, length: 50 });
-		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
-			'"tributes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"gro"',
-		);
+		let bytes = await store.getRange("/zarr.json", { suffixLength: 50 });
+		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot('"utes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"group\\"}"');
+	});
+
+	it("reads partial - offset, length", async () => {
+		let store = new FetchStore(href);
+		let bytes = await store.getRange("/zarr.json", { offset: 4, length: 50 });
+		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot('"tributes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"gro"');
 	});
 });

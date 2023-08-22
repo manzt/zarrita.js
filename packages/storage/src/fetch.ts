@@ -1,4 +1,4 @@
-import type { AbsolutePath, AsyncReadable, GetOptions } from "./types.js";
+import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
 import { fetch_range } from "./util.js";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
@@ -33,24 +33,54 @@ class FetchStore implements AsyncReadable<RequestInit> {
 		this.#overrides = options.overrides ?? {};
 	}
 
-	async get(
-		key: AbsolutePath,
-		{ offset, length, ...overrides }: GetOptions<RequestInit> = {},
-	): Promise<Uint8Array | undefined> {
-		const href = resolve(this.url, key).href;
-		const response = await fetch_range(href, offset, length, {
+	#merge_init(overrides: RequestInit) {
+		return {
 			...this.#overrides,
 			...overrides,
 			headers: {
 				...this.#overrides.headers,
 				...overrides.headers,
 			},
-		});
+		};
+	}
+
+	async get(
+		key: AbsolutePath,
+		options: RequestInit = {},
+	): Promise<Uint8Array | undefined> {
+		let href = resolve(this.url, key).href;
+		let response = await fetch(href, this.#merge_init(options));
 		if (response.status === 404 || response.status === 403) {
 			return undefined;
 		}
-		const value = await response.arrayBuffer();
-		return new Uint8Array(value);
+		return new Uint8Array(await response.arrayBuffer());
+	}
+
+	async getRange(
+		key: AbsolutePath,
+		range: RangeQuery,
+		options: RequestInit = {},
+	): Promise<Uint8Array | undefined> {
+		let url = resolve(this.url, key);
+		let init = this.#merge_init(options);
+		let response: Response;
+		if ("suffixLength" in range) {
+			// TODO: option to support suffix request instead of two requests
+			let head_response = await fetch(url, { ...init, method: "HEAD" });
+			if (head_response.status === 404 || head_response.status === 403) {
+				return undefined;
+			}
+			let length = Number(head_response.headers.get("Content-Length"));
+			response = await fetch_range(url, length - range.suffixLength, length - 1, init);
+		} else {
+			response = await fetch_range(url, range.offset, range.length, init);
+		}
+
+		if (response.status === 404 || response.status === 403) {
+			return undefined;
+		}
+
+		return new Uint8Array(await response.arrayBuffer());
 	}
 }
 

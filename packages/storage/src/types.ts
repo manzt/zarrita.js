@@ -1,8 +1,10 @@
 export type AbsolutePath<Rest extends string = string> = `/${Rest}`;
 
-export type GetOptions<T = {}> = T & {
-	offset?: number;
-	length?: number;
+export type RangeQuery = {
+	offset: number;
+	length: number;
+} | {
+	suffixLength: number;
 };
 
 export type Readable<GetOptions = unknown> =
@@ -11,13 +13,24 @@ export type Readable<GetOptions = unknown> =
 export interface AsyncReadable<Options = unknown> {
 	get(
 		key: AbsolutePath,
-		opts?: GetOptions<Options>,
+		opts?: Options,
 	): Promise<Uint8Array | undefined>;
-	stat?(key: AbsolutePath): Promise<{ size: number }>;
+	getRange?(
+		key: AbsolutePath,
+		range: RangeQuery,
+		opts?: Options,
+	): Promise<Uint8Array | undefined>;
 }
 export interface SyncReadable<Options = unknown> {
-	get(key: AbsolutePath, opts?: GetOptions<Options>): Uint8Array | undefined;
-	stat?(key: AbsolutePath): { size: number };
+	get(
+		key: AbsolutePath,
+		opts?: Options,
+	): Uint8Array | undefined;
+	getRange?(
+		key: AbsolutePath,
+		range: RangeQuery,
+		opts?: Options,
+	): Uint8Array | undefined;
 }
 
 export type Writeable = AsyncWriteable | SyncWriteable;

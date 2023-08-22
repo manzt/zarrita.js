@@ -1,26 +1,34 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { AbsolutePath, AsyncMutable, GetOptions } from "./types.js";
+import type { AbsolutePath, AsyncMutable, RangeQuery } from "./types.js";
 import { strip_prefix } from "./util.js";
 
 class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
-	async get(
-		key: AbsolutePath,
-		options?: GetOptions,
-	): Promise<Uint8Array | undefined> {
-		const fp = path.join(this.root, strip_prefix(key));
+	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+		let fp = path.join(this.root, strip_prefix(key));
+		return fs.promises.readFile(fp).catch((err) => {
+			if (err.code === "ENOENT") return undefined;
+			throw err;
+		});
+	}
+
+	async getRange(key: AbsolutePath, range: RangeQuery): Promise<Uint8Array | undefined> {
+		let fp = path.join(this.root, strip_prefix(key));
 		let filehandle: fs.promises.FileHandle | undefined;
 		try {
 			filehandle = await fs.promises.open(fp, "r");
-			if (options?.length !== undefined && options?.offset !== undefined) {
-				let data = Buffer.alloc(options.length);
-				await filehandle.read(data, 0, options.length, options.offset);
+			if ("suffixLength" in range) {
+				let stats = await filehandle.stat();
+				let data = Buffer.alloc(range.suffixLength);
+				await filehandle.read(data, 0, range.suffixLength, stats.size - range.suffixLength);
 				return data;
 			}
-			return filehandle.readFile();
+			let data = Buffer.alloc(range.length);
+			await filehandle.read(data, 0, range.length, range.offset);
+			return data;
 		} catch (err: any) {
 			// return undefined is no file or directory
 			if (err?.code === "ENOENT") return undefined;
