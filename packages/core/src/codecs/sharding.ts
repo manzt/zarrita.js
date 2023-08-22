@@ -46,7 +46,7 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 			index = cache[shard_path] = await index_codec.decode(bytes);
 		}
 
-		let linear_offset = 2 * chunk_coord
+		let linear_offset = chunk_coord
 			.map((d, i) => d % index.shape[i])
 			.reduce((acc, sel, idx) => acc + sel * index.stride[idx], 0);
 

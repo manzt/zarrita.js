@@ -1663,7 +1663,6 @@ describe("v3", () => {
 		});
 	});
 
-	// TODO: fix me
 	describe("2d.contiguous.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("2d.chunked.compressed.sharded.i2"),
@@ -1698,29 +1697,28 @@ describe("v3", () => {
 		);
 	});
 
-	// TODO: fix me
 	describe("2d.chunked.compressed.sharded.filled.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("2d.chunked.compressed.sharded.filled.i2"),
 			{ kind: "array" },
 		);
 		it.each<[chunk_coord: [number, number], value: number]>([
-			[[0, 0], 1],
-			[[0, 1], 2],
-			[[0, 2], 3],
-			[[0, 3], 4],
-			[[1, 0], 5],
-			[[1, 1], 6],
-			[[1, 2], 7],
-			[[1, 3], 8],
-			[[2, 0], 9],
-			[[2, 1], 10],
-			[[2, 2], 11],
-			[[2, 3], 12],
-			[[3, 0], 13],
-			[[3, 1], 14],
-			[[3, 2], 15],
-			[[3, 3], 16],
+			[[0, 0], 0],
+			[[0, 1], 1],
+			[[0, 2], 2],
+			[[0, 3], 3],
+			[[1, 0], 4],
+			[[1, 1], 5],
+			[[1, 2], 6],
+			[[1, 3], 7],
+			[[2, 0], 8],
+			[[2, 1], 9],
+			[[2, 2], 10],
+			[[2, 3], 11],
+			[[3, 0], 12],
+			[[3, 1], 13],
+			[[3, 2], 14],
+			[[3, 3], 15],
 		])(
 			"getChunk(%j) -> Int32Array([%i])",
 			async (chunk_coord, expected) => {
@@ -1733,7 +1731,6 @@ describe("v3", () => {
 		);
 	});
 
-	// TODO: fix me
 	describe("3d.chunked.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("3d.chunked.compressed.sharded.i2"),

@@ -78,17 +78,17 @@ function create_context<Store extends Readable, D extends DataType>(
 	location: Location<Readable>,
 	metadata: ArrayMetadata<D>,
 ): ArrayContext<Store, D> {
-	let context = {
+	let { configuration } = metadata.codecs.find(is_sharding_codec) ?? {};
+	let shared_context = {
 		encode_chunk_key: create_chunk_key_encoder(metadata.chunk_key_encoding),
 		TypedArray: get_ctr(metadata.data_type),
 		fill_value: metadata.fill_value,
 	};
-	let sharding_meta = metadata.codecs.find(is_sharding_codec);
-	if (sharding_meta) {
-		let { configuration } = sharding_meta;
+
+	if (configuration) {
 		let native_order = get_array_order(configuration.codecs);
 		return {
-			...context,
+			...shared_context,
 			kind: "sharded",
 			chunk_shape: configuration.chunk_shape,
 			codec: create_codec_pipeline({
@@ -102,14 +102,15 @@ function create_context<Store extends Readable, D extends DataType>(
 			get_chunk_bytes: create_sharded_chunk_getter(
 				location,
 				metadata.chunk_grid.configuration.chunk_shape,
-				context.encode_chunk_key,
+				shared_context.encode_chunk_key,
 				configuration,
 			),
 		};
 	}
+
 	let native_order = get_array_order(metadata.codecs);
 	return {
-		...context,
+		...shared_context,
 		kind: "regular",
 		chunk_shape: metadata.chunk_grid.configuration.chunk_shape,
 		codec: create_codec_pipeline({
@@ -121,7 +122,7 @@ function create_context<Store extends Readable, D extends DataType>(
 			return get_strides(shape, order ?? native_order);
 		},
 		async get_chunk_bytes(chunk_coords, options) {
-			let chunk_key = context.encode_chunk_key(chunk_coords);
+			let chunk_key = shared_context.encode_chunk_key(chunk_coords);
 			let chunk_path = location.resolve(chunk_key).path;
 			return location.store.get(chunk_path, options);
 		},
