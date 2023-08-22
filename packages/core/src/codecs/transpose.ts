@@ -46,8 +46,8 @@ function empty_like<D extends DataType>(
 		chunk.data instanceof UnicodeStringArray
 	) {
 		data = new (chunk.constructor as TypedArrayConstructor<D>)(
-			chunk.data.length,
 			// @ts-expect-error
+			chunk.data.length,
 			chunk.data.chars,
 		);
 	} else {
