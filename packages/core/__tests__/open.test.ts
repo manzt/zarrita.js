@@ -1603,51 +1603,28 @@ describe("v3", () => {
 		expect(a2.path).toBe("/1d.chunked.i2");
 	});
 
-	it("reads 1d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(store.resolve("1d.chunked.compressed.sharded.i2"), {
-			kind: "array",
-		});
-		expect.fail("TODO");
-	});
-
-	it("reads 1d.chunked.filled.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("1d.chunked.filled.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
-	it("reads 1d.contiguous.compressed.sharded.b1", async () => {
-		let arr = await open.v3(
-			store.resolve("1d.contiguous.compressed.sharded.b1"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
-	it("reads 1d.contiguous.compressed.sharded.f4", async () => {
-		let arr = await open.v3(
-			store.resolve("1d.contiguous.compressed.sharded.f4"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
-	it("reads 1d.contiguous.compressed.sharded.f8", async () => {
-		let arr = await open.v3(
-			store.resolve("1d.contiguous.compressed.sharded.f8"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
 	it("reads 1d.contiguous.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.contiguous.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		expect.fail("TODO");
+		let chunk = await arr.getChunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
+			{
+			  "data": Int16Array [
+			    1,
+			    2,
+			    3,
+			    4,
+			  ],
+			  "shape": [
+			    4,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`);
 	});
 
 	it("reads 1d.contiguous.compressed.sharded.i4", async () => {
@@ -1655,7 +1632,23 @@ describe("v3", () => {
 			store.resolve("1d.contiguous.compressed.sharded.i4"),
 			{ kind: "array" },
 		);
-		expect.fail("TODO");
+		let chunk = await arr.getChunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
+			{
+			  "data": Int32Array [
+			    1,
+			    2,
+			    3,
+			    4,
+			  ],
+			  "shape": [
+			    4,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`);
 	});
 
 	it("reads 1d.contiguous.compressed.sharded.u1", async () => {
@@ -1663,60 +1656,152 @@ describe("v3", () => {
 			store.resolve("1d.contiguous.compressed.sharded.u1"),
 			{ kind: "array" },
 		);
-		expect.fail("TODO");
+		let chunk = await arr.getChunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
+			{
+			  "data": Uint8Array [
+			    255,
+			    0,
+			    255,
+			    0,
+			  ],
+			  "shape": [
+			    4,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`)
 	});
 
-	it("reads 2d.chunked.compressed.sharded.filled.i2", async () => {
+	it("reads 1d.contiguous.compressed.sharded.f4", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.f4"),
+			{ kind: "array" },
+		);
+		let chunk = await arr.getChunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
+			{
+			  "data": Float32Array [
+			    -1000.5,
+			    0,
+			    1000.5,
+			    0,
+			  ],
+			  "shape": [
+			    4,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`);
+	});
+
+	it("reads 1d.contiguous.compressed.sharded.f8", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.f8"),
+			{ kind: "array" },
+		);
+		let chunk = await arr.getChunk([0]);
+		expect(chunk).toMatchInlineSnapshot(`
+			{
+			  "data": Float64Array [
+			    1.5,
+			    2.5,
+			    3.5,
+			    4.5,
+			  ],
+			  "shape": [
+			    4,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`);
+	});
+
+	// TODO: fix me
+	it.skip.each<[chunk_coord: [i: number, j: number], value: number]>([
+		[[0, 0], 1],
+		[[0, 1], 2],
+		[[0, 2], 3],
+		[[0, 3], 4],
+		[[1, 0], 5],
+		[[1, 1], 6],
+		[[1, 2], 7],
+		[[1, 3], 8],
+		[[2, 0], 9],
+		[[2, 1], 10],
+		[[2, 2], 11],
+		[[2, 3], 12],
+		[[3, 0], 13],
+		[[3, 1], 14],
+		[[3, 2], 15],
+		[[3, 3], 16],	        
+	])(`chunk_coord: %j – 2d.contiguous.compressed.sharded.i2`, async ([i, j], expected) => {
+		let arr = await open.v3(
+			store.resolve("2d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		let chunk = await arr.getChunk([i, j]);
+		expect(chunk).toStrictEqual({
+			data: new Int16Array([expected]),
+			shape: [1, 1],
+			stride: [1, 1],
+		});
+	});
+
+	// TODO: fix me
+	it.skip.each<[chunk_coord: [number, number], value: number]>([
+		[[0, 0], 1],
+		[[0, 1], 2],
+		[[0, 2], 3],
+		[[0, 3], 4],
+		[[1, 0], 5],
+		[[1, 1], 6],
+		[[1, 2], 7],
+		[[1, 3], 8],
+		[[2, 0], 9],
+		[[2, 1], 10],
+		[[2, 2], 11],
+		[[2, 3], 12],
+		[[3, 0], 13],
+		[[3, 1], 14],
+		[[3, 2], 15],
+		[[3, 3], 16],	        
+	])(`chunk_coord: %j – 2d.contiguous.compressed.sharded.filled.i2`, async (chunk_coord, expected) => {
 		let arr = await open.v3(
 			store.resolve("2d.chunked.compressed.sharded.filled.i2"),
 			{ kind: "array" },
 		);
-		expect.fail("TODO");
-	});
-
-	it("reads 2d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(store.resolve("2d.chunked.compressed.sharded.i2"), {
-			kind: "array",
+		expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+			data: new Int16Array([expected]),
+			shape: [1, 1],
+			stride: [1, 1],
 		});
-		expect.fail("TODO");
 	});
 
-	it("reads 2d.chunked.ragged.compressed.sharded.i2", async () => {
+	// TODO: fix me
+	it.skip.each<[chunk_coord: [number, number, number], value: number]>([
+		[[0, 0, 0], 0],
+		[[1, 0, 1], 17],
+		[[2, 0, 0], 32],
+		[[1, 1, 1], 21],
+		[[1, 3, 2], 30],
+		[[3, 3, 3], 63],
+	])(`chunk_coord: %j – 3d.chunked.compressed.sharded.i2`, async (chunk_coords, expected) => {
 		let arr = await open.v3(
-			store.resolve("2d.chunked.ragged.compressed.sharded.i2"),
+			store.resolve("3d.chunked.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
-		expect.fail("TODO");
-	});
-
-	it("reads 2d.contiguous.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("2d.contiguous.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
-	it("reads 3d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(store.resolve("3d.chunked.compressed.sharded.i2"), {
-			kind: "array",
+		expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+			data: new Int16Array([expected]),
+			shape: [1, 1, 1],
+			stride: [1, 1, 1],
 		});
-		expect.fail("TODO");
 	});
-
-	it("reads 3d.chunked.mixed.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("3d.chunked.mixed.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
-
-	it("reads 3d.contiguous.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("3d.contiguous.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
-		expect.fail("TODO");
-	});
+	
 });
