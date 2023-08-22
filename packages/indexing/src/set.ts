@@ -30,6 +30,9 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	},
 ) {
 	const context = _internal_get_array_context(arr);
+	if (context.kind === "sharded") {
+		throw new Error("Set not supported for sharded arrays.");
+	}
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
