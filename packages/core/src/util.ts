@@ -11,7 +11,6 @@ import type {
 	CodecMetadata,
 	DataType,
 	GroupMetadata,
-	GroupMetadataV2,
 	NumberDataType,
 	StringDataType,
 	TypedArrayConstructor,
@@ -113,10 +112,8 @@ export function create_chunk_key_encoder(
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
-export function get_array_order(meta: ArrayMetadata<DataType>): "C" | "F" {
-	const maybe_transpose_codec = meta.codecs.find(
-		(c) => c.name === "transpose",
-	);
+export function get_array_order(codecs: CodecMetadata[]): "C" | "F" {
+	const maybe_transpose_codec = codecs.find((c) => c.name === "transpose");
 	return maybe_transpose_codec?.configuration?.order === "F" ? "F" : "C";
 }
 
@@ -242,4 +239,19 @@ export function is_dtype<Query extends DataTypeQuery>(
 	const is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;
 	return !is_string && !is_bigint && !is_boolean;
+}
+
+export type ShardingCodecMetadata = {
+	name: "sharding_indexed";
+	configuration: {
+		chunk_shape: number[];
+		codecs: CodecMetadata[];
+		index_codecs: CodecMetadata[];
+	};
+};
+
+export function is_sharding_codec(
+	codec: CodecMetadata,
+): codec is ShardingCodecMetadata {
+	return codec?.name === "sharding_indexed";
 }

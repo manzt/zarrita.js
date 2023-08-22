@@ -7,7 +7,12 @@ import type {
 	Scalar,
 	TypedArrayConstructor,
 } from "./metadata.js";
-import { type DataTypeQuery, is_dtype, type NarrowDataType } from "./util.js";
+import {
+	type DataTypeQuery,
+	is_dtype,
+	is_sharding_codec,
+	type NarrowDataType,
+} from "./util.js";
 import { KeyError } from "./errors.js";
 import { create_codec_pipeline } from "./codecs.js";
 import {
@@ -16,6 +21,7 @@ import {
 	get_ctr,
 	get_strides,
 } from "./util.js";
+import { create_sharded_chunk_getter } from "./codecs/sharding.js";
 
 export class Location<Store> {
 	constructor(
@@ -68,23 +74,70 @@ export function get_context<T>(obj: { [CONTEXT_MARKER]: T }): T {
 	return obj[CONTEXT_MARKER];
 }
 
-function create_context<D extends DataType>(
+function create_context<Store extends Readable, D extends DataType>(
+	location: Location<Readable>,
 	metadata: ArrayMetadata<D>,
-): ArrayContext<D> {
-	let native_order = get_array_order(metadata);
-	return {
-		codec: create_codec_pipeline(metadata),
+): ArrayContext<Store, D> {
+	let context = {
 		encode_chunk_key: create_chunk_key_encoder(metadata.chunk_key_encoding),
 		TypedArray: get_ctr(metadata.data_type),
 		fill_value: metadata.fill_value,
+	};
+	let sharding_meta = metadata.codecs.find(is_sharding_codec);
+	if (sharding_meta) {
+		let { configuration } = sharding_meta;
+		let native_order = get_array_order(configuration.codecs);
+		return {
+			...context,
+			kind: "sharded",
+			chunk_shape: configuration.chunk_shape,
+			codec: create_codec_pipeline({
+				data_type: metadata.data_type,
+				shape: configuration.chunk_shape,
+				codecs: configuration.codecs,
+			}),
+			get_strides(shape: number[], order?: "C" | "F") {
+				return get_strides(shape, order ?? native_order);
+			},
+			get_chunk_bytes: create_sharded_chunk_getter(
+				location,
+				metadata.chunk_grid.configuration.chunk_shape,
+				context.encode_chunk_key,
+				configuration,
+			),
+		};
+	}
+	let native_order = get_array_order(metadata.codecs);
+	return {
+		...context,
+		kind: "regular",
+		chunk_shape: metadata.chunk_grid.configuration.chunk_shape,
+		codec: create_codec_pipeline({
+			data_type: metadata.data_type,
+			shape: metadata.chunk_grid.configuration.chunk_shape,
+			codecs: metadata.codecs,
+		}),
 		get_strides(shape: number[], order?: "C" | "F") {
 			return get_strides(shape, order ?? native_order);
+		},
+		async get_chunk_bytes(chunk_coords, options) {
+			let chunk_key = context.encode_chunk_key(chunk_coords);
+			let chunk_path = location.resolve(chunk_key).path;
+			let maybe_bytes = await location.store.get(chunk_path, options);
+			if (!maybe_bytes) {
+				throw new KeyError(chunk_path);
+			}
+			return maybe_bytes;
 		},
 	};
 }
 
 /** For internal use only, and is subject to change. */
-interface ArrayContext<D extends DataType> {
+interface ArrayContext<
+	Store extends Readable,
+	D extends DataType,
+> {
+	kind: "sharded" | "regular";
 	/** The codec pipeline for this array. */
 	codec: ReturnType<typeof create_codec_pipeline<D>>;
 	/** Encode a chunk key from chunk coordinates. */
@@ -95,6 +148,13 @@ interface ArrayContext<D extends DataType> {
 	get_strides(shape: number[], order?: "C" | "F"): number[];
 	/** The fill value for this array. */
 	fill_value: Scalar<D> | null;
+	/** A function to get the bytes for a given chunk. */
+	get_chunk_bytes(
+		chunk_coords: number[],
+		options?: Parameters<Store["get"]>[1],
+	): Promise<Uint8Array>;
+	/** The chunk shape for this array. */
+	chunk_shape: number[];
 }
 
 export class Array<
@@ -103,7 +163,7 @@ export class Array<
 > extends Location<Store> {
 	readonly kind = "array";
 	#metadata: ArrayMetadata<Dtype>;
-	[CONTEXT_MARKER]: ArrayContext<Dtype>;
+	[CONTEXT_MARKER]: ArrayContext<Store, Dtype>;
 
 	constructor(
 		store: Store,
@@ -112,7 +172,7 @@ export class Array<
 	) {
 		super(store, path);
 		this.#metadata = metadata;
-		this[CONTEXT_MARKER] = create_context(metadata);
+		this[CONTEXT_MARKER] = create_context(this, metadata);
 	}
 
 	get attrs() {
@@ -124,7 +184,7 @@ export class Array<
 	}
 
 	get chunks() {
-		return this.#metadata.chunk_grid.configuration.chunk_shape;
+		return this[CONTEXT_MARKER].chunk_shape;
 	}
 
 	get dtype() {
@@ -135,13 +195,9 @@ export class Array<
 		chunk_coords: number[],
 		options?: Parameters<Store["get"]>[1],
 	): Promise<Chunk<Dtype>> {
-		let chunk_key = this[CONTEXT_MARKER].encode_chunk_key(chunk_coords);
-		let chunk_path = this.resolve(chunk_key).path;
-		let maybe_bytes = await this.store.get(chunk_path, options);
-		if (!maybe_bytes) {
-			throw new KeyError(chunk_path);
-		}
-		return this[CONTEXT_MARKER].codec.decode(maybe_bytes);
+		let context = this[CONTEXT_MARKER];
+		let bytes = await context.get_chunk_bytes(chunk_coords, options);
+		return context.codec.decode(bytes);
 	}
 
 	/**

@@ -1,5 +1,15 @@
-import type { ArrayMetadata, Chunk, DataType } from "../metadata.js";
-import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
+import type {
+	Chunk,
+	CodecMetadata,
+	DataType,
+	TypedArrayConstructor,
+} from "../metadata.js";
+import {
+	byteswap_inplace,
+	get_array_order,
+	get_ctr,
+	get_strides,
+} from "../util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
@@ -31,42 +41,47 @@ function bytes_per_element(data_type: DataType): number {
 
 export class EndianCodec<D extends DataType> {
 	kind = "array_to_bytes";
+	strides: number[];
+	TypedArray: TypedArrayConstructor<D>;
 
 	constructor(
 		public configuration: { endian: "little" | "big" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
+		public data_type: D,
+		public shape: number[],
+		codecs: CodecMetadata[],
+	) {
+		this.TypedArray = get_ctr(data_type);
+		this.strides = get_strides(shape, get_array_order(codecs));
+	}
 
 	static fromConfig<D extends DataType>(
 		configuration: { endian: "little" | "big" },
-		array_metadata: ArrayMetadata<D>,
+		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	): EndianCodec<D> {
-		return new EndianCodec(configuration, array_metadata);
+		return new EndianCodec(
+			configuration,
+			meta.data_type,
+			meta.shape,
+			meta.codecs,
+		);
 	}
 
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
+			byteswap_inplace(bytes, bytes_per_element(this.data_type));
 		}
 		return bytes;
 	}
 
 	decode(bytes: Uint8Array): Chunk<D> {
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
+			byteswap_inplace(bytes, bytes_per_element(this.data_type));
 		}
-		let ctr = get_ctr(this.array_metadata.data_type);
-		let maybe_transpose_codec = this.array_metadata.codecs.find((c) =>
-			c.name === "transpose"
-		);
 		return {
-			data: new ctr(bytes.buffer) as any,
-			shape: this.array_metadata.chunk_grid.configuration.chunk_shape,
-			stride: get_strides(
-				this.array_metadata.chunk_grid.configuration.chunk_shape,
-				maybe_transpose_codec?.configuration.order === "F" ? "F" : "C",
-			),
+			data: new this.TypedArray(bytes.buffer),
+			shape: this.shape,
+			stride: this.strides,
 		};
 	}
 }
