@@ -13,10 +13,10 @@ import {
 	is_sharding_codec,
 	type NarrowDataType,
 } from "./util.js";
-import { KeyError } from "./errors.js";
 import { create_codec_pipeline } from "./codecs.js";
 import {
 	create_chunk_key_encoder,
+	ensure_correct_scalar,
 	get_array_order,
 	get_ctr,
 	get_strides,
@@ -123,11 +123,7 @@ function create_context<Store extends Readable, D extends DataType>(
 		async get_chunk_bytes(chunk_coords, options) {
 			let chunk_key = context.encode_chunk_key(chunk_coords);
 			let chunk_path = location.resolve(chunk_key).path;
-			let maybe_bytes = await location.store.get(chunk_path, options);
-			if (!maybe_bytes) {
-				throw new KeyError(chunk_path);
-			}
-			return maybe_bytes;
+			return location.store.get(chunk_path, options);
 		},
 	};
 }
@@ -152,7 +148,7 @@ interface ArrayContext<
 	get_chunk_bytes(
 		chunk_coords: number[],
 		options?: Parameters<Store["get"]>[1],
-	): Promise<Uint8Array>;
+	): Promise<Uint8Array | undefined>;
 	/** The chunk shape for this array. */
 	chunk_shape: number[];
 }
@@ -171,7 +167,10 @@ export class Array<
 		metadata: ArrayMetadata<Dtype>,
 	) {
 		super(store, path);
-		this.#metadata = metadata;
+		this.#metadata = {
+			...metadata,
+			fill_value: ensure_correct_scalar(metadata),
+		};
 		this[CONTEXT_MARKER] = create_context(this, metadata);
 	}
 
@@ -196,8 +195,18 @@ export class Array<
 		options?: Parameters<Store["get"]>[1],
 	): Promise<Chunk<Dtype>> {
 		let context = this[CONTEXT_MARKER];
-		let bytes = await context.get_chunk_bytes(chunk_coords, options);
-		return context.codec.decode(bytes);
+		let maybe_bytes = await context.get_chunk_bytes(chunk_coords, options);
+		if (!maybe_bytes) {
+			let size = context.chunk_shape.reduce((a, b) => a * b, 1);
+			let data = new context.TypedArray(size);
+			(data as any).fill(context.fill_value as any);
+			return {
+				data,
+				shape: context.chunk_shape,
+				stride: context.get_strides(context.chunk_shape),
+			};
+		}
+		return context.codec.decode(maybe_bytes);
 	}
 
 	/**

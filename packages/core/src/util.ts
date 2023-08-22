@@ -12,6 +12,7 @@ import type {
 	DataType,
 	GroupMetadata,
 	NumberDataType,
+	Scalar,
 	StringDataType,
 	TypedArrayConstructor,
 } from "./metadata.js";
@@ -254,4 +255,16 @@ export function is_sharding_codec(
 	codec: CodecMetadata,
 ): codec is ShardingCodecMetadata {
 	return codec?.name === "sharding_indexed";
+}
+
+export function ensure_correct_scalar<D extends DataType>(
+	metadata: ArrayMetadata<D>,
+): Scalar<D> | null {
+	if (
+		(metadata.data_type === "uint64" || metadata.data_type === "int64") &&
+		metadata.fill_value != undefined
+	) {
+		return BigInt(metadata.fill_value) as Scalar<D>;
+	}
+	return metadata.fill_value;
 }

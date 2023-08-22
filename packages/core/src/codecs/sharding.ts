@@ -55,19 +55,11 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		let length = index.data[linear_offset + 1];
 		// write null chunk when 2^64-1 indicates fill value
 		if (offset === MAX_BIG_UINT && length === MAX_BIG_UINT) {
-			throw new KeyError(
-				`shard: ${shard_path} chunk: ${chunk_coord.join("/")}}`,
-			);
+			return undefined;
 		}
-		let maybe_bytes = await get_range(shard_path, {
+		return get_range(shard_path, {
 			offset: Number(offset),
 			length: Number(length),
 		});
-		if (!maybe_bytes) {
-			throw new KeyError(
-				`shard: ${shard_path} chunk: ${chunk_coord.join("/")}}`,
-			);
-		}
-		return maybe_bytes;
 	};
 }

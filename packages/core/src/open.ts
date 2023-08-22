@@ -94,6 +94,13 @@ async function _open_v3<Store extends Readable>(
 	let meta_doc: ArrayMetadata<DataType> | GroupMetadata = json_decode_object(
 		meta,
 	);
+	if (
+		meta_doc.node_type === "array" &&
+		(meta_doc.data_type === "uint64" || meta_doc.data_type === "int64") &&
+		meta_doc.fill_value != undefined
+	) {
+		meta_doc.fill_value = BigInt(meta_doc.fill_value);
+	}
 	return meta_doc.node_type === "array"
 		? new Array(store, location.path, meta_doc)
 		: new Group(store, location.path, meta_doc);

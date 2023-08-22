@@ -3,6 +3,7 @@ import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 
 import { TransposeCodec } from "./codecs/transpose.js";
 import { EndianCodec } from "./codecs/endian.js";
+import { Crc32cCodec } from "./codecs/crc32c.js";
 
 type ChunkMetadata<D extends DataType> = {
 	data_type: D;
@@ -26,7 +27,8 @@ function create_default_registry(): Map<
 		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
 		.set("transpose", () => TransposeCodec)
-		.set("endian", () => EndianCodec);
+		.set("endian", () => EndianCodec)
+		.set("crc32c", () => Crc32cCodec);
 }
 
 export const registry = create_default_registry();
