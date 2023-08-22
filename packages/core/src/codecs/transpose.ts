@@ -46,8 +46,8 @@ function empty_like<D extends DataType>(
 		chunk.data instanceof UnicodeStringArray
 	) {
 		data = new (chunk.constructor as TypedArrayConstructor<D>)(
-			chunk.data.length,
 			// @ts-expect-error
+			chunk.data.length,
 			chunk.data.chars,
 		);
 	} else {
@@ -103,29 +103,27 @@ function get_order(arr: Chunk<DataType>): "C" | "F" {
 	return arr.stride.every((s, i) => s === row_major_strides[i]) ? "C" : "F";
 }
 
-export class TransposeCodec<D extends DataType> {
+export class TransposeCodec {
 	kind = "array_to_array";
 
 	constructor(
 		public configuration: { order: "C" | "F" },
-		public array_metadata: ArrayMetadata<DataType>,
 	) {}
 
-	static fromConfig<D extends DataType>(
+	static fromConfig(
 		configuration: { order: "C" | "F" },
-		array_metadata: ArrayMetadata<D>,
 	) {
-		return new TransposeCodec(configuration, array_metadata);
+		return new TransposeCodec(configuration);
 	}
 
-	encode(arr: Chunk<D>): Chunk<D> {
+	encode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
 		if (get_order(arr) === this.configuration.order) {
 			return arr;
 		}
 		return convert_array_order(arr, this.configuration.order);
 	}
 
-	decode(arr: Chunk<D>): Chunk<D> {
+	decode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
 		return arr;
 	}
 }

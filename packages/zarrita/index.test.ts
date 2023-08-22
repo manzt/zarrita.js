@@ -24,6 +24,7 @@ it("exports all the things", () => {
 		    "zstd" => [Function],
 		    "transpose" => [Function],
 		    "endian" => [Function],
+		    "crc32c" => [Function],
 		  },
 		  "root": [Function],
 		  "set": [Function],

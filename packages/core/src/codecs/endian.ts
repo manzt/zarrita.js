@@ -1,5 +1,15 @@
-import type { ArrayMetadata, Chunk, DataType } from "../metadata.js";
-import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
+import type {
+	Chunk,
+	CodecMetadata,
+	DataType,
+	TypedArrayConstructor,
+} from "../metadata.js";
+import {
+	byteswap_inplace,
+	get_array_order,
+	get_ctr,
+	get_strides,
+} from "../util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
@@ -9,64 +19,62 @@ function system_is_little_endian(): boolean {
 	return !(b[0] === 0x12);
 }
 
-function bytes_per_element(data_type: DataType): number {
-	const mapping: any = {
-		int8: 1,
-		int16: 2,
-		int32: 4,
-		int64: 8,
-		uint8: 1,
-		uint16: 2,
-		uint32: 4,
-		uint64: 8,
-		float32: 4,
-		float64: 8,
-	};
-	let b = mapping[data_type] ?? data_type.startsWith("v2:U") ? 4 : undefined;
-	if (!b) {
-		throw new Error(`Unknown or unsupported data type: ${data_type}`);
+function bytes_per_element<D extends DataType>(
+	TypedArray: TypedArrayConstructor<D>,
+): number {
+	if ("BYTES_PER_ELEMENT" in TypedArray) {
+		return TypedArray.BYTES_PER_ELEMENT as number;
 	}
-	return b;
+	// Unicode string array is backed by a Int32Array.
+	return 4;
 }
 
 export class EndianCodec<D extends DataType> {
 	kind = "array_to_bytes";
+	#strides: number[];
+	#TypedArray: TypedArrayConstructor<D>;
+	#BYTES_PER_ELEMENT: number;
+	#shape: number[];
 
 	constructor(
 		public configuration: { endian: "little" | "big" },
-		public array_metadata: ArrayMetadata<DataType>,
-	) {}
+		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
+	) {
+		this.#TypedArray = get_ctr(meta.data_type);
+		this.#shape = meta.shape;
+		this.#strides = get_strides(meta.shape, get_array_order(meta.codecs));
+		// TODO: fix me.
+		// hack to get bytes per element since it's dynamic for string types.
+		this.#BYTES_PER_ELEMENT = new this.#TypedArray(0).BYTES_PER_ELEMENT;
+	}
 
 	static fromConfig<D extends DataType>(
 		configuration: { endian: "little" | "big" },
-		array_metadata: ArrayMetadata<D>,
+		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	): EndianCodec<D> {
-		return new EndianCodec(configuration, array_metadata);
+		return new EndianCodec(configuration, meta);
 	}
 
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
+			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
 		}
 		return bytes;
 	}
 
 	decode(bytes: Uint8Array): Chunk<D> {
 		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.array_metadata.data_type));
+			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
 		}
-		let ctr = get_ctr(this.array_metadata.data_type);
-		let maybe_transpose_codec = this.array_metadata.codecs.find((c) =>
-			c.name === "transpose"
-		);
 		return {
-			data: new ctr(bytes.buffer) as any,
-			shape: this.array_metadata.chunk_grid.configuration.chunk_shape,
-			stride: get_strides(
-				this.array_metadata.chunk_grid.configuration.chunk_shape,
-				maybe_transpose_codec?.configuration.order === "F" ? "F" : "C",
+			data: new this.#TypedArray(
+				bytes.buffer,
+				bytes.byteOffset,
+				bytes.byteLength / this.#BYTES_PER_ELEMENT,
 			),
+			shape: this.#shape,
+			stride: this.#strides,
 		};
 	}
 }

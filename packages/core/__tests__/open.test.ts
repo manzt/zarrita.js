@@ -44,7 +44,7 @@ describe("v2", () => {
 		expect(group.attrs).toMatchInlineSnapshot("{}");
 	});
 
-	it("reads 1d.contiguous.zlib.i2", async () => {
+	it("1d.contiguous.zlib.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zlib.i2"), {
 			kind: "array",
 		});
@@ -66,7 +66,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.blosc.i2", async () => {
+	it("1d.contiguous.blosc.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
@@ -88,7 +88,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.lz4.i2", async () => {
+	it("1d.contiguous.lz4.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.lz4.i2"), {
 			kind: "array",
 		});
@@ -110,7 +110,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.zstd.i2", async () => {
+	it("1d.contiguous.zstd.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.zstd.i2"), {
 			kind: "array",
 		});
@@ -132,7 +132,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.raw.i2", async () => {
+	it("1d.contiguous.raw.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
@@ -154,7 +154,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.i4", async () => {
+	it("1d.contiguous.i4", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
@@ -176,7 +176,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.u1", async () => {
+	it("1d.contiguous.u1", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
@@ -198,7 +198,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f4.le", async () => {
+	it("1d.contiguous.f4.le", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
@@ -220,7 +220,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f4.be", async () => {
+	it("1d.contiguous.f4.be", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
@@ -242,7 +242,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f8", async () => {
+	it("1d.contiguous.f8", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
@@ -264,7 +264,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.U13.le", async () => {
+	it("1d.contiguous.U13.le", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U13.le"), {
 			kind: "array",
 		});
@@ -279,7 +279,7 @@ describe("v2", () => {
 		expect(chunk.shape).toStrictEqual([4]);
 	});
 
-	it("reads 1d.contiguous.U13.be", async () => {
+	it("1d.contiguous.U13.be", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U13.be"), {
 			kind: "array",
 		});
@@ -294,7 +294,7 @@ describe("v2", () => {
 		expect(chunk.shape).toStrictEqual([4]);
 	});
 
-	it("reads 1d.contiguous.U7", async () => {
+	it("1d.contiguous.U7", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.U7"), {
 			kind: "array",
 		});
@@ -309,7 +309,7 @@ describe("v2", () => {
 		expect(chunk.shape).toStrictEqual([4]);
 	});
 
-	it("reads 1d.contiguous.S7", async () => {
+	it("1d.contiguous.S7", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.S7"), {
 			kind: "array",
 		});
@@ -324,7 +324,7 @@ describe("v2", () => {
 		expect(chunk.shape).toStrictEqual([4]);
 	});
 
-	it("reads 1d.contiguous.b1", async () => {
+	it("1d.contiguous.b1", async () => {
 		let arr = await open.v2(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
@@ -350,7 +350,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 2d.contiguous.i2", async () => {
+	it("2d.contiguous.i2", async () => {
 		let arr = await open.v2(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
@@ -374,7 +374,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 3d.contiguous.i2", async () => {
+	it("3d.contiguous.i2", async () => {
 		let arr = await open.v2(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
@@ -423,7 +423,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.chunked.i2", async () => {
+	it("1d.chunked.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.chunked.i2"), {
 			kind: "array",
 		});
@@ -461,7 +461,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 1d.chunked.ragged.i2", async () => {
+	it("1d.chunked.ragged.i2", async () => {
 		let arr = await open.v2(store.resolve("/1d.chunked.ragged.i2"), {
 			kind: "array",
 		});
@@ -512,7 +512,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 2d.chunked.i2", async () => {
+	it("2d.chunked.i2", async () => {
 		let arr = await open.v2(store.resolve("/2d.chunked.i2"), {
 			kind: "array",
 		});
@@ -580,7 +580,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 2d.chunked.U7", async () => {
+	it("2d.chunked.U7", async () => {
 		let arr = await open.v2(store.resolve("/2d.chunked.U7"), {
 			kind: "array",
 		});
@@ -600,7 +600,7 @@ describe("v2", () => {
 		expect(c4.shape).toStrictEqual([1, 1]);
 	});
 
-	it("reads 2d.chunked.ragged.i2", async () => {
+	it("2d.chunked.ragged.i2", async () => {
 		let arr = await open.v2(store.resolve("/2d.chunked.ragged.i2"), {
 			kind: "array",
 		});
@@ -680,7 +680,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.i2", async () => {
+	it("3d.chunked.i2", async () => {
 		let arr = await open.v2(store.resolve("/3d.chunked.i2"), {
 			kind: "array",
 		});
@@ -756,7 +756,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.mixed.i2.C", async () => {
+	it("3d.chunked.mixed.i2.C", async () => {
 		let arr = await open.v2(store.resolve("/3d.chunked.mixed.i2.C"), {
 			kind: "array",
 		});
@@ -840,7 +840,7 @@ describe("v2", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.mixed.i2.F", async () => {
+	it("3d.chunked.mixed.i2.F", async () => {
 		let arr = await open.v2(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
@@ -899,7 +899,7 @@ describe("v3", () => {
 		),
 	);
 
-	it("reads 1d.contiguous.gzip.i2", async () => {
+	it("1d.contiguous.gzip.i2", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.gzip.i2"), {
 			kind: "array",
 		});
@@ -921,7 +921,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.blosc.i2", async () => {
+	it("1d.contiguous.blosc.i2", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.blosc.i2"), {
 			kind: "array",
 		});
@@ -943,7 +943,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.raw.i2", async () => {
+	it("1d.contiguous.raw.i2", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.raw.i2"), {
 			kind: "array",
 		});
@@ -965,7 +965,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.i4", async () => {
+	it("1d.contiguous.i4", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.i4"), {
 			kind: "array",
 		});
@@ -987,7 +987,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.u1", async () => {
+	it("1d.contiguous.u1", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
 		});
@@ -1009,7 +1009,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f4.le", async () => {
+	it("1d.contiguous.f4.le", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f4.le"), {
 			kind: "array",
 		});
@@ -1031,7 +1031,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f4.be", async () => {
+	it("1d.contiguous.f4.be", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f4.be"), {
 			kind: "array",
 		});
@@ -1053,7 +1053,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.f8", async () => {
+	it("1d.contiguous.f8", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.f8"), {
 			kind: "array",
 		});
@@ -1075,7 +1075,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.contiguous.b1", async () => {
+	it("1d.contiguous.b1", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.b1"), {
 			kind: "array",
 		});
@@ -1101,7 +1101,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 2d.contiguous.i2", async () => {
+	it("2d.contiguous.i2", async () => {
 		let arr = await open.v3(store.resolve("/2d.contiguous.i2"), {
 			kind: "array",
 		});
@@ -1125,7 +1125,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 3d.contiguous.i2", async () => {
+	it("3d.contiguous.i2", async () => {
 		let arr = await open.v3(store.resolve("/3d.contiguous.i2"), {
 			kind: "array",
 		});
@@ -1174,7 +1174,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.chunked.i2", async () => {
+	it("1d.chunked.i2", async () => {
 		let arr = await open.v3(store.resolve("/1d.chunked.i2"), {
 			kind: "array",
 		});
@@ -1209,7 +1209,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 1d.chunked.ragged.i2", async () => {
+	it("1d.chunked.ragged.i2", async () => {
 		let arr = await open.v3(store.resolve("/1d.chunked.ragged.i2"), {
 			kind: "array",
 		});
@@ -1260,7 +1260,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 2d.chunked.i2", async () => {
+	it("2d.chunked.i2", async () => {
 		let arr = await open.v3(store.resolve("/2d.chunked.i2"), {
 			kind: "array",
 		});
@@ -1328,7 +1328,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 2d.chunked.ragged.i2", async () => {
+	it("2d.chunked.ragged.i2", async () => {
 		let arr = await open.v3(store.resolve("/2d.chunked.ragged.i2"), {
 			kind: "array",
 		});
@@ -1408,7 +1408,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.i2", async () => {
+	it("3d.chunked.i2", async () => {
 		let arr = await open.v3(store.resolve("/3d.chunked.i2"), {
 			kind: "array",
 		});
@@ -1468,7 +1468,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.mixed.i2.C", async () => {
+	it("3d.chunked.mixed.i2.C", async () => {
 		let arr = await open.v3(store.resolve("/3d.chunked.mixed.i2.C"), {
 			kind: "array",
 		});
@@ -1552,7 +1552,7 @@ describe("v3", () => {
 		`);
 	});
 
-	it("reads 3d.chunked.mixed.i2.F", async () => {
+	it("3d.chunked.mixed.i2.F", async () => {
 		let arr = await open.v3(store.resolve("/3d.chunked.mixed.i2.F"), {
 			kind: "array",
 		});
@@ -1601,5 +1601,275 @@ describe("v3", () => {
 		});
 		expect(a1.path).toBe("/1d.chunked.i2");
 		expect(a2.path).toBe("/1d.chunked.i2");
+	});
+
+	it("1d.contiguous.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int16Array([1, 2, 3, 4]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.compressed.sharded.i4", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.i4"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int32Array([1, 2, 3, 4]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.compressed.sharded.u1", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.u1"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Uint8Array([255, 0, 255, 0]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.compressed.sharded.f4", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.f4"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Float32Array([-1000.5, 0, 1000.5, 0]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.compressed.sharded.f8", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.f8"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Float64Array([1.5, 2.5, 3.5, 4.5]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.compressed.sharded.b1", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.contiguous.compressed.sharded.b1"),
+			{ kind: "array" },
+		);
+		let chunk = await arr.getChunk([0]);
+		expect({
+			...chunk,
+			data: Array.from(chunk.data as any),
+		}).toStrictEqual({
+			data: [true, false, true, false],
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	describe("1d.chunked.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number], value: number]>([
+			[[0], 1],
+			[[1], 2],
+			[[2], 3],
+			[[3], 4],
+		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1],
+				stride: [1],
+			});
+		});
+	});
+
+	describe("1d.chunked.filled.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("1d.chunked.filled.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number], value: number]>([
+			[[0], 1],
+			[[1], 2],
+			[[2], 0],
+			[[3], 0],
+		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1],
+				stride: [1],
+			});
+		});
+	});
+
+	describe("2d.contiguous.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("2d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [i: number, j: number], value: number]>([
+			[[0, 0], 1],
+			[[0, 1], 2],
+			[[0, 2], 3],
+			[[0, 3], 4],
+			[[1, 0], 5],
+			[[1, 1], 6],
+			[[1, 2], 7],
+			[[1, 3], 8],
+			[[2, 0], 9],
+			[[2, 1], 10],
+			[[2, 2], 11],
+			[[2, 3], 12],
+			[[3, 0], 13],
+			[[3, 1], 14],
+			[[3, 2], 15],
+			[[3, 3], 16],
+		])(
+			"getChunk(%j) -> Int16Array([%i])",
+			async (chunk_coords, expected) => {
+				expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+					data: new Int16Array([expected]),
+					shape: [1, 1],
+					stride: [1, 1],
+				});
+			},
+		);
+	});
+
+	describe("2d.chunked.compressed.sharded.filled.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("2d.chunked.compressed.sharded.filled.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number, number], value: number]>([
+			[[0, 0], 0],
+			[[0, 1], 1],
+			[[0, 2], 2],
+			[[0, 3], 3],
+			[[1, 0], 4],
+			[[1, 1], 5],
+			[[1, 2], 6],
+			[[1, 3], 7],
+			[[2, 0], 8],
+			[[2, 1], 9],
+			[[2, 2], 10],
+			[[2, 3], 11],
+			[[3, 0], 12],
+			[[3, 1], 13],
+			[[3, 2], 14],
+			[[3, 3], 15],
+		])(
+			"getChunk(%j) -> Int32Array([%i])",
+			async (chunk_coord, expected) => {
+				expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+					data: new Int16Array([expected]),
+					shape: [1, 1],
+					stride: [1, 1],
+				});
+			},
+		);
+	});
+
+	describe("2d.chunked.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("2d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number, number], value: number]>([
+			[[0, 0], 1],
+			[[0, 1], 2],
+			[[0, 2], 3],
+			[[0, 3], 4],
+			[[1, 0], 5],
+			[[1, 1], 6],
+			[[1, 2], 7],
+			[[1, 3], 8],
+			[[2, 0], 9],
+			[[2, 1], 10],
+			[[2, 2], 11],
+			[[2, 3], 12],
+			[[3, 0], 13],
+			[[3, 1], 14],
+			[[3, 2], 15],
+			[[3, 3], 16],
+		])(
+			"getChunk(%j) -> Int32Array([%i])",
+			async (chunk_coord, expected) => {
+				expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+					data: new Int16Array([expected]),
+					shape: [1, 1],
+					stride: [1, 1],
+				});
+			},
+		);
+	});
+
+	it("3d.contiguous.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("3d.contiguous.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0, 0, 0])).toStrictEqual({
+			data: new Int16Array(Array.from({ length: 27 }, (_, i) => i)),
+			shape: [3, 3, 3],
+			stride: [9, 3, 1],
+		});
+	});
+
+	describe("3d.chunked.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("3d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number, number, number], value: number]>([
+			[[0, 0, 0], 0],
+			[[1, 0, 1], 17],
+			[[2, 0, 0], 32],
+			[[1, 1, 1], 21],
+			[[1, 3, 2], 30],
+			[[3, 3, 3], 63],
+		])(
+			"getChunk(%j) –> Int16Array([%i])",
+			async (chunk_coords, expected) => {
+				expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+					data: new Int16Array([expected]),
+					shape: [1, 1, 1],
+					stride: [1, 1, 1],
+				});
+			},
+		);
+	});
+
+	describe("3d.chunked.mixed.compressed.sharded.i2", async () => {
+		let arr = await open.v3(
+			store.resolve("3d.chunked.mixed.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		it.each<[chunk_coord: [number, number, number], value: number[]]>([
+			[[0, 0, 0], [0, 3, 6, 9, 12, 15, 18, 21, 24]],
+			[[0, 0, 1], [1, 4, 7, 10, 13, 16, 19, 22, 25]],
+			[[0, 0, 2], [2, 5, 8, 11, 14, 17, 20, 23, 26]],
+		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array(expected),
+				shape: [3, 3, 1],
+				stride: [3, 1, 1],
+			});
+		});
 	});
 });
