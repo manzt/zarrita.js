@@ -1,5 +1,44 @@
 # @zarrita/indexing
 
+## 0.0.3
+
+### Patch Changes
+
+- feat: Support `VLenUTF8` codec in v2 and introduce a strided JS "object" Array. ([#96](https://github.com/manzt/zarrita.js/pull/96))
+
+  ```python
+  import zarr
+  import numcodecs
+
+  zarr.create_dataset(
+      "data.zarr",
+      data=np.array(
+          [[["a", "aa"], ["aaa", "aaaa"]],
+          [["b", "bb"], ["bbb", "bbbb"]]],
+          dtype=object
+      ),
+      dtype="|O",
+      object_codec=numcodecs.VLenUTF8(),
+      chunks=(1, 1, 2),
+  )
+  ```
+
+  ```typescript
+  import * as zarr from "zarrita";
+
+  let store = zarr.FetchStore("http://localhost:8080/data.zarr");
+  let arr = await zarr.open.v2(store, { kind: "array" });
+  let result = zarr.get(arr);
+  // {
+  //   data: ["a", "aa", "aaa", "aaaa", "b", "bb", "bbb", "bbbb"],
+  //   shape: [2, 2, 2],
+  //   stride: [4, 2, 1],
+  // }
+  ```
+
+- Updated dependencies [[`97e7df1`](https://github.com/manzt/zarrita.js/commit/97e7df188efa5e6ef343edca35c3d16862149920)]:
+  - @zarrita/core@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
