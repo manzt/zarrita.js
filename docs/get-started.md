@@ -6,16 +6,15 @@ and Deno.
 ## Try Zarr online
 
 You can try out **zarrita** on
-[Observable](https://observablehq.com/d/35b6921f8cb3aeef)! The
-[example notebook](https://observablehq.com/d/35b6921f8cb3aeef) has all the
-dependencies loaded for you to poke around with the API and try loading some of
-your own data.
+[Observable](https://observablehq.com/d/35b6921f8cb3aeef)! Fork the
+[example notebook](https://observablehq.com/d/35b6921f8cb3aeef) and
+try loading some of your own data.
 
 ## Zarr in vanilla HTML
 
 In vanilla HTML, you can load **zarrita** from a CDN such as
 [jsDelivr](https://www.jsdelivr.com/) or [esm.sh](https://esm.sh) or you can
-download it locally. We recommend using the CDN-hosted ES module bundle as it
+download it locally. We recommend using the CDN-hosted ES module bundle since it
 automatically loads the other dependencies.
 
 ::: tabs
@@ -25,7 +24,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@0.3.0/+esm";
+  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@0.3/+esm";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -49,7 +48,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://esm.sh/zarrita@0.3.0";
+  import * as zarr from "https://esm.sh/zarrita@0.3";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -75,11 +74,11 @@ automatically loads the other dependencies.
 <script type="importmap">
   {
     "imports": {
-      "zarrita": "https://unpkg.com/zarrita@0.3.0",
-      "@zarrita/core": "https://unpkg.com/@zarrita/core@0.0.1/dist/src/index.js",
-      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@0.0.1/index.js",
-      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@0.0.1/dist/src/index.js",
-      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@0.0.1/dist/src/fetch.js",
+      "zarrita": "https://unpkg.com/zarrita@0.3",
+      "@zarrita/core": "https://unpkg.com/@zarrita/core@0.0",
+      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@0.0",
+      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@0.0",
+      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@0.0/dist/src/fetch.js",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.2/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.2/lz4",
       "numcodecs/zlib": "https://unpkg.com/numcodecs@0.2/zlib",

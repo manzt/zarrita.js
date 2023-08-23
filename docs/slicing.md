@@ -38,8 +38,7 @@ The `slice` utility supports:
 - `slice(start, end)`
 - `slice(start, end, step)`
 
-Note that `slice(null)` and `null` are equivalent selections. The `slice`
-utility
+Note that `slice(null)` and `null` are equivalent selections.
 
 :::
 
