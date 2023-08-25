@@ -7,8 +7,8 @@ and Deno.
 
 You can try out **zarrita** on
 [Observable](https://observablehq.com/d/35b6921f8cb3aeef)! Fork the
-[example notebook](https://observablehq.com/d/35b6921f8cb3aeef) and
-try loading some of your own data.
+[example notebook](https://observablehq.com/d/35b6921f8cb3aeef) and try loading
+some of your own data.
 
 ## Zarr in vanilla HTML
 
