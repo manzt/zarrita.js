@@ -4,9 +4,10 @@
 	"version": "0.3.2",
 	"sideEffects": false,
 	"main": "index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
-			"require": "./dist/index.d.ts",
+			"types": "./dist/index.d.ts",
 			"import": "./index.js"
 		}
 	},
