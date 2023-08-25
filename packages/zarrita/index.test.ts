@@ -23,7 +23,7 @@ it("exports all the things", () => {
 		    "zlib" => [Function],
 		    "zstd" => [Function],
 		    "transpose" => [Function],
-		    "endian" => [Function],
+		    "bytes" => [Function],
 		    "crc32c" => [Function],
 		    "vlen-utf8" => [Function],
 		  },
