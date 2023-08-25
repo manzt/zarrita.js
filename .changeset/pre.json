@@ -1,0 +1,13 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@zarrita/core": "0.0.3",
+    "@zarrita/indexing": "0.0.3",
+    "@zarrita/ndarray": "0.0.3",
+    "@zarrita/storage": "0.0.2",
+    "@zarrita/typedarray": "0.0.1",
+    "zarrita": "0.3.2"
+  },
+  "changesets": []
+}
