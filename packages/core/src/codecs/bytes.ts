@@ -2,6 +2,7 @@ import type {
 	Chunk,
 	CodecMetadata,
 	DataType,
+	TypedArray,
 	TypedArrayConstructor,
 } from "../metadata.js";
 import {
@@ -29,44 +30,45 @@ function bytes_per_element<D extends DataType>(
 	return 4;
 }
 
-type SupportedDataType = Exclude<DataType, "v2:object">;
-
-export class EndianCodec<D extends SupportedDataType> {
+export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 	kind = "array_to_bytes";
 	#strides: number[];
 	#TypedArray: TypedArrayConstructor<D>;
 	#BYTES_PER_ELEMENT: number;
 	#shape: number[];
+	#endian?: "little" | "big";
 
 	constructor(
-		public configuration: { endian: "little" | "big" },
+		configuration: { endian?: "little" | "big" },
 		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	) {
+		this.#endian = configuration.endian;
 		this.#TypedArray = get_ctr(meta.data_type);
 		this.#shape = meta.shape;
 		this.#strides = get_strides(meta.shape, get_array_order(meta.codecs));
 		// TODO: fix me.
 		// hack to get bytes per element since it's dynamic for string types.
-		this.#BYTES_PER_ELEMENT = new this.#TypedArray(0).BYTES_PER_ELEMENT;
+		const sample = new this.#TypedArray(0);
+		this.#BYTES_PER_ELEMENT = sample.BYTES_PER_ELEMENT;
 	}
 
-	static fromConfig<D extends SupportedDataType>(
+	static fromConfig<D extends Exclude<DataType, "v2:object">>(
 		configuration: { endian: "little" | "big" },
 		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
-	): EndianCodec<D> {
-		return new EndianCodec(configuration, meta);
+	): BytesCodec<D> {
+		return new BytesCodec(configuration, meta);
 	}
 
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
-		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
+		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
 			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
 		}
 		return bytes;
 	}
 
 	decode(bytes: Uint8Array): Chunk<D> {
-		if (LITTLE_ENDIAN_OS && this.configuration.endian === "big") {
+		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
 			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
 		}
 		return {

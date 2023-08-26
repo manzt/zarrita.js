@@ -15,7 +15,7 @@ a = zarrita.Array.create(
     shape=(4,),
     chunk_shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.gzip_codec(),
     ],
 )
@@ -28,7 +28,7 @@ a = zarrita.Array.create(
     shape=(4,),
     chunk_shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -41,7 +41,7 @@ a = zarrita.Array.create(
     shape=(4,),
     chunk_shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
     ],
 )
 a[:] = [1, 2, 3, 4]
@@ -54,7 +54,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -68,7 +68,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -82,7 +82,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -95,7 +95,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(endian="big"),
+        zarrita.codecs.bytes_codec(endian="big"),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -108,7 +108,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -122,7 +122,7 @@ a = zarrita.Array.create(
     chunk_shape=(4,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -136,7 +136,7 @@ a = zarrita.Array.create(
     chunk_shape=(2,),
     shape=(4,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -149,7 +149,7 @@ a = zarrita.Array.create(
     chunk_shape=(2,),
     shape=(5,),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -162,7 +162,7 @@ a = zarrita.Array.create(
     chunk_shape=(2, 2),
     shape=(2, 2),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -175,7 +175,7 @@ a = zarrita.Array.create(
     chunk_shape=(1, 1),
     shape=(2, 2),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -188,7 +188,7 @@ a = zarrita.Array.create(
     chunk_shape=(2, 2),
     shape=(3, 3),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -201,7 +201,7 @@ a = zarrita.Array.create(
     chunk_shape=(3, 3, 3),
     shape=(3, 3, 3),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -214,7 +214,7 @@ a = zarrita.Array.create(
     chunk_shape=(1, 1, 1),
     shape=(3, 3, 3),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -227,7 +227,7 @@ a = zarrita.Array.create(
     chunk_shape=(3, 3, 1),
     shape=(3, 3, 3),
     codecs=[
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -241,7 +241,7 @@ a = zarrita.Array.create(
     shape=(3, 3, 3),
     codecs=[
         zarrita.codecs.transpose_codec(order="F"),
-        zarrita.codecs.endian_codec(),
+        zarrita.codecs.bytes_codec(),
         zarrita.codecs.blosc_codec(typesize=4),
     ],
 )
@@ -260,7 +260,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -277,7 +277,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -294,7 +294,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -312,7 +312,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -329,7 +329,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -347,7 +347,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(4,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -364,7 +364,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -381,7 +381,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1,),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -419,7 +419,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(2, 2),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -436,7 +436,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1, 1),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -453,7 +453,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1, 1),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -470,7 +470,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1, 1),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -488,7 +488,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(3, 3, 3),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -505,7 +505,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(1, 1, 1),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )
@@ -522,7 +522,7 @@ a = zarrita.Array.create(
     codecs=[
         zarrita.codecs.sharding_codec(
             chunk_shape=(3, 3, 1),
-            codecs=[zarrita.codecs.endian_codec(), zarrita.codecs.gzip_codec()],
+            codecs=[zarrita.codecs.bytes_codec(), zarrita.codecs.gzip_codec()],
         )
     ],
 )

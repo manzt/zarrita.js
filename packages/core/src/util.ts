@@ -171,7 +171,7 @@ export function v2_to_v3_array_metadata(
 		codecs.push({ name: "transpose", configuration: { order: "F" } });
 	}
 	if ("endian" in dtype && dtype.endian === "big") {
-		codecs.push({ name: "endian", configuration: { endian: "big" } });
+		codecs.push({ name: "bytes", configuration: { endian: "big" } });
 	}
 	for (let { id, ...configuration } of meta.filters ?? []) {
 		codecs.push({ name: id, configuration });

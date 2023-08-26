@@ -63,7 +63,7 @@ describe("FetchStore", () => {
 			      "configuration": {
 			        "endian": "little",
 			      },
-			      "name": "endian",
+			      "name": "bytes",
 			    },
 			    {
 			      "configuration": {
