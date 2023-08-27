@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { BoolArray, ByteStringArray, UnicodeStringArray } from "../index.js";
+import { BoolArray, ByteStringArray, UnicodeStringArray } from "../src/index.js";
 
 describe("BoolArray.constructor", () => {
 	test("new (size: number) -> BoolArray", () => {

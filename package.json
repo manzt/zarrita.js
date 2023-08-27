@@ -2,6 +2,7 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "tsc --build",
+		"clean": "pnpm -r exec rm -rf dist",
 		"test": "vitest --api",
 		"fmt": "dprint fmt",
 		"lint": "dprint check"

@@ -3,17 +3,13 @@
 	"type": "module",
 	"version": "0.0.3",
 	"sideEffects": false,
-	"scripts": {
-		"build": "tsc",
-		"clean": "rm -rf dist"
-	},
-	"main": "./dist/src/index.js",
 	"exports": {
 		".": {
-			"types": "./dist/src/index.d.ts",
-			"import": "./dist/src/index.js"
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
 		}
 	},
+	"files": ["dist"],
 	"dependencies": {
 		"@zarrita/core": "workspace:^",
 		"@zarrita/storage": "workspace:^",
@@ -24,5 +20,14 @@
 		"@types/ndarray-ops": "^1.2.4",
 		"ndarray": "^1.0.19",
 		"ndarray-ops": "^1.2.2"
+	},
+	"publishConfig": {
+		"main": "./dist/src/index.js",
+		"exports": {
+			".": {
+				"types": "./dist/src/index.d.ts",
+				"import": "./dist/src/index.js"
+			}
+		}
 	}
 }

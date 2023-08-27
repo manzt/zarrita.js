@@ -3,14 +3,9 @@
 	"type": "module",
 	"version": "0.0.3",
 	"sideEffects": false,
-	"scripts": {
-		"build": "tsc",
-		"clean": "rm -rf dist"
-	},
-	"main": "index.js",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
+			"types": "./index.js",
 			"import": "./index.js"
 		}
 	},
@@ -25,5 +20,14 @@
 	},
 	"devDependencies": {
 		"@zarrita/typedarray": "workspace:^"
+	},
+	"publishConfig": {
+		"main": "index.js",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./index.js"
+			}
+		}
 	}
 }

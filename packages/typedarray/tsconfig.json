@@ -1,8 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
+	"include": ["src/**/*", "__tests__/**/*"],
 	"compilerOptions": {
-		"outDir": "dist",
-		"emitDeclarationOnly": true
-	},
-	"include": ["index.js", "src/**/*", "__tests__/**/*"]
+		"outDir": "dist"
+	}
 }
