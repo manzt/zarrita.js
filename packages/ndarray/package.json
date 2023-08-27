@@ -22,11 +22,11 @@
 		"@zarrita/typedarray": "workspace:^"
 	},
 	"publishConfig": {
-		"main": "index.js",
+		"main": "dist/src/index.js",
 		"exports": {
 			".": {
-				"types": "./dist/index.d.ts",
-				"import": "./index.js"
+				"types": "./dist/src/index.d.ts",
+				"import": "./dist/src/index.js"
 			}
 		}
 	}

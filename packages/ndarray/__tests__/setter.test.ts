@@ -4,7 +4,7 @@ import { assign } from "ndarray-ops";
 
 import { type Projection, slice } from "@zarrita/indexing";
 
-import { setter } from "../index.js";
+import { setter } from "../src/index.js";
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 function get_strides(shape: readonly number[], order: "C" | "F") {

@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
 
-import { get } from "../index.js";
-import { range } from "../../indexing/src/util.js";
+import { get } from "../src/index.js";
 
 import * as zarr from "@zarrita/core";
 import {
@@ -17,6 +16,17 @@ let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 let root = path.resolve(__dirname, "../../../fixtures/v2/data.zarr");
 let store = zarr.root(new FileSystemStore(root));
+
+/** Similar to python's `range` function. Supports positive ranges only. */
+function* range(start: number, stop?: number, step = 1): Iterable<number> {
+	if (stop === undefined) {
+		stop = start;
+		start = 0;
+	}
+	for (let i = start; i < stop; i += step) {
+		yield i;
+	}
+}
 
 describe("ndarray", () => {
 	it("1d.contiguous.zlib.i2", async () => {
