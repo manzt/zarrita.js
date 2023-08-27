@@ -3,25 +3,27 @@
 	"type": "module",
 	"version": "0.0.3",
 	"sideEffects": false,
-	"main": "dist/src/index.js",
-	"scripts": {
-		"check": "tsc --noEmit",
-		"build": "tsc",
-		"test": "vitest",
-		"clean": "rm -rf dist"
-	},
 	"files": [
 		"dist/"
 	],
 	"exports": {
 		".": {
-			"types": "./dist/src/index.d.ts",
-			"import": "./dist/src/index.js"
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
 		}
 	},
 	"dependencies": {
 		"@zarrita/storage": "workspace:^",
 		"@zarrita/typedarray": "workspace:^",
 		"numcodecs": "^0.2.2"
+	},
+	"publishConfig": {
+		"main": "dist/src/index.js",
+		"exports": {
+			".": {
+				"types": "./dist/src/index.d.ts",
+				"import": "./dist/src/index.js"
+			}
+		}
 	}
 }

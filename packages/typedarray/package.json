@@ -3,15 +3,20 @@
 	"type": "module",
 	"version": "0.0.1",
 	"sideEffects": false,
-	"scripts": {
-		"build": "tsc",
-		"clean": "rm -rf dist"
-	},
-	"main": "index.js",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./index.js"
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
+		}
+	},
+	"files": ["dist"],
+	"publishConfig": {
+		"main": "dist/src/index.js",
+		"exports": {
+			".": {
+				"types": "./dist/src/index.d.ts",
+				"import": "./dist/src/index.js"
+			}
 		}
 	}
 }

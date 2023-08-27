@@ -3,17 +3,25 @@
 	"type": "module",
 	"version": "0.3.2",
 	"sideEffects": false,
-	"main": "index.js",
-	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./index.js"
+			"types": "./index.ts",
+			"import": "./index.ts"
 		}
 	},
 	"dependencies": {
 		"@zarrita/core": "workspace:^",
 		"@zarrita/indexing": "workspace:^",
 		"@zarrita/storage": "workspace:^"
+	},
+	"publishConfig": {
+		"main": "dist/index.js",
+		"types": "dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			}
+		}
 	}
 }
