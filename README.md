@@ -1,6 +1,6 @@
-# zarrita.js
+# zarrita.js <a href="https://github.com/manzt/zarrita.js"><img align="right" src="https://raw.githubusercontent.com/manzt/zarrita.js/main/docs/public/logo.svg" height="38"></img></a>
 
-**zarrita** is a minimal & modular Zarr implementation in TypeScript.
+a minimal & modular Zarr implementation in TypeScript
 
 - **Zero dependencies** (optionally
   [`scijs/ndarray`](https://github.com/scijs/ndarray))
