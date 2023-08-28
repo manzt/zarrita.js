@@ -116,22 +116,22 @@ via yarn, npm, pnpm:
 
 ::: tabs key:pkg
 
-== yarn
-
-```sh
-yarn add zarrita
-```
-
 == npm
 
 ```sh
-npm install zarrita
+npm install zarrita@next
 ```
 
 == pnpm
 
 ```sh
-pnpm add zarrita
+pnpm add zarrita@next
+```
+
+== yarn
+
+```sh
+yarn add zarrita@next
 ```
 
 :::

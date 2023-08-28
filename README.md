@@ -89,7 +89,7 @@ classDiagram
 ### In Browser (or Deno)
 
 ```javascript
-import * as zarr from "https://esm.sh/zarrita";
+import * as zarr from "https://esm.sh/zarrita@next";
 ```
 
 ### In Node.js or Application Bundles
