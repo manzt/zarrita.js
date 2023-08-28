@@ -24,7 +24,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@0.3/+esm";
+  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@next/+esm";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -48,7 +48,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://esm.sh/zarrita@0.3";
+  import * as zarr from "https://esm.sh/zarrita@next";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -74,11 +74,11 @@ automatically loads the other dependencies.
 <script type="importmap">
   {
     "imports": {
-      "zarrita": "https://unpkg.com/zarrita@0.3",
-      "@zarrita/core": "https://unpkg.com/@zarrita/core@0.0",
-      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@0.0",
-      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@0.0",
-      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@0.0/dist/src/fetch.js",
+      "zarrita": "https://unpkg.com/zarrita@next",
+      "@zarrita/core": "https://unpkg.com/@zarrita/core@next",
+      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@next",
+      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@next",
+      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@next/dist/src/fetch.js",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.2/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.2/lz4",
       "numcodecs/zlib": "https://unpkg.com/numcodecs@0.2/zlib",
@@ -116,22 +116,22 @@ via yarn, npm, pnpm:
 
 ::: tabs key:pkg
 
-== yarn
-
-```sh
-yarn add zarrita
-```
-
 == npm
 
 ```sh
-npm install zarrita
+npm install zarrita@next
 ```
 
 == pnpm
 
 ```sh
-pnpm add zarrita
+pnpm add zarrita@next
+```
+
+== yarn
+
+```sh
+yarn add zarrita@next
 ```
 
 :::
