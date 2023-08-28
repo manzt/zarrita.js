@@ -1,5 +1,9 @@
 # zarrita.js <a href="https://github.com/manzt/zarrita.js"><img align="right" src="https://raw.githubusercontent.com/manzt/zarrita.js/main/docs/public/logo.svg" height="38"></img></a>
 
+[![NPM](https://img.shields.io/npm/v/zarrita.svg?color=black)](https://www.npmjs.com/package/zarrita)
+[![License](https://img.shields.io/npm/l/zarrita.svg?color=black)](https://github.com/manzt/zarrita.js/raw/main/LICENSE)
+![GitHub Actions](https://github.com/manzt/zarrita.js/actions/workflows/ci.yml/badge.svg)
+
 a minimal & modular Zarr implementation in TypeScript
 
 - **Zero dependencies** (optionally
@@ -37,13 +41,8 @@ Read [the documentation](https://manzt.github.io/zarrita.js) to learn more.
 
 ### Zarr building blocks
 
-zarrita's API is almost entirely tree-shakeable, meaning users are able to pick
-and choose only the features of Zarr which are necessary for an applications. At
-its core, the `zarr.Array` class allows accessing and decoding individual array
-chunks. "Fancy-indexing" and "slicing" are accomplished via (optional) functions
-which operate on `zarr.Array` objects.
-
-Thus, you only pay for these features if used (when bundling for the web). This
+zarrita's API is almost entirely tree-shakeable, meaning developers are able to pick
+and choose the features necessary for an application. This
 design choice differs from existing implemenations of Zarr in JavaScript, and
 allows zarrita to be both minimal and more feature-complete if necessary.
 
@@ -84,26 +83,6 @@ classDiagram
         - ReferenceStore()
         - ZipStore()
     }
-```
-
-### In Browser (or Deno)
-
-```javascript
-import * as zarr from "https://esm.sh/zarrita@next";
-```
-
-### In Node.js or Application Bundles
-
-Import using ES module syntax as a namespace:
-
-```javascript
-import * as zarr from "zarrita";
-```
-
-or with targeted named imports:
-
-```javascript
-import { open } from "zarrita";
 ```
 
 ## Development
