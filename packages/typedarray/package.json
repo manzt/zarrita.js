@@ -1,7 +1,7 @@
 {
 	"name": "@zarrita/typedarray",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "0.1.0-next.0",
 	"sideEffects": false,
 	"exports": {
 		".": {
@@ -9,7 +9,9 @@
 			"import": "./src/index.ts"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"main": "dist/src/index.js",
 		"exports": {

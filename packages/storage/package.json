@@ -1,9 +1,11 @@
 {
 	"name": "@zarrita/storage",
 	"type": "module",
-	"version": "0.0.2",
+	"version": "0.1.0-next.0",
 	"sideEffects": false,
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"exports": {
 		".": {
 			"types": "./src/index.ts",

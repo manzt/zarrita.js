@@ -1,5 +1,11 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.0
+
+### Minor Changes
+
+- chore: prepare preleases ([`fa43aff`](https://github.com/manzt/zarrita.js/commit/fa43aff50e65ef4b05b9d67d56de2d1b9c5104a5))
+
 ## 0.0.1
 
 ### Patch Changes

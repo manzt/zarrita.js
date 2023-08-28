@@ -1,5 +1,20 @@
 # zarrita
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- chore: prepare preleases ([`fa43aff`](https://github.com/manzt/zarrita.js/commit/fa43aff50e65ef4b05b9d67d56de2d1b9c5104a5))
+
+### Patch Changes
+
+- fix: correctly export types from package.json ([#98](https://github.com/manzt/zarrita.js/pull/98))
+
+- Updated dependencies [[`fa43aff`](https://github.com/manzt/zarrita.js/commit/fa43aff50e65ef4b05b9d67d56de2d1b9c5104a5)]:
+  - @zarrita/core@0.1.0-next.0
+  - @zarrita/indexing@0.1.0-next.0
+  - @zarrita/storage@0.1.0-next.0
+
 ## 0.3.2
 
 ### Patch Changes

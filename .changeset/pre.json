@@ -9,5 +9,8 @@
     "@zarrita/typedarray": "0.0.1",
     "zarrita": "0.3.2"
   },
-  "changesets": []
+  "changesets": [
+    "flat-boats-train",
+    "quick-teachers-camp"
+  ]
 }
