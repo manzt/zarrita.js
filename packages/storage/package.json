@@ -1,7 +1,8 @@
 {
 	"name": "@zarrita/storage",
-	"type": "module",
 	"version": "0.1.0-next.0",
+	"license": "MIT",
+	"type": "module",
 	"sideEffects": false,
 	"files": [
 		"dist"
