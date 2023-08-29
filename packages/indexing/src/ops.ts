@@ -63,6 +63,20 @@ function compat_chunk<D extends core.DataType>(arr: core.Chunk<D>): {
 	};
 }
 
+/** Hack to get the constructor of a typed array constructor from an existing TypedArray. */
+function get_typed_array_constructor<
+	D extends Exclude<core.DataType, "v2:object">,
+>(
+	arr: core.TypedArray<D>,
+): core.TypedArrayConstructor<D> {
+	if ("chars" in arr) {
+		// our custom TypedArray needs to bind the number of characters per
+		// element to the constructor.
+		return arr.constructor.bind(null, arr.chars);
+	}
+	return arr.constructor as core.TypedArrayConstructor<D>;
+}
+
 /**
  * Convert a scalar to a Uint8Array that can be used with the binary
  * set functions. This is necessary because the binary set functions
@@ -81,9 +95,7 @@ function compat_scalar<D extends core.DataType>(
 		// @ts-expect-error
 		return object_array_view([value]);
 	}
-	let TypedArray = arr.data.constructor as core.TypedArrayConstructor<
-		Exclude<D, "v2:object">
-	>;
+	let TypedArray = get_typed_array_constructor(arr.data);
 	let data = new TypedArray([value]);
 	return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 }
