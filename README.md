@@ -15,6 +15,22 @@ a minimal & modular Zarr implementation in TypeScript
 - Provides rich, in-editor **type information** via
   [template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
 
+## Installation
+
+**zarrita** supports a variety of environments, including the browser, Node.js,
+and Deno.
+
+If you're developing an application with Node.js, you can install **zarrita**
+with yarn, npm, or pnpm:
+
+```sh
+npm install zarrita@next
+```
+
+Read
+[the documentation](https://manzt.github.io/zarrita.js/get-started.html#getting-started)
+to learn more about other environments.
+
 ## Usage
 
 ```javascript
