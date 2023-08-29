@@ -41,10 +41,10 @@ Read [the documentation](https://manzt.github.io/zarrita.js) to learn more.
 
 ### Zarr building blocks
 
-zarrita's API is almost entirely tree-shakeable, meaning developers are able to pick
-and choose the features necessary for an application. This
-design choice differs from existing implemenations of Zarr in JavaScript, and
-allows zarrita to be both minimal and more feature-complete if necessary.
+zarrita's API is almost entirely tree-shakeable, meaning developers are able to
+pick and choose the features necessary for an application. This design choice
+differs from existing implemenations of Zarr in JavaScript, and allows zarrita
+to be both minimal and more feature-complete if necessary.
 
 ```mermaid
 classDiagram
