@@ -1,5 +1,13 @@
 # @zarrita/indexing
 
+## 0.1.0-next.1
+
+### Patch Changes
+
+- feat: generalize chunk-indexing/slicing operations ([#103](https://github.com/manzt/zarrita.js/pull/103))
+
+  Refactors the internals of `get`/`set` to operate on the raw 1D "bytes" for decompressed chunks.
+
 ## 0.1.0-next.0
 
 ### Minor Changes
