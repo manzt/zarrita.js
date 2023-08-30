@@ -12,11 +12,22 @@ npm install @zarrita/core@next
 
 ```javascript
 import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage/fetch";
 
-let store = new FetchStore("http://localhost:8080/data.zarr");
-let grp = await zarr.open(store, { kind: "group" });
-let arr = await zarr.open(group.resolve("foo"), { kind: "array" });
+// Create an in-memory store & navigate to the root
+let store = new Map();
+let root = zarr.root(store);
+
+// Initialize an array at "/foo"
+await zarr.create(root.resolve("foo"), {
+  data_type: "int64",
+  shape: [100, 100],
+  chunk_shape: [10, 10],
+});
+
+// Open an array from "/foo"
+let arr = await zarr.open(root.resolve("foo"), { kind: "array" });
+
+// Load a chunk
 let chunk = await arr.getChunk([0, 0]);
 ```
 
