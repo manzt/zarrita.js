@@ -17,12 +17,6 @@ a minimal & modular Zarr implementation in TypeScript
 
 ## Installation
 
-**zarrita** supports a variety of environments, including the browser, Node.js,
-and Deno.
-
-If you're developing an application with Node.js, you can install **zarrita**
-with yarn, npm, or pnpm:
-
 ```sh
 npm install zarrita@next
 ```
@@ -54,70 +48,3 @@ const region = await get(arr, [null, zarr.slice(6)]);
 ```
 
 Read [the documentation](https://manzt.github.io/zarrita.js) to learn more.
-
-### Zarr building blocks
-
-zarrita's API is almost entirely tree-shakeable, meaning developers are able to
-pick and choose the features necessary for an application. This design choice
-differs from existing implemenations of Zarr in JavaScript, and allows zarrita
-to be both minimal and more feature-complete if necessary.
-
-```mermaid
-classDiagram
-    indexing --|> core : uses
-    ndarray --|> indexing : uses
-    ndarray --|> core : uses
-    core --|> storage : uses
-
-    class indexing {
-        - get(arr: zarr.Array, selection)
-        - set(arr: zarr.Array, selection, view)
-        - slice and index multiple chunks
-        - returns strided arrays
-    }
-
-    class ndarray {
-        - get(arr: zarr.Array, selection)
-        - set(arr: zarr.Array,  selection, view)
-        - slice and index multiple chunks
-        - returns scijs/ndarray objects
-    }
-
-    class core {
-        - open(store: Readable)
-        - create(store: Writeable)
-        - zarr.Array and zarr.Group
-        - access and decode individual chunks
-    }
-
-    class storage {
-        - Readable
-        - Writeable
-        - Map()
-        - FetchStore()
-        - FileSystemStore()
-        - ReferenceStore()
-        - ZipStore()
-    }
-```
-
-## Development
-
-This library uses the [`pnpm`](https://pnpm.io/) package manager.
-
-```bash
-pnpm install
-pnpm build
-pnpm test
-```
-
-The tests are run with [Vitest](https://github.com/vitest-dev/vitest), which is
-a Node.js test runner. To try our a development version of **zarrita** in the
-browser, run `pnpm build` and start a web-server in the root of the repository:
-
-```sh
-python3 -m http.server .
-# navigate to localhost:8000
-```
-
-You can edit the contents of `index.html` and refresh the page.
