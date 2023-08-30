@@ -10,11 +10,14 @@ export default defineConfig({
 		["link", {
 			rel: "icon",
 			type: "image/svg+xml",
-			href: "/zarrita.js/logo.svg",
+			href: "/zarrita.js/favicon.svg",
 		}],
 	],
 	themeConfig: {
-		logo: "/logo.svg",
+		logo: {
+			light: "/logo-light.svg",
+			dark: "/logo-dark.svg",
+		},
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
 			{ text: "Home", link: "/" },

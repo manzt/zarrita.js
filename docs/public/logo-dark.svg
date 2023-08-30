@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+	<path id="top" fill="none" stroke-width="1.5" d="M23.4,19l5.6,3l-13,7L3,22l5.6-3"/>
+	<path id="middle" fill="none" stroke-width="2" d="M8.6,13L3,16l5.6,3 M23.4,13l5.6,3l-5.6,3 M23.4,19L16,23l-7.4-4"/>
+	<path id="bottom" fill="none" stroke-width="1.5" d="M8.6,13l7.4,4l7.4-4 M8.6,13L3,10l13-7l13,7l-5.6,3"/>
+	<style>
+		#top {
+			stroke: rgba(255, 255, 245);
+		}
+		#middle {
+			stroke: #ec4899;
+		}
+		#bottom {
+			stroke: rgba(255, 255, 245);
+		}
+	</style>
+</svg>
