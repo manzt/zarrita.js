@@ -1,5 +1,16 @@
 # @zarrita/ndarray
 
+## 0.1.0-next.2
+
+### Patch Changes
+
+- Add licenses and READMES to packages ([#107](https://github.com/manzt/zarrita.js/pull/107))
+
+- Updated dependencies [[`9b76a33`](https://github.com/manzt/zarrita.js/commit/9b76a331605be7d7d53188c069cf2dbb8463baec)]:
+  - @zarrita/indexing@0.1.0-next.2
+  - @zarrita/storage@0.1.0-next.1
+  - @zarrita/core@0.1.0-next.1
+
 ## 0.1.0-next.1
 
 ### Patch Changes
