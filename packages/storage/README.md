@@ -1,0 +1,32 @@
+# @zarrita/storage
+
+> Storage backends for Zarr in the browser, Node.js, Bun.js, and Deno.
+
+## Installation
+
+```sh
+npm install @zarrita/storage@next
+```
+
+## Usage
+
+```javascript
+import * as zarr from "@zarrita/core";
+import { FetchStore, FileSystemStore } from "@zarrita/storage";
+
+let remoteStore = new FetchStore("http://localhost:8080/data.zarr");
+let arr = await zarr.open(remoteStore, { kind: "array" });
+
+let localStore = new FileSystemStore("data.zarr");
+await zarr.create(localStore, {
+  data_type: "int64",
+  shape: [100, 100],
+  chunk_shape: [10, 10],
+});
+```
+
+Read the [documentation](https://manzt.github.io/zarrita.js/) to learn more.
+
+## License
+
+MIT
