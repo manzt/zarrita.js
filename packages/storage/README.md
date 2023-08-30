@@ -22,9 +22,9 @@ let arr = await zarr.open(remoteStore, { kind: "array" });
 
 let localStore = new FileSystemStore("data.zarr");
 await zarr.create(localStore, {
-  data_type: "int64",
-  shape: [100, 100],
-  chunk_shape: [10, 10],
+	data_type: "int64",
+	shape: [100, 100],
+	chunk_shape: [10, 10],
 });
 ```
 

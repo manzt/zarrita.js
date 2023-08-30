@@ -3,7 +3,8 @@
 [![NPM](https://img.shields.io/npm/v/@zarrita/core/next.svg?color=black)](https://www.npmjs.com/package/zarrita)
 [![License](https://img.shields.io/npm/l/zarrita.svg?color=black)](https://github.com/manzt/zarrita.js/raw/main/LICENSE)
 
-> Primatives for using Zarr in JavaScript. Navigate a store hierarchy and load individual chunks.
+> Primatives for using Zarr in JavaScript. Navigate a store hierarchy and load
+> individual chunks.
 
 ## Installation
 
@@ -22,9 +23,9 @@ let root = zarr.root(store);
 
 // Initialize an array at "/foo"
 await zarr.create(root.resolve("foo"), {
-  data_type: "int64",
-  shape: [100, 100],
-  chunk_shape: [10, 10],
+	data_type: "int64",
+	shape: [100, 100],
+	chunk_shape: [10, 10],
 });
 
 // Open an array from "/foo"
