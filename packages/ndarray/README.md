@@ -1,5 +1,8 @@
 # @zarrita/ndarray
 
+[![NPM](https://img.shields.io/npm/v/@zarrita/ndarray/next.svg?color=black)](https://www.npmjs.com/package/zarrita)
+[![License](https://img.shields.io/npm/l/zarrita.svg?color=black)](https://github.com/manzt/zarrita.js/raw/main/LICENSE)
+
 > Slice and index a Zarr array with [`scijs/ndarray`](https://github.com/scijs/ndarray).
 
 ## Installation
