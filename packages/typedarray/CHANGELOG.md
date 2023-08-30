@@ -1,5 +1,11 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.1
+
+### Patch Changes
+
+- Add licenses and READMES to packages ([#107](https://github.com/manzt/zarrita.js/pull/107))
+
 ## 0.1.0-next.0
 
 ### Minor Changes
