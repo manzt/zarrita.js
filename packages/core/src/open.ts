@@ -181,12 +181,15 @@ export async function open<Store extends Readable>(
 	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	const store = "store" in location ? location.store : location;
-	const versionMax = VERSION_COUNTER.version_max(store);
-	let firstOpen = versionMax === "v2" ? open.v2 : open.v3;
-	let secondOpen = versionMax === "v2" ? open.v3 : open.v2;
-	return firstOpen(location, options as any).catch((err) => {
+	const version_max = VERSION_COUNTER.version_max(store);
+	// Use the open function for the version with the most successful opens.
+	// Note that here we use the dot syntax to access the open functions
+	// because this enables us to use vi.spyOn during testing.
+	let open_primary = version_max === "v2" ? open.v2 : open.v3;
+	let open_secondary = version_max === "v2" ? open.v3 : open.v2;
+	return open_primary(location, options as any).catch((err) => {
 		if (err instanceof NodeNotFoundError) {
-			return secondOpen(location, options as any);
+			return open_secondary(location, options as any);
 		}
 		throw err;
 	});
