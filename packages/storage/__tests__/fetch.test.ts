@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { open, root } from "@zarrita/core";
+
 import FetchStore from "../src/fetch.js";
 
 // `vitest --api` exposes the port 51204
 // ref: https://vitest.dev/config/#api
 let href = "http://localhost:51204/fixtures/v3/data.zarr";
+let href_v2 = "http://localhost:51204/fixtures/v2/data.zarr";
 
 describe("FetchStore", () => {
 	afterEach(() => {
@@ -137,5 +140,15 @@ describe("FetchStore", () => {
 		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
 			'"tributes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"gro"',
 		);
+	});
+
+	it("prioritizes v2 over v3 based on count of successful opens by version", async () => {
+		let storeRoot = root(new FetchStore(href_v2));
+		expect(storeRoot.store.versionMax()).toBe("v3");
+		let arr1 = await open(storeRoot.resolve("1d.chunked.i2"), { kind: "array" });
+		let arr2 = await open(storeRoot.resolve("1d.chunked.ragged.i2"), { kind: "array" });
+		expect(storeRoot.store.v2_count).toBe(2);
+		expect(storeRoot.store.v3_count).toBe(0);
+		expect(storeRoot.store.versionMax()).toBe("v2");
 	});
 });

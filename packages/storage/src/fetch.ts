@@ -63,12 +63,17 @@ class FetchStore implements AsyncReadable<RequestInit> {
 	#overrides: RequestInit;
 	#use_suffix_request: boolean;
 
+	v2_count: number;
+	v3_count: number;
+
 	constructor(
 		public url: string | URL,
 		options: { overrides?: RequestInit; useSuffixRequest?: boolean } = {},
 	) {
 		this.#overrides = options.overrides ?? {};
 		this.#use_suffix_request = options.useSuffixRequest ?? false;
+		this.v2_count = 0;
+		this.v3_count = 0;
 	}
 
 	#merge_init(overrides: RequestInit) {
@@ -110,6 +115,13 @@ class FetchStore implements AsyncReadable<RequestInit> {
 			response = await fetch_range(url, range.offset, range.length, init);
 		}
 		return handle_response(response);
+	}
+
+	versionMax(): 'v2' | 'v3' {
+		if (this.v2_count > this.v3_count) {
+			return 'v2';
+		}
+		return 'v3';
 	}
 }
 

@@ -43,6 +43,9 @@ async function open_v2<Store extends Readable>(
 	let loc = "store" in location ? location : new Location(location);
 	let attrs = {};
 	if (options.attrs ?? true) attrs = await load_attrs(loc);
+	if("v2_count" in loc.store && typeof loc.store.v2_count === "number") {
+		loc.store.v2_count += 1;
+	}
 	if (options.kind === "array") return open_array_v2(loc, attrs);
 	if (options.kind === "group") return open_group_v2(loc, attrs);
 	return open_array_v2(loc, attrs).catch((err) => {
@@ -130,6 +133,9 @@ async function open_v3<Store extends Readable>(
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
 	let node = await _open_v3(loc);
+	if("v3_count" in loc.store && typeof loc.store.v3_count === "number") {
+		loc.store.v3_count += 1;
+	}
 	if (options.kind === undefined) return node;
 	if (options.kind === "array" && node instanceof Array) return node;
 	if (options.kind === "group" && node instanceof Group) return node;
@@ -159,6 +165,15 @@ export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
+	const versionMax = "store" in location ? location.store.versionMax?.() : location.versionMax?.();
+	if (versionMax === "v2") {
+		return open_v2(location, options as any).catch((err) => {
+			if (err instanceof NodeNotFoundError) {
+				return open_v3(location, options as any);
+			}
+			throw err;
+		});
+	}
 	return open_v3(location, options as any).catch((err) => {
 		if (err instanceof NodeNotFoundError) {
 			return open_v2(location, options as any);

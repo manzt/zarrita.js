@@ -115,6 +115,10 @@ importers:
       unzipit:
         specifier: ^1.3.6
         version: 1.3.6
+    devDependencies:
+      '@zarrita/core':
+        specifier: workspace:^
+        version: link:../core
 
   packages/typedarray: {}
 
