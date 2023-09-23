@@ -14,7 +14,7 @@ import {
 } from "./util.js";
 
 function create_version_counter() {
-	let version_counts = new WeakMap<Readable, { v2: number, v3: number}>();
+	let version_counts = new WeakMap<Readable, { v2: number; v3: number }>();
 	function get_counts(store: Readable) {
 		let counts = version_counts.get(store) ?? { v2: 0, v3: 0 };
 		version_counts.set(store, counts);
@@ -26,9 +26,9 @@ function create_version_counter() {
 		},
 		version_max(store: Readable): "v2" | "v3" {
 			let counts = get_counts(store);
-			return counts.v3 > counts.v2 ? "v3" :  "v2";
-		}
-	}
+			return counts.v3 > counts.v2 ? "v3" : "v2";
+		},
+	};
 }
 let VERSION_COUNTER = create_version_counter();
 
