@@ -11,8 +11,6 @@ export type Readable<GetOptions = unknown> =
 	| AsyncReadable<GetOptions>
 	| SyncReadable<GetOptions>;
 export interface AsyncReadable<Options = unknown> {
-	v2_count?: number;
-	v3_count?: number;
 	get(
 		key: AbsolutePath,
 		opts?: Options,
@@ -22,11 +20,8 @@ export interface AsyncReadable<Options = unknown> {
 		range: RangeQuery,
 		opts?: Options,
 	): Promise<Uint8Array | undefined>;
-	versionMax?(): 'v2' | 'v3';
 }
 export interface SyncReadable<Options = unknown> {
-	v2_count?: number;
-	v3_count?: number;
 	get(
 		key: AbsolutePath,
 		opts?: Options,
@@ -36,7 +31,6 @@ export interface SyncReadable<Options = unknown> {
 		range: RangeQuery,
 		opts?: Options,
 	): Uint8Array | undefined;
-	versionMax?(): 'v2' | 'v3';
 }
 
 export type Writeable = AsyncWriteable | SyncWriteable;

@@ -144,11 +144,13 @@ describe("FetchStore", () => {
 
 	it("prioritizes v2 over v3 based on count of successful opens by version", async () => {
 		let storeRoot = root(new FetchStore(href_v2));
-		expect(storeRoot.store.versionMax()).toBe("v3");
+		
+		const v2_spy = vi.spyOn(open, 'v2');
+		const v3_spy = vi.spyOn(open, 'v3');
+
 		let arr1 = await open(storeRoot.resolve("1d.chunked.i2"), { kind: "array" });
 		let arr2 = await open(storeRoot.resolve("1d.chunked.ragged.i2"), { kind: "array" });
-		expect(storeRoot.store.v2_count).toBe(2);
-		expect(storeRoot.store.v3_count).toBe(0);
-		expect(storeRoot.store.versionMax()).toBe("v2");
+		expect(v2_spy).toHaveBeenCalledTimes(2);
+		expect(v3_spy).toHaveBeenCalledTimes(0);
 	});
 });
