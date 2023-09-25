@@ -25,19 +25,19 @@ interface AsyncReadable<Options> {
 }
 ```
 
-and may optionally implement `Writeable` or `AsyncWriteable`:
+and may optionally implement `Writable` or `AsyncWritable`:
 
 ```typescript
-interface Writeable {
+interface Writable {
 	set(key: string, value: Uint8Array): void;
 }
 
-interface AsyncWriteable {
+interface AsyncWritable {
 	set(key: string, value: Uint8Array): Promise<void>;
 }
 ```
 
-That's it! `Readable`/`Writeable` are enough to allow an
+That's it! `Readable`/`Writable` are enough to allow an
 [ES6 Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
 to serve as the most basic backend, while also facilitating developers in
 creating their custom stores as needed.
@@ -69,7 +69,7 @@ const store = new FetchStore("http://localhost:8080/data.zarr", {
 });
 ```
 
-### FileSystemStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writeable" />
+### FileSystemStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writable" />
 
 Designed for JavaScript runtimes with file system access, the The
 **FileSystemStore** is designed for JavaScript runtimes with file system access

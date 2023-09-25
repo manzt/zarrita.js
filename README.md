@@ -85,14 +85,14 @@ classDiagram
 
     class core {
         - open(store: Readable)
-        - create(store: Writeable)
+        - create(store: Writable)
         - zarr.Array and zarr.Group
         - access and decode individual chunks
     }
 
     class storage {
         - Readable
-        - Writeable
+        - Writable
         - Map()
         - FetchStore()
         - FileSystemStore()
