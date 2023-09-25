@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.2
+
+### Patch Changes
+
+- Use a counter to prioritize v2/v3 when opening. ([#109](https://github.com/manzt/zarrita.js/pull/109))
+
 ## 0.1.0-next.1
 
 ### Patch Changes
