@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as url from "node:url";
 import * as path from "node:path";
-import { FileSystemStore } from "@zarrita/storage";
+import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
 import {
 	BoolArray,
 	ByteStringArray,
@@ -11,12 +11,124 @@ import {
 import { open } from "../src/open.js";
 import { root } from "../src/hierarchy.js";
 import { NodeNotFoundError } from "../src/errors.js";
+import type {
+	ArrayMetadata,
+	ArrayMetadataV2,
+	GroupMetadata,
+	GroupMetadataV2,
+} from "../src/metadata.js";
 
 function range(n: number) {
 	return Array.from({ length: n }, (_, i) => i);
 }
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+describe("open (v2 vs v3 priority)", () => {
+	function meta_store(
+		entries: Record<
+			AbsolutePath,
+			| ArrayMetadata
+			| GroupMetadata
+			| ArrayMetadataV2
+			| GroupMetadataV2
+		>,
+	): Map<AbsolutePath, Uint8Array> {
+		let enc = new TextEncoder();
+		let store = new Map<AbsolutePath, Uint8Array>();
+		for (let [k, v] of Object.entries(entries)) {
+			store.set(k as AbsolutePath, enc.encode(JSON.stringify(v)));
+		}
+		return store;
+	}
+
+	let store_root = () =>
+		root(
+			meta_store({
+				"/v2/.zgroup": {
+					"zarr_format": 2,
+				},
+				"/v2/foo/.zarray": {
+					"zarr_format": 2,
+					"chunks": [2],
+					"shape": [4],
+					"compressor": null,
+					"dtype": "<i2",
+					"fill_value": 0,
+					"filters": null,
+					"order": "C",
+				},
+				"/v3/zarr.json": {
+					"zarr_format": 3,
+					"node_type": "group",
+					"attributes": {},
+				},
+				"/v3/foo/zarr.json": {
+					"zarr_format": 3,
+					"node_type": "array",
+					"data_type": "int32",
+					"shape": [4],
+					"chunk_grid": {
+						"name": "regular",
+						"configuration": {
+							"chunk_shape": [2],
+						},
+					},
+					"codecs": [],
+					"chunk_key_encoding": {
+						"name": "default",
+						"configuration": {
+							"separator": "/",
+						},
+					},
+					"fill_value": null,
+					"attributes": {},
+				},
+			}),
+		);
+
+	it("prioritizes v2 by default", async () => {
+		let store = store_root();
+		let v2_spy = vi.spyOn(open, "v2");
+		let v3_spy = vi.spyOn(open, "v3");
+		await open(store.resolve("v2/foo"));
+		await open(store.resolve("v2"));
+		expect(v2_spy).toHaveBeenCalledTimes(2);
+		expect(v3_spy).toHaveBeenCalledTimes(0);
+	});
+
+	it("prioritizes v3 after opening v3 more times", async () => {
+		let store = store_root();
+		let v2_spy = vi.spyOn(open, "v2");
+		let v3_spy = vi.spyOn(open, "v3");
+
+		// Simulate opening v3 more times than v2
+		await open(store.resolve("v3"));
+		await open(store.resolve("v3"));
+		await open(store.resolve("v3/foo"));
+
+		// Assuming v2 is the default and tried first
+		expect(v2_spy).toHaveBeenCalledTimes(1);
+		expect(v3_spy).toHaveBeenCalledTimes(3);
+	});
+
+	it("switches back to prioritizing v2 after opening v2 more times", async () => {
+		let store = store_root();
+		let v2_spy = vi.spyOn(open, "v2");
+		let v3_spy = vi.spyOn(open, "v3");
+
+		// Simulate initial opening of v3
+		await open(store.resolve("v3"));
+
+		// Now, simulate opening v2 more times than v3
+		await open(store.resolve("v2"));
+		await open(store.resolve("v2/foo"));
+		await open(store.resolve("v2"));
+
+		expect(v2_spy).toHaveBeenCalledTimes(4);
+		expect(v3_spy).toHaveBeenCalledTimes(2);
+	});
+});
 
 describe("v2", () => {
 	let store = root(

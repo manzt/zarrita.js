@@ -62,7 +62,6 @@ async function open_v2<Store extends Readable>(
 	let loc = "store" in location ? location : new Location(location);
 	let attrs = {};
 	if (options.attrs ?? true) attrs = await load_attrs(loc);
-	VERSION_COUNTER.increment(loc.store, "v2");
 	if (options.kind === "array") return open_array_v2(loc, attrs);
 	if (options.kind === "group") return open_group_v2(loc, attrs);
 	return open_array_v2(loc, attrs).catch((err) => {
@@ -80,6 +79,7 @@ async function open_array_v2<Store extends Readable>(
 	if (!meta) {
 		throw new NodeNotFoundError(path);
 	}
+	VERSION_COUNTER.increment(location.store, "v2");
 	return new Array(
 		location.store,
 		location.path,
@@ -96,6 +96,7 @@ async function open_group_v2<Store extends Readable>(
 	if (!meta) {
 		throw new NodeNotFoundError(path);
 	}
+	VERSION_COUNTER.increment(location.store, "v2");
 	return new Group(
 		location.store,
 		location.path,
