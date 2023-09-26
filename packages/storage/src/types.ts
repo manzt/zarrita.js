@@ -33,20 +33,20 @@ export interface SyncReadable<Options = unknown> {
 	): Uint8Array | undefined;
 }
 
-export type Writeable = AsyncWriteable | SyncWriteable;
-export interface AsyncWriteable {
+export type Writable = AsyncWritable | SyncWritable;
+export interface AsyncWritable {
 	set(key: AbsolutePath, value: Uint8Array): Promise<void>;
 }
-export interface SyncWriteable {
+export interface SyncWritable {
 	set(key: AbsolutePath, value: Uint8Array): void;
 }
 
 export type AsyncMutable<GetOptions = unknown> =
 	& AsyncReadable<GetOptions>
-	& AsyncWriteable;
+	& AsyncWritable;
 export type SyncMutable<GetOptions = unknown> =
 	& SyncReadable<GetOptions>
-	& SyncWriteable;
+	& SyncWritable;
 export type Mutable<GetOptions = unknown> =
 	| AsyncMutable<GetOptions>
 	| SyncMutable<GetOptions>;

@@ -58,7 +58,7 @@ const arr = await zarr.open.v2(store, { kind: "array" });
 
 ## Create an Array <Badge type="tip" text="v3" />
 
-Requires the `store` to implement `Writeable`.
+Requires the `store` to implement `Writable`.
 
 ```js
 import * as zarr from "zarrita";
@@ -75,7 +75,7 @@ arr; // zarr.Array<"int32", FileSystemStore>
 
 ## Create a Group <Badge type="tip" text="v3" />
 
-Requires the `store` to implement `Writeable`.
+Requires the `store` to implement `Writable`.
 
 ```js
 import * as zarr from "zarrita";

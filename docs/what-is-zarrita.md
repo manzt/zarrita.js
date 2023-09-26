@@ -32,7 +32,7 @@ Zarr.
 ### [@zarrita/storage](/packages/storage)
 
 - A collection of useful of storage backends for Zarr.
-- Implement your own `Readable` and (optionally `Writeable`) stores.
+- Implement your own `Readable` and (optionally `Writable`) stores.
 
 ### [@zarrita/core](/packages/core)
 
