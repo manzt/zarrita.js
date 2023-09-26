@@ -61,13 +61,30 @@ import { FetchStore } from "@zarrita/storage";
 const store = new FetchStore("http://localhost:8080/data.zarr");
 ```
 
-You can optionally provide `RequestInit` to forward to each `fetch` request:
+#### Default Fetch Options
+
+You can specify default fetch options using the `overrides` parameter when initializing the `FetchStore`.
+These act as base configurations for every fetch request:
 
 ```javascript
+const fetchOptions = { headers: { Authorization: "XXXXX" } };
 const store = new FetchStore("http://localhost:8080/data.zarr", {
-	headers: { Authorization: "XXXXX" },
+	overrides: fetchOptions,
 });
 ```
+
+#### Specific Request Options
+
+When making individual requests, you can supply specific options as the second argument to `FetchStore.get`.
+For example, additional headers or an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+
+```javascript
+const controller = new AbortController();
+const fetchOptions = { headers: { foo: "bar" }, signal: controller.signal };
+const bytes = await store.get("/zarr.json", fetchOptions);
+```
+
+These options override the defaults for the store, except headers are merged (with the latter taking precedent).
 
 ### FileSystemStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writable" />
 
