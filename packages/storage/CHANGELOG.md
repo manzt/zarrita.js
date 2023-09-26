@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.3
+
+### Minor Changes
+
+- fix(storage): Rename storage type `Writeable` to `Writable` ([#114](https://github.com/manzt/zarrita.js/pull/114))
+
 ## 0.1.0-next.2
 
 ### Patch Changes
