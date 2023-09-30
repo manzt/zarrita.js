@@ -4,6 +4,8 @@ import { assign } from "ndarray-ops";
 
 import { type Projection, slice } from "@zarrita/indexing";
 
+import { slice_indices } from "../node_modules/@zarrita/indexing/src/util.js";
+
 import { setter } from "../src/index.js";
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
@@ -48,7 +50,7 @@ describe("setter", () => {
 			get_strides([2, 3, 4], "C"),
 		);
 
-		let sel = [2, 3, 4].map((size) => slice(null).indices(size));
+		let sel = [2, 3, 4].map((size) => slice_indices(slice(null), size));
 		setter.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		expect(a.data).toStrictEqual(new Float32Array([
@@ -125,7 +127,7 @@ describe("setter", () => {
 			get_strides([2, 3, 4], "C"),
 		);
 
-		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
+		let sel = [slice_indices(slice(null), 2), slice_indices(slice(2), 3), 0];
 		setter.set_scalar(a, sel, 1);
 		// deno-fmt-ignore
 		expect(a.data).toStrictEqual(new Float32Array([
@@ -138,7 +140,7 @@ describe("setter", () => {
 			0, 0, 0, 0,
 		]));
 
-		sel = [0, slice(null).indices(3), slice(null).indices(4)];
+		sel = [0, slice_indices(slice(null), 3), slice_indices(slice(null), 4)];
 		setter.set_scalar(a, sel, 2);
 
 		// deno-fmt-ignore
@@ -160,7 +162,7 @@ describe("setter", () => {
 			get_strides([2, 3, 4], "F"),
 		);
 
-		let sel = [slice(null).indices(2), slice(2).indices(3), 0];
+		let sel = [slice_indices(slice(null), 2), slice_indices(slice(2), 3), 0];
 		setter.set_scalar(f, sel, 1);
 		// deno-fmt-ignore
 		expect(f.data).toStrictEqual(new Float32Array([
@@ -170,7 +172,7 @@ describe("setter", () => {
 			0, 0, 0, 0, 0, 0,
 		]));
 
-		sel = [0, slice(null).indices(3), slice(null).indices(4)];
+		sel = [0, slice_indices(slice(null), 3), slice_indices(slice(null), 4)];
 		setter.set_scalar(f, sel, 2);
 
 		// deno-fmt-ignore

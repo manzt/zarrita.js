@@ -6,7 +6,6 @@ export interface Slice {
 	start: number | null;
 	stop: number | null;
 	step: number | null;
-	indices: (length: number) => Indices;
 }
 
 export type Projection =

@@ -1,11 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { range, slice } from "../src/util.js";
+import { range, slice, slice_indices } from "../src/util.js";
 
 describe("slice", () => {
 	test("slice(null)", () => {
 		expect(slice(null)).toMatchInlineSnapshot(`
 			{
-			  "indices": [Function],
 			  "start": null,
 			  "step": null,
 			  "stop": null,
@@ -13,14 +12,13 @@ describe("slice", () => {
 		`);
 	});
 
-	test("slice(null).indices(10)", () => {
-		expect(slice(null).indices(10)).toStrictEqual([0, 10, 1]);
+	test("slice_indices(slice(null), 10)", () => {
+		expect(slice_indices(slice(null), 10)).toStrictEqual([0, 10, 1]);
 	});
 
 	test("slice(3, 15, 2)", () => {
 		expect(slice(3, 15, 2)).toMatchInlineSnapshot(`
 			{
-			  "indices": [Function],
 			  "start": 3,
 			  "step": 2,
 			  "stop": 15,
@@ -28,18 +26,17 @@ describe("slice", () => {
 		`);
 	});
 
-	test("slice(3, 15, 2).indices(10)", () => {
-		expect(slice(3, 15, 2).indices(10)).toStrictEqual([3, 10, 2]);
+	test("slice_indices(slice(3, 15, 2), 10)", () => {
+		expect(slice_indices(slice(3, 15, 2), 10)).toStrictEqual([3, 10, 2]);
 	});
 
-	test("slice(3, 15, 2).indices(30)", () => {
-		expect(slice(3, 15, 2).indices(30)).toStrictEqual([3, 15, 2]);
+	test("slice_indices(slice(3, 15, 2), 30)", () => {
+		expect(slice_indices(slice(3, 15, 2), 30)).toStrictEqual([3, 15, 2]);
 	});
 
 	test("slice(40)", () => {
 		expect(slice(40)).toMatchInlineSnapshot(`
 			{
-			  "indices": [Function],
 			  "start": null,
 			  "step": null,
 			  "stop": 40,
@@ -47,12 +44,12 @@ describe("slice", () => {
 		`);
 	});
 
-	test("slice(40).indices(10)", () => {
-		expect(slice(40).indices(4)).toStrictEqual([0, 4, 1]);
+	test("slice_indices(slice(40), 4)", () => {
+		expect(slice_indices(slice(40), 4)).toStrictEqual([0, 4, 1]);
 	});
 
-	test("slice(40).indices(41)", () => {
-		expect(slice(40).indices(41)).toStrictEqual([0, 40, 1]);
+	test("slice_indices(slice(40), 41)", () => {
+		expect(slice_indices(slice(40), 41)).toStrictEqual([0, 40, 1]);
 	});
 });
 
@@ -61,8 +58,8 @@ describe("slice indices", () => {
 		[null, 10, [0, 10, 1]],
 		[40, 4, [0, 4, 1]],
 		[40, 41, [0, 40, 1]],
-	])("slice(%o).indices(%i) -> %o", (arg, indices, expected) => {
-		expect(slice(arg).indices(indices)).toStrictEqual(expected);
+	])("slice_indices(slice(%o), %i) -> %o", (arg, indices, expected) => {
+		expect(slice_indices(slice(arg), indices)).toStrictEqual(expected);
 	});
 
 	test.each([
@@ -73,18 +70,21 @@ describe("slice indices", () => {
 		[null, null, -3, 14, [13, -1, -3]],
 		[null, null, -3, 2, [1, -1, -3]],
 	])(
-		"slice(%o, %o, %o).indices(%i) -> %o",
+		"slice_indices(slice(%o, %o, %o), %i) -> %o",
 		(start, stop, step, indices, expected) => {
-			expect(slice(start, stop, step).indices(indices)).toStrictEqual(expected);
+			expect(slice_indices(slice(start, stop, step), indices)).toStrictEqual(
+				expected,
+			);
 		},
 	);
 
 	test.each([
 		[null, null, 0, 1],
 	])(
-		`slice(%o, %o, %o).indices(%i) -> throws`,
+		`slice_indices(slice(%o, %o, %o), %i) -> throws`,
 		(start, stop, step, indices) => {
-			expect(() => slice(start, stop, step).indices(indices)).toThrowError();
+			expect(() => slice_indices(slice(start, stop, step), indices))
+				.toThrowError();
 		},
 	);
 });

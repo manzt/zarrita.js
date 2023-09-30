@@ -51,10 +51,8 @@ export function* product<T extends Array<Iterable<any>>>(
 }
 
 // https://github.com/python/cpython/blob/263c0dd16017613c5ea2fbfc270be4de2b41b5ad/Objects/sliceobject.c#L376-L519
-function slice_indices(
-	start: number | null,
-	stop: number | null,
-	step: number | null,
+export function slice_indices(
+	{ start, stop, step }: Slice,
 	length: number,
 ): Indices {
 	if (step === 0) {
@@ -117,9 +115,6 @@ export function slice(
 		start,
 		stop,
 		step,
-		indices(length: number) {
-			return slice_indices(this.start, this.stop, this.step, length);
-		},
 	};
 }
 
