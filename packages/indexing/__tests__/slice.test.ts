@@ -1,27 +1,54 @@
 import { describe, expect, it } from "vitest";
-import ndarray from "ndarray";
 import * as zarr from "@zarrita/core";
 
 import * as ops from "../src/ops.js";
 import { range, slice } from "../src/util.js";
 import { IndexError } from "../src/indexer.js";
 
+async function create_array() {
+	let arr = await zarr.create(new Map(), {
+		shape: [2, 3, 4],
+		data_type: "int32",
+		chunk_shape: [1, 2, 2],
+	});
+	await ops.set(arr, null, {
+		data: new Int32Array(range(2 * 3 * 4)),
+		shape: [2, 3, 4],
+		stride: [12, 4, 1],
+	});
+	return arr;
+}
+
 export function run_suite(name: string, getter: any) {
-	const get = getter as typeof ops.get;
+	let get = getter as typeof ops.get;
 
 	describe(name, async () => {
-		let arr = await zarr.create(new Map(), {
-			shape: [2, 3, 4],
-			data_type: "int32",
-			chunk_shape: [1, 2, 2],
-		});
-		await ops.set(
-			arr,
-			null,
-			ndarray(new Int32Array(range(2 * 3 * 4)), arr.shape),
-		);
+		let arr = await create_array();
 
 		it.each([
+			undefined,
+			null,
+			[null, null, null],
+			[slice(null), slice(null), slice(null)],
+			[null, slice(null), slice(null)],
+		])("Reads the whole array - selection = %j", async (sel) => {
+			let { data, shape, stride } = await get(arr, sel);
+			expect({ data, shape, stride }).toStrictEqual({
+				data: new Int32Array(range(24)),
+				shape: [2, 3, 4],
+				stride: [12, 4, 1],
+			});
+		});
+
+		it.each([
+			[
+				[1, slice(1, 3), null],
+				{
+					data: new Int32Array([16, 17, 18, 19, 20, 21, 22, 23]),
+					shape: [2, 4],
+					stride: [4, 1],
+				},
+			],
 			[
 				[null, slice(1, 3), slice(2)],
 				{
@@ -87,11 +114,11 @@ export function run_suite(name: string, getter: any) {
 				},
 			],
 			[
-				undefined,
+				[1, 2, null],
 				{
-					data: new Int32Array(range(24)),
-					shape: [2, 3, 4],
-					stride: [12, 4, 1],
+					data: new Int32Array([20, 21, 22, 23]),
+					shape: [4],
+					stride: [1],
 				},
 			],
 		])(`Reads selection - %j`, async (sel, expected) => {
