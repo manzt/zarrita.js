@@ -1,5 +1,5 @@
 import type { Indices, Slice } from "./types.js";
-import { product, range, slice } from "./util.js";
+import { product, range, slice, slice_indices } from "./util.js";
 
 export class IndexError extends Error {
 	constructor(msg: string) {
@@ -109,7 +109,7 @@ class SliceDimIndexer {
 
 	constructor({ dim_sel, dim_len, dim_chunk_len }: SliceDimIndexerProps) {
 		// normalize
-		const [start, stop, step] = dim_sel.indices(dim_len);
+		const [start, stop, step] = slice_indices(dim_sel, dim_len);
 		this.start = start;
 		this.stop = stop;
 		this.step = step;
