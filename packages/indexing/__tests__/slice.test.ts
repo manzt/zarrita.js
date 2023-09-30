@@ -5,8 +5,8 @@ import * as ops from "../src/ops.js";
 import { slice } from "../src/util.js";
 import { IndexError } from "../src/indexer.js";
 
-// @deno-fmt-ignore
 const DATA = {
+	// @deno-fmt-ignore
 	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]),
 	shape: [2, 3, 4],
 	stride: [12, 4, 1],
@@ -70,20 +70,8 @@ export function run_suite(name: string, getter: any) {
 			[
 				[1, null, null],
 				{
-					data: new Int32Array([
-						12,
-						13,
-						14,
-						15,
-						16,
-						17,
-						18,
-						19,
-						20,
-						21,
-						22,
-						23,
-					]),
+					// @deno-fmt-ignore
+					data: new Int32Array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]),
 					shape: [3, 4],
 					stride: [4, 1],
 				},

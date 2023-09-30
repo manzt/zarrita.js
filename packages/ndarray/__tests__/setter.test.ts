@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import ndarray, { type TypedArray } from "ndarray";
 import { assign } from "ndarray-ops";
 
-import { type Projection, slice } from "@zarrita/indexing";
-
-import { slice_indices } from "../node_modules/@zarrita/indexing/src/util.js";
+import {
+	_slice_indices as slice_indices,
+	type Projection,
+	slice,
+} from "@zarrita/indexing";
 
 import { setter } from "../src/index.js";
 
