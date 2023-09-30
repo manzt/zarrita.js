@@ -2,28 +2,26 @@ import { describe, expect, it } from "vitest";
 import * as zarr from "@zarrita/core";
 
 import * as ops from "../src/ops.js";
-import { range, slice } from "../src/util.js";
+import { slice } from "../src/util.js";
 import { IndexError } from "../src/indexer.js";
 
-async function create_array() {
-	let arr = await zarr.create(new Map(), {
-		shape: [2, 3, 4],
-		data_type: "int32",
-		chunk_shape: [1, 2, 2],
-	});
-	await ops.set(arr, null, {
-		data: new Int32Array(range(2 * 3 * 4)),
-		shape: [2, 3, 4],
-		stride: [12, 4, 1],
-	});
-	return arr;
-}
+// @deno-fmt-ignore
+const DATA = {
+	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]),
+	shape: [2, 3, 4],
+	stride: [12, 4, 1],
+};
 
 export function run_suite(name: string, getter: any) {
 	let get = getter as typeof ops.get;
 
 	describe(name, async () => {
-		let arr = await create_array();
+		let arr = await zarr.create(new Map(), {
+			shape: [2, 3, 4],
+			data_type: "int32",
+			chunk_shape: [1, 2, 2],
+		});
+		await ops.set(arr, null, DATA);
 
 		it.each([
 			undefined,
@@ -31,13 +29,9 @@ export function run_suite(name: string, getter: any) {
 			[null, null, null],
 			[slice(null), slice(null), slice(null)],
 			[null, slice(null), slice(null)],
-		])("Reads the whole array - selection = %j", async (sel) => {
+		])("Reads entire array: selection = %j", async (sel) => {
 			let { data, shape, stride } = await get(arr, sel);
-			expect({ data, shape, stride }).toStrictEqual({
-				data: new Int32Array(range(24)),
-				shape: [2, 3, 4],
-				stride: [12, 4, 1],
-			});
+			expect({ data, shape, stride }).toStrictEqual(DATA);
 		});
 
 		it.each([
@@ -76,7 +70,20 @@ export function run_suite(name: string, getter: any) {
 			[
 				[1, null, null],
 				{
-					data: new Int32Array(range(12, 24)),
+					data: new Int32Array([
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+					]),
 					shape: [3, 4],
 					stride: [4, 1],
 				},
@@ -121,7 +128,7 @@ export function run_suite(name: string, getter: any) {
 					stride: [1],
 				},
 			],
-		])(`Reads selection - %j`, async (sel, expected) => {
+		])(`Reads fancy slices: selection - %j`, async (sel, expected) => {
 			let { data, shape, stride } = await get(arr, sel);
 			expect({ data, shape, stride }).toStrictEqual(expected);
 		});
