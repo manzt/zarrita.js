@@ -1,17 +1,28 @@
-import type { AbsolutePath, Readable } from "@zarrita/storage";
+import { FetchStore, type AbsolutePath, type Readable } from "@zarrita/storage";
 
-import { Array, Group, Location } from "./hierarchy.js";
+import { Array, Group } from "./hierarchy.js";
 import {
 	json_decode_object,
+	json_encode_object,
 	v2_to_v3_array_metadata,
 	v2_to_v3_group_metadata,
 } from "./util.js";
-import type { ArrayMetadataV2, DataType, GroupMetadataV2 } from "./metadata.js";
-import { NodeNotFoundError } from "./errors.js";
+import type {
+	ArrayMetadata,
+	ArrayMetadataV2,
+	GroupMetadata,
+	GroupMetadataV2,
+	Attributes,
+} from "./metadata.js";
 
 type ConsolidatedMetadata = {
-	metadata: Record<string, any>;
+	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;
 	zarr_consolidated_format: 1;
+};
+
+type Listable<Store extends Readable> = {
+	get(...args: Parameters<Store["get"]>): Promise<Uint8Array | undefined>;
+	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
 };
 
 async function get_consolidated_metadata(
@@ -26,13 +37,72 @@ async function get_consolidated_metadata(
 	return meta;
 }
 
-/** Proxies requests to the underlying store. */
-export async function openConsolidated<Store extends Readable>(
+type Metadata =
+	| ArrayMetadataV2
+	| GroupMetadataV2
+	| ArrayMetadata
+	| GroupMetadata
+	| Attributes;
+
+function is_meta_key(key: string): boolean {
+	return (
+		key.endsWith(".zarray") ||
+		key.endsWith(".zgroup") ||
+		key.endsWith(".zattrs") ||
+		key.endsWith("zarr.json")
+	);
+}
+
+function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
+	return "zarr_format" in meta && meta.zarr_format === 3;
+}
+
+async function withConsolidated<Store extends Readable>(
 	store: Store,
-) {
-	let { metadata } = await get_consolidated_metadata(store);
-	let meta_nodes = Object
-		.entries(metadata)
+): Promise<Listable<Store>> {
+	let known_meta: Record<AbsolutePath, Metadata> =
+		await get_consolidated_metadata(store)
+			.then((meta) => {
+				let new_meta: Record<AbsolutePath, Metadata> = {};
+				for (let [key, value] of Object.entries(meta.metadata)) {
+					new_meta[`/${key}`] = value;
+				}
+				return new_meta;
+			})
+			.catch(() => ({}));
+
+	return {
+		async get(...args: Parameters<Store["get"]>): Promise<Uint8Array | undefined> {
+			let [key, opts] = args;
+			if (known_meta[key]) {
+				return json_encode_object(known_meta[key]);
+			}
+			let maybe_bytes = await store.get(key, opts);
+			if (is_meta_key(key) && maybe_bytes) {
+				let meta = json_decode_object(maybe_bytes);
+				known_meta[key] = meta;
+			}
+			return maybe_bytes;
+		},
+		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
+			let contents: { path: AbsolutePath, kind: "array" | "group" }[] = [];
+			for (let [key, value] of Object.entries(known_meta)) {
+				let path = key as AbsolutePath;
+				if (key.endsWith(".zarray")) contents.push({ path, kind: "array" });
+				if (key.endsWith(".zgroup")) contents.push({ path, kind: "group" });
+				if (is_v3(value)) contents.push({ path, kind: value.node_type });
+			}
+			return contents;
+		}
+	};
+}
+
+async function openListable<Store extends Readable>(store: Listable<Store>) {
+	let metadata = await Promise.all(
+		store.contents().map(({ path }) => [path, store.get(path)] as const)
+	);
+
+	metadata
 		.reduce(
 			(acc, [path, content]) => {
 				let parts = path.split("/");
@@ -56,47 +126,6 @@ export async function openConsolidated<Store extends Readable>(
 				}
 			>,
 		);
-	let nodes = new Map<AbsolutePath, Array<DataType, Store> | Group<Store>>();
-	for (let [path, { meta, attrs }] of Object.entries(meta_nodes)) {
-		if (!meta) throw new Error("missing metadata");
-		let node: Array<DataType, Store> | Group<Store>;
-		if ("shape" in meta) {
-			let metadata = v2_to_v3_array_metadata(meta, attrs);
-			node = new Array(store, path as AbsolutePath, metadata);
-		} else {
-			let metadata = v2_to_v3_group_metadata(meta, attrs);
-			node = new Group(store, path as AbsolutePath, metadata);
-		}
-		nodes.set(path as AbsolutePath, node);
-	}
-	return new ConsolidatedHierarchy(nodes);
-}
 
-class ConsolidatedHierarchy<Store extends Readable> {
-	constructor(
-		public contents: Map<AbsolutePath, Array<DataType, Store> | Group<Store>>,
-	) {}
-	open(
-		where: AbsolutePath | Location<unknown>,
-		options: { kind: "group" },
-	): Group<Store>;
-	open(
-		where: AbsolutePath | Location<unknown>,
-		options: { kind: "array" },
-	): Array<DataType, Store>;
-	open(
-		where: AbsolutePath | Location<unknown>,
-	): Array<DataType, Store> | Group<Store>;
-	open(
-		where: AbsolutePath | Location<unknown>,
-		options: { kind?: "array" | "group" } = {},
-	) {
-		let path = typeof where === "string" ? where : where.path;
-		let node = this.contents.get(path);
-		if (node && (!options.kind || options.kind == node.kind)) return node;
-		throw new NodeNotFoundError(path);
-	}
-	root() {
-		return this.open("/", { kind: "group" });
-	}
+
 }
