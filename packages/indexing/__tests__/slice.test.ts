@@ -1,213 +1,147 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import ndarray from "ndarray";
+import { describe, expect, it } from "vitest";
 import * as zarr from "@zarrita/core";
 
 import * as ops from "../src/ops.js";
-import { range, slice } from "../src/util.js";
+import { slice } from "../src/util.js";
 import { IndexError } from "../src/indexer.js";
 
-interface Context {
-	arr: zarr.Array<"int32", Map<string, Uint8Array>>;
-}
+// @deno-fmt-ignore
+const DATA = {
+	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]),
+	shape: [2, 3, 4],
+	stride: [12, 4, 1],
+};
 
 export function run_suite(name: string, getter: any) {
-	const get = getter as typeof ops.get;
+	let get = getter as typeof ops.get;
 
-	beforeEach<Context>(async (ctx) => {
-		let store = new Map<string, Uint8Array>();
-		let arr = await zarr.create(store, {
+	describe(name, async () => {
+		let arr = await zarr.create(new Map(), {
 			shape: [2, 3, 4],
 			data_type: "int32",
 			chunk_shape: [1, 2, 2],
 		});
-		let data = ndarray(new Int32Array(range(2 * 3 * 4)), arr.shape);
-		await ops.set(arr, null, data);
-		ctx.arr = arr;
-	});
+		await ops.set(arr, null, DATA);
 
-	describe(name, () => {
-		it<Context>(
-			`
-selection = [null, slice(1, 3), slice(2)]
-array([[[ 4,  5],
-        [ 8,  9]],
-
-       [[16, 17],
-        [20, 21]]])
-`,
-			async (ctx) => {
-				let sel = [null, slice(1, 3), slice(2)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(
-					new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]),
-				);
-				expect(shape).toStrictEqual([2, 2, 2]);
-				expect(stride).toStrictEqual([4, 2, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = [null, null, 0]
-array([[ 0,  4,  8],
-       [12, 16, 20]])
-`,
-			async (ctx) => {
-				let sel = [null, null, 0];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([0, 4, 8, 12, 16, 20]));
-				expect(shape).toStrictEqual([2, 3]);
-				expect(stride).toStrictEqual([3, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = [slice(3), slice(2), slice(2)]
-array([[[ 0,  1],
-        [ 4,  5]],
-
-       [[12, 13],
-        [16, 17]]])
-`,
-			async (ctx) => {
-				let sel = [slice(3), slice(2), slice(2)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(
-					new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]),
-				);
-				expect(shape).toStrictEqual([2, 2, 2]);
-				expect(stride).toStrictEqual([4, 2, 1]);
-			},
-		);
-
-		it<Context>(`selection = [1, 1, 1], output = 17`, async (ctx) => {
-			let sel = [1, 1, 1];
-			let res = await get(ctx.arr, sel);
-			expect(res).toBe(17);
+		it.each([
+			undefined,
+			null,
+			[null, null, null],
+			[slice(null), slice(null), slice(null)],
+			[null, slice(null), slice(null)],
+		])("Reads entire array: selection = %j", async (sel) => {
+			let { data, shape, stride } = await get(arr, sel);
+			expect({ data, shape, stride }).toStrictEqual(DATA);
 		});
 
-		it<Context>(
-			`
-selection = [1, null, null]
-array([[12, 13, 14, 15],
-       [16, 17, 18, 19],
-       [20, 21, 22, 23]])
-`,
-			async (ctx) => {
-				let sel = [1, null, null];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array(range(12, 24)));
-				expect(shape).toStrictEqual([3, 4]);
-				expect(stride).toStrictEqual([4, 1]);
-			},
-		);
+		it.each([
+			[
+				[1, slice(1, 3), null],
+				{
+					data: new Int32Array([16, 17, 18, 19, 20, 21, 22, 23]),
+					shape: [2, 4],
+					stride: [4, 1],
+				},
+			],
+			[
+				[null, slice(1, 3), slice(2)],
+				{
+					data: new Int32Array([4, 5, 8, 9, 16, 17, 20, 21]),
+					shape: [2, 2, 2],
+					stride: [4, 2, 1],
+				},
+			],
+			[
+				[null, null, 0],
+				{
+					data: new Int32Array([0, 4, 8, 12, 16, 20]),
+					shape: [2, 3],
+					stride: [3, 1],
+				},
+			],
+			[
+				[slice(3), slice(2), slice(2)],
+				{
+					data: new Int32Array([0, 1, 4, 5, 12, 13, 16, 17]),
+					shape: [2, 2, 2],
+					stride: [4, 2, 1],
+				},
+			],
+			[
+				[1, null, null],
+				{
+					data: new Int32Array([
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22,
+						23,
+					]),
+					shape: [3, 4],
+					stride: [4, 1],
+				},
+			],
+			[
+				[0, slice(null, null, 2), slice(null, null, 3)],
+				{
+					data: new Int32Array([0, 3, 8, 11]),
+					shape: [2, 2],
+					stride: [2, 1],
+				},
+			],
+			[
+				[null, null, slice(null, null, 4)],
+				{
+					data: new Int32Array([0, 4, 8, 12, 16, 20]),
+					shape: [2, 3, 1],
+					stride: [3, 1, 1],
+				},
+			],
+			[
+				[1, null, slice(null, 3, 2)],
+				{
+					data: new Int32Array([12, 14, 16, 18, 20, 22]),
+					shape: [3, 2],
+					stride: [2, 1],
+				},
+			],
+			[
+				[null, 1, null],
+				{
+					data: new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]),
+					shape: [2, 4],
+					stride: [4, 1],
+				},
+			],
+			[
+				[1, 2, null],
+				{
+					data: new Int32Array([20, 21, 22, 23]),
+					shape: [4],
+					stride: [1],
+				},
+			],
+		])(`Reads fancy slices: selection - %j`, async (sel, expected) => {
+			let { data, shape, stride } = await get(arr, sel);
+			expect({ data, shape, stride }).toStrictEqual(expected);
+		});
 
-		it<Context>(
-			`
-selection = [0, slice(null, null, 2), slice(null, null, 3)]
-array([[ 0,  3],
-       [ 8, 11]])
-`,
-			async (ctx) => {
-				let sel = [0, slice(null, null, 2), slice(null, null, 3)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([0, 3, 8, 11]));
-				expect(shape).toStrictEqual([2, 2]);
-				expect(stride).toStrictEqual([2, 1]);
-			},
-		);
+		it("Reads a scalar", async () => {
+			let sel = [1, 1, 1];
+			let val = await get(arr, sel);
+			expect(val).toBe(17);
+		});
 
-		it<Context>(
-			`
-selection = [0, slice(null, null, 2), slice(null, null, 3)]
-array([[ 0,  3],
-       [ 8, 11]])
-`,
-			async (ctx) => {
-				let sel = [0, slice(null, null, 2), slice(null, null, 3)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([0, 3, 8, 11]));
-				expect(shape).toStrictEqual([2, 2]);
-				expect(stride).toStrictEqual([2, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = [null, null, slice(null, null, 4)]
-array([[[ 0],
-        [ 4],
-        [ 8]],
-
-       [[12],
-        [16],
-        [20]]])
-`,
-			async (ctx) => {
-				let sel = [null, null, slice(null, null, 4)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([0, 4, 8, 12, 16, 20]));
-				expect(shape).toStrictEqual([2, 3, 1]);
-				expect(stride).toStrictEqual([3, 1, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = [1, null, slice(null, 3, 2)]
-array([[12, 14],
-       [16, 18],
-       [20, 22]])
-`,
-			async (ctx) => {
-				let sel = [1, null, slice(null, 3, 2)];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(new Int32Array([12, 14, 16, 18, 20, 22]));
-				expect(shape).toStrictEqual([3, 2]);
-				expect(stride).toStrictEqual([2, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = [null, 1, null];
-array([[ 4,  5,  6,  7],
-       [16, 17, 18, 19]])
-`,
-			async (ctx) => {
-				let sel = [null, 1, null];
-				let { data, shape, stride } = await get(ctx.arr, sel);
-				expect(data).toStrictEqual(
-					new Int32Array([4, 5, 6, 7, 16, 17, 18, 19]),
-				);
-				expect(shape).toStrictEqual([2, 4]);
-				expect(stride).toStrictEqual([4, 1]);
-			},
-		);
-
-		it<Context>(
-			`
-selection = null;
-array([[[ 0,  1,  2,  3],
-        [ 4,  5,  6,  7],
-        [ 8,  9, 10, 11]],
-
-       [[12, 13, 14, 15],
-        [16, 17, 18, 19],
-        [20, 21, 22, 23]]])
-`,
-			async (ctx) => {
-				let { data, shape, stride } = await get(ctx.arr);
-				expect(data).toStrictEqual(new Int32Array(range(24)));
-				expect(shape).toStrictEqual([2, 3, 4]);
-				expect(stride).toStrictEqual([12, 4, 1]);
-			},
-		);
-
-		it<Context>("reads Does not support negative indices", async (ctx) => {
+		it("Does not support negative indices", async () => {
 			let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-			await expect(get(ctx.arr, sel))
+			await expect(get(arr, sel))
 				.rejects
 				.toThrowError(IndexError);
 		});

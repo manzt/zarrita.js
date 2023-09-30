@@ -159,8 +159,6 @@ function coerce_dtype(
 	return { data_type, endian: endian === "<" ? "little" : "big" } as any;
 }
 
-export const v2_marker = Symbol("v2");
-
 export function v2_to_v3_array_metadata(
 	meta: ArrayMetadataV2,
 	attributes: Record<string, unknown> = {},
