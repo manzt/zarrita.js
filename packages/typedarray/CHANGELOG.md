@@ -1,5 +1,11 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.2
+
+### Patch Changes
+
+- feat: Make unicode string array data view private ([#123](https://github.com/manzt/zarrita.js/pull/123))
+
 ## 0.1.0-next.1
 
 ### Patch Changes
