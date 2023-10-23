@@ -151,7 +151,7 @@ export class ByteStringArray {
 }
 
 export class UnicodeStringArray {
-	_data: Int32Array;
+	#data: Int32Array;
 	chars: number;
 	#encode_buffer: Int32Array;
 
@@ -171,17 +171,17 @@ export class UnicodeStringArray {
 	) {
 		this.chars = chars;
 		if (typeof x === "number") {
-			this._data = new Int32Array(x * chars);
+			this.#data = new Int32Array(x * chars);
 		} else if (x instanceof ArrayBuffer) {
 			if (length) length *= chars;
-			this._data = new Int32Array(x, byteOffset, length);
+			this.#data = new Int32Array(x, byteOffset, length);
 		} else {
 			const values = x;
 			const d = new UnicodeStringArray(chars, 1);
-			this._data = new Int32Array((function* () {
+			this.#data = new Int32Array((function* () {
 				for (let str of values) {
 					d.set(0, str);
-					yield* d._data;
+					yield* d.#data;
 				}
 			})());
 		}
@@ -189,39 +189,39 @@ export class UnicodeStringArray {
 	}
 
 	get BYTES_PER_ELEMENT() {
-		return this._data.BYTES_PER_ELEMENT * this.chars;
+		return this.#data.BYTES_PER_ELEMENT * this.chars;
 	}
 
 	get byteLength() {
-		return this._data.byteLength;
+		return this.#data.byteLength;
 	}
 
 	get byteOffset() {
-		return this._data.byteOffset;
+		return this.#data.byteOffset;
 	}
 
 	/** @type {ArrayBuffer} */
 	get buffer() {
-		return this._data.buffer;
+		return this.#data.buffer;
 	}
 
 	/** @type {number} */
 	get length() {
-		return this._data.length / this.chars;
+		return this.#data.length / this.chars;
 	}
 
 	get(idx: number) {
 		const offset = this.chars * idx;
 		let result = "";
 		for (let i = 0; i < this.chars; i++) {
-			result += String.fromCodePoint(this._data[offset + i]);
+			result += String.fromCodePoint(this.#data[offset + i]);
 		}
 		return result.replace(/\u0000/g, "");
 	}
 
 	set(idx: number, value: string) {
 		const offset = this.chars * idx;
-		const view = this._data.subarray(offset, offset + this.chars);
+		const view = this.#data.subarray(offset, offset + this.chars);
 		view.fill(0); // clear current
 		for (let i = 0; i < this.chars; i++) {
 			view[i] = value.codePointAt(i) ?? 0;
@@ -232,9 +232,9 @@ export class UnicodeStringArray {
 		// encode once
 		this.set(0, value);
 		// copy the encoded values to all other elements
-		let encoded = this._data.subarray(0, this.chars);
+		let encoded = this.#data.subarray(0, this.chars);
 		for (let i = 1; i < this.length; i++) {
-			this._data.set(encoded, i * this.chars);
+			this.#data.set(encoded, i * this.chars);
 		}
 	}
 
