@@ -1,5 +1,13 @@
 # zarrita
 
+## 0.4.0-next.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @zarrita/core@0.1.0-next.4
+  - @zarrita/indexing@0.1.0-next.6
+
 ## 0.4.0-next.5
 
 ### Patch Changes
