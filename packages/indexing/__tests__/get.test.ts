@@ -542,7 +542,7 @@ describe("get v2", () => {
 
 	it("3d.chunked.mixed.i2.F", async () => {
 		let res = await get_v2("/3d.chunked.mixed.i2.F");
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(res.data).toStrictEqual(new Int16Array([
 			0,  9, 18,  3, 12, 21,  6, 15, 24,
 			1, 10, 19,  4, 13, 22,  7, 16, 25,
@@ -691,7 +691,7 @@ describe("get v3", () => {
 
 	it("3d.chunked.mixed.i2.F", async () => {
 		let res = await get_v3("/3d.chunked.mixed.i2.F");
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(res.data).toStrictEqual(new Int16Array([
 			0,  9, 18,  3, 12, 21,  6, 15, 24,
 			1, 10, 19,  4, 13, 22,  7, 16, 25,

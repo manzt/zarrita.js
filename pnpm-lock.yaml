@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@biomejs/biome':
+        specifier: 1.4.1
+        version: 1.4.1
       '@changesets/cli':
         specifier: ^2.26.2
         version: 2.26.2
@@ -17,9 +20,6 @@ importers:
       '@types/node':
         specifier: ^20.4.9
         version: 20.4.9
-      dprint:
-        specifier: ^0.40.2
-        version: 0.40.2
       publint:
         specifier: ^0.2.2
         version: 0.2.2
@@ -316,6 +316,74 @@ packages:
       to-fast-properties: 2.0.0
     dev: true
 
+  /@biomejs/biome@1.4.1:
+    resolution: {integrity: sha512-JccVAwPbhi37pdxbAGmaOBjUTKEwEjWAhl7rKkVVuXHo4MLASXJ5HR8BTgrImi4/7rTBsGz1tgVD1Kwv1CHGRg==}
+    engines: {node: '>=14.*'}
+    hasBin: true
+    requiresBuild: true
+    optionalDependencies:
+      '@biomejs/cli-darwin-arm64': 1.4.1
+      '@biomejs/cli-darwin-x64': 1.4.1
+      '@biomejs/cli-linux-arm64': 1.4.1
+      '@biomejs/cli-linux-x64': 1.4.1
+      '@biomejs/cli-win32-arm64': 1.4.1
+      '@biomejs/cli-win32-x64': 1.4.1
+    dev: true
+
+  /@biomejs/cli-darwin-arm64@1.4.1:
+    resolution: {integrity: sha512-PZWy2Idndqux38p6AXSDQM2ldRAWi32bvb7bMbTN0ALzpWYMYnxd71ornatumSSJYoNhKmxzDLq+jct7nZJ79w==}
+    engines: {node: '>=14.*'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@biomejs/cli-darwin-x64@1.4.1:
+    resolution: {integrity: sha512-soj3BWhnsM1M2JlzR09cibUzG1owJqetwj/Oo7yg0foijo9lNH9XWXZfJBYDKgW/6Fomn+CC2EcUS+hisQzt9g==}
+    engines: {node: '>=14.*'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@biomejs/cli-linux-arm64@1.4.1:
+    resolution: {integrity: sha512-YIZqfJUg4F+fPsBTXxgD7EU2E5OAYbmYSl/snf4PevwfQCWE/omOFZv+NnIQmjYj9I7ParDgcJvanoA3/kO0JQ==}
+    engines: {node: '>=14.*'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@biomejs/cli-linux-x64@1.4.1:
+    resolution: {integrity: sha512-9YOZw3qBd/KUj63A6Hn2zZgzGb2nbESM0qNmeMXgmqinVKM//uc4OgY5TuKITuGjMSvcVxxd4dX1IzYjV9qvNQ==}
+    engines: {node: '>=14.*'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@biomejs/cli-win32-arm64@1.4.1:
+    resolution: {integrity: sha512-nWQbvkNKxYn/kCQ0yVF8kCaS3VzaGvtFSmItXiMknU4521LDjJ7tNWH12Gol+pIslrCbd4E1LhJa0a3ThRsBVg==}
+    engines: {node: '>=14.*'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@biomejs/cli-win32-x64@1.4.1:
+    resolution: {integrity: sha512-88fR2CQxQ4YLs2BUDuywWYQpUKgU3A3sTezANFc/4LGKQFFLV2yX+F7QAdZVkMHfA+RD9Xg178HomM/6mnTNPA==}
+    engines: {node: '>=14.*'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
   /@changesets/apply-release-plan@6.1.4:
     resolution: {integrity: sha512-FMpKF1fRlJyCZVYHr3CbinpZZ+6MwvOtWUuO8uo+svcATEoc1zRDcj23pAurJ2TZ/uVz1wFHH6K3NlACy0PLew==}
     dependencies:
@@ -548,54 +616,6 @@ packages:
       - '@algolia/client-search'
       - search-insights
     dev: true
-
-  /@dprint/darwin-arm64@0.40.2:
-    resolution: {integrity: sha512-qharMFhxpNq9brgvHLbqzzAgVgPWSHLfzNLwWWhKcGOUUDUIilfAo3SlvOz6w4nQiIifLpYZOvZqK7Lpf9mSSw==}
-    cpu: [arm64]
-    os: [darwin]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /@dprint/darwin-x64@0.40.2:
-    resolution: {integrity: sha512-FPDdOTVr1JfqtLBTCvqlihWslTy3LBUoi3H1gaqIazCKMj2dB9voFWkBiMT+REMHDrlVsoSpFAfsliNr/y7HPA==}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /@dprint/linux-arm64-glibc@0.40.2:
-    resolution: {integrity: sha512-GmUWfKwEwXA+onvewX9hEJSMcd9V184+uRbEhI5tG28tBP9+IjQhrY7jCjxPvaZA+EvzNPnAy5D1wbJdlNLBNA==}
-    cpu: [arm64]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /@dprint/linux-x64-glibc@0.40.2:
-    resolution: {integrity: sha512-vMHAHdsOY+2thieSWbIrIioDfPgvipwUgd0MZUWOqycTrXU6kLyi2B+5J/2Jc+QO3CiLIbumQd2FH/0vB1eWqA==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /@dprint/linux-x64-musl@0.40.2:
-    resolution: {integrity: sha512-nFSbDWd9ORyOhJ7a+RmE39WbuPoQ3OQutIgfAmfikiu/wENzEwxxv4QJ7aFnBaoZb0wuVEEpXShr8vY4p0exkg==}
-    cpu: [x64]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /@dprint/win32-x64@0.40.2:
-    resolution: {integrity: sha512-qF4VCQzFTZYD61lbQqXLU/IwUTbLK22CancO+uVtXmZRoKU9GaVjcBhMUB7URxsa8rvxWHhHT6ldillI/aOWCg==}
-    cpu: [x64]
-    os: [win32]
-    requiresBuild: true
-    dev: true
-    optional: true
 
   /@esbuild/android-arm64@0.18.16:
     resolution: {integrity: sha512-wsCqSPqLz+6Ov+OM4EthU43DyYVVyfn15S4j1bJzylDpc1r1jZFFfJQNfDuT8SlgwuqpmpJXK4uPlHGw6ve7eA==}
@@ -1492,19 +1512,6 @@ packages:
   /dotenv@16.3.1:
     resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
     engines: {node: '>=12'}
-    dev: true
-
-  /dprint@0.40.2:
-    resolution: {integrity: sha512-3LdyUV0itEW59UPtsRA2StOWOu8FyOW+BgvJpH/tACRHKi0z5gaQnvSxdS3mbG7dgtEhdRnGg6JoiQyGib6NTg==}
-    hasBin: true
-    requiresBuild: true
-    optionalDependencies:
-      '@dprint/darwin-arm64': 0.40.2
-      '@dprint/darwin-x64': 0.40.2
-      '@dprint/linux-arm64-glibc': 0.40.2
-      '@dprint/linux-x64-glibc': 0.40.2
-      '@dprint/linux-x64-musl': 0.40.2
-      '@dprint/win32-x64': 0.40.2
     dev: true
 
   /emoji-regex@8.0.0:
