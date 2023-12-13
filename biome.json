@@ -1,8 +1,5 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.4.1/schema.json",
-	"formatter": {
-		"ignore": ["fixtures", "packages/*/dist"]
-	},
 	"organizeImports": {
 		"enabled": true
 	},
@@ -11,5 +8,8 @@
 		"rules": {
 			"recommended": true
 		}
+	},
+	"files": {
+		"ignore": ["fixtures", "**/dist"]
 	}
 }
