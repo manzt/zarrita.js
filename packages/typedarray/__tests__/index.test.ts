@@ -269,7 +269,7 @@ describe("UnicodeStringArray", () => {
 	});
 
 	test("new (buffer: ArrayBuffer, byteOffset: number, length: number) -> UnicodeStringArray", () => {
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		let data = new Int32Array([161, 72, 111, 108, 97, 32, 109, 117, 110, 100, 111, 33, 0, 0, 0, 0, 0, 0, 0, 0, 72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0, 88, 105, 110, 32, 99, 104, 224, 111, 32, 116, 104, 7871, 32, 103, 105, 7899, 105, 0, 0, 0]);
 		let chars = 20;
 		let arr = new UnicodeStringArray(chars, data.buffer, chars * 4, 2);
@@ -312,13 +312,13 @@ describe("UnicodeStringArray", () => {
 			BYTES_PER_ELEMENT: chars * Int32Array.BYTES_PER_ELEMENT,
 			byteOffset: 0,
 			byteLength: data.length * chars * Int32Array.BYTES_PER_ELEMENT,
-			// deno-fmt-ignore
+			// biome-ignore format: the array should not be formatted
 			encoded: new Int32Array([
 				161, 72, 111, 108, 97, 32, 109, 117, 110, 100, 111, 33, 0, 0, 0, 0, 0, 0, 0, 0,
 				72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0,
 				88, 105, 110, 32, 99, 104, 224, 111, 32, 116, 104, 7871, 32, 103, 105, 7899, 105, 0, 0, 0,
 			]),
-			// deno-fmt-ignore
+			// biome-ignore format: the array should not be formatted
 			encoded_sub_view: new Int32Array([
 				72, 101, 106, 32, 86, 228, 114, 108, 100, 101, 110, 33, 0, 0, 0, 0, 0, 0, 0, 0,
 			]),

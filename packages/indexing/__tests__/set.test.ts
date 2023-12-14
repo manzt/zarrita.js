@@ -68,7 +68,7 @@ test("Read and write array data - builtin", async () => {
 
 	res = await get(a, [null, slice(0, 7)]);
 	expect(res.shape).toStrictEqual([5, 7]);
-	// deno-fmt-ignore
+	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([ 
 		 0,  1,  2,  3,  4,
 		 5,  6, 10, 11, 12,
@@ -81,7 +81,7 @@ test("Read and write array data - builtin", async () => {
 
 	res = await get(a, [slice(0, 3), null]);
 	expect(res.shape).toStrictEqual([3, 10]);
-	// deno-fmt-ignore
+	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([
 		 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -89,7 +89,7 @@ test("Read and write array data - builtin", async () => {
 	]));
 	res = await get(a, [slice(0, 3), slice(0, 7)]);
 	expect(res.shape).toStrictEqual([3, 7]);
-	// deno-fmt-ignore
+	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([
 		 0,  1,  2,  3,  4,  5,  6,
 		10, 11, 12, 13, 14, 15, 16,
@@ -98,7 +98,7 @@ test("Read and write array data - builtin", async () => {
 
 	res = await get(a, [slice(1, 4), slice(2, 7)]);
 	expect(res.shape).toStrictEqual([3, 5]);
-	// deno-fmt-ignore
+	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([
 		12, 13, 14, 15, 16,
 		22, 23, 24, 25, 26,

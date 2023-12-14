@@ -66,6 +66,7 @@ export type DataType =
 export type Attributes = Record<string, unknown>;
 
 // Hack to get scalar type since is not defined on any typed arrays.
+// biome-ignore format: easier to read this way
 export type Scalar<D extends DataType> = D extends Bool ? boolean
 	: D extends BigintDataType ? bigint
 	: D extends StringDataType ? string
@@ -127,6 +128,7 @@ export type GroupMetadataV2 = {
 	zarr_format: 2;
 };
 
+// biome-ignore format: easier to read this way
 export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Int16 ? Int16Array
 	: D extends Int32 ? Int32Array

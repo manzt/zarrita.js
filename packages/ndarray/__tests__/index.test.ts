@@ -288,7 +288,7 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(res.data).toStrictEqual(new Int16Array([
 			0,  9, 18,  3, 12, 21,  6, 15, 24,
 			1, 10, 19,  4, 13, 22,  7, 16, 25,
