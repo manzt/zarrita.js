@@ -15,7 +15,6 @@ it("exports all the things", () => {
 		  "create": [Function],
 		  "get": [Function],
 		  "open": [Function],
-		  "openConsolidated": [Function],
 		  "registry": Map {
 		    "blosc" => [Function],
 		    "gzip" => [Function],

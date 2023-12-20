@@ -169,6 +169,11 @@ export function open<Store extends Readable>(
 	options: { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
+export async function open<Store extends Readable>(
+	location: Location<Store> | Store,
+	options: { kind?: "array" | "group" },
+): Promise<Array<DataType, Store> | Group<Store>>;
+
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 ): Promise<Array<DataType, Store> | Group<Store>>;

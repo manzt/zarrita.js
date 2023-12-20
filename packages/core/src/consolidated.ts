@@ -1,12 +1,5 @@
-import { FetchStore, type AbsolutePath, type Readable } from "@zarrita/storage";
-
-import { Array, Group } from "./hierarchy.js";
-import {
-	json_decode_object,
-	json_encode_object,
-	v2_to_v3_array_metadata,
-	v2_to_v3_group_metadata,
-} from "./util.js";
+import { type AbsolutePath, type Readable } from "@zarrita/storage";
+import { json_decode_object, json_encode_object } from "./util.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -21,7 +14,7 @@ type ConsolidatedMetadata = {
 };
 
 type Listable<Store extends Readable> = {
-	get(...args: Parameters<Store["get"]>): Promise<Uint8Array | undefined>;
+	get: Store["get"];
 	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
 };
 
@@ -57,7 +50,7 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 	return "zarr_format" in meta && meta.zarr_format === 3;
 }
 
-async function withConsolidated<Store extends Readable>(
+export async function withConsolidated<Store extends Readable>(
 	store: Store,
 ): Promise<Listable<Store>> {
 	let known_meta: Record<AbsolutePath, Metadata> =
@@ -87,45 +80,17 @@ async function withConsolidated<Store extends Readable>(
 		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
 			let contents: { path: AbsolutePath, kind: "array" | "group" }[] = [];
 			for (let [key, value] of Object.entries(known_meta)) {
-				let path = key as AbsolutePath;
-				if (key.endsWith(".zarray")) contents.push({ path, kind: "array" });
-				if (key.endsWith(".zgroup")) contents.push({ path, kind: "group" });
-				if (is_v3(value)) contents.push({ path, kind: value.node_type });
+				let parts = key.split("/");
+				let filename = parts.pop()!;
+				let path = parts.join("/") as AbsolutePath;
+				if (!path.startsWith("/")) path = `/${path}`;
+				if (filename === ".zarray") contents.push({ path, kind: "array" });
+				if (filename === ".zgroup") contents.push({ path, kind: "group" });
+				if (is_v3(value)) {
+					contents.push({ path, kind: value.node_type });
+				}
 			}
 			return contents;
 		}
 	};
-}
-
-async function openListable<Store extends Readable>(store: Listable<Store>) {
-	let metadata = await Promise.all(
-		store.contents().map(({ path }) => [path, store.get(path)] as const)
-	);
-
-	metadata
-		.reduce(
-			(acc, [path, content]) => {
-				let parts = path.split("/");
-				let file_name = parts.pop()!;
-				let key: AbsolutePath = `/${parts.join("/")}`;
-				if (!acc[key]) acc[key] = {};
-				if (file_name === ".zarray") {
-					acc[key].meta = content;
-				} else if (file_name === ".zgroup") {
-					acc[key].meta = content;
-				} else if (file_name === ".zattrs") {
-					acc[key].attrs = content;
-				}
-				return acc;
-			},
-			{} as Record<
-				AbsolutePath,
-				{
-					meta?: ArrayMetadataV2 | GroupMetadataV2;
-					attrs?: Record<string, any>;
-				}
-			>,
-		);
-
-
 }
