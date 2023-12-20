@@ -3,9 +3,9 @@ import { json_decode_object, json_encode_object } from "./util.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
+	Attributes,
 	GroupMetadata,
 	GroupMetadataV2,
-	Attributes,
 } from "./metadata.js";
 
 type ConsolidatedMetadata = {
@@ -65,7 +65,9 @@ export async function withConsolidated<Store extends Readable>(
 			.catch(() => ({}));
 
 	return {
-		async get(...args: Parameters<Store["get"]>): Promise<Uint8Array | undefined> {
+		async get(
+			...args: Parameters<Store["get"]>
+		): Promise<Uint8Array | undefined> {
 			let [key, opts] = args;
 			if (known_meta[key]) {
 				return json_encode_object(known_meta[key]);
@@ -78,12 +80,11 @@ export async function withConsolidated<Store extends Readable>(
 			return maybe_bytes;
 		},
 		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
-			let contents: { path: AbsolutePath, kind: "array" | "group" }[] = [];
+			let contents: { path: AbsolutePath; kind: "array" | "group" }[] = [];
 			for (let [key, value] of Object.entries(known_meta)) {
 				let parts = key.split("/");
 				let filename = parts.pop()!;
-				let path = parts.join("/") as AbsolutePath;
-				if (!path.startsWith("/")) path = `/${path}`;
+				let path = (parts.join("/") || "/") as AbsolutePath;
 				if (filename === ".zarray") contents.push({ path, kind: "array" });
 				if (filename === ".zgroup") contents.push({ path, kind: "group" });
 				if (is_v3(value)) {
@@ -91,6 +92,6 @@ export async function withConsolidated<Store extends Readable>(
 				}
 			}
 			return contents;
-		}
+		},
 	};
 }
