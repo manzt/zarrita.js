@@ -9,7 +9,7 @@ import { Array as ZarrArray } from "../src/hierarchy.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-describe("openConsolidated", () => {
+describe("withConsolidated", () => {
 	it("loads consolidated metadata", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let store = await withConsolidated(new FileSystemStore(root));
