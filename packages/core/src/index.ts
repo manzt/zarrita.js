@@ -9,5 +9,4 @@ export {
 export { open } from "./open.js";
 export { create } from "./create.js";
 export { registry } from "./codecs.js";
-export { openConsolidated } from "./consolidated.js";
 export type * from "./metadata.js";

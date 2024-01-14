@@ -6,7 +6,8 @@
 		"test": "vitest --api",
 		"fmt": "dprint fmt",
 		"lint": "dprint check",
-		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
+		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
+		"errors": "vim -c \"copen\" -c \"cexpr system('npx build')\" -c \"wincmd p\""
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",

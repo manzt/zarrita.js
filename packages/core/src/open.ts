@@ -6,13 +6,14 @@ import type {
 	GroupMetadata,
 } from "./metadata.js";
 import { Array, Group, Location } from "./hierarchy.js";
-import { NodeNotFoundError } from "./errors.js";
+import { KeyError, NodeNotFoundError } from "./errors.js";
 import {
 	json_decode_object,
 	v2_to_v3_array_metadata,
 	v2_to_v3_group_metadata,
 } from "./util.js";
 
+let VERSION_COUNTER = create_version_counter();
 function create_version_counter() {
 	let version_counts = new WeakMap<Readable, { v2: number; v3: number }>();
 	function get_counts(store: Readable) {
@@ -30,7 +31,6 @@ function create_version_counter() {
 		},
 	};
 }
-let VERSION_COUNTER = create_version_counter();
 
 async function load_attrs(
 	location: Location<Readable>,
@@ -77,7 +77,9 @@ async function open_array_v2<Store extends Readable>(
 	let { path } = location.resolve(".zarray");
 	let meta = await location.store.get(path);
 	if (!meta) {
-		throw new NodeNotFoundError(path);
+		throw new NodeNotFoundError("v2 array", {
+			cause: new KeyError(path),
+		});
 	}
 	VERSION_COUNTER.increment(location.store, "v2");
 	return new Array(
@@ -94,7 +96,9 @@ async function open_group_v2<Store extends Readable>(
 	let { path } = location.resolve(".zgroup");
 	let meta = await location.store.get(path);
 	if (!meta) {
-		throw new NodeNotFoundError(path);
+		throw new NodeNotFoundError("v2 group", {
+			cause: new KeyError(path),
+		});
 	}
 	VERSION_COUNTER.increment(location.store, "v2");
 	return new Group(
@@ -110,7 +114,9 @@ async function _open_v3<Store extends Readable>(
 	let { store, path } = location.resolve("zarr.json");
 	let meta = await location.store.get(path);
 	if (!meta) {
-		throw new NodeNotFoundError(path);
+		throw new NodeNotFoundError("v3 array or group", {
+			cause: new KeyError(path),
+		});
 	}
 	let meta_doc: ArrayMetadata<DataType> | GroupMetadata = json_decode_object(
 		meta,
@@ -169,6 +175,11 @@ export function open<Store extends Readable>(
 	options: { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
+export async function open<Store extends Readable>(
+	location: Location<Store> | Store,
+	options: { kind?: "array" | "group" },
+): Promise<Array<DataType, Store> | Group<Store>>;
+
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
 ): Promise<Array<DataType, Store> | Group<Store>>;
@@ -181,8 +192,8 @@ export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
 	options: { kind?: "array" | "group" } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
-	const store = "store" in location ? location.store : location;
-	const version_max = VERSION_COUNTER.version_max(store);
+	let store = "store" in location ? location.store : location;
+	let version_max = VERSION_COUNTER.version_max(store);
 	// Use the open function for the version with the most successful opens.
 	// Note that here we use the dot syntax to access the open functions
 	// because this enables us to use vi.spyOn during testing.

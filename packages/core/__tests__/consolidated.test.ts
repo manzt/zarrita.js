@@ -3,16 +3,18 @@ import * as path from "node:path";
 import * as url from "node:url";
 
 import { FileSystemStore } from "@zarrita/storage";
-import { openConsolidated } from "../src/consolidated.js";
+import { withConsolidated } from "../src/consolidated.js";
+import { open } from "../src/open.js";
+import { Array as ZarrArray } from "../src/hierarchy.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-describe("openConsolidated", () => {
+describe("withConsolidated", () => {
 	it("loads consolidated metadata", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let h = await openConsolidated(new FileSystemStore(root));
+		let store = await withConsolidated(new FileSystemStore(root));
 		let map = new Map(
-			[...h.contents.values()].map((entry) => [entry.path, entry.kind]),
+			store.contents().map((x) => [x.path, x.kind]),
 		);
 		expect(map).toMatchInlineSnapshot(`
 			Map {
@@ -49,8 +51,14 @@ describe("openConsolidated", () => {
 
 	it("loads chunk data from underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let h = await openConsolidated(new FileSystemStore(root));
-		let arr = h.open("/3d.chunked.mixed.i2.C", { kind: "array" });
+		let store = await withConsolidated(new FileSystemStore(root));
+		let entry = store.contents().find((x) =>
+			x.path === "/3d.chunked.mixed.i2.C"
+		)!;
+		let grp = await open(store, { kind: "group" });
+		let arr = await open(grp.resolve(entry.path), { kind: entry.kind });
+		expect(arr).toBeInstanceOf(ZarrArray);
+		// @ts-expect-error - we know this is an array
 		expect(await arr.getChunk([0, 0, 0])).toMatchInlineSnapshot(`
 			{
 			  "data": Int16Array [
@@ -80,10 +88,10 @@ describe("openConsolidated", () => {
 
 	it("loads and navigates from root", async () => {
 		let path_root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let h = await openConsolidated(new FileSystemStore(path_root));
-		let grp = h.root();
+		let store = await withConsolidated(new FileSystemStore(path_root));
+		let grp = await open(store, { kind: "group" });
 		expect(grp.kind).toBe("group");
-		let arr = h.open(grp.resolve("1d.chunked.i2"), { kind: "array" });
+		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
 	});
 });
