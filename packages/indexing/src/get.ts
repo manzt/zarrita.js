@@ -8,7 +8,7 @@ import type {
 	Slice,
 } from "./types.js";
 
-import { _internal_get_array_context, KeyError } from "@zarrita/core";
+import { _internal_get_array_context } from "@zarrita/core";
 import { BasicIndexer } from "./indexer.js";
 import { create_queue } from "./util.js";
 
@@ -36,41 +36,25 @@ export async function get<
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
 > {
-	const context = _internal_get_array_context(arr);
-	const indexer = new BasicIndexer({
+	let context = _internal_get_array_context(arr);
+	let indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
 		chunk_shape: arr.chunks,
 	});
-	const out = setter.prepare(
+	let out = setter.prepare(
 		new context.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
 		indexer.shape,
 		context.get_strides(indexer.shape, opts.order),
 	);
 
-	const queue = opts.create_queue?.() ?? create_queue();
+	let queue = opts.create_queue?.() ?? create_queue();
 	for (const { chunk_coords, mapping } of indexer) {
-		queue.add(() =>
-			arr.getChunk(chunk_coords, opts.opts)
-				.then(({ data, shape, stride }) => {
-					const chunk = setter.prepare(data, shape, stride);
-					setter.set_from_chunk(out, chunk, mapping);
-				})
-				.catch((err) => {
-					// re-throw error if not a missing chunk
-					if (!(err instanceof KeyError)) throw err;
-					// KeyError, we need to fill the corresponding array
-					if (context.fill_value) {
-						setter.set_scalar(
-							out,
-							mapping
-								.map((m) => m.to)
-								.filter((s): s is Exclude<typeof s, null> => s !== null),
-							context.fill_value,
-						);
-					}
-				})
-		);
+		queue.add(async () => {
+			let { data, shape, stride } = await arr.getChunk(chunk_coords, opts.opts);
+			let chunk = setter.prepare(data, shape, stride);
+			setter.set_from_chunk(out, chunk, mapping);
+		});
 	}
 
 	await queue.onIdle();

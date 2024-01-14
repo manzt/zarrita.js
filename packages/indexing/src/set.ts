@@ -1,4 +1,4 @@
-import { _internal_get_array_context, KeyError } from "@zarrita/core";
+import { _internal_get_array_context } from "@zarrita/core";
 import type { Mutable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 
@@ -78,15 +78,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 				}
 			} else {
 				// partially replace the contents of this chunk
-				chunk_data = await arr.getChunk(chunk_coords)
-					.then(({ data }) => data)
-					.catch((err) => {
-						if (!(err instanceof KeyError)) throw err;
-						const empty = new context.TypedArray(chunk_size);
-						// @ts-expect-error
-						if (arr.fill_value) empty.fill(arr.fill_value);
-						return empty;
-					});
+				chunk_data = await arr.getChunk(chunk_coords).then(({ data }) => data);
 
 				const chunk = setter.prepare(
 					chunk_data,

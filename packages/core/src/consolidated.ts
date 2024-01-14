@@ -1,5 +1,6 @@
 import { type AbsolutePath, type Readable } from "@zarrita/storage";
 import { json_decode_object, json_encode_object } from "./util.js";
+import { KeyError, NodeNotFoundError } from "./errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -22,7 +23,11 @@ async function get_consolidated_metadata(
 	store: Readable,
 ): Promise<ConsolidatedMetadata> {
 	let bytes = await store.get("/.zmetadata");
-	if (!bytes) throw new Error("No consolidated metadata found.");
+	if (!bytes) {
+		throw new NodeNotFoundError("v2 consolidated metadata", {
+			cause: new KeyError("/.zmetadata"),
+		});
+	}
 	let meta: ConsolidatedMetadata = json_decode_object(bytes);
 	if (meta.zarr_consolidated_format !== 1) {
 		throw new Error("Unsupported consolidated format.");
