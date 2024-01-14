@@ -113,8 +113,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       unzipit:
-        specifier: ^1.3.6
-        version: 1.3.6
+        specifier: ^1.4.3
+        version: 1.4.3
 
   packages/typedarray: {}
 
@@ -3058,8 +3058,8 @@ packages:
     engines: {node: '>= 4.0.0'}
     dev: true
 
-  /unzipit@1.3.6:
-    resolution: {integrity: sha512-0NdsMz2+2Vcvw+xRT1ag24Piq6YWHdX1DrcRiUoL2JYkwCx6NBbp8I09C/F2Mb2bpPlxtq25scOXRqXPARsajw==}
+  /unzipit@1.4.3:
+    resolution: {integrity: sha512-gsq2PdJIWWGhx5kcdWStvNWit9FVdTewm4SEG7gFskWs+XCVaULt9+BwuoBtJiRE8eo3L1IPAOrbByNLtLtIlg==}
     engines: {node: '>=12'}
     dependencies:
       uzip-module: 1.0.3
