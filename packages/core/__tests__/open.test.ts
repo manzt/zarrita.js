@@ -467,7 +467,7 @@ describe("v2", () => {
 			open.v2(store.resolve("/not/a/group"), { kind: "group" });
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			'"Node not found: v2 group"',
+			`[NodeNotFoundError: Node not found: v2 group]`,
 		);
 	});
 
@@ -724,7 +724,7 @@ describe("v3", () => {
 			open.v3(store.resolve("/not/a/group"), { kind: "group" });
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			'"Node not found: v3 array or group"',
+			`[NodeNotFoundError: Node not found: v3 array or group]`,
 		);
 	});
 
