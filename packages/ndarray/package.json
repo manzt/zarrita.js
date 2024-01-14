@@ -6,8 +6,8 @@
 	"sideEffects": false,
 	"exports": {
 		".": {
-			"types": "./index.js",
-			"import": "./index.js"
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
 		}
 	},
 	"dependencies": {
