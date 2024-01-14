@@ -153,7 +153,6 @@ export class ByteStringArray {
 export class UnicodeStringArray {
 	#data: Int32Array;
 	chars: number;
-	#encode_buffer: Int32Array;
 
 	constructor(chars: number, size: number);
 	constructor(
@@ -185,7 +184,6 @@ export class UnicodeStringArray {
 				}
 			})());
 		}
-		this.#encode_buffer = new Int32Array(chars);
 	}
 
 	get BYTES_PER_ELEMENT() {

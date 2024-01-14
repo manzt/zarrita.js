@@ -1,15 +1,21 @@
 {
 	"compilerOptions": {
-		"module": "esnext",
-		"target": "esnext",
-		"moduleResolution": "nodenext",
-		"strict": true,
-		"declaration": true,
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "NodeNext",
+		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"verbatimModuleSyntax": true,
-		"skipLibCheck": true,
+		"isolatedModules": true,
+		"declaration": true,
 		"allowJs": true,
-		"checkJs": true
+		"checkJs": true,
+		/* Linting */
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true
 	},
 	"files": [],
 	"references": [

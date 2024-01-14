@@ -2,7 +2,6 @@ import type {
 	Chunk,
 	CodecMetadata,
 	DataType,
-	TypedArray,
 	TypedArrayConstructor,
 } from "../metadata.js";
 import {

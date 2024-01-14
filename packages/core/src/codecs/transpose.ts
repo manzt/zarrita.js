@@ -1,5 +1,4 @@
 import type {
-	ArrayMetadata,
 	Chunk,
 	DataType,
 	Scalar,
