@@ -3,9 +3,10 @@ import * as path from "node:path";
 import * as url from "node:url";
 
 import { FileSystemStore } from "@zarrita/storage";
-import { withConsolidated } from "../src/consolidated.js";
+import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
 import { open } from "../src/open.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";
+import { NodeNotFoundError } from "../src/errors.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -93,5 +94,34 @@ describe("withConsolidated", () => {
 		expect(grp.kind).toBe("group");
 		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
+	});
+
+	it("throws if consolidated metadata is missing", async () => {
+		let root = path.join(
+			__dirname,
+			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
+		);
+		let try_open = () => withConsolidated(new FileSystemStore(root));
+		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
+			'"Node not found: v2 consolidated metadata"',
+		);
+	});
+});
+
+describe("tryWithConsolidated", () => {
+	it("creates Listable from consolidated store", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await tryWithConsolidated(new FileSystemStore(root));
+		expect(store).toHaveProperty("contents");
+	});
+
+	it("falls back to original store if missing consolidated metadata", async () => {
+		let root = path.join(
+			__dirname,
+			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
+		);
+		let store = await tryWithConsolidated(new FileSystemStore(root));
+		expect(store).toBeInstanceOf(FileSystemStore);
 	});
 });

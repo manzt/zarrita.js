@@ -55,20 +55,33 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 	return "zarr_format" in meta && meta.zarr_format === 3;
 }
 
+/**
+ * Open a consolidated store.
+ *
+ * This will open a store with Zarr v2 consolidated metadata (`.zmetadata`).
+ * @see {@link https://zarr.readthedocs.io/en/stable/spec/v2.html#consolidated-metadata}
+ *
+ * @param store The store to open.
+ * @returns A listable store.
+ *
+ * @example
+ * ```js
+ * let store = await withConsolidated(
+ *   new zarr.FetchStore("https://my-bucket.s3.amazonaws.com");
+ * );
+ * store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
+ * let grp = zarr.open(store); // Open the root group.
+ * let foo = zarr.open(grp.resolve(contents[1].path)); // Open the foo array
+ * ```
+ */
 export async function withConsolidated<Store extends Readable>(
 	store: Store,
 ): Promise<Listable<Store>> {
-	let known_meta: Record<AbsolutePath, Metadata> =
-		await get_consolidated_metadata(store)
-			.then((meta) => {
-				let new_meta: Record<AbsolutePath, Metadata> = {};
-				for (let [key, value] of Object.entries(meta.metadata)) {
-					new_meta[`/${key}`] = value;
-				}
-				return new_meta;
-			})
-			.catch(() => ({}));
-
+	let v2_meta = await get_consolidated_metadata(store);
+	let known_meta: Record<AbsolutePath, Metadata> = {};
+	for (let [key, value] of Object.entries(v2_meta.metadata)) {
+		known_meta[`/${key}`] = value;
+	}
 	return {
 		async get(
 			...args: Parameters<Store["get"]>
@@ -99,4 +112,27 @@ export async function withConsolidated<Store extends Readable>(
 			return contents;
 		},
 	};
+}
+
+/**
+ * Try to open a consolidated store, but fall back to the original store if the
+ * consolidated metadata is missing.
+ *
+ * Provides a convenient way to open a store that may or may not have consolidated,
+ * returning a consistent interface for both cases. Ideal for usage senarios with
+ * known access paths, since store with consolidated metadata do not incur
+ * additional network requests when accessing underlying groups and arrays.
+ *
+ * @param store The store to open.
+ * @returns A listable store.
+ */
+export async function tryWithConsolidated<Store extends Readable>(
+	store: Store,
+): Promise<Listable<Store> | Store> {
+	return withConsolidated(store).catch((e: unknown) => {
+		if (e instanceof NodeNotFoundError) {
+			return store;
+		}
+		throw e;
+	});
 }
