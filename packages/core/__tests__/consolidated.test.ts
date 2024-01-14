@@ -94,6 +94,16 @@ describe("withConsolidated", () => {
 		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
 	});
+
+	it("throws if consolidated metadata is missing", async () => {
+		let root = path.join(
+			__dirname,
+			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
+		);
+		await expect(() => withConsolidated(new FileSystemStore(root)))
+			.rejects
+			.toThrowErrorMatchingInlineSnapshot('"Node not found: v2 consolidated metadata"');
+	});
 });
 
 describe("tryWithConsolidated", () => {
