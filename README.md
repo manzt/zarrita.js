@@ -120,4 +120,4 @@ python3 -m http.server .
 # navigate to localhost:8000/demo.html
 ```
 
-You can edit the contents of `index.html` and refresh the page.
+You can edit the contents of `demo.html` and refresh the page.
