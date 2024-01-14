@@ -19,7 +19,7 @@
 	},
 	"dependencies": {
 		"reference-spec-reader": "^0.2.0",
-		"unzipit": "^1.3.6"
+		"unzipit": "^1.4.3"
 	},
 	"publishConfig": {
 		"main": "dist/src/index.js",
