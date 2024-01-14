@@ -90,7 +90,7 @@ describe("FetchStore", () => {
 
 	it("returns undefined for missing file", async () => {
 		let store = new FetchStore(href);
-		expect(await store.get("/missing.json")).toBeUndefined();
+		expect(await store.get("/some/random/file/missing.duh")).toBeUndefined();
 	});
 
 	it("forwards request options to fetch", async () => {
@@ -127,7 +127,7 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let bytes = await store.getRange("/zarr.json", { suffixLength: 50 });
 		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
-			'"utes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"group\\"}"',
+			`"utes": {}, "zarr_format": 3, "node_type": "group"}"`,
 		);
 	});
 
@@ -135,7 +135,7 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let bytes = await store.getRange("/zarr.json", { offset: 4, length: 50 });
 		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
-			'"tributes\\": {}, \\"zarr_format\\": 3, \\"node_type\\": \\"gro"',
+			`"tributes": {}, "zarr_format": 3, "node_type": "gro"`,
 		);
 	});
 });
