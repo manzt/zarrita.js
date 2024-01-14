@@ -100,15 +100,15 @@ describe("tryWithConsolidated", () => {
 	it("creates Listable from consolidated store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let store = await tryWithConsolidated(new FileSystemStore(root));
-		expect("contents" in store).toBe(true);
+		expect(store).toHaveProperty("contents");
 	});
 
 	it("falls back to original store if missing consolidated metadata", async () => {
 		let root = path.join(
 			__dirname,
-			"../../../fixtures/v2/data.zarr/3d.chunked.mixed.i2.C",
+			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
 		);
 		let store = await tryWithConsolidated(new FileSystemStore(root));
-		expect("contents" in store).toBe(false);
+		expect(store).toBeInstanceOf(FileSystemStore);
 	});
 });

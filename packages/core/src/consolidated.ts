@@ -77,17 +77,11 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 export async function withConsolidated<Store extends Readable>(
 	store: Store,
 ): Promise<Listable<Store>> {
-	let known_meta: Record<AbsolutePath, Metadata> =
-		await get_consolidated_metadata(store)
-			.then((meta) => {
-				let new_meta: Record<AbsolutePath, Metadata> = {};
-				for (let [key, value] of Object.entries(meta.metadata)) {
-					new_meta[`/${key}`] = value;
-				}
-				return new_meta;
-			})
-			.catch(() => ({}));
-
+	let v2_meta = await get_consolidated_metadata(store);
+	let known_meta: Record<AbsolutePath, Metadata> = {};
+	for (let [key, value] of Object.entries(v2_meta.metadata)) {
+		known_meta[`/${key}`] = value;
+	}
 	return {
 		async get(
 			...args: Parameters<Store["get"]>
