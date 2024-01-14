@@ -117,7 +117,7 @@ browser, run `pnpm build` and start a web-server in the root of the repository:
 
 ```sh
 python3 -m http.server .
-# navigate to localhost:8000
+# navigate to localhost:8000/demo.html
 ```
 
-You can edit the contents of `index.html` and refresh the page.
+You can edit the contents of `demo.html` and refresh the page.
