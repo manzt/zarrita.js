@@ -1,6 +1,6 @@
 export class NodeNotFoundError extends Error {
 	constructor(context: string, options: { cause?: Error } = {}) {
-		super(`Node not found: ${context}`);
+		super(`Node not found: ${context}`, options);
 		this.name = "NodeNotFoundError";
 	}
 }
