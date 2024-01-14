@@ -1,5 +1,37 @@
 # @zarrita/indexing
 
+## 0.1.0-next.7
+
+### Minor Changes
+
+- feat: Add `withConsolidated` store utility ([#119](https://github.com/manzt/zarrita.js/pull/119))
+
+  **BREAKING**: Replaces [`openConsolidated`](https://github.com/manzt/zarrita.js/pull/91)
+  to provide a consistent interface for accessing consolidated and non-consolidated stores.
+
+  ```javascript
+  import * as zarr from "zarrita";
+
+  // non-consolidated
+  let store = new zarr.FetchStore("https://localhost:8080/data.zarr");
+  let grp = await zarr.open(store); // network request for .zgroup/.zattrs
+  let foo = await zarr.open(grp.resolve("/foo"), { kind: array }); // network request for .zarray/.zattrs
+
+  // consolidated
+  let store = new zarr.FetchStore("https://localhost:8080/data.zarr");
+  let consolidatedStore = await zarr.withConsolidated(store); // opens ./zmetadata
+  let contents = consolidatedStore.contents(); // [ {path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
+  let grp = await zarr.open(consolidatedStore); // no network request
+  let foo = await zarr.open(grp.resolve(contents[1].path), {
+    kind: contents[1].kind,
+  }); // no network request
+  ```
+
+### Patch Changes
+
+- Updated dependencies [[`191d95c77d2c7902344cd0175ae0044f740d19ba`](https://github.com/manzt/zarrita.js/commit/191d95c77d2c7902344cd0175ae0044f740d19ba), [`4d177d825f7bc241e0906a1b2890cad93f22d8a6`](https://github.com/manzt/zarrita.js/commit/4d177d825f7bc241e0906a1b2890cad93f22d8a6)]:
+  - @zarrita/core@0.1.0-next.5
+
 ## 0.1.0-next.6
 
 ### Patch Changes
