@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as url from "node:url";
 
 import { FileSystemStore } from "@zarrita/storage";
-import { withConsolidated } from "../src/consolidated.js";
+import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
 import { open } from "../src/open.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";
 
@@ -93,5 +93,22 @@ describe("withConsolidated", () => {
 		expect(grp.kind).toBe("group");
 		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
 		expect(arr.kind).toBe("array");
+	});
+});
+
+describe("tryWithConsolidated", () => {
+	it("creates Listable from consolidated store", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await tryWithConsolidated(new FileSystemStore(root));
+		expect("contents" in store).toBe(true);
+	});
+
+	it("falls back to original store if missing consolidated metadata", async () => {
+		let root = path.join(
+			__dirname,
+			"../../../fixtures/v2/data.zarr/3d.chunked.mixed.i2.C",
+		);
+		let store = await tryWithConsolidated(new FileSystemStore(root));
+		expect("contents" in store).toBe(false);
 	});
 });
