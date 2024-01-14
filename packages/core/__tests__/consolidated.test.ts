@@ -6,6 +6,7 @@ import { FileSystemStore } from "@zarrita/storage";
 import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
 import { open } from "../src/open.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";
+import { NodeNotFoundError } from "../src/errors.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -100,9 +101,11 @@ describe("withConsolidated", () => {
 			__dirname,
 			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
 		);
-		await expect(() => withConsolidated(new FileSystemStore(root)))
-			.rejects
-			.toThrowErrorMatchingInlineSnapshot('"Node not found: v2 consolidated metadata"');
+		let try_open = () => withConsolidated(new FileSystemStore(root));
+		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
+			'"Node not found: v2 consolidated metadata"',
+		);
 	});
 });
 
