@@ -1,5 +1,52 @@
 # @zarrita/core
 
+## 0.1.0-next.5
+
+### Minor Changes
+
+- feat: Add `tryWithConsolidated` store helper ([#141](https://github.com/manzt/zarrita.js/pull/141))
+
+  Provides a convenient way to open a store that may or may not have consolidated
+  metadata. Ideal for usage senarios with known access paths, since store with
+  consolidated metadata do not incur additional network requests when accessing
+  underlying groups and arrays.
+
+  ```js
+  import * as zarr from "zarrita";
+
+  let store = await zarr.tryWithConsolidated(
+    new zarr.FetchStore("https://localhost:8080/data.zarr");
+  );
+
+  // The following do not read from the store
+  // (make network requests) if it is consolidated.
+  let grp = await zarr.open(store, { kind: "group" });
+  let foo = await zarr.open(grp.resolve("foo"), { kind: "array" });
+  ```
+
+- feat: Add `withConsolidated` store utility ([#119](https://github.com/manzt/zarrita.js/pull/119))
+
+  **BREAKING**: Replaces [`openConsolidated`](https://github.com/manzt/zarrita.js/pull/91)
+  to provide a consistent interface for accessing consolidated and non-consolidated stores.
+
+  ```javascript
+  import * as zarr from "zarrita";
+
+  // non-consolidated
+  let store = new zarr.FetchStore("https://localhost:8080/data.zarr");
+  let grp = await zarr.open(store); // network request for .zgroup/.zattrs
+  let foo = await zarr.open(grp.resolve("/foo"), { kind: array }); // network request for .zarray/.zattrs
+
+  // consolidated
+  let store = new zarr.FetchStore("https://localhost:8080/data.zarr");
+  let consolidatedStore = await zarr.withConsolidated(store); // opens ./zmetadata
+  let contents = consolidatedStore.contents(); // [ {path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
+  let grp = await zarr.open(consolidatedStore); // no network request
+  let foo = await zarr.open(grp.resolve(contents[1].path), {
+    kind: contents[1].kind,
+  }); // no network request
+  ```
+
 ## 0.1.0-next.4
 
 ### Patch Changes
