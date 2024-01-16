@@ -87,3 +87,48 @@ const group = await zarr.create(store, {
 });
 group; // zarr.Group
 ```
+
+## Open a Consolidated Store
+
+Zarr v2 allows
+[consolidating metadata](https://zarr.readthedocs.io/en/stable/tutorial.html#consolidating-metadata)
+for an entire hierarchy at the store root (under `/.zmetadata`). Metadata
+consolidation is particularly useful when interacting with remote stores, where
+each metadata fetch incurs a network request and hence, latency.
+
+The `withConsolidated` helper wraps an existing [store](/packages/storage),
+proxying metadata requests with the consolidated metadata, thereby minimizing
+network requests.
+
+```js{3}
+import * as zarr from "zarrita";
+
+let store = zarr.withConsolidated(
+	new zarr.FetchStore("https://localhost:8080/data.zarr")
+);
+
+// The following do not incur network requests for metadata
+let root = await zarr.open(store, { kind: "group" });
+let foo = await zarr.open(root.resolve("foo"), { kind: "array" });
+```
+
+The store returned from `withConsolidated` is **readonly** and adds
+`.contents()` list the known contents of the hierarchy:
+
+```js
+store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
+```
+
+::: info
+
+The `withConsolidated` helper errors out if v2 consolidated metadata is absent.
+Use `tryWithConsolidated` for uncertain cases; it leverages consolidated
+metadata if available.
+
+```js
+let store = zarr.tryWithConsolidated(
+	new zarr.FetchStore("https://localhost:8080/data.zarr"),
+);
+```
+
+:::
