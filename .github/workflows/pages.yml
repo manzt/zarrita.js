@@ -28,7 +28,7 @@ jobs:
           version: 8
       - run: |
           pnpm install
-          pnpm build --base /zarrita.js/
+          pnpm build
         working-directory: docs
       - uses: actions/upload-pages-artifact@v3
         with:
