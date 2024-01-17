@@ -1,4 +1,4 @@
-import { type AbsolutePath, type Readable } from "@zarrita/storage";
+import type { AbsolutePath, Readable } from "@zarrita/storage";
 import { json_decode_object, json_encode_object } from "./util.js";
 import { KeyError, NodeNotFoundError } from "./errors.js";
 import type {
