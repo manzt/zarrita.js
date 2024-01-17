@@ -8,7 +8,7 @@ titleTemplate: A JavaScript toolkit for Zarr
 head:
   - - link
     - rel: canonical
-      href: https://manzt.github.io/zarrita.js/
+      href: https://zarrita.dev
   - - meta
     - name: title
       content: zarrita.js
@@ -38,7 +38,7 @@ head:
       content: article
   - - meta
     - property: og:url
-      content: https://manzt.github.io/zarrita.js
+      content: https://zarrita.dev
 
 hero:
   name: zarrita.js

@@ -82,8 +82,10 @@ argument to `FetchStore.get`. For example, additional headers or an
 
 ```javascript
 const controller = new AbortController();
-const fetchOptions = { headers: { foo: "bar" }, signal: controller.signal };
-const bytes = await store.get("/zarr.json", fetchOptions);
+const bytes = await store.get("/zarr.json", {
+	headers: { foo: "bar" },
+	signal: controller.signal,
+});
 ```
 
 These options override the defaults for the store, except headers are merged
