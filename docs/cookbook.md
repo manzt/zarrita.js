@@ -119,7 +119,7 @@ The store returned from `withConsolidated` is **readonly** and adds
 store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
 ```
 
-::: info
+::: tip
 
 The `withConsolidated` helper errors out if v2 consolidated metadata is absent.
 Use `tryWithConsolidated` for uncertain cases; it leverages consolidated
