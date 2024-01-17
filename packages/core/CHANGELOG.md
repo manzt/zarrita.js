@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.6
+
+### Patch Changes
+
+- fix: Use blanket storage export to avoid including @zarrita/storage in bundle ([`dad2e4e40509f53ffd25ff44f6454776fd52d723`](https://github.com/manzt/zarrita.js/commit/dad2e4e40509f53ffd25ff44f6454776fd52d723))
+
 ## 0.1.0-next.5
 
 ### Minor Changes
