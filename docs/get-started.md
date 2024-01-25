@@ -79,11 +79,11 @@ automatically loads the other dependencies.
       "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@next",
       "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@next",
       "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@next/dist/src/fetch.js",
-      "numcodecs/blosc": "https://unpkg.com/numcodecs@0.2/blosc",
-      "numcodecs/lz4": "https://unpkg.com/numcodecs@0.2/lz4",
-      "numcodecs/zlib": "https://unpkg.com/numcodecs@0.2/zlib",
-      "numcodecs/zstd": "https://unpkg.com/numcodecs@0.2/zstd",
-      "numcodecs/gzip": "https://unpkg.com/numcodecs@0.2/gzip"
+      "numcodecs/blosc": "https://unpkg.com/numcodecs@0.3/blosc",
+      "numcodecs/lz4": "https://unpkg.com/numcodecs@0.3/lz4",
+      "numcodecs/zlib": "https://unpkg.com/numcodecs@0.3/zlib",
+      "numcodecs/zstd": "https://unpkg.com/numcodecs@0.3/zstd",
+      "numcodecs/gzip": "https://unpkg.com/numcodecs@0.3/gzip"
     }
   }
 </script>
