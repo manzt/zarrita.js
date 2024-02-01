@@ -15,6 +15,6 @@
 		"dprint": "^0.45.0",
 		"publint": "^0.2.2",
 		"typescript": "^5.3.3",
-		"vitest": "^1.2.0"
+		"vitest": "^1.2.2"
 	}
 }
