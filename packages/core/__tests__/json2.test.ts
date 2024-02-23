@@ -113,12 +113,12 @@ describe("JsonCodec", () => {
 	});
 	test("supports sort_keys", () => {
 		const chunk = {
-			data: [{"1": 1, "3": 3, "2": 2}],
+			data: [{ "1": 1, "3": 3, "2": 2 }],
 			shape: [1],
 			stride: [1],
 		};
 		const jsonCodec = new JsonCodec({ sort_keys: true });
-		const decodedChunk = jsonCodec.decode(jsonCodec.encode(chunk))
+		const decodedChunk = jsonCodec.decode(jsonCodec.encode(chunk));
 		expect(Object.keys(decodedChunk.data[0])).toEqual(["1", "2", "3"]);
 	});
 });
