@@ -159,7 +159,6 @@ export class JsonCodec {
 				return "\\u" + sub_str;
 			});
 		}
-
 		return new TextEncoder().encode(json_str);
 	}
 
