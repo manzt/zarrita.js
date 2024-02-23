@@ -32,7 +32,7 @@ function create_default_registry(): Map<
 		.set("bytes", () => BytesCodec)
 		.set("crc32c", () => Crc32cCodec)
 		.set("vlen-utf8", () => VLenUTF8)
-		.set("json2", JsonCodec);
+		.set("json2", () => JsonCodec);
 }
 
 export const registry = create_default_registry();
