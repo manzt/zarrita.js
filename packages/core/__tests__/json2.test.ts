@@ -131,7 +131,27 @@ describe("JsonCodec", () => {
 		const encodedChunk = jsonCodec.encode(chunk);
 		const decodedChunk = jsonCodec.decode(encodedChunk);
 		expect(decodedChunk.data).toEqual(["£"]);
-		expect(Array.from(encodedChunk)).toEqual([91,34,92,117,48,48,97,51,34,44,34,124,79,34,44,91,49,93,93])
+		expect(Array.from(encodedChunk)).toEqual([
+			91,
+			34,
+			92,
+			117,
+			48,
+			48,
+			97,
+			51,
+			34,
+			44,
+			34,
+			124,
+			79,
+			34,
+			44,
+			91,
+			49,
+			93,
+			93,
+		]);
 	});
 	test("supports !ensure_ascii", () => {
 		const chunk = {
@@ -143,6 +163,22 @@ describe("JsonCodec", () => {
 		const encodedChunk = jsonCodec.encode(chunk);
 		const decodedChunk = jsonCodec.decode(encodedChunk);
 		expect(decodedChunk.data).toEqual(["£"]);
-		expect(Array.from(encodedChunk)).toEqual([91,34,194,163,34,44,34,124,79,34,44,91,49,93,93]);
+		expect(Array.from(encodedChunk)).toEqual([
+			91,
+			34,
+			194,
+			163,
+			34,
+			44,
+			34,
+			124,
+			79,
+			34,
+			44,
+			91,
+			49,
+			93,
+			93,
+		]);
 	});
 });
