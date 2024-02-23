@@ -119,7 +119,7 @@ export class JsonCodec {
 			// By default, for JSON.stringify,
 			// a TypeError will be thrown if one attempts to encode an object with circular references
 			throw new Error(
-				"JsonCodec does not yet support skipping the check for circiular references during encoding.",
+				"JsonCodec does not yet support skipping the check for circular references during encoding.",
 			);
 		}
 		if (!allow_nan) {
@@ -165,8 +165,9 @@ export class JsonCodec {
 	decode(bytes: Uint8Array): Chunk<ObjectType> {
 		const { strict } = this.#decoder_config;
 		if (!strict) {
+			// (i.e., allowing control characters inside strings)
 			throw new Error(
-				"JsonCodec does not yet support non-strict decoding (i.e., allowing control characters inside strings).",
+				"JsonCodec does not yet support non-strict decoding.",
 			);
 		}
 		const items = json_decode_object(bytes);
