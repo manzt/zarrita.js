@@ -103,7 +103,7 @@ network requests.
 ```js{3}
 import * as zarr from "zarrita";
 
-let store = zarr.withConsolidated(
+let store = await zarr.withConsolidated(
 	new zarr.FetchStore("https://localhost:8080/data.zarr")
 );
 
@@ -126,7 +126,7 @@ Use `tryWithConsolidated` for uncertain cases; it leverages consolidated
 metadata if available.
 
 ```js
-let store = zarr.tryWithConsolidated(
+let store = await zarr.tryWithConsolidated(
 	new zarr.FetchStore("https://localhost:8080/data.zarr"),
 );
 ```
