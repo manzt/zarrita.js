@@ -5,6 +5,7 @@ import { TransposeCodec } from "./codecs/transpose.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
+import { JsonCodec } from "./codecs/json2.js";
 
 type ChunkMetadata<D extends DataType> = {
 	data_type: D;
@@ -30,7 +31,8 @@ function create_default_registry(): Map<
 		.set("transpose", () => TransposeCodec)
 		.set("bytes", () => BytesCodec)
 		.set("crc32c", () => Crc32cCodec)
-		.set("vlen-utf8", () => VLenUTF8);
+		.set("vlen-utf8", () => VLenUTF8)
+		.set("json2", () => JsonCodec);
 }
 
 export const registry = create_default_registry();
