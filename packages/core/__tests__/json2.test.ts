@@ -65,4 +65,60 @@ describe("JsonCodec", () => {
 		const encodedResult = jsonCodec.encode(chunk);
 		expect(encodedResult).toStrictEqual(encodedBytes);
 	});
+
+	test("throws on decode when !strict", () => {
+		const encodedStr = `["A","B","C","|O",[3]]`;
+		const encodedBytes = new TextEncoder().encode(encodedStr);
+		const jsonCodec = new JsonCodec({ strict: false });
+		expect(() => jsonCodec.decode(encodedBytes)).toThrowError();
+	});
+
+	test("throws on encode with non-supported encoding", () => {
+		const chunk = {
+			data: ["A", "B", "C"],
+			shape: [3],
+			stride: [1],
+		};
+		const jsonCodec = new JsonCodec({ check_circular: false });
+		expect(() => jsonCodec.encode(chunk)).toThrowError();
+	});
+	test("throws on encode with !check_circular", () => {
+		const chunk = {
+			data: ["A", "B", "C"],
+			shape: [3],
+			stride: [1],
+		};
+		const jsonCodec = new JsonCodec({ check_circular: false });
+		expect(() => jsonCodec.encode(chunk)).toThrowError();
+	});
+	test("throws on encode with check_circular and circular reference", () => {
+		let data: any[] = ["A", null];
+		data[1] = data;
+		const chunk = {
+			data,
+			shape: [2],
+			stride: [1],
+		};
+		const jsonCodec = new JsonCodec({ check_circular: true });
+		expect(() => jsonCodec.encode(chunk)).toThrowError();
+	});
+	test("supports !allow_nan", () => {
+		const chunk = {
+			data: [1, 2, NaN],
+			shape: [3],
+			stride: [1],
+		};
+		const jsonCodec = new JsonCodec({ allow_nan: false });
+		expect(() => jsonCodec.encode(chunk)).toThrowError();
+	});
+	test("supports sort_keys", () => {
+		const chunk = {
+			data: [{"1": 1, "3": 3, "2": 2}],
+			shape: [1],
+			stride: [1],
+		};
+		const jsonCodec = new JsonCodec({ sort_keys: true });
+		const decodedChunk = jsonCodec.decode(jsonCodec.encode(chunk))
+		expect(Object.keys(decodedChunk.data[0])).toEqual(["1", "2", "3"]);
+	});
 });
