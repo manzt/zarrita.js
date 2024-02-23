@@ -18,8 +18,8 @@ import type {
 	TypedArrayConstructor,
 } from "./metadata.js";
 
-export function json_encode_object(o: Record<string, any>): Uint8Array {
-	const str = JSON.stringify(o, null, 2);
+export function json_encode_object(o: Record<string, any>, space: number = 2): Uint8Array {
+	const str = JSON.stringify(o, null, space);
 	return new TextEncoder().encode(str);
 }
 
