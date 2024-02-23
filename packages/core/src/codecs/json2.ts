@@ -66,9 +66,9 @@ export class JsonCodec {
 	decode(bytes: Uint8Array): Chunk<ObjectType> {
 		const items = json_decode_object(bytes);
 		const shape = items.pop();
-		const dtype = items.pop();
+		items.pop(); // Pop off dtype (unused)
 		if (!shape) {
-			// O-d case?
+			// O-d case
 			throw new Error("0D not implemented for JsonCodec.");
 		} else {
 			const stride = get_strides(shape, "C");
