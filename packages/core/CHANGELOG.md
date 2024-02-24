@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.7
+
+### Patch Changes
+
+- Add json2 codec. ([#153](https://github.com/manzt/zarrita.js/pull/153))
+
 ## 0.1.0-next.6
 
 ### Patch Changes

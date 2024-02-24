@@ -1,5 +1,13 @@
 # zarrita
 
+## 0.4.0-next.9
+
+### Patch Changes
+
+- Updated dependencies [[`b90f16b77bc665d21f572b0790d1a0070d709f41`](https://github.com/manzt/zarrita.js/commit/b90f16b77bc665d21f572b0790d1a0070d709f41)]:
+  - @zarrita/core@0.1.0-next.7
+  - @zarrita/indexing@0.1.0-next.9
+
 ## 0.4.0-next.8
 
 ### Patch Changes
