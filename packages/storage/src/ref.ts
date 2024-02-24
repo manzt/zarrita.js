@@ -1,5 +1,5 @@
 import { parse } from "reference-spec-reader";
-import { fetch_range, strip_prefix, uri2href } from "./util.js";
+import { fetch_range, merge_init, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
 
 /**
@@ -36,12 +36,15 @@ type ReferenceEntry = string | [url: string | null] | [
 
 interface ReferenceStoreOptions {
 	target?: string | URL;
+	preferTarget?: boolean;
+	overrides?: RequestInit;
 }
 
 /** @experimental */
 class ReferenceStore implements AsyncReadable<RequestInit> {
 	#refs: Map<string, ReferenceEntry>;
 	#opts: ReferenceStoreOptions;
+	#overrides: RequestInit;
 
 	constructor(
 		refs: Map<string, ReferenceEntry>,
@@ -49,6 +52,7 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	) {
 		this.#refs = refs;
 		this.#opts = opts;
+		this.#overrides = opts.overrides || {};
 	}
 
 	async get(
@@ -68,11 +72,22 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 
 		let [urlOrNull, offset, size] = ref;
 		let url = urlOrNull ?? this.#opts.target;
+		if (this.#opts.target && this.#opts.preferTarget) {
+			// If preferTarget is true, then the target URL
+			// should take precedence regardless of whether
+			// a URL was present in the reference spec.
+			url = this.#opts.target;
+		}
 		if (!url) {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
 
-		let res = await fetch_range(uri2href(url), offset, size, opts);
+		let res = await fetch_range(
+			uri2href(url),
+			offset,
+			size,
+			merge_init(this.#overrides, opts),
+		);
 
 		if (res.status === 200 || res.status === 206) {
 			return new Uint8Array(await res.arrayBuffer());
