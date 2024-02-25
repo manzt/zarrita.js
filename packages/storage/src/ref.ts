@@ -36,7 +36,6 @@ type ReferenceEntry = string | [url: string | null] | [
 
 interface ReferenceStoreOptions {
 	target?: string | URL;
-	preferTarget?: boolean;
 	overrides?: RequestInit;
 }
 
@@ -72,12 +71,6 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 
 		let [urlOrNull, offset, size] = ref;
 		let url = urlOrNull ?? this.#opts.target;
-		if (this.#opts.target && this.#opts.preferTarget) {
-			// If preferTarget is true, then the target URL
-			// should take precedence regardless of whether
-			// a URL was present in the reference spec.
-			url = this.#opts.target;
-		}
 		if (!url) {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
