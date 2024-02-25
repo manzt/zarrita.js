@@ -1,5 +1,5 @@
 import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
-import { fetch_range } from "./util.js";
+import { fetch_range, merge_init } from "./util.js";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;
@@ -72,14 +72,7 @@ class FetchStore implements AsyncReadable<RequestInit> {
 	}
 
 	#merge_init(overrides: RequestInit) {
-		return {
-			...this.#overrides,
-			...overrides,
-			headers: {
-				...this.#overrides.headers,
-				...overrides.headers,
-			},
-		};
+		return merge_init(this.#overrides, overrides);
 	}
 
 	async get(

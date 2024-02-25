@@ -1,5 +1,5 @@
 import { parse } from "reference-spec-reader";
-import { fetch_range, strip_prefix, uri2href } from "./util.js";
+import { fetch_range, merge_init, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
 
 /**
@@ -36,12 +36,14 @@ type ReferenceEntry = string | [url: string | null] | [
 
 interface ReferenceStoreOptions {
 	target?: string | URL;
+	overrides?: RequestInit;
 }
 
 /** @experimental */
 class ReferenceStore implements AsyncReadable<RequestInit> {
 	#refs: Map<string, ReferenceEntry>;
 	#opts: ReferenceStoreOptions;
+	#overrides: RequestInit;
 
 	constructor(
 		refs: Map<string, ReferenceEntry>,
@@ -49,6 +51,7 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	) {
 		this.#refs = refs;
 		this.#opts = opts;
+		this.#overrides = opts.overrides || {};
 	}
 
 	async get(
@@ -72,7 +75,12 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
 
-		let res = await fetch_range(uri2href(url), offset, size, opts);
+		let res = await fetch_range(
+			uri2href(url),
+			offset,
+			size,
+			merge_init(this.#overrides, opts),
+		);
 
 		if (res.status === 200 || res.status === 206) {
 			return new Uint8Array(await res.arrayBuffer());
@@ -89,7 +97,7 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	}
 
 	static async fromUrl(url: string | URL, opts?: ReferenceStoreOptions) {
-		let spec = await fetch(url).then((res) => res.json());
+		let spec = await fetch(url, opts?.overrides).then((res) => res.json());
 		return ReferenceStore.fromSpec(spec, opts);
 	}
 }

@@ -40,3 +40,18 @@ export function fetch_range(
 	}
 	return fetch(url, opts);
 }
+
+export function merge_init(
+	storeOverrides: RequestInit,
+	requestOverrides: RequestInit,
+) {
+	// Request overrides take precedence over storeOverrides.
+	return {
+		...storeOverrides,
+		...requestOverrides,
+		headers: {
+			...storeOverrides.headers,
+			...requestOverrides.headers,
+		},
+	};
+}
