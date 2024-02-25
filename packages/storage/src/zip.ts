@@ -15,13 +15,23 @@ export class BlobReader implements Reader {
 	}
 }
 
+interface ZipFileStoreOptions {
+	overrides?: RequestInit;
+}
+
 export class HTTPRangeReader implements Reader {
 	private length?: number;
-	constructor(public url: string | URL) {}
+	#overrides: RequestInit;
+	constructor(public url: string | URL, opts: ZipFileStoreOptions = {}) {
+		this.#overrides = opts.overrides ?? {};
+	}
 
 	async getLength() {
 		if (this.length === undefined) {
-			const req = await fetch(this.url as string, { method: "HEAD" });
+			const req = await fetch(this.url as string, {
+				...this.#overrides,
+				method: "HEAD",
+			});
 			if (!req.ok) {
 				throw new Error(
 					`failed http request ${this.url}, status: ${req.status}: ${req.statusText}`,
@@ -39,7 +49,7 @@ export class HTTPRangeReader implements Reader {
 		if (size === 0) {
 			return new Uint8Array(0);
 		}
-		const req = await fetch_range(this.url, offset, size);
+		const req = await fetch_range(this.url, offset, size, this.#overrides);
 		if (!req.ok) {
 			throw new Error(
 				`failed http request ${this.url}, status: ${req.status} offset: ${offset} size: ${size}: ${req.statusText}`,
@@ -66,8 +76,8 @@ class ZipFileStore<R extends Reader> implements AsyncReadable {
 		return strip_prefix(key) in (await this.info).entries;
 	}
 
-	static fromUrl(href: string | URL) {
-		return new ZipFileStore(new HTTPRangeReader(href));
+	static fromUrl(href: string | URL, opts: ZipFileStoreOptions = {}) {
+		return new ZipFileStore(new HTTPRangeReader(href, opts));
 	}
 
 	static fromBlob(blob: Blob) {
