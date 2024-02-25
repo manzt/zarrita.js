@@ -1,5 +1,13 @@
 # @zarrita/storage
 
+## 0.1.0-next.4
+
+### Patch Changes
+
+- Add support for passing fetch options to ReferenceStore. ([#155](https://github.com/manzt/zarrita.js/pull/155))
+
+- Add support for passing fetch options to ZipFileStore.fromUrl. ([#156](https://github.com/manzt/zarrita.js/pull/156))
+
 ## 0.1.0-next.3
 
 ### Minor Changes
