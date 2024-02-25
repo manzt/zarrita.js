@@ -104,7 +104,7 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	}
 
 	static async fromUrl(url: string | URL, opts?: ReferenceStoreOptions) {
-		let spec = await fetch(url).then((res) => res.json());
+		let spec = await fetch(url, opts?.overrides).then((res) => res.json());
 		return ReferenceStore.fromSpec(spec, opts);
 	}
 }
