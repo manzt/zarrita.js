@@ -28,7 +28,10 @@ export class HTTPRangeReader implements Reader {
 
 	async getLength() {
 		if (this.length === undefined) {
-			const req = await fetch(this.url as string, { ...this.#overrides, method: "HEAD" });
+			const req = await fetch(this.url as string, {
+				...this.#overrides,
+				method: "HEAD",
+			});
 			if (!req.ok) {
 				throw new Error(
 					`failed http request ${this.url}, status: ${req.status}: ${req.statusText}`,
