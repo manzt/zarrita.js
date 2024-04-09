@@ -24,8 +24,8 @@ importers:
         specifier: ^0.2.2
         version: 0.2.7
       typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
+        specifier: ^5.4.4
+        version: 5.4.4
       vitest:
         specifier: ^1.4.0
         version: 1.4.0(@types/node@20.12.2)
@@ -34,13 +34,13 @@ importers:
     devDependencies:
       vitepress:
         specifier: 1.0.0-rc.37
-        version: 1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.3.3)
+        version: 1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.4.4)
       vitepress-plugin-tabs:
         specifier: ^0.5.0
         version: 0.5.0(vitepress@1.0.0-rc.37)(vue@3.4.13)
       vue:
         specifier: ^3.3.4
-        version: 3.4.13(typescript@5.3.3)
+        version: 3.4.13(typescript@5.4.4)
 
   packages/core:
     dependencies:
@@ -1046,7 +1046,7 @@ packages:
       vue: ^3.2.25
     dependencies:
       vite: 5.0.11(@types/node@20.12.2)
-      vue: 3.4.14(typescript@5.3.3)
+      vue: 3.4.14(typescript@5.4.4)
     dev: true
 
   /@vitest/expect@1.4.0:
@@ -1217,7 +1217,7 @@ packages:
     dependencies:
       '@vue/compiler-ssr': 3.4.13
       '@vue/shared': 3.4.13
-      vue: 3.4.13(typescript@5.3.3)
+      vue: 3.4.13(typescript@5.4.4)
     dev: true
 
   /@vue/server-renderer@3.4.14(vue@3.4.14):
@@ -1227,7 +1227,7 @@ packages:
     dependencies:
       '@vue/compiler-ssr': 3.4.14
       '@vue/shared': 3.4.14
-      vue: 3.4.14(typescript@5.3.3)
+      vue: 3.4.14(typescript@5.4.4)
     dev: true
 
   /@vue/shared@3.4.13:
@@ -3376,8 +3376,8 @@ packages:
       is-typed-array: 1.1.12
     dev: true
 
-  /typescript@5.3.3:
-    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+  /typescript@5.4.4:
+    resolution: {integrity: sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true
@@ -3488,11 +3488,11 @@ packages:
       vitepress: ^1.0.0-rc.27
       vue: ^3.3.8
     dependencies:
-      vitepress: 1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.3.3)
-      vue: 3.4.13(typescript@5.3.3)
+      vitepress: 1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.4.4)
+      vue: 3.4.13(typescript@5.4.4)
     dev: true
 
-  /vitepress@1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.3.3):
+  /vitepress@1.0.0-rc.37(@algolia/client-search@4.22.1)(@types/node@20.12.2)(search-insights@2.13.0)(typescript@5.4.4):
     resolution: {integrity: sha512-Z2X+M0id+bUdxcWxvFRUzfLyV2GtPWRcejLSMGOHRiwA1DV/dNmELKJ3U9D1HBYQK0FBzunpuQD0a2jZ7FZvJA==}
     hasBin: true
     peerDependencies:
@@ -3518,7 +3518,7 @@ packages:
       shikiji-core: 0.9.19
       shikiji-transformers: 0.9.19
       vite: 5.0.11(@types/node@20.12.2)
-      vue: 3.4.14(typescript@5.3.3)
+      vue: 3.4.14(typescript@5.4.4)
     transitivePeerDependencies:
       - '@algolia/client-search'
       - '@types/node'
@@ -3615,10 +3615,10 @@ packages:
       '@vue/composition-api':
         optional: true
     dependencies:
-      vue: 3.4.14(typescript@5.3.3)
+      vue: 3.4.14(typescript@5.4.4)
     dev: true
 
-  /vue@3.4.13(typescript@5.3.3):
+  /vue@3.4.13(typescript@5.4.4):
     resolution: {integrity: sha512-FE3UZ0p+oUZTwz+SzlH/hDFg+XsVRFvwmx0LXjdD1pRK/cO4fu5v6ltAZji4za4IBih3dV78elUK3di8v3pWIg==}
     peerDependencies:
       typescript: '*'
@@ -3631,10 +3631,10 @@ packages:
       '@vue/runtime-dom': 3.4.13
       '@vue/server-renderer': 3.4.13(vue@3.4.13)
       '@vue/shared': 3.4.13
-      typescript: 5.3.3
+      typescript: 5.4.4
     dev: true
 
-  /vue@3.4.14(typescript@5.3.3):
+  /vue@3.4.14(typescript@5.4.4):
     resolution: {integrity: sha512-Rop5Al/ZcBbBz+KjPZaZDgHDX0kUP4duEzDbm+1o91uxYUNmJrZSBuegsNIJvUGy+epLevNRNhLjm08VKTgGyw==}
     peerDependencies:
       typescript: '*'
@@ -3647,7 +3647,7 @@ packages:
       '@vue/runtime-dom': 3.4.14
       '@vue/server-renderer': 3.4.14(vue@3.4.14)
       '@vue/shared': 3.4.14
-      typescript: 5.3.3
+      typescript: 5.4.4
     dev: true
 
   /wcwidth@1.0.1:
