@@ -12,7 +12,8 @@ const DATA = {
 	stride: [12, 4, 1],
 };
 
-export function run_suite(name: string, getter: any) {
+// biome-ignore lint/suspicious/noExportsInTest: <explanation>
+export function run_suite(name: string, getter: unknwon) {
 	let get = getter as typeof ops.get;
 
 	describe(name, async () => {

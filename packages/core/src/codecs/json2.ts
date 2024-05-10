@@ -19,8 +19,8 @@ type DecoderConfig = {
 type JsonCodecConfig = EncoderConfig & DecoderConfig;
 
 // Reference: https://stackoverflow.com/a/21897413
-function throw_on_nan_replacer(_key: string | number, value: any): any {
-	if (value !== value) {
+function throw_on_nan_replacer(_key: string | number, value: number): number {
+	if (Number.isNaN(value)) {
 		throw new Error(
 			"JsonCodec allow_nan is false but NaN was encountered during encoding.",
 		);
@@ -41,14 +41,14 @@ function throw_on_nan_replacer(_key: string | number, value: any): any {
 }
 
 // Reference: https://gist.github.com/davidfurlong/463a83a33b70a3b6618e97ec9679e490
-function sort_keys_replacer(_key: string | number, value: any): any {
+function sort_keys_replacer(_key: string | number, value: Record<string, unknown>) {
 	return value instanceof Object && !Array.isArray(value)
 		? Object.keys(value)
 				.sort()
-				.reduce((sorted: any, key: string | number) => {
+				.reduce((sorted, key: string | number) => {
 					sorted[key] = value[key];
 					return sorted;
-				}, {})
+				}, {} as Record<string, unknown>)
 		: value;
 }
 
@@ -134,11 +134,11 @@ export class JsonCodec {
 
 		let replacer = undefined;
 		if (replacer_functions.length) {
-			replacer = (key: string | number, value: any): any => {
+			replacer = (key: string | number, value: Record<string, unknown>) => {
 				let new_value = value;
-				replacer_functions.forEach((sub_replacer) => {
+				for (let sub_replacer of replacer_functions) {
 					new_value = sub_replacer(key, new_value);
-				});
+				}
 				return new_value;
 			};
 		}
