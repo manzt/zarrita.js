@@ -18,7 +18,7 @@ import type {
 	TypedArrayConstructor,
 } from "./metadata.js";
 
-export function json_encode_object(o: Record<string, any>): Uint8Array {
+export function json_encode_object(o: Record<string, unknown>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);
 	return new TextEncoder().encode(str);
 }
@@ -61,7 +61,7 @@ export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
 	if (data_type === "v2:object") {
-		return globalThis.Array as any;
+		return globalThis.Array as unknown as TypedArrayConstructor<D>;
 	}
 	let match = data_type.match(V2_STRING_REGEX);
 	if (match) {
@@ -72,11 +72,12 @@ export function get_ctr<D extends DataType>(
 			Number(chars),
 		);
 	}
-	let ctr = (CONSTRUCTORS as any)[data_type];
+	// @ts-expect-error - We've checked that the key exists
+	let ctr: TypedArrayConstructor<D> = CONSTRUCTORS[data_type];
 	if (!ctr) {
 		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
 	}
-	return ctr as any;
+	return ctr;
 }
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
@@ -156,9 +157,12 @@ function coerce_dtype(
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
 	}
 	if (endian === "|") {
-		return { data_type } as any;
+		return { data_type } as { data_type: DataType };
 	}
-	return { data_type, endian: endian === "<" ? "little" : "big" } as any;
+	return { data_type, endian: endian === "<" ? "little" : "big" } as {
+		data_type: DataType;
+		endian: "little" | "big";
+	};
 }
 
 export function v2_to_v3_array_metadata(
@@ -228,12 +232,12 @@ export type NarrowDataType<
 > = Query extends "number"
 	? NumberDataType
 	: Query extends "bigint"
-		? BigintDataType
-		: Query extends "string"
-			? StringDataType
-			: Query extends "object"
-				? ObjectType
-				: Extract<Query, Dtype>;
+	? BigintDataType
+	: Query extends "string"
+	? StringDataType
+	: Query extends "object"
+	? ObjectType
+	: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,
