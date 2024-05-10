@@ -3,7 +3,8 @@ import type { AbsolutePath } from "./types.js";
 export function strip_prefix<Path extends AbsolutePath>(
 	path: Path,
 ): Path extends AbsolutePath<infer Rest> ? Rest : never {
-	return path.slice(1) as any;
+	// @ts-expect-error - TS can't infer this type correctly
+	return path.slice(1);
 }
 
 export function uri2href(url: string | URL) {

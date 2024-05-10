@@ -51,5 +51,5 @@ export type SetOptions = Options;
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {
 	add(fn: () => Promise<void>): void;
-	onIdle(): Promise<void[]>;
+	onIdle(): Promise<Array<void>>;
 };

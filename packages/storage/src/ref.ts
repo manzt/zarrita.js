@@ -90,7 +90,8 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 		);
 	}
 
-	static fromSpec(spec: Record<string, any>, opts?: ReferenceStoreOptions) {
+	static fromSpec(spec: Record<string, unknown>, opts?: ReferenceStoreOptions) {
+		// @ts-expect-error - TS doesn't like the type of `parse`
 		let refs = parse(spec);
 		return new ReferenceStore(refs, opts);
 	}

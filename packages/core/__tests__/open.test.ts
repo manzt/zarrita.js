@@ -218,13 +218,11 @@ describe("v2", () => {
 				});
 				let chunk = await arr.getChunk([0]);
 				expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-				expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual(
-					{
-						data: ["a", "b", "cc", "d"],
-						shape: [4],
-						stride: [1],
-					},
-				);
+				expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
+					data: ["a", "b", "cc", "d"],
+					shape: [4],
+					stride: [1],
+				});
 			},
 		);
 	});
@@ -235,7 +233,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: ["a", "b", "cc", "d"],
 			shape: [4],
 			stride: [1],
@@ -248,7 +246,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(ByteStringArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: ["a", "b", "cc", "d"],
 			shape: [4],
 			stride: [1],
@@ -261,7 +259,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(BoolArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],
 			stride: [1],
@@ -356,7 +354,7 @@ describe("v2", () => {
 		])("getChunk(%j) -> %j", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-			expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+			expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 				data: expected,
 				shape: [1, 1],
 				stride: [1, 1],
@@ -596,7 +594,7 @@ describe("v3", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(BoolArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],
 			stride: [1],
@@ -872,7 +870,7 @@ describe("v3", () => {
 		let chunk = await arr.getChunk([0]);
 		expect({
 			...chunk,
-			data: Array.from(chunk.data as any),
+			data: Array.from(chunk.data),
 		}).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],

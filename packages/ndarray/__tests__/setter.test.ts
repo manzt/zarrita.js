@@ -41,7 +41,8 @@ function to_c<T extends TypedArray>({
 	stride,
 }: ndarray.NdArray<T>) {
 	let size = shape.reduce((a, b) => a * b, 1);
-	let out = ndarray(new (data as any).constructor(size), shape);
+	// @ts-expect-error - constructor exists on TypedArray.*
+	let out = ndarray(new data.constructor(size), shape);
 	assign(out, ndarray(data, shape, stride));
 	return out;
 }

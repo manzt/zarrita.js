@@ -18,6 +18,10 @@ type DecoderConfig = {
 
 type JsonCodecConfig = EncoderConfig & DecoderConfig;
 
+// TODO: Correctly type the replacer function
+// biome-ignore lint/suspicious/noExplicitAny: Really complex type
+type ReplacerFunction = (key: string | number, value: any) => any;
+
 // Reference: https://stackoverflow.com/a/21897413
 function throw_on_nan_replacer(_key: string | number, value: number): number {
 	if (Number.isNaN(value)) {
@@ -116,7 +120,7 @@ export class JsonCodec {
 		if (encoding !== "utf-8") {
 			throw new Error("JsonCodec does not yet support non-utf-8 encoding.");
 		}
-		const replacer_functions: Function[] = [];
+		const replacer_functions: ReplacerFunction[] = [];
 		if (!check_circular) {
 			// By default, for JSON.stringify,
 			// a TypeError will be thrown if one attempts to encode an object with circular references
@@ -138,9 +142,9 @@ export class JsonCodec {
 		items.push("|O");
 		items.push(buf.shape);
 
-		let replacer = undefined;
+		let replacer: ReplacerFunction | undefined = undefined;
 		if (replacer_functions.length) {
-			replacer = (key: string | number, value: Record<string, unknown>) => {
+			replacer = (key, value) => {
 				let new_value = value;
 				for (let sub_replacer of replacer_functions) {
 					new_value = sub_replacer(key, new_value);

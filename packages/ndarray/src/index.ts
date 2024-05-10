@@ -19,7 +19,8 @@ export const setter = {
 		selection: (number | Indices)[],
 		value: core.Scalar<D>,
 	) {
-		(ops.assigns as any)(view(dest, selection), value);
+		// @ts-expect-error - ndarray-ops types are incorrect
+		ops.assigns(view(dest, selection), value);
 	},
 	set_from_chunk<D extends core.DataType>(
 		dest: ndarray.NdArray<core.TypedArray<D>>,

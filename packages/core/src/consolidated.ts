@@ -101,7 +101,7 @@ export async function withConsolidated<Store extends Readable>(
 			let contents: { path: AbsolutePath; kind: "array" | "group" }[] = [];
 			for (let [key, value] of Object.entries(known_meta)) {
 				let parts = key.split("/");
-				let filename = parts.pop()!;
+				let filename = parts.pop();
 				let path = (parts.join("/") || "/") as AbsolutePath;
 				if (filename === ".zarray") contents.push({ path, kind: "array" });
 				if (filename === ".zgroup") contents.push({ path, kind: "group" });

@@ -45,7 +45,7 @@ export class Location<Store> {
 export function root<Store>(store: Store): Location<Store>;
 export function root(): Location<Map<string, Uint8Array>>;
 export function root<Store>(
-	store?: any,
+	store?: Store,
 ): Location<Store | Map<string, Uint8Array>> {
 	return new Location(store ?? new Map());
 }
@@ -191,7 +191,8 @@ export class Array<
 		if (!maybe_bytes) {
 			let size = context.chunk_shape.reduce((a, b) => a * b, 1);
 			let data = new context.TypedArray(size);
-			(data as any).fill(context.fill_value as any);
+			// @ts-expect-error: TS can't infer that `fill_value` is union (assumes never) but this is ok
+			data.fill(context.fill_value);
 			return {
 				data,
 				shape: context.chunk_shape,

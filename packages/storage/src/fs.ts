@@ -4,6 +4,11 @@ import * as path from "node:path";
 import type { AbsolutePath, AsyncMutable, RangeQuery } from "./types.js";
 import { strip_prefix } from "./util.js";
 
+function is_error_no_entry(err: unknown): err is { code: "ENOENT" } {
+	const is_object = typeof err === "object" && err !== null;
+	return is_object && "code" in err && err.code === "ENOENT";
+}
+
 class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
@@ -37,9 +42,11 @@ class FileSystemStore implements AsyncMutable {
 			let data = Buffer.alloc(range.length);
 			await filehandle.read(data, 0, range.length, range.offset);
 			return data;
-		} catch (err: any) {
+		} catch (err: unknown) {
 			// return undefined is no file or directory
-			if (err?.code === "ENOENT") return undefined;
+			if (is_error_no_entry(err)) {
+				return undefined;
+			}
 			throw err;
 		} finally {
 			await filehandle?.close();

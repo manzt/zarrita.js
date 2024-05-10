@@ -16,7 +16,7 @@ function unwrap<D extends DataType>(
 	arr: TypedArray<D>,
 	idx: number,
 ): Scalar<D> {
-	return "get" in arr ? arr.get(idx) : (arr[idx] as any);
+	return ("get" in arr ? arr.get(idx) : arr[idx]) as Scalar<D>;
 }
 
 export async function get<
@@ -60,5 +60,6 @@ export async function get<
 	await queue.onIdle();
 
 	// If the final out shape is empty, we just return a scalar.
-	return indexer.shape.length === 0 ? unwrap(out.data, 0) : (out as any);
+	// @ts-expect-error - TS can't narrow this conditional type
+	return indexer.shape.length === 0 ? unwrap(out.data, 0) : out;
 }

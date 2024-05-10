@@ -63,7 +63,7 @@ describe("Array", () => {
 	});
 
 	test("Array.is", () => {
-		let arr = new Array(new Map(), "/", array_metadata as any);
+		let arr = new Array(new Map(), "/", array_metadata as ArrayMetadata);
 		expectTypeOf(arr.dtype).toMatchTypeOf<DataType>();
 		if (arr.is("bigint")) {
 			expectTypeOf(arr.dtype).toMatchTypeOf<BigintDataType>();
