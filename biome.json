@@ -10,6 +10,6 @@
 		}
 	},
 	"files": {
-		"ignore": ["fixtures", "**/dist"]
+		"ignore": ["fixtures", "**/dist", "docs/.vitepress/cache", ".changeset"]
 	}
 }

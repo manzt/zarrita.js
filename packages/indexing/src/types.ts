@@ -12,9 +12,9 @@ export type Projection =
 	| { from: null; to: number }
 	| { from: number; to: null }
 	| {
-		from: Indices;
-		to: Indices;
-	};
+			from: Indices;
+			to: Indices;
+	  };
 
 export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	data: TypedArray<D>,
@@ -22,19 +22,13 @@ export type Prepare<D extends DataType, NdArray extends Chunk<D>> = (
 	stride: number[],
 ) => NdArray;
 
-export type SetScalar<
-	D extends DataType,
-	NdArray extends Chunk<D>,
-> = (
+export type SetScalar<D extends DataType, NdArray extends Chunk<D>> = (
 	target: NdArray,
 	selection: (Indices | number)[],
 	value: Scalar<D>,
 ) => void;
 
-export type SetFromChunk<
-	D extends DataType,
-	NdArray extends Chunk<D>,
-> = (
+export type SetFromChunk<D extends DataType, NdArray extends Chunk<D>> = (
 	a: NdArray,
 	b: NdArray,
 	proj: Projection[],

@@ -10,9 +10,7 @@
 			"import": "./src/index.ts"
 		}
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"publishConfig": {
 		"main": "dist/src/index.js",
 		"exports": {

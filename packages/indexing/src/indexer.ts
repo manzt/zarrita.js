@@ -117,10 +117,7 @@ class SliceDimIndexer {
 		// store properties
 		this.dim_len = dim_len;
 		this.dim_chunk_len = dim_chunk_len;
-		this.nitems = Math.max(
-			0,
-			Math.ceil((this.stop - this.start) / this.step),
-		);
+		this.nitems = Math.max(0, Math.ceil((this.stop - this.start) / this.step));
 		this.nchunks = Math.ceil(this.dim_len / this.dim_chunk_len);
 	}
 
@@ -145,18 +142,15 @@ class SliceDimIndexer {
 				const remainder = (dim_offset - this.start) % this.step;
 				if (remainder) dim_chunk_sel_start += this.step - remainder;
 				// compute number of previous items, provides offset into output array
-				dim_out_offset = Math.ceil(
-					(dim_offset - this.start) / this.step,
-				);
+				dim_out_offset = Math.ceil((dim_offset - this.start) / this.step);
 			} else {
 				// selection starts within current chunk
 				dim_chunk_sel_start = this.start - dim_offset;
 			}
 			// selection starts within current chunk if true,
 			// otherwise selection ends after current chunk.
-			const dim_chunk_sel_stop = this.stop > dim_limit
-				? dim_chunk_len
-				: this.stop - dim_offset;
+			const dim_chunk_sel_stop =
+				this.stop > dim_limit ? dim_chunk_len : this.stop - dim_offset;
 
 			const dim_chunk_sel: Indices = [
 				dim_chunk_sel_start,
@@ -197,10 +191,12 @@ interface BasicIndexerProps {
 	chunk_shape: readonly number[];
 }
 
-export type IndexerProjection = { from: number; to: null } | {
-	from: Indices;
-	to: Indices;
-};
+export type IndexerProjection =
+	| { from: number; to: null }
+	| {
+			from: Indices;
+			to: Indices;
+	  };
 
 interface ChunkProjection {
 	chunk_coords: number[];
@@ -215,9 +211,9 @@ export class BasicIndexer {
 		// setup per-dimension indexers
 		this.dim_indexers = normalize_selection(selection, shape).map(
 			(dim_sel, i) => {
-				return new (typeof dim_sel === "number"
-					? IntDimIndexer
-					: SliceDimIndexer)({
+				return new (
+					typeof dim_sel === "number" ? IntDimIndexer : SliceDimIndexer
+				)({
 					// @ts-expect-error ts inference not strong enough to know correct chunk
 					dim_sel: dim_sel,
 					dim_len: shape[i],

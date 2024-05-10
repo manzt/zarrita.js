@@ -39,7 +39,9 @@ function object_array_view<T>(arr: T[], offset = 0, size?: number) {
  * In the case of `Array` instances, it will return a `object_array_view` of
  * the underlying, which is supported by our binary set functions.
  */
-function compat_chunk<D extends core.DataType>(arr: core.Chunk<D>): {
+function compat_chunk<D extends core.DataType>(
+	arr: core.Chunk<D>,
+): {
 	data: Uint8Array;
 	stride: number[];
 	bytes_per_element: number;
@@ -66,9 +68,7 @@ function compat_chunk<D extends core.DataType>(arr: core.Chunk<D>): {
 /** Hack to get the constructor of a typed array constructor from an existing TypedArray. */
 function get_typed_array_constructor<
 	D extends Exclude<core.DataType, "v2:object">,
->(
-	arr: core.TypedArray<D>,
-): core.TypedArrayConstructor<D> {
+>(arr: core.TypedArray<D>): core.TypedArrayConstructor<D> {
 	if ("chars" in arr) {
 		// our custom TypedArray needs to bind the number of characters per
 		// element to the constructor.
@@ -155,9 +155,7 @@ export async function get<
 }
 
 /** @category Utility */
-export async function set<
-	D extends core.DataType,
->(
+export async function set<D extends core.DataType>(
 	arr: core.Array<D, Mutable>,
 	selection: (null | Slice | number)[] | null,
 	value: core.Scalar<D> | core.Chunk<D>,
@@ -258,9 +256,7 @@ function set_from_chunk_binary(
 	if (projs.length === 0) {
 		// NB: we have a contiguous block of memory
 		// so we can just copy over all the data at once.
-		if (
-			step === 1 && sstep === 1 && dstride === 1 && sstride === 1
-		) {
+		if (step === 1 && sstep === 1 && dstride === 1 && sstride === 1) {
 			let offset = sfrom * bytes_per_element;
 			let size = len * bytes_per_element;
 			dest.data.set(

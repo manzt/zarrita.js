@@ -48,7 +48,10 @@ class FileSystemStore implements AsyncMutable {
 
 	async has(key: AbsolutePath): Promise<boolean> {
 		const fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.access(fp).then(() => true).catch(() => false);
+		return fs.promises
+			.access(fp)
+			.then(() => true)
+			.catch(() => false);
 	}
 
 	async set(key: AbsolutePath, value: Uint8Array): Promise<void> {

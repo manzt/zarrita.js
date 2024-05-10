@@ -80,9 +80,11 @@ describe("BoolArray.constructor", () => {
 	});
 
 	test("new (values: Iterable<boolean>) -> BoolArray", () => {
-		let arr = new BoolArray((function* () {
-			yield* [true, true, false, false, true];
-		})());
+		let arr = new BoolArray(
+			(function* () {
+				yield* [true, true, false, false, true];
+			})(),
+		);
 		expect({
 			length: arr.length,
 			BYTES_PER_ELEMENT: arr.BYTES_PER_ELEMENT,
@@ -219,8 +221,7 @@ describe("ByteStringArray", () => {
 		}).toStrictEqual({
 			length: 5,
 			data,
-			text:
-				"Hello\x00world!\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+			text: "Hello\x00world!\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
 		});
 	});
 

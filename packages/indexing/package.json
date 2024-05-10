@@ -10,9 +10,7 @@
 			"import": "./src/index.ts"
 		}
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"dependencies": {
 		"@zarrita/core": "workspace:^",
 		"@zarrita/storage": "workspace:^",

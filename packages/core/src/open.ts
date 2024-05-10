@@ -32,9 +32,7 @@ function create_version_counter() {
 	};
 }
 
-async function load_attrs(
-	location: Location<Readable>,
-): Promise<Attributes> {
+async function load_attrs(location: Location<Readable>): Promise<Attributes> {
 	let meta_bytes = await location.store.get(location.resolve(".zattrs").path);
 	if (!meta_bytes) return {};
 	return json_decode_object(meta_bytes);
@@ -108,9 +106,7 @@ async function open_group_v2<Store extends Readable>(
 	);
 }
 
-async function _open_v3<Store extends Readable>(
-	location: Location<Store>,
-) {
+async function _open_v3<Store extends Readable>(location: Location<Store>) {
 	let { store, path } = location.resolve("zarr.json");
 	let meta = await location.store.get(path);
 	if (!meta) {
@@ -118,9 +114,8 @@ async function _open_v3<Store extends Readable>(
 			cause: new KeyError(path),
 		});
 	}
-	let meta_doc: ArrayMetadata<DataType> | GroupMetadata = json_decode_object(
-		meta,
-	);
+	let meta_doc: ArrayMetadata<DataType> | GroupMetadata =
+		json_decode_object(meta);
 	if (
 		meta_doc.node_type === "array" &&
 		(meta_doc.data_type === "uint64" || meta_doc.data_type === "int64") &&

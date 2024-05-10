@@ -129,9 +129,7 @@ export function run_suite(name: string, getter: any) {
 
 		it("Does not support negative indices", async () => {
 			let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-			await expect(get(arr, sel))
-				.rejects
-				.toThrowError(IndexError);
+			await expect(get(arr, sel)).rejects.toThrowError(IndexError);
 		});
 	});
 }

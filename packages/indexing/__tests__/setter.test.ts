@@ -325,11 +325,7 @@ describe("setter", () => {
 	});
 
 	it("set_from_chunk - dest squeezed", async () => {
-		let dest = setter.prepare(
-			new Float32Array(4),
-			[4],
-			get_strides([4], "C"),
-		);
+		let dest = setter.prepare(new Float32Array(4), [4], get_strides([4], "C"));
 
 		let src = setter.prepare(
 			// biome-ignore format: the array should not be formatted
@@ -420,30 +416,28 @@ describe("setter", () => {
 		]));
 	});
 
-	it.skip(
-		"set_from_chunk - dest=F order, src=C order",
-		async () => {
-			let dest = setter.prepare(
-				new Float32Array(2 * 3 * 4),
-				[2, 3, 4],
-				get_strides([2, 3, 4], "F"),
-			);
+	it.skip("set_from_chunk - dest=F order, src=C order", async () => {
+		let dest = setter.prepare(
+			new Float32Array(2 * 3 * 4),
+			[2, 3, 4],
+			get_strides([2, 3, 4], "F"),
+		);
 
-			let src = setter.prepare(
-				new Float32Array([2, 0, 0, 2]),
-				[4],
-				get_strides([4], "C"),
-			);
+		let src = setter.prepare(
+			new Float32Array([2, 0, 0, 2]),
+			[4],
+			get_strides([4], "C"),
+		);
 
-			let mapping: Projection[] = [
-				{ to: 0, from: null },
-				{ to: [0, 3, 2], from: [0, 4, 3] },
-				{ to: 1, from: null },
-			];
+		let mapping: Projection[] = [
+			{ to: 0, from: null },
+			{ to: [0, 3, 2], from: [0, 4, 3] },
+			{ to: 1, from: null },
+		];
 
-			setter.set_from_chunk(dest, src, mapping);
-			// biome-ignore format: the array should not be formatted
-			expect(to_c(dest).data).toStrictEqual(new Float32Array([
+		setter.set_from_chunk(dest, src, mapping);
+		// biome-ignore format: the array should not be formatted
+		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 				0, 2, 0, 0,
 				0, 0, 0, 0,
 				0, 2, 0, 0,
@@ -452,8 +446,7 @@ describe("setter", () => {
 				0, 0, 0, 0,
 				0, 0, 0, 0,
 			]));
-		},
-	);
+	});
 
 	it("set_from_chunk - dest=C order, src=F order", async () => {
 		let dest = setter.prepare(

@@ -177,12 +177,14 @@ export class UnicodeStringArray {
 		} else {
 			const values = x;
 			const d = new UnicodeStringArray(chars, 1);
-			this.#data = new Int32Array((function* () {
-				for (let str of values) {
-					d.set(0, str);
-					yield* d.#data;
-				}
-			})());
+			this.#data = new Int32Array(
+				(function* () {
+					for (let str of values) {
+						d.set(0, str);
+						yield* d.#data;
+					}
+				})(),
+			);
 		}
 	}
 

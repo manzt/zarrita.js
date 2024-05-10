@@ -28,9 +28,7 @@ interface CreateArrayOptions<Dtype extends DataType> {
 export async function create<
 	Store extends Mutable,
 	Dtype extends DataType = DataType,
->(
-	location: Location<Store> | Store,
-): Promise<Group<Store>>;
+>(location: Location<Store> | Store): Promise<Group<Store>>;
 
 export async function create<
 	Store extends Mutable,
@@ -40,18 +38,12 @@ export async function create<
 	options: CreateGroupOptions,
 ): Promise<Group<Store>>;
 
-export async function create<
-	Store extends Mutable,
-	Dtype extends DataType,
->(
+export async function create<Store extends Mutable, Dtype extends DataType>(
 	location: Location<Store> | Store,
 	options: CreateArrayOptions<Dtype>,
 ): Promise<Array<Dtype, Store>>;
 
-export async function create<
-	Store extends Mutable,
-	Dtype extends DataType,
->(
+export async function create<Store extends Mutable, Dtype extends DataType>(
 	location: Location<Store> | Store,
 	options: CreateArrayOptions<Dtype> | CreateGroupOptions = {},
 ): Promise<Array<Dtype, Store> | Group<Store>> {
@@ -76,10 +68,7 @@ async function create_group<Store extends Mutable>(
 	return new Group(location.store, location.path, metadata);
 }
 
-async function create_array<
-	Store extends Mutable,
-	Dtype extends DataType,
->(
+async function create_array<Store extends Mutable, Dtype extends DataType>(
 	location: Location<Store>,
 	options: CreateArrayOptions<Dtype>,
 ): Promise<Array<DataType, Store>> {

@@ -18,10 +18,7 @@ type CodecEntry = {
 	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
 };
 
-function create_default_registry(): Map<
-	string,
-	() => Promise<CodecEntry>
-> {
+function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
 		.set("gzip", () => import("numcodecs/gzip").then((m) => m.default))

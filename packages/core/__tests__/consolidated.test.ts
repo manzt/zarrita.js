@@ -14,9 +14,7 @@ describe("withConsolidated", () => {
 	it("loads consolidated metadata", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let store = await withConsolidated(new FileSystemStore(root));
-		let map = new Map(
-			store.contents().map((x) => [x.path, x.kind]),
-		);
+		let map = new Map(store.contents().map((x) => [x.path, x.kind]));
 		expect(map).toMatchInlineSnapshot(`
 			Map {
 			  "/" => "group",
@@ -53,9 +51,9 @@ describe("withConsolidated", () => {
 	it("loads chunk data from underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let store = await withConsolidated(new FileSystemStore(root));
-		let entry = store.contents().find((x) =>
-			x.path === "/3d.chunked.mixed.i2.C"
-		)!;
+		let entry = store
+			.contents()
+			.find((x) => x.path === "/3d.chunked.mixed.i2.C")!;
 		let grp = await open(store, { kind: "group" });
 		let arr = await open(grp.resolve(entry.path), { kind: entry.kind });
 		expect(arr).toBeInstanceOf(ZarrArray);

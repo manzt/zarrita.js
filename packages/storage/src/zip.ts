@@ -22,7 +22,10 @@ interface ZipFileStoreOptions {
 export class HTTPRangeReader implements Reader {
 	private length?: number;
 	#overrides: RequestInit;
-	constructor(public url: string | URL, opts: ZipFileStoreOptions = {}) {
+	constructor(
+		public url: string | URL,
+		opts: ZipFileStoreOptions = {},
+	) {
 		this.#overrides = opts.overrides ?? {};
 	}
 

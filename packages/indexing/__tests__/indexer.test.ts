@@ -10,27 +10,28 @@ import { slice } from "../src/util.js";
 describe("normalize_selection", () => {
 	// null !== null, so need custom compare
 	let eq = (a: (Slice | number)[], b: (Slice | number)[]) => {
-		expect(
-			a.map((s) => s.toString()),
-		).toStrictEqual(
+		expect(a.map((s) => s.toString())).toStrictEqual(
 			b.map((s) => s.toString()),
 		);
 	};
 	test("handles complete selection", () => {
-		eq(
-			normalize_selection(null, [2, 3, 4]),
-			[slice(null), slice(null), slice(null)],
-		);
+		eq(normalize_selection(null, [2, 3, 4]), [
+			slice(null),
+			slice(null),
+			slice(null),
+		]);
 	});
 	test("handles partial complete selection", () => {
-		eq(
-			normalize_selection([slice(2), null, 3], [2, 3, 4]),
-			[slice(2), slice(null), 3],
-		);
+		eq(normalize_selection([slice(2), null, 3], [2, 3, 4]), [
+			slice(2),
+			slice(null),
+			3,
+		]);
 	});
 	test("throws when dimensions don't match", () => {
-		expect(() => normalize_selection([slice(2), null, 3, 4], [2, 3, 4]))
-			.toThrowError();
+		expect(() =>
+			normalize_selection([slice(2), null, 3, 4], [2, 3, 4]),
+		).toThrowError();
 	});
 });
 
@@ -56,8 +57,9 @@ describe("normalize_integer_selection", () => {
 	])(
 		`normalize_integer_selection(%i, %i) -> throws`,
 		(dim_selection, dim_length) => {
-			expect(() => normalize_integer_selection(dim_selection, dim_length))
-				.toThrowError();
+			expect(() =>
+				normalize_integer_selection(dim_selection, dim_length),
+			).toThrowError();
 		},
 	);
 });
