@@ -22,17 +22,21 @@ function proxy<D extends DataType>(arr: TypedArray<D>): TypedArrayProxy<D> {
 		arr instanceof ByteStringArray ||
 		arr instanceof UnicodeStringArray
 	) {
-		return new Proxy(arr as any, {
+		// @ts-expect-error - TS cannot infer arr is a TypedArrayProxy<D>
+		const arrp: TypedArrayProxy<D> = new Proxy(arr, {
 			get(target, prop) {
 				return target.get(Number(prop));
 			},
 			set(target, prop, value) {
-				target.set(Number(prop), value as any);
+				// @ts-expect-error - value is OK
+				target.set(Number(prop), value);
 				return true;
 			},
 		});
+		return arrp;
 	}
-	return arr as any;
+	// @ts-expect-error - TS cannot infer arr is a TypedArrayProxy<D>
+	return arr;
 }
 
 function empty_like<D extends DataType>(

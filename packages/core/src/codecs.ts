@@ -14,7 +14,7 @@ type ChunkMetadata<D extends DataType> = {
 };
 
 type CodecEntry = {
-	fromConfig: (config: any, meta: ChunkMetadata<DataType>) => Codec;
+	fromConfig: (config: unknown, meta: ChunkMetadata<DataType>) => Codec;
 	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
 };
 

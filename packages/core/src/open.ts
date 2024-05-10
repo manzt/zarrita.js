@@ -191,9 +191,9 @@ export async function open<Store extends Readable>(
 	// because this enables us to use vi.spyOn during testing.
 	let open_primary = version_max === "v2" ? open.v2 : open.v3;
 	let open_secondary = version_max === "v2" ? open.v3 : open.v2;
-	return open_primary(location, options as any).catch((err) => {
+	return open_primary(location, options).catch((err) => {
 		if (err instanceof NodeNotFoundError) {
-			return open_secondary(location, options as any);
+			return open_secondary(location, options);
 		}
 		throw err;
 	});
