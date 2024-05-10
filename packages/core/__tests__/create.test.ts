@@ -9,8 +9,9 @@ test("create root group", async () => {
 	expect(grp.path).toBe("/");
 	expect(grp.attrs).toStrictEqual(attributes);
 	expect(grp.store.has("/zarr.json")).true;
-	expect(json_decode_object(grp.store.get("/zarr.json")!))
-		.toMatchInlineSnapshot(`
+	expect(
+		json_decode_object(grp.store.get("/zarr.json")!),
+	).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
 		    "hello": "world",
@@ -36,8 +37,9 @@ test("create array", async () => {
 	expect(a.dtype).toBe("int32");
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
-	expect(json_decode_object(h.store.get("/arthur/dent/zarr.json")!))
-		.toMatchInlineSnapshot(`
+	expect(
+		json_decode_object(h.store.get("/arthur/dent/zarr.json")!),
+	).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
 		    "answer": 42,

@@ -35,9 +35,11 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-function to_c<T extends TypedArray>(
-	{ data, shape, stride }: ndarray.NdArray<T>,
-) {
+function to_c<T extends TypedArray>({
+	data,
+	shape,
+	stride,
+}: ndarray.NdArray<T>) {
 	let size = shape.reduce((a, b) => a * b, 1);
 	let out = ndarray(new (data as any).constructor(size), shape);
 	assign(out, ndarray(data, shape, stride));
@@ -54,7 +56,7 @@ describe("setter", () => {
 
 		let sel = [2, 3, 4].map((size) => slice_indices(slice(null), size));
 		setter.set_scalar(a, sel, 1);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 1, 1, 1,
 			1, 1, 1, 1,
@@ -74,7 +76,7 @@ describe("setter", () => {
 		);
 
 		setter.set_scalar(a, [0, 0, 0], 1);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -86,7 +88,7 @@ describe("setter", () => {
 		]));
 
 		setter.set_scalar(a, [1, 1, 1], 2);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -98,7 +100,7 @@ describe("setter", () => {
 		]));
 
 		setter.set_scalar(a, [1, 2, 3], 3);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -110,7 +112,7 @@ describe("setter", () => {
 		]));
 
 		setter.set_scalar(a, [1, 2, 2], 4);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -131,7 +133,7 @@ describe("setter", () => {
 
 		let sel = [slice_indices(slice(null), 2), slice_indices(slice(2), 3), 0];
 		setter.set_scalar(a, sel, 1);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			1, 0, 0, 0,
 			1, 0, 0, 0,
@@ -145,7 +147,7 @@ describe("setter", () => {
 		sel = [0, slice_indices(slice(null), 3), slice_indices(slice(null), 4)];
 		setter.set_scalar(a, sel, 2);
 
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(a.data).toStrictEqual(new Float32Array([
 			2, 2, 2, 2,
 			2, 2, 2, 2,
@@ -166,7 +168,7 @@ describe("setter", () => {
 
 		let sel = [slice_indices(slice(null), 2), slice_indices(slice(2), 3), 0];
 		setter.set_scalar(f, sel, 1);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(f.data).toStrictEqual(new Float32Array([
 			1, 1, 1, 1, 0, 0,
 			0, 0, 0, 0, 0, 0,
@@ -177,7 +179,7 @@ describe("setter", () => {
 		sel = [0, slice_indices(slice(null), 3), slice_indices(slice(null), 4)];
 		setter.set_scalar(f, sel, 2);
 
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(f.data).toStrictEqual(new Float32Array([
 			2, 1, 2, 1, 2, 0,
 			2, 0, 2, 0, 2, 0,
@@ -185,7 +187,7 @@ describe("setter", () => {
 			2, 0, 2, 0, 2, 0,
 		]));
 
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(to_c(f).data).toStrictEqual(new Float32Array([
 			2, 2, 2, 2,
 			2, 2, 2, 2,
@@ -217,7 +219,7 @@ describe("setter", () => {
 		];
 
 		setter.set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(dest.data).toStrictEqual(new Float32Array([
 			1, 1, 0, 0,
 			1, 1, 0, 0,
@@ -249,7 +251,7 @@ describe("setter", () => {
 		];
 
 		setter.set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(dest.data).toStrictEqual(new Float32Array([
 			2, 0, 2, 0,
 			0, 0, 0, 0,
@@ -269,7 +271,7 @@ describe("setter", () => {
 		);
 
 		let src = setter.prepare(
-			// deno-fmt-ignore
+			// biome-ignore format: the array should not be formatted
 			new Float32Array([
 			2, 0, 2, 0,
 			0, 0, 0, 0,
@@ -313,7 +315,7 @@ describe("setter", () => {
 		];
 
 		setter.set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(dest.data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
@@ -326,14 +328,10 @@ describe("setter", () => {
 	});
 
 	it("set_from_chunk - dest squeezed", async () => {
-		let dest = setter.prepare(
-			new Float32Array(4),
-			[4],
-			get_strides([4], "C"),
-		);
+		let dest = setter.prepare(new Float32Array(4), [4], get_strides([4], "C"));
 
 		let src = setter.prepare(
-			// deno-fmt-ignore
+			// biome-ignore format: the array should not be formatted
 			new Float32Array([
 				0, 2, 0, 0,
 				0, 0, 0, 0,
@@ -377,7 +375,7 @@ describe("setter", () => {
 		];
 
 		setter.set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 			1, 1, 0, 0,
 			1, 1, 0, 0,
@@ -409,7 +407,7 @@ describe("setter", () => {
 		];
 
 		setter.set_from_chunk(dest, src, mapping);
-		// deno-fmt-ignore
+		// biome-ignore format: the array should not be formatted
 		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 			0, 2, 0, 0,
 			0, 0, 0, 0,
@@ -421,30 +419,28 @@ describe("setter", () => {
 		]));
 	});
 
-	it(
-		"set_from_chunk - dest=F order, src=C order",
-		async () => {
-			let dest = setter.prepare(
-				new Float32Array(2 * 3 * 4),
-				[2, 3, 4],
-				get_strides([2, 3, 4], "F"),
-			);
+	it("set_from_chunk - dest=F order, src=C order", async () => {
+		let dest = setter.prepare(
+			new Float32Array(2 * 3 * 4),
+			[2, 3, 4],
+			get_strides([2, 3, 4], "F"),
+		);
 
-			let src = setter.prepare(
-				new Float32Array([2, 0, 0, 2]),
-				[4],
-				get_strides([4], "C"),
-			);
+		let src = setter.prepare(
+			new Float32Array([2, 0, 0, 2]),
+			[4],
+			get_strides([4], "C"),
+		);
 
-			let mapping: Projection[] = [
-				{ to: 0, from: null },
-				{ to: [0, 3, 2], from: [0, 4, 3] },
-				{ to: 1, from: null },
-			];
+		let mapping: Projection[] = [
+			{ to: 0, from: null },
+			{ to: [0, 3, 2], from: [0, 4, 3] },
+			{ to: 1, from: null },
+		];
 
-			setter.set_from_chunk(dest, src, mapping);
-			// deno-fmt-ignore
-			expect(to_c(dest).data).toStrictEqual(new Float32Array([
+		setter.set_from_chunk(dest, src, mapping);
+		// biome-ignore format: the array should not be formatted
+		expect(to_c(dest).data).toStrictEqual(new Float32Array([
 				0, 2, 0, 0,
 				0, 0, 0, 0,
 				0, 2, 0, 0,
@@ -453,33 +449,30 @@ describe("setter", () => {
 				0, 0, 0, 0,
 				0, 0, 0, 0,
 			]));
-		},
-	);
+	});
 
-	it(
-		"set_from_chunk - dest=C order, src=F order",
-		async () => {
-			let dest = setter.prepare(
-				new Float32Array(2 * 3 * 4),
-				[2, 3, 4],
-				get_strides([2, 3, 4], "C"),
-			);
+	it("set_from_chunk - dest=C order, src=F order", async () => {
+		let dest = setter.prepare(
+			new Float32Array(2 * 3 * 4),
+			[2, 3, 4],
+			get_strides([2, 3, 4], "C"),
+		);
 
-			let src = setter.prepare(
-				new Float32Array([2, 0, 0, 2]),
-				[4],
-				get_strides([4], "F"),
-			);
+		let src = setter.prepare(
+			new Float32Array([2, 0, 0, 2]),
+			[4],
+			get_strides([4], "F"),
+		);
 
-			let mapping: Projection[] = [
-				{ to: 0, from: null },
-				{ to: [0, 3, 2], from: [0, 4, 3] },
-				{ to: 1, from: null },
-			];
+		let mapping: Projection[] = [
+			{ to: 0, from: null },
+			{ to: [0, 3, 2], from: [0, 4, 3] },
+			{ to: 1, from: null },
+		];
 
-			setter.set_from_chunk(dest, src, mapping);
-			// deno-fmt-ignore
-			expect(dest.data).toStrictEqual(new Float32Array([
+		setter.set_from_chunk(dest, src, mapping);
+		// biome-ignore format: the array should not be formatted
+		expect(dest.data).toStrictEqual(new Float32Array([
 				0, 2, 0, 0,
 				0, 0, 0, 0,
 				0, 2, 0, 0,
@@ -488,6 +481,5 @@ describe("setter", () => {
 				0, 0, 0, 0,
 				0, 0, 0, 0,
 			]));
-		},
-	);
+	});
 });

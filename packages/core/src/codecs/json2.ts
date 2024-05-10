@@ -44,11 +44,11 @@ function throw_on_nan_replacer(_key: string | number, value: any): any {
 function sort_keys_replacer(_key: string | number, value: any): any {
 	return value instanceof Object && !(value instanceof Array)
 		? Object.keys(value)
-			.sort()
-			.reduce((sorted: any, key: string | number) => {
-				sorted[key] = value[key];
-				return sorted;
-			}, {})
+				.sort()
+				.reduce((sorted: any, key: string | number) => {
+					sorted[key] = value[key];
+					return sorted;
+				}, {})
 		: value;
 }
 
@@ -58,9 +58,7 @@ export class JsonCodec {
 	#encoder_config: EncoderConfig;
 	#decoder_config: DecoderConfig;
 
-	constructor(
-		public configuration: JsonCodecConfig,
-	) {
+	constructor(public configuration: JsonCodecConfig) {
 		// Reference: https://github.com/zarr-developers/numcodecs/blob/0878717a3613d91a453fe3d3716aa9c67c023a8b/numcodecs/json.py#L36
 		const {
 			encoding = "utf-8",
@@ -96,9 +94,7 @@ export class JsonCodec {
 		};
 		this.#decoder_config = { strict };
 	}
-	static fromConfig(
-		configuration: JsonCodecConfig,
-	) {
+	static fromConfig(configuration: JsonCodecConfig) {
 		return new JsonCodec(configuration);
 	}
 
@@ -166,9 +162,7 @@ export class JsonCodec {
 		const { strict } = this.#decoder_config;
 		if (!strict) {
 			// (i.e., allowing control characters inside strings)
-			throw new Error(
-				"JsonCodec does not yet support non-strict decoding.",
-			);
+			throw new Error("JsonCodec does not yet support non-strict decoding.");
 		}
 		const items = json_decode_object(bytes);
 		const shape = items.pop();

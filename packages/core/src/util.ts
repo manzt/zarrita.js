@@ -104,9 +104,10 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-export function create_chunk_key_encoder(
-	{ name, configuration }: ArrayMetadata["chunk_key_encoding"],
-): (chunk_coords: number[]) => string {
+export function create_chunk_key_encoder({
+	name,
+	configuration,
+}: ArrayMetadata["chunk_key_encoding"]): (chunk_coords: number[]) => string {
 	if (name === "default") {
 		return (chunk_coords) =>
 			["c", ...chunk_coords].join(configuration.separator);
@@ -136,19 +137,20 @@ function coerce_dtype(
 		throw new Error(`Invalid dtype: ${dtype}`);
 	}
 	let [, endian, rest] = match;
-	let data_type = {
-		"b1": "bool",
-		"i1": "int8",
-		"u1": "uint8",
-		"i2": "int16",
-		"u2": "uint16",
-		"i4": "int32",
-		"u4": "uint32",
-		"i8": "int64",
-		"u8": "uint64",
-		"f4": "float32",
-		"f8": "float64",
-	}[rest] ??
+	let data_type =
+		{
+			b1: "bool",
+			i1: "int8",
+			u1: "uint8",
+			i2: "int16",
+			u2: "uint16",
+			i4: "int32",
+			u4: "uint32",
+			i8: "int64",
+			u8: "uint64",
+			f4: "float32",
+			f8: "float64",
+		}[rest] ??
 		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
 	if (!data_type) {
 		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
@@ -223,11 +225,15 @@ export type DataTypeQuery =
 export type NarrowDataType<
 	Dtype extends DataType,
 	Query extends DataTypeQuery,
-> = Query extends "number" ? NumberDataType
-	: Query extends "bigint" ? BigintDataType
-	: Query extends "string" ? StringDataType
-	: Query extends "object" ? ObjectType
-	: Extract<Query, Dtype>;
+> = Query extends "number"
+	? NumberDataType
+	: Query extends "bigint"
+		? BigintDataType
+		: Query extends "string"
+			? StringDataType
+			: Query extends "object"
+				? ObjectType
+				: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,

@@ -4,15 +4,15 @@
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
-		"fmt": "dprint fmt",
-		"lint": "dprint check",
+		"format": "biome format .",
+		"lint": "echo \"TODO: Add linting\"",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.7.3",
 		"@changesets/cli": "^2.27.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@types/node": "^20.12.2",
-		"dprint": "^0.45.1",
 		"publint": "^0.2.2",
 		"typescript": "^5.4.5",
 		"vitest": "^1.5.3"

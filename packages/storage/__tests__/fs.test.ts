@@ -21,9 +21,9 @@ describe("FileSystemStore", () => {
 	it("writes a file", async () => {
 		const store = new FileSystemStore(store_path);
 		await store.set("/foo-write", new TextEncoder().encode("bar"));
-		expect(
-			await fs.readFile(path.join(store_path, "foo-write"), "utf-8"),
-		).toBe("bar");
+		expect(await fs.readFile(path.join(store_path, "foo-write"), "utf-8")).toBe(
+			"bar",
+		);
 	});
 	it("reads a file", async () => {
 		const store = new FileSystemStore(store_path);

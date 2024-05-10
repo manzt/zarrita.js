@@ -17,8 +17,8 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		throw new Error("Store does not support range requests");
 	}
 	let get_range = location.store.getRange.bind(location.store);
-	let index_shape = shard_shape.map((d, i) =>
-		d / sharding_config.chunk_shape[i]
+	let index_shape = shard_shape.map(
+		(d, i) => d / sharding_config.chunk_shape[i],
 	);
 	let index_codec = create_codec_pipeline({
 		data_type: "uint64",

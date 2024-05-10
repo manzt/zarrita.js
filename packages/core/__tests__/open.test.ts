@@ -28,10 +28,7 @@ describe("open (v2 vs v3 priority)", () => {
 	function meta_store(
 		entries: Record<
 			AbsolutePath,
-			| ArrayMetadata
-			| GroupMetadata
-			| ArrayMetadataV2
-			| GroupMetadataV2
+			ArrayMetadata | GroupMetadata | ArrayMetadataV2 | GroupMetadataV2
 		>,
 	): Map<AbsolutePath, Uint8Array> {
 		let enc = new TextEncoder();
@@ -46,43 +43,43 @@ describe("open (v2 vs v3 priority)", () => {
 		root(
 			meta_store({
 				"/v2/.zgroup": {
-					"zarr_format": 2,
+					zarr_format: 2,
 				},
 				"/v2/foo/.zarray": {
-					"zarr_format": 2,
-					"chunks": [2],
-					"shape": [4],
-					"compressor": null,
-					"dtype": "<i2",
-					"fill_value": 0,
-					"filters": null,
-					"order": "C",
+					zarr_format: 2,
+					chunks: [2],
+					shape: [4],
+					compressor: null,
+					dtype: "<i2",
+					fill_value: 0,
+					filters: null,
+					order: "C",
 				},
 				"/v3/zarr.json": {
-					"zarr_format": 3,
-					"node_type": "group",
-					"attributes": {},
+					zarr_format: 3,
+					node_type: "group",
+					attributes: {},
 				},
 				"/v3/foo/zarr.json": {
-					"zarr_format": 3,
-					"node_type": "array",
-					"data_type": "int32",
-					"shape": [4],
-					"chunk_grid": {
-						"name": "regular",
-						"configuration": {
-							"chunk_shape": [2],
+					zarr_format: 3,
+					node_type: "array",
+					data_type: "int32",
+					shape: [4],
+					chunk_grid: {
+						name: "regular",
+						configuration: {
+							chunk_shape: [2],
 						},
 					},
-					"codecs": [],
-					"chunk_key_encoding": {
-						"name": "default",
-						"configuration": {
-							"separator": "/",
+					codecs: [],
+					chunk_key_encoding: {
+						name: "default",
+						configuration: {
+							separator: "/",
 						},
 					},
-					"fill_value": null,
-					"attributes": {},
+					fill_value: null,
+					attributes: {},
 				},
 			}),
 		);
@@ -188,17 +185,17 @@ describe("v2", () => {
 	});
 
 	describe("1d.contiguous.f4", () => {
-		it.each([
-			"1d.contiguous.f4.le",
-			"1d.contiguous.f4.be",
-		])(`%s`, async (path) => {
-			let arr = await open.v2(store.resolve(path), { kind: "array" });
-			expect(await arr.getChunk([0])).toStrictEqual({
-				data: new Float32Array([-1000.5, 0, 1000.5, 0]),
-				shape: [4],
-				stride: [1],
-			});
-		});
+		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
+			`%s`,
+			async (path) => {
+				let arr = await open.v2(store.resolve(path), { kind: "array" });
+				expect(await arr.getChunk([0])).toStrictEqual({
+					data: new Float32Array([-1000.5, 0, 1000.5, 0]),
+					shape: [4],
+					stride: [1],
+				});
+			},
+		);
 	});
 
 	it("1d.contiguous.f8", async () => {
@@ -213,21 +210,23 @@ describe("v2", () => {
 	});
 
 	describe("1d.contiguous.U13", () => {
-		it.each([
-			"1d.contiguous.U13.le",
-			"1d.contiguous.U13.le",
-		])(`%s`, async (path) => {
-			let arr = await open.v2(store.resolve(path), {
-				kind: "array",
-			});
-			let chunk = await arr.getChunk([0]);
-			expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-			expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
-				data: ["a", "b", "cc", "d"],
-				shape: [4],
-				stride: [1],
-			});
-		});
+		it.each(["1d.contiguous.U13.le", "1d.contiguous.U13.le"])(
+			`%s`,
+			async (path) => {
+				let arr = await open.v2(store.resolve(path), {
+					kind: "array",
+				});
+				let chunk = await arr.getChunk([0]);
+				expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
+				expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual(
+					{
+						data: ["a", "b", "cc", "d"],
+						shape: [4],
+						stride: [1],
+					},
+				);
+			},
+		);
 	});
 
 	it("1d.contiguous.U7", async () => {
@@ -370,10 +369,22 @@ describe("v2", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0], [1, 2, 4, 5]],
-			[[0, 1], [3, 0, 6, 0]],
-			[[1, 0], [7, 8, 0, 0]],
-			[[1, 1], [9, 0, 0, 0]],
+			[
+				[0, 0],
+				[1, 2, 4, 5],
+			],
+			[
+				[0, 1],
+				[3, 0, 6, 0],
+			],
+			[
+				[1, 0],
+				[7, 8, 0, 0],
+			],
+			[
+				[1, 1],
+				[9, 0, 0, 0],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -408,10 +419,22 @@ describe("v2", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0, 0], ["a", "aa"]],
-			[[1, 0, 0], ["b", "bb"]],
-			[[0, 1, 0], ["aaa", "aaaa"]],
-			[[1, 1, 0], ["bbb", "bbbb"]],
+			[
+				[0, 0, 0],
+				["a", "aa"],
+			],
+			[
+				[1, 0, 0],
+				["b", "bb"],
+			],
+			[
+				[0, 1, 0],
+				["aaa", "aaaa"],
+			],
+			[
+				[1, 1, 0],
+				["bbb", "bbbb"],
+			],
 		])(`getChunk(%j) -> %j`, async (index, expected) => {
 			expect(await arr.getChunk(index)).toStrictEqual({
 				data: expected,
@@ -426,9 +449,18 @@ describe("v2", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0, 0], [0, 3, 6, 9, 12, 15, 18, 21, 24]],
-			[[0, 0, 1], [1, 4, 7, 10, 13, 16, 19, 22, 25]],
-			[[0, 0, 2], [2, 5, 8, 11, 14, 17, 20, 23, 26]],
+			[
+				[0, 0, 0],
+				[0, 3, 6, 9, 12, 15, 18, 21, 24],
+			],
+			[
+				[0, 0, 1],
+				[1, 4, 7, 10, 13, 16, 19, 22, 25],
+			],
+			[
+				[0, 0, 2],
+				[2, 5, 8, 11, 14, 17, 20, 23, 26],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -444,9 +476,18 @@ describe("v2", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0, 0], [0, 9, 18, 3, 12, 21, 6, 15, 24]],
-			[[0, 0, 1], [1, 10, 19, 4, 13, 22, 7, 16, 25]],
-			[[0, 0, 2], [2, 11, 20, 5, 14, 23, 8, 17, 26]],
+			[
+				[0, 0, 0],
+				[0, 9, 18, 3, 12, 21, 6, 15, 24],
+			],
+			[
+				[0, 0, 1],
+				[1, 10, 19, 4, 13, 22, 7, 16, 25],
+			],
+			[
+				[0, 0, 2],
+				[2, 11, 20, 5, 14, 23, 8, 17, 26],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -473,10 +514,7 @@ describe("v2", () => {
 
 	describe("opens array from group", async () => {
 		let grp = await open.v2(store, { kind: "group" });
-		it.each([
-			"/1d.chunked.i2",
-			"1d.chunked.i2",
-		])(`%s`, async (path) => {
+		it.each(["/1d.chunked.i2", "1d.chunked.i2"])(`%s`, async (path) => {
 			let a = await open.v2(grp.resolve(path), { kind: "array" });
 			expect(a.path).toBe("/1d.chunked.i2");
 		});
@@ -528,17 +566,17 @@ describe("v3", () => {
 	});
 
 	describe("1d.contiguous.f4", () => {
-		it.each([
-			"1d.contiguous.f4.le",
-			"1d.contiguous.f4.be",
-		])(`%s`, async (path) => {
-			let arr = await open.v3(store.resolve(path), { kind: "array" });
-			expect(await arr.getChunk([0])).toStrictEqual({
-				data: new Float32Array([-1000.5, 0, 1000.5, 0]),
-				shape: [4],
-				stride: [1],
-			});
-		});
+		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
+			`%s`,
+			async (path) => {
+				let arr = await open.v3(store.resolve(path), { kind: "array" });
+				expect(await arr.getChunk([0])).toStrictEqual({
+					data: new Float32Array([-1000.5, 0, 1000.5, 0]),
+					shape: [4],
+					stride: [1],
+				});
+			},
+		);
 	});
 
 	it("1d.contiguous.f8", async () => {
@@ -646,10 +684,22 @@ describe("v3", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0], [1, 2, 4, 5]],
-			[[0, 1], [3, 0, 6, 0]],
-			[[1, 0], [7, 8, 0, 0]],
-			[[1, 1], [9, 0, 0, 0]],
+			[
+				[0, 0],
+				[1, 2, 4, 5],
+			],
+			[
+				[0, 1],
+				[3, 0, 6, 0],
+			],
+			[
+				[1, 0],
+				[7, 8, 0, 0],
+			],
+			[
+				[1, 1],
+				[9, 0, 0, 0],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -683,9 +733,18 @@ describe("v3", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0, 0], [0, 3, 6, 9, 12, 15, 18, 21, 24]],
-			[[0, 0, 1], [1, 4, 7, 10, 13, 16, 19, 22, 25]],
-			[[0, 0, 2], [2, 5, 8, 11, 14, 17, 20, 23, 26]],
+			[
+				[0, 0, 0],
+				[0, 3, 6, 9, 12, 15, 18, 21, 24],
+			],
+			[
+				[0, 0, 1],
+				[1, 4, 7, 10, 13, 16, 19, 22, 25],
+			],
+			[
+				[0, 0, 2],
+				[2, 5, 8, 11, 14, 17, 20, 23, 26],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -701,9 +760,18 @@ describe("v3", () => {
 			kind: "array",
 		});
 		it.each([
-			[[0, 0, 0], [0, 9, 18, 3, 12, 21, 6, 15, 24]],
-			[[0, 0, 1], [1, 10, 19, 4, 13, 22, 7, 16, 25]],
-			[[0, 0, 2], [2, 11, 20, 5, 14, 23, 8, 17, 26]],
+			[
+				[0, 0, 0],
+				[0, 9, 18, 3, 12, 21, 6, 15, 24],
+			],
+			[
+				[0, 0, 1],
+				[1, 10, 19, 4, 13, 22, 7, 16, 25],
+			],
+			[
+				[0, 0, 2],
+				[2, 11, 20, 5, 14, 23, 8, 17, 26],
+			],
 		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
@@ -730,10 +798,7 @@ describe("v3", () => {
 
 	describe("opens array from group", async () => {
 		let grp = await open.v3(store, { kind: "group" });
-		it.each([
-			"/1d.chunked.i2",
-			"1d.chunked.i2",
-		])(`%s`, async (path) => {
+		it.each(["/1d.chunked.i2", "1d.chunked.i2"])(`%s`, async (path) => {
 			let a = await open.v3(grp.resolve(path), { kind: "array" });
 			expect(a.path).toBe("/1d.chunked.i2");
 		});
@@ -816,10 +881,9 @@ describe("v3", () => {
 	});
 
 	describe("1d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("1d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
+		let arr = await open.v3(store.resolve("1d.chunked.compressed.sharded.i2"), {
+			kind: "array",
+		});
 		it.each<[chunk_coord: [number], value: number]>([
 			[[0], 1],
 			[[1], 2],
@@ -854,10 +918,9 @@ describe("v3", () => {
 	});
 
 	describe("2d.contiguous.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("2d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
+		let arr = await open.v3(store.resolve("2d.chunked.compressed.sharded.i2"), {
+			kind: "array",
+		});
 		it.each<[chunk_coord: [i: number, j: number], value: number]>([
 			[[0, 0], 1],
 			[[0, 1], 2],
@@ -875,16 +938,13 @@ describe("v3", () => {
 			[[3, 1], 14],
 			[[3, 2], 15],
 			[[3, 3], 16],
-		])(
-			"getChunk(%j) -> Int16Array([%i])",
-			async (chunk_coords, expected) => {
-				expect(await arr.getChunk(chunk_coords)).toStrictEqual({
-					data: new Int16Array([expected]),
-					shape: [1, 1],
-					stride: [1, 1],
-				});
-			},
-		);
+		])("getChunk(%j) -> Int16Array([%i])", async (chunk_coords, expected) => {
+			expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		});
 	});
 
 	describe("2d.chunked.compressed.sharded.filled.i2", async () => {
@@ -909,23 +969,19 @@ describe("v3", () => {
 			[[3, 1], 13],
 			[[3, 2], 14],
 			[[3, 3], 15],
-		])(
-			"getChunk(%j) -> Int32Array([%i])",
-			async (chunk_coord, expected) => {
-				expect(await arr.getChunk(chunk_coord)).toStrictEqual({
-					data: new Int16Array([expected]),
-					shape: [1, 1],
-					stride: [1, 1],
-				});
-			},
-		);
+		])("getChunk(%j) -> Int32Array([%i])", async (chunk_coord, expected) => {
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		});
 	});
 
 	describe("2d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("2d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
+		let arr = await open.v3(store.resolve("2d.chunked.compressed.sharded.i2"), {
+			kind: "array",
+		});
 		it.each<[chunk_coord: [number, number], value: number]>([
 			[[0, 0], 1],
 			[[0, 1], 2],
@@ -943,16 +999,13 @@ describe("v3", () => {
 			[[3, 1], 14],
 			[[3, 2], 15],
 			[[3, 3], 16],
-		])(
-			"getChunk(%j) -> Int32Array([%i])",
-			async (chunk_coord, expected) => {
-				expect(await arr.getChunk(chunk_coord)).toStrictEqual({
-					data: new Int16Array([expected]),
-					shape: [1, 1],
-					stride: [1, 1],
-				});
-			},
-		);
+		])("getChunk(%j) -> Int32Array([%i])", async (chunk_coord, expected) => {
+			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		});
 	});
 
 	it("3d.contiguous.compressed.sharded.i2", async () => {
@@ -968,10 +1021,9 @@ describe("v3", () => {
 	});
 
 	describe("3d.chunked.compressed.sharded.i2", async () => {
-		let arr = await open.v3(
-			store.resolve("3d.chunked.compressed.sharded.i2"),
-			{ kind: "array" },
-		);
+		let arr = await open.v3(store.resolve("3d.chunked.compressed.sharded.i2"), {
+			kind: "array",
+		});
 		it.each<[chunk_coord: [number, number, number], value: number]>([
 			[[0, 0, 0], 0],
 			[[1, 0, 1], 17],
@@ -979,16 +1031,13 @@ describe("v3", () => {
 			[[1, 1, 1], 21],
 			[[1, 3, 2], 30],
 			[[3, 3, 3], 63],
-		])(
-			"getChunk(%j) –> Int16Array([%i])",
-			async (chunk_coords, expected) => {
-				expect(await arr.getChunk(chunk_coords)).toStrictEqual({
-					data: new Int16Array([expected]),
-					shape: [1, 1, 1],
-					stride: [1, 1, 1],
-				});
-			},
-		);
+		])("getChunk(%j) –> Int16Array([%i])", async (chunk_coords, expected) => {
+			expect(await arr.getChunk(chunk_coords)).toStrictEqual({
+				data: new Int16Array([expected]),
+				shape: [1, 1, 1],
+				stride: [1, 1, 1],
+			});
+		});
 	});
 
 	describe("3d.chunked.mixed.compressed.sharded.i2", async () => {
@@ -997,9 +1046,18 @@ describe("v3", () => {
 			{ kind: "array" },
 		);
 		it.each<[chunk_coord: [number, number, number], value: number[]]>([
-			[[0, 0, 0], [0, 3, 6, 9, 12, 15, 18, 21, 24]],
-			[[0, 0, 1], [1, 4, 7, 10, 13, 16, 19, 22, 25]],
-			[[0, 0, 2], [2, 5, 8, 11, 14, 17, 20, 23, 26]],
+			[
+				[0, 0, 0],
+				[0, 3, 6, 9, 12, 15, 18, 21, 24],
+			],
+			[
+				[0, 0, 1],
+				[1, 4, 7, 10, 13, 16, 19, 22, 25],
+			],
+			[
+				[0, 0, 2],
+				[2, 5, 8, 11, 14, 17, 20, 23, 26],
+			],
 		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
 			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
 				data: new Int16Array(expected),

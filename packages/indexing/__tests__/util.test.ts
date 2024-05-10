@@ -78,13 +78,12 @@ describe("slice indices", () => {
 		},
 	);
 
-	test.each([
-		[null, null, 0, 1],
-	])(
+	test.each([[null, null, 0, 1]])(
 		`slice_indices(slice(%o, %o, %o), %i) -> throws`,
 		(start, stop, step, indices) => {
-			expect(() => slice_indices(slice(start, stop, step), indices))
-				.toThrowError();
+			expect(() =>
+				slice_indices(slice(start, stop, step), indices),
+			).toThrowError();
 		},
 	);
 });

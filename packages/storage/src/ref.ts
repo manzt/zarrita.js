@@ -16,7 +16,7 @@ export function to_binary(base64: string): Uint8Array {
 		// @ts-ignore
 		(((n - (base64[n - 1] == "=") - (base64[n - 2] == "=")) * 3) / 4) | 0,
 	);
-	for (var i = 0, j = 0; i < n;) {
+	for (var i = 0, j = 0; i < n; ) {
 		var c0 = table[base64.charCodeAt(i++)],
 			c1 = table[base64.charCodeAt(i++)];
 		var c2 = table[base64.charCodeAt(i++)],
@@ -28,11 +28,10 @@ export function to_binary(base64: string): Uint8Array {
 	return bytes;
 }
 
-type ReferenceEntry = string | [url: string | null] | [
-	url: string | null,
-	offset: number,
-	length: number,
-];
+type ReferenceEntry =
+	| string
+	| [url: string | null]
+	| [url: string | null, offset: number, length: number];
 
 interface ReferenceStoreOptions {
 	target?: string | URL;

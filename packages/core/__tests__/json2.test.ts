@@ -8,8 +8,7 @@ describe("JsonCodec", () => {
 		// import numpy as np
 		// json_codec = JSON()
 		// json_codec.encode(np.array(['ASC1', 'ASC2', 'END', 'GABA1', 'GABA2', 'MG', 'NSC', 'ODC1', 'OPC', 'Unclassified', 'exCA1', 'exCA3', 'exDG', 'exPFC1', 'exPFC2'], dtype=object))
-		const encodedStr =
-			`["ASC1","ASC2","END","GABA1","GABA2","MG","NSC","ODC1","OPC","Unclassified","exCA1","exCA3","exDG","exPFC1","exPFC2","|O",[15]]`;
+		const encodedStr = `["ASC1","ASC2","END","GABA1","GABA2","MG","NSC","ODC1","OPC","Unclassified","exCA1","exCA3","exDG","exPFC1","exPFC2","|O",[15]]`;
 		const encodedBytes = new TextEncoder().encode(encodedStr);
 		const jsonCodec = new JsonCodec({ encoding: "utf-8" });
 		const decodedResult = jsonCodec.decode(encodedBytes);
@@ -36,8 +35,7 @@ describe("JsonCodec", () => {
 		});
 	});
 	test("can encode", () => {
-		const encodedStr =
-			`["ASC1","ASC2","END","GABA1","GABA2","MG","NSC","ODC1","OPC","Unclassified","exCA1","exCA3","exDG","exPFC1","exPFC2","|O",[15]]`;
+		const encodedStr = `["ASC1","ASC2","END","GABA1","GABA2","MG","NSC","ODC1","OPC","Unclassified","exCA1","exCA3","exDG","exPFC1","exPFC2","|O",[15]]`;
 		const encodedBytes = new TextEncoder().encode(encodedStr);
 
 		const chunk = {
@@ -132,24 +130,7 @@ describe("JsonCodec", () => {
 		const decodedChunk = jsonCodec.decode(encodedChunk);
 		expect(decodedChunk.data).toEqual(["£"]);
 		expect(Array.from(encodedChunk)).toEqual([
-			91,
-			34,
-			92,
-			117,
-			48,
-			48,
-			97,
-			51,
-			34,
-			44,
-			34,
-			124,
-			79,
-			34,
-			44,
-			91,
-			49,
-			93,
+			91, 34, 92, 117, 48, 48, 97, 51, 34, 44, 34, 124, 79, 34, 44, 91, 49, 93,
 			93,
 		]);
 	});
@@ -164,21 +145,7 @@ describe("JsonCodec", () => {
 		const decodedChunk = jsonCodec.decode(encodedChunk);
 		expect(decodedChunk.data).toEqual(["£"]);
 		expect(Array.from(encodedChunk)).toEqual([
-			91,
-			34,
-			194,
-			163,
-			34,
-			44,
-			34,
-			124,
-			79,
-			34,
-			44,
-			91,
-			49,
-			93,
-			93,
+			91, 34, 194, 163, 34, 44, 34, 124, 79, 34, 44, 91, 49, 93, 93,
 		]);
 	});
 });

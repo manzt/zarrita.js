@@ -21,9 +21,9 @@ export function* range(
  */
 export function* product<T extends Array<Iterable<any>>>(
 	...iterables: T
-): IterableIterator<
-	{ [K in keyof T]: T[K] extends Iterable<infer U> ? U : never }
-> {
+): IterableIterator<{
+	[K in keyof T]: T[K] extends Iterable<infer U> ? U : never;
+}> {
 	if (iterables.length === 0) {
 		return;
 	}
@@ -33,7 +33,7 @@ export function* product<T extends Array<Iterable<any>>>(
 	if (results.some((r) => r.done)) {
 		throw new Error("Input contains an empty iterator.");
 	}
-	for (let i = 0;;) {
+	for (let i = 0; ; ) {
 		if (results[i].done) {
 			// reset the current iterator
 			iterators[i] = iterables[i][Symbol.iterator]();

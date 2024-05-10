@@ -50,16 +50,10 @@ export function root<Store>(
 	return new Location(store ?? new Map());
 }
 
-export class Group<
-	Store extends Readable,
-> extends Location<Store> {
+export class Group<Store extends Readable> extends Location<Store> {
 	readonly kind = "group";
 	#metadata: GroupMetadata;
-	constructor(
-		store: Store,
-		path: AbsolutePath,
-		metadata: GroupMetadata,
-	) {
+	constructor(store: Store, path: AbsolutePath, metadata: GroupMetadata) {
 		super(store, path);
 		this.#metadata = metadata;
 	}
@@ -130,10 +124,7 @@ function create_context<Store extends Readable, D extends DataType>(
 }
 
 /** For internal use only, and is subject to change. */
-interface ArrayContext<
-	Store extends Readable,
-	D extends DataType,
-> {
+interface ArrayContext<Store extends Readable, D extends DataType> {
 	kind: "sharded" | "regular";
 	/** The codec pipeline for this array. */
 	codec: ReturnType<typeof create_codec_pipeline<D>>;

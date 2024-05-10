@@ -53,8 +53,9 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const flipped = mapping.map(flip_indexer_projection);
 		queue.add(async () => {
 			// obtain key for chunk storage
-			const chunk_path =
-				arr.resolve(context.encode_chunk_key(chunk_coords)).path;
+			const chunk_path = arr.resolve(
+				context.encode_chunk_key(chunk_coords),
+			).path;
 
 			let chunk_data: TypedArray<Dtype>;
 			const chunk_shape = arr.chunks.slice();

@@ -105,13 +105,9 @@ function get_order(arr: Chunk<DataType>): "C" | "F" {
 export class TransposeCodec {
 	kind = "array_to_array";
 
-	constructor(
-		public configuration: { order: "C" | "F" },
-	) {}
+	constructor(public configuration: { order: "C" | "F" }) {}
 
-	static fromConfig(
-		configuration: { order: "C" | "F" },
-	) {
+	static fromConfig(configuration: { order: "C" | "F" }) {
 		return new TransposeCodec(configuration);
 	}
 

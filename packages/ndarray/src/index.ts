@@ -65,10 +65,12 @@ export async function set<D extends core.DataType>(
 	);
 }
 
-function unzip_selections(
-	mapping: Projection[],
-): { to: (number | Indices)[]; from: (number | Indices)[] } {
-	const to = [], from = [];
+function unzip_selections(mapping: Projection[]): {
+	to: (number | Indices)[];
+	from: (number | Indices)[];
+} {
+	const to = [],
+		from = [];
 	for (const m of mapping) {
 		if (m.to !== null) to.push(m.to);
 		if (m.from !== null) from.push(m.from);
@@ -98,5 +100,9 @@ function view<D extends core.DataType>(
 		step.push(s[2]);
 		pick.push(null);
 	});
-	return arr.hi(...hi).lo(...lo).step(...step).pick(...pick);
+	return arr
+		.hi(...hi)
+		.lo(...lo)
+		.step(...step)
+		.pick(...pick);
 }

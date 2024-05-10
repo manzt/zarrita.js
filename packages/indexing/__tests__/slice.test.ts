@@ -6,7 +6,7 @@ import { slice } from "../src/util.js";
 import { IndexError } from "../src/indexer.js";
 
 const DATA = {
-	// @deno-fmt-ignore
+	// biome-ignore format: the array should not be formatted
 	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]),
 	shape: [2, 3, 4],
 	stride: [12, 4, 1],
@@ -70,7 +70,7 @@ export function run_suite(name: string, getter: any) {
 			[
 				[1, null, null],
 				{
-					// @deno-fmt-ignore
+					// biome-ignore format: the array should not be formatted
 					data: new Int32Array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]),
 					shape: [3, 4],
 					stride: [4, 1],
@@ -129,9 +129,7 @@ export function run_suite(name: string, getter: any) {
 
 		it("Does not support negative indices", async () => {
 			let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-			await expect(get(arr, sel))
-				.rejects
-				.toThrowError(IndexError);
+			await expect(get(arr, sel)).rejects.toThrowError(IndexError);
 		});
 	});
 }

@@ -33,9 +33,7 @@ describe("get_ctr", () => {
 		expect(new T(1)).toBeInstanceOf(ctr);
 	});
 
-	test.each([
-		"float16",
-	])("%s -> throws", (dtype) => {
+	test.each(["float16"])("%s -> throws", (dtype) => {
 		expect(() => get_ctr(dtype as DataType)).toThrowError();
 	});
 });
