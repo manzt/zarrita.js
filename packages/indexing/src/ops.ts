@@ -18,7 +18,7 @@ function object_array_view<T>(arr: T[], offset = 0, size?: number) {
 		subarray(from: number, to: number = length) {
 			return object_array_view(arr, offset + from, to - from);
 		},
-		set(data: { get(idx: number): T; length: number }, start: number = 0) {
+		set(data: { get(idx: number): T; length: number }, start = 0) {
 			for (let i = 0; i < data.length; i++) {
 				arr[offset + start + i] = data.get(i);
 			}

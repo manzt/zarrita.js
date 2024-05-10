@@ -26,13 +26,13 @@ function throw_on_nan_replacer(_key: string | number, value: any): any {
 		);
 	}
 
-	if (value === Infinity) {
+	if (value === Number.POSITIVE_INFINITY) {
 		throw new Error(
 			"JsonCodec allow_nan is false but Infinity was encountered during encoding.",
 		);
 	}
 
-	if (value === -Infinity) {
+	if (value === Number.NEGATIVE_INFINITY) {
 		throw new Error(
 			"JsonCodec allow_nan is false but -Infinity was encountered during encoding.",
 		);
@@ -134,7 +134,7 @@ export class JsonCodec {
 
 		let replacer = undefined;
 		if (replacer_functions.length) {
-			replacer = function (key: string | number, value: any): any {
+			replacer = (key: string | number, value: any): any => {
 				let new_value = value;
 				replacer_functions.forEach((sub_replacer) => {
 					new_value = sub_replacer(key, new_value);
@@ -149,7 +149,7 @@ export class JsonCodec {
 			// to have all incoming non-ASCII characters escaped.
 			// If ensure_ascii is false, these characters will be output as-is.
 			// Reference: https://stackoverflow.com/a/31652607
-			json_str = json_str.replace(/[\u007F-\uFFFF]/g, function (chr) {
+			json_str = json_str.replace(/[\u007F-\uFFFF]/g, (chr) => {
 				const full_str = "0000" + chr.charCodeAt(0).toString(16);
 				const sub_str = full_str.substring(full_str.length - 4);
 				return "\\u" + sub_str;

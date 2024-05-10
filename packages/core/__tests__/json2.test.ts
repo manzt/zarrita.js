@@ -102,7 +102,7 @@ describe("JsonCodec", () => {
 	});
 	test("supports !allow_nan", () => {
 		const chunk = {
-			data: [1, 2, NaN],
+			data: [1, 2, Number.NaN],
 			shape: [3],
 			stride: [1],
 		};
