@@ -19,7 +19,7 @@ export function* range(
  * python-like itertools.product generator
  * https://gist.github.com/cybercase/db7dde901d7070c98c48
  */
-export function* product<T extends Array<Iterable<any>>>(
+export function* product<T extends Array<Iterable<unknown>>>(
 	...iterables: T
 ): IterableIterator<{
 	[K in keyof T]: T[K] extends Iterable<infer U> ? U : never;
@@ -43,7 +43,8 @@ export function* product<T extends Array<Iterable<any>>>(
 				return;
 			}
 		} else {
-			yield results.map(({ value }) => value) as any;
+			// @ts-expect-error - TS can't infer this
+			yield results.map(({ value }) => value);
 			i = 0;
 		}
 		results[i] = iterators[i].next();

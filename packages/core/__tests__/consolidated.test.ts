@@ -51,6 +51,7 @@ describe("withConsolidated", () => {
 	it("loads chunk data from underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let store = await withConsolidated(new FileSystemStore(root));
+		// biome-ignore lint/style/noNonNullAssertion: Fine for a test
 		let entry = store
 			.contents()
 			.find((x) => x.path === "/3d.chunked.mixed.i2.C")!;
@@ -102,7 +103,7 @@ describe("withConsolidated", () => {
 		let try_open = () => withConsolidated(new FileSystemStore(root));
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			`[NodeNotFoundError: Node not found: v2 consolidated metadata]`,
+			"[NodeNotFoundError: Node not found: v2 consolidated metadata]",
 		);
 	});
 });

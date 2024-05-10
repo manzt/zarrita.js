@@ -19,7 +19,7 @@ async function handle_response(
 	if (response.status === 404 || response.status === 403) {
 		return undefined;
 	}
-	if (response.status == 200 || response.status == 206) {
+	if (response.status === 200 || response.status === 206) {
 		return new Uint8Array(await response.arrayBuffer());
 	}
 	throw new Error(

@@ -123,9 +123,9 @@ describe("ndarray", () => {
 		let arr = await zarr.open.v2(store.resolve("/1d.contiguous.U13.le"), {
 			kind: "array",
 		});
-		let res = await get(arr as any);
+		let res = await get(arr);
 		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -238,8 +238,8 @@ describe("ndarray", () => {
 		let arr = await zarr.open.v2(store.resolve("/2d.chunked.U7"), {
 			kind: "array",
 		});
-		let res = await get(arr as any);
-		expect(Array.from(res.data as any)).toStrictEqual(["a", "b", "cc", "d"]);
+		let res = await get(arr);
+		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([2, 2]);
 	});
 
@@ -247,7 +247,7 @@ describe("ndarray", () => {
 		let arr = await zarr.open.v2(store.resolve("/3d.chunked.O"), {
 			kind: "array",
 		});
-		let res = await get(arr as any);
+		let res = await get(arr);
 		expect(res).toMatchObject({
 			data: ["a", "aa", "aaa", "aaaa", "b", "bb", "bbb", "bbbb"],
 			shape: [2, 2, 2],

@@ -28,7 +28,9 @@ test("Read and write array data - builtin", async () => {
 	);
 
 	const expected = new Int32Array(50).fill(42, 0, 10);
-	[10, 20, 30, 40].forEach((i) => (expected[i] = 42));
+	for (let i of [10, 20, 30, 40]) {
+		expected[i] = 42;
+	}
 	await set(a, [null, 0], 42);
 	expect((await get(a, null)).data).toStrictEqual(expected);
 

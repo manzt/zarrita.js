@@ -6,7 +6,14 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"style": {
+				"useConst": "off",
+				"noParameterAssign": "off"
+			},
+			"suspicious": {
+				"noShadowRestrictedNames": "off"
+			}
 		}
 	},
 	"files": {

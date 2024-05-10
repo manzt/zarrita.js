@@ -18,7 +18,7 @@ function object_array_view<T>(arr: T[], offset = 0, size?: number) {
 		subarray(from: number, to: number = length) {
 			return object_array_view(arr, offset + from, to - from);
 		},
-		set(data: { get(idx: number): T; length: number }, start: number = 0) {
+		set(data: { get(idx: number): T; length: number }, start = 0) {
 			for (let i = 0; i < data.length; i++) {
 				arr[offset + start + i] = data.get(i);
 			}
@@ -46,7 +46,7 @@ function compat_chunk<D extends core.DataType>(
 	stride: number[];
 	bytes_per_element: number;
 } {
-	if (arr.data instanceof globalThis.Array) {
+	if (globalThis.Array.isArray(arr.data)) {
 		return {
 			// @ts-expect-error
 			data: object_array_view(arr.data),
@@ -91,11 +91,12 @@ function compat_scalar<D extends core.DataType>(
 	arr: core.Chunk<D>,
 	value: core.Scalar<D>,
 ): Uint8Array {
-	if (arr.data instanceof globalThis.Array) {
+	if (globalThis.Array.isArray(arr.data)) {
 		// @ts-expect-error
 		return object_array_view([value]);
 	}
 	let TypedArray = get_typed_array_constructor(arr.data);
+	// @ts-expect-error - value is a scalar and matches
 	let data = new TypedArray([value]);
 	return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 }

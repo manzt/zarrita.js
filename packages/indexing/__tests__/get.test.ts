@@ -16,11 +16,12 @@ let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 async function get_v2(
 	abs_path: string,
-	...args: any[]
+	...args: unknown[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
 	let root = path.resolve(__dirname, "../../../fixtures/v2/data.zarr");
 	let store = zarr.root(new FSStore(root));
 	let arr = await zarr.open.v2(store.resolve(abs_path), { kind: "array" });
+	// @ts-expect-error - TS not happy about spreading these args and its fine for this func
 	return get(arr, ...args);
 }
 
@@ -571,12 +572,13 @@ describe("get v2", () => {
 
 async function get_v3(
 	abs_path: string,
-	...args: any[]
+	...args: unknown[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
 	let root = path.resolve(__dirname, "../../../fixtures/v3/data.zarr");
 	let store = zarr.root(new FSStore(root));
 	let arr = await zarr.open.v3(store.resolve(abs_path), { kind: "array" });
-	return get(arr as any, ...args);
+	// @ts-expect-error - TS not happy about spreading these args
+	return get(arr, ...args);
 }
 
 describe("get v3", () => {

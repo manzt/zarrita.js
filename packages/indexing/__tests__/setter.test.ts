@@ -34,7 +34,8 @@ function col_major_stride(shape: readonly number[]) {
 
 function to_c<D extends DataType>({ data, shape, stride }: Chunk<D>): Chunk<D> {
 	let size = shape.reduce((a, b) => a * b, 1);
-	let out = ndarray(new (data as any).constructor(size), shape);
+	// @ts-expect-error - We know constructor exists on TypedArray
+	let out = ndarray(new data.constructor(size), shape);
 	assign(out, ndarray(data, shape, stride));
 	return out;
 }

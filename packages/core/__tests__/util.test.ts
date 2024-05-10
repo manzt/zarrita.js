@@ -14,7 +14,7 @@ import {
 } from "@zarrita/typedarray";
 
 describe("get_ctr", () => {
-	test.each<[DataType, any]>([
+	test.each<[DataType, unknown]>([
 		["int8", Int8Array],
 		["int16", Int16Array],
 		["int32", Int32Array],
@@ -28,7 +28,7 @@ describe("get_ctr", () => {
 		["bool", BoolArray],
 		["v2:U6", UnicodeStringArray],
 		["v2:S6", ByteStringArray],
-	])(`%s -> %o`, (dtype, ctr) => {
+	])("%s -> %o", (dtype, ctr) => {
 		const T = get_ctr(dtype);
 		expect(new T(1)).toBeInstanceOf(ctr);
 	});
@@ -45,7 +45,7 @@ describe("byteswap_inplace", () => {
 		new Float32Array([1, 2, 3, 42, 5]),
 		new Uint8Array([1, 2, 3, 4]),
 		new Int8Array([-3, 2, 3, 10]),
-	])(`%o`, (arr) => {
+	])("%o", (arr) => {
 		// make a copy and then byteswap original twice
 		const expected = arr.slice();
 		byteswap_inplace(new Uint8Array(arr.buffer), arr.BYTES_PER_ELEMENT);

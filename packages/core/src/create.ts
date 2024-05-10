@@ -12,7 +12,7 @@ import { json_encode_object } from "./util.js";
 import { Array, Group, Location } from "./hierarchy.js";
 
 interface CreateGroupOptions {
-	attributes?: Record<string, any>;
+	attributes?: Record<string, unknown>;
 }
 
 interface CreateArrayOptions<Dtype extends DataType> {
@@ -48,7 +48,10 @@ export async function create<Store extends Mutable, Dtype extends DataType>(
 	options: CreateArrayOptions<Dtype> | CreateGroupOptions = {},
 ): Promise<Array<Dtype, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
-	if ("shape" in options) return create_array(loc, options) as any;
+	if ("shape" in options) {
+		let arr = await create_array(loc, options);
+		return arr as Array<Dtype, Store>;
+	}
 	return create_group(loc, options);
 }
 

@@ -18,21 +18,25 @@ type DecoderConfig = {
 
 type JsonCodecConfig = EncoderConfig & DecoderConfig;
 
+// TODO: Correctly type the replacer function
+// biome-ignore lint/suspicious/noExplicitAny: Really complex type
+type ReplacerFunction = (key: string | number, value: any) => any;
+
 // Reference: https://stackoverflow.com/a/21897413
-function throw_on_nan_replacer(_key: string | number, value: any): any {
-	if (value !== value) {
+function throw_on_nan_replacer(_key: string | number, value: number): number {
+	if (Number.isNaN(value)) {
 		throw new Error(
 			"JsonCodec allow_nan is false but NaN was encountered during encoding.",
 		);
 	}
 
-	if (value === Infinity) {
+	if (value === Number.POSITIVE_INFINITY) {
 		throw new Error(
 			"JsonCodec allow_nan is false but Infinity was encountered during encoding.",
 		);
 	}
 
-	if (value === -Infinity) {
+	if (value === Number.NEGATIVE_INFINITY) {
 		throw new Error(
 			"JsonCodec allow_nan is false but -Infinity was encountered during encoding.",
 		);
@@ -41,14 +45,20 @@ function throw_on_nan_replacer(_key: string | number, value: any): any {
 }
 
 // Reference: https://gist.github.com/davidfurlong/463a83a33b70a3b6618e97ec9679e490
-function sort_keys_replacer(_key: string | number, value: any): any {
-	return value instanceof Object && !(value instanceof Array)
+function sort_keys_replacer(
+	_key: string | number,
+	value: Record<string, unknown>,
+) {
+	return value instanceof Object && !Array.isArray(value)
 		? Object.keys(value)
 				.sort()
-				.reduce((sorted: any, key: string | number) => {
-					sorted[key] = value[key];
-					return sorted;
-				}, {})
+				.reduce(
+					(sorted, key: string | number) => {
+						sorted[key] = value[key];
+						return sorted;
+					},
+					{} as Record<string, unknown>,
+				)
 		: value;
 }
 
@@ -110,7 +120,7 @@ export class JsonCodec {
 		if (encoding !== "utf-8") {
 			throw new Error("JsonCodec does not yet support non-utf-8 encoding.");
 		}
-		const replacer_functions: Function[] = [];
+		const replacer_functions: ReplacerFunction[] = [];
 		if (!check_circular) {
 			// By default, for JSON.stringify,
 			// a TypeError will be thrown if one attempts to encode an object with circular references
@@ -132,13 +142,13 @@ export class JsonCodec {
 		items.push("|O");
 		items.push(buf.shape);
 
-		let replacer = undefined;
+		let replacer: ReplacerFunction | undefined = undefined;
 		if (replacer_functions.length) {
-			replacer = function (key: string | number, value: any): any {
+			replacer = (key, value) => {
 				let new_value = value;
-				replacer_functions.forEach((sub_replacer) => {
+				for (let sub_replacer of replacer_functions) {
 					new_value = sub_replacer(key, new_value);
-				});
+				}
 				return new_value;
 			};
 		}
@@ -149,10 +159,10 @@ export class JsonCodec {
 			// to have all incoming non-ASCII characters escaped.
 			// If ensure_ascii is false, these characters will be output as-is.
 			// Reference: https://stackoverflow.com/a/31652607
-			json_str = json_str.replace(/[\u007F-\uFFFF]/g, function (chr) {
-				const full_str = "0000" + chr.charCodeAt(0).toString(16);
+			json_str = json_str.replace(/[\u007F-\uFFFF]/g, (chr) => {
+				const full_str = `0000${chr.charCodeAt(0).toString(16)}`;
 				const sub_str = full_str.substring(full_str.length - 4);
-				return "\\u" + sub_str;
+				return `\\u${sub_str}`;
 			});
 		}
 		return new TextEncoder().encode(json_str);
@@ -170,10 +180,9 @@ export class JsonCodec {
 		if (!shape) {
 			// O-d case
 			throw new Error("0D not implemented for JsonCodec.");
-		} else {
-			const stride = get_strides(shape, "C");
-			const data = items;
-			return { data, shape, stride };
 		}
+		const stride = get_strides(shape, "C");
+		const data = items;
+		return { data, shape, stride };
 	}
 }

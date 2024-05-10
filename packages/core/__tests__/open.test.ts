@@ -139,7 +139,7 @@ describe("v2", () => {
 			[undefined, { answer: 42 }],
 			[true, { answer: 42 }],
 			[false, {}],
-		])(`attrs: %j`, async (attrs, expected) => {
+		])("attrs: %j", async (attrs, expected) => {
 			let group = await open.v2(store, { attrs });
 			expect(group.attrs).toStrictEqual(expected);
 		});
@@ -152,7 +152,7 @@ describe("v2", () => {
 			"1d.contiguous.lz4.i2",
 			"1d.contiguous.zstd.i2",
 			"1d.contiguous.raw.i2",
-		])(`%s`, async (path) => {
+		])("%s", async (path) => {
 			let arr = await open.v2(store.resolve(path), { kind: "array" });
 			expect(await arr.getChunk([0])).toStrictEqual({
 				data: new Int16Array([1, 2, 3, 4]),
@@ -186,7 +186,7 @@ describe("v2", () => {
 
 	describe("1d.contiguous.f4", () => {
 		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
-			`%s`,
+			"%s",
 			async (path) => {
 				let arr = await open.v2(store.resolve(path), { kind: "array" });
 				expect(await arr.getChunk([0])).toStrictEqual({
@@ -211,20 +211,18 @@ describe("v2", () => {
 
 	describe("1d.contiguous.U13", () => {
 		it.each(["1d.contiguous.U13.le", "1d.contiguous.U13.le"])(
-			`%s`,
+			"%s",
 			async (path) => {
 				let arr = await open.v2(store.resolve(path), {
 					kind: "array",
 				});
 				let chunk = await arr.getChunk([0]);
 				expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-				expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual(
-					{
-						data: ["a", "b", "cc", "d"],
-						shape: [4],
-						stride: [1],
-					},
-				);
+				expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
+					data: ["a", "b", "cc", "d"],
+					shape: [4],
+					stride: [1],
+				});
 			},
 		);
 	});
@@ -235,7 +233,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: ["a", "b", "cc", "d"],
 			shape: [4],
 			stride: [1],
@@ -248,7 +246,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(ByteStringArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: ["a", "b", "cc", "d"],
 			shape: [4],
 			stride: [1],
@@ -261,7 +259,7 @@ describe("v2", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(BoolArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],
 			stride: [1],
@@ -315,7 +313,7 @@ describe("v2", () => {
 			[[0], [1, 2]],
 			[[1], [3, 4]],
 			[[2], [5, 0]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -334,7 +332,7 @@ describe("v2", () => {
 			[[0, 1], [2]],
 			[[1, 0], [3]],
 			[[1, 1], [4]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -353,10 +351,10 @@ describe("v2", () => {
 			[[0, 1], ["b"]],
 			[[1, 0], ["cc"]],
 			[[1, 1], ["d"]],
-		])(`getChunk(%j) -> %j`, async (index, expected) => {
+		])("getChunk(%j) -> %j", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-			expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+			expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 				data: expected,
 				shape: [1, 1],
 				stride: [1, 1],
@@ -385,7 +383,7 @@ describe("v2", () => {
 				[1, 1],
 				[9, 0, 0, 0],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -404,7 +402,7 @@ describe("v2", () => {
 			[[0, 0, 2], [2]],
 			[[1, 1, 1], [13]],
 			[[2, 2, 2], [26]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -435,7 +433,7 @@ describe("v2", () => {
 				[1, 1, 0],
 				["bbb", "bbbb"],
 			],
-		])(`getChunk(%j) -> %j`, async (index, expected) => {
+		])("getChunk(%j) -> %j", async (index, expected) => {
 			expect(await arr.getChunk(index)).toStrictEqual({
 				data: expected,
 				shape: [1, 1, 2],
@@ -461,7 +459,7 @@ describe("v2", () => {
 				[0, 0, 2],
 				[2, 5, 8, 11, 14, 17, 20, 23, 26],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -488,7 +486,7 @@ describe("v2", () => {
 				[0, 0, 2],
 				[2, 11, 20, 5, 14, 23, 8, 17, 26],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -508,13 +506,13 @@ describe("v2", () => {
 			open.v2(store.resolve("/not/a/group"), { kind: "group" });
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			`[NodeNotFoundError: Node not found: v2 group]`,
+			"[NodeNotFoundError: Node not found: v2 group]",
 		);
 	});
 
 	describe("opens array from group", async () => {
 		let grp = await open.v2(store, { kind: "group" });
-		it.each(["/1d.chunked.i2", "1d.chunked.i2"])(`%s`, async (path) => {
+		it.each(["/1d.chunked.i2", "1d.chunked.i2"])("%s", async (path) => {
 			let a = await open.v2(grp.resolve(path), { kind: "array" });
 			expect(a.path).toBe("/1d.chunked.i2");
 		});
@@ -533,7 +531,7 @@ describe("v3", () => {
 			"1d.contiguous.gzip.i2",
 			"1d.contiguous.blosc.i2",
 			"1d.contiguous.raw.i2",
-		])(`%s`, async (path) => {
+		])("%s", async (path) => {
 			let arr = await open.v3(store.resolve(path), { kind: "array" });
 			expect(await arr.getChunk([0])).toStrictEqual({
 				data: new Int16Array([1, 2, 3, 4]),
@@ -567,7 +565,7 @@ describe("v3", () => {
 
 	describe("1d.contiguous.f4", () => {
 		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
-			`%s`,
+			"%s",
 			async (path) => {
 				let arr = await open.v3(store.resolve(path), { kind: "array" });
 				expect(await arr.getChunk([0])).toStrictEqual({
@@ -596,7 +594,7 @@ describe("v3", () => {
 		});
 		let chunk = await arr.getChunk([0]);
 		expect(chunk.data).toBeInstanceOf(BoolArray);
-		expect({ ...chunk, data: Array.from(chunk.data as any) }).toStrictEqual({
+		expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],
 			stride: [1],
@@ -632,7 +630,7 @@ describe("v3", () => {
 		it.each([
 			[[0], [1, 2]],
 			[[1], [3, 4]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -650,7 +648,7 @@ describe("v3", () => {
 			[[0], [1, 2]],
 			[[1], [3, 4]],
 			[[2], [5, 0]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -669,7 +667,7 @@ describe("v3", () => {
 			[[0, 1], [2]],
 			[[1, 0], [3]],
 			[[1, 1], [4]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -700,7 +698,7 @@ describe("v3", () => {
 				[1, 1],
 				[9, 0, 0, 0],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -718,7 +716,7 @@ describe("v3", () => {
 			[[0, 0, 2], [2]],
 			[[1, 1, 1], [13]],
 			[[2, 2, 2], [26]],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -745,7 +743,7 @@ describe("v3", () => {
 				[0, 0, 2],
 				[2, 5, 8, 11, 14, 17, 20, 23, 26],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -772,7 +770,7 @@ describe("v3", () => {
 				[0, 0, 2],
 				[2, 11, 20, 5, 14, 23, 8, 17, 26],
 			],
-		])(`getChunk(%j) -> Int16Array(%j)`, async (index, expected) => {
+		])("getChunk(%j) -> Int16Array(%j)", async (index, expected) => {
 			let chunk = await arr.getChunk(index);
 			expect(chunk).toStrictEqual({
 				data: new Int16Array(expected),
@@ -792,13 +790,13 @@ describe("v3", () => {
 			open.v3(store.resolve("/not/a/group"), { kind: "group" });
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			`[NodeNotFoundError: Node not found: v3 array or group]`,
+			"[NodeNotFoundError: Node not found: v3 array or group]",
 		);
 	});
 
 	describe("opens array from group", async () => {
 		let grp = await open.v3(store, { kind: "group" });
-		it.each(["/1d.chunked.i2", "1d.chunked.i2"])(`%s`, async (path) => {
+		it.each(["/1d.chunked.i2", "1d.chunked.i2"])("%s", async (path) => {
 			let a = await open.v3(grp.resolve(path), { kind: "array" });
 			expect(a.path).toBe("/1d.chunked.i2");
 		});
@@ -872,7 +870,7 @@ describe("v3", () => {
 		let chunk = await arr.getChunk([0]);
 		expect({
 			...chunk,
-			data: Array.from(chunk.data as any),
+			data: Array.from(chunk.data),
 		}).toStrictEqual({
 			data: [true, false, true, false],
 			shape: [4],
@@ -889,7 +887,7 @@ describe("v3", () => {
 			[[1], 2],
 			[[2], 3],
 			[[3], 4],
-		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+		])("getChunk(%j) -> Int16Array([%i])", async (chunk_coord, expected) => {
 			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
 				data: new Int16Array([expected]),
 				shape: [1],
@@ -908,7 +906,7 @@ describe("v3", () => {
 			[[1], 2],
 			[[2], 0],
 			[[3], 0],
-		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+		])("getChunk(%j) -> Int16Array([%i])", async (chunk_coord, expected) => {
 			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
 				data: new Int16Array([expected]),
 				shape: [1],
@@ -1058,7 +1056,7 @@ describe("v3", () => {
 				[0, 0, 2],
 				[2, 5, 8, 11, 14, 17, 20, 23, 26],
 			],
-		])(`getChunk(%j) -> Int16Array([%i])`, async (chunk_coord, expected) => {
+		])("getChunk(%j) -> Int16Array([%i])", async (chunk_coord, expected) => {
 			expect(await arr.getChunk(chunk_coord)).toStrictEqual({
 				data: new Int16Array(expected),
 				shape: [3, 3, 1],

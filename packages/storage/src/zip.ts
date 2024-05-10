@@ -40,7 +40,7 @@ export class HTTPRangeReader implements Reader {
 					`failed http request ${this.url}, status: ${req.status}: ${req.statusText}`,
 				);
 			}
-			this.length = parseInt(req.headers.get("content-length")!);
+			this.length = Number(req.headers.get("content-length"));
 			if (Number.isNaN(this.length)) {
 				throw Error("could not get length");
 			}

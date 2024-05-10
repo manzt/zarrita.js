@@ -5,7 +5,7 @@
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
 		"format": "biome format .",
-		"lint": "echo \"TODO: Add linting\"",
+		"lint": "biome lint .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
 	},
 	"devDependencies": {

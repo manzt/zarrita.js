@@ -123,6 +123,7 @@ export class ByteStringArray {
 			this.byteOffset + this.chars * idx,
 			this.chars,
 		);
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: necessary for null byte removal
 		return new TextDecoder().decode(view).replace(/\x00/g, "");
 	}
 
@@ -216,6 +217,7 @@ export class UnicodeStringArray {
 		for (let i = 0; i < this.chars; i++) {
 			result += String.fromCodePoint(this.#data[offset + i]);
 		}
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: necessary for null byte removal
 		return result.replace(/\u0000/g, "");
 	}
 

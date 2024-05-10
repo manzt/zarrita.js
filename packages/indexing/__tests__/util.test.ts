@@ -79,7 +79,7 @@ describe("slice indices", () => {
 	);
 
 	test.each([[null, null, 0, 1]])(
-		`slice_indices(slice(%o, %o, %o), %i) -> throws`,
+		"slice_indices(slice(%o, %o, %o), %i) -> throws",
 		(start, stop, step, indices) => {
 			expect(() =>
 				slice_indices(slice(start, stop, step), indices),
@@ -92,7 +92,7 @@ describe("range", () => {
 	test.each([
 		[4, [0, 1, 2, 3]],
 		[0, []],
-	])(`range(%i) -> %o`, (stop, expected) => {
+	])("range(%i) -> %o", (stop, expected) => {
 		expect(Array.from(range(stop))).toStrictEqual(expected);
 	});
 

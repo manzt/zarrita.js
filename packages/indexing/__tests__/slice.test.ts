@@ -12,7 +12,8 @@ const DATA = {
 	stride: [12, 4, 1],
 };
 
-export function run_suite(name: string, getter: any) {
+// biome-ignore lint/suspicious/noExportsInTest: <explanation>
+export function run_suite(name: string, getter: unknown) {
 	let get = getter as typeof ops.get;
 
 	describe(name, async () => {
@@ -116,7 +117,7 @@ export function run_suite(name: string, getter: any) {
 					stride: [1],
 				},
 			],
-		])(`Reads fancy slices: selection - %j`, async (sel, expected) => {
+		])("Reads fancy slices: selection - %j", async (sel, expected) => {
 			let { data, shape, stride } = await get(arr, sel);
 			expect({ data, shape, stride }).toStrictEqual(expected);
 		});

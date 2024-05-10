@@ -10,6 +10,7 @@ test("create root group", async () => {
 	expect(grp.attrs).toStrictEqual(attributes);
 	expect(grp.store.has("/zarr.json")).true;
 	expect(
+		// biome-ignore lint/style/noNonNullAssertion: we know it's there
 		json_decode_object(grp.store.get("/zarr.json")!),
 	).toMatchInlineSnapshot(`
 		{
@@ -38,6 +39,7 @@ test("create array", async () => {
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
 	expect(
+		// biome-ignore lint/style/noNonNullAssertion: we know it's there
 		json_decode_object(h.store.get("/arthur/dent/zarr.json")!),
 	).toMatchInlineSnapshot(`
 		{

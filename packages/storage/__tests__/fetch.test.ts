@@ -98,7 +98,7 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json", { headers });
-		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
+		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, { headers });
 	});
 
 	it("forwards request options to fetch when configured globally", async () => {
@@ -106,7 +106,7 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href, { overrides: { headers } });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json");
-		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", { headers });
+		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, { headers });
 	});
 
 	it("merges request options", async () => {
@@ -117,7 +117,7 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href, { overrides });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json", { headers: { "x-test": "override" } });
-		expect(spy).toHaveBeenCalledWith(href + "/zarr.json", {
+		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, {
 			headers: { "x-test": "override", "x-test2": "root" },
 			cache: "no-cache",
 		});

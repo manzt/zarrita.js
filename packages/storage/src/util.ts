@@ -3,7 +3,8 @@ import type { AbsolutePath } from "./types.js";
 export function strip_prefix<Path extends AbsolutePath>(
 	path: Path,
 ): Path extends AbsolutePath<infer Rest> ? Rest : never {
-	return path.slice(1) as any;
+	// @ts-expect-error - TS can't infer this type correctly
+	return path.slice(1);
 }
 
 export function uri2href(url: string | URL) {
@@ -19,7 +20,7 @@ export function uri2href(url: string | URL) {
 	if (protocol === "s3") {
 		return `https://s3.amazonaws.com/${rest}`;
 	}
-	throw Error("Protocol not supported, got: " + JSON.stringify(protocol));
+	throw Error(`Protocol not supported, got: ${JSON.stringify(protocol)}`);
 }
 
 export function fetch_range(
