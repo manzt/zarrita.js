@@ -46,7 +46,7 @@ function compat_chunk<D extends core.DataType>(
 	stride: number[];
 	bytes_per_element: number;
 } {
-	if (arr.data instanceof globalThis.Array) {
+	if (globalThis.Array.isArray(arr.data)) {
 		return {
 			// @ts-expect-error
 			data: object_array_view(arr.data),
@@ -91,7 +91,7 @@ function compat_scalar<D extends core.DataType>(
 	arr: core.Chunk<D>,
 	value: core.Scalar<D>,
 ): Uint8Array {
-	if (arr.data instanceof globalThis.Array) {
+	if (globalThis.Array.isArray(arr.data)) {
 		// @ts-expect-error
 		return object_array_view([value]);
 	}

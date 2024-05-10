@@ -69,8 +69,8 @@ function unzip_selections(mapping: Projection[]): {
 	to: (number | Indices)[];
 	from: (number | Indices)[];
 } {
-	const to = [],
-		from = [];
+	const to = [];
+	const from = [];
 	for (const m of mapping) {
 		if (m.to !== null) to.push(m.to);
 		if (m.from !== null) from.push(m.from);

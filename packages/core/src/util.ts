@@ -279,7 +279,7 @@ export function ensure_correct_scalar<D extends DataType>(
 ): Scalar<D> | null {
 	if (
 		(metadata.data_type === "uint64" || metadata.data_type === "int64") &&
-		metadata.fill_value != undefined
+		metadata.fill_value !== undefined
 	) {
 		return BigInt(metadata.fill_value) as Scalar<D>;
 	}

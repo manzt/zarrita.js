@@ -42,7 +42,7 @@ function throw_on_nan_replacer(_key: string | number, value: any): any {
 
 // Reference: https://gist.github.com/davidfurlong/463a83a33b70a3b6618e97ec9679e490
 function sort_keys_replacer(_key: string | number, value: any): any {
-	return value instanceof Object && !(value instanceof Array)
+	return value instanceof Object && !Array.isArray(value)
 		? Object.keys(value)
 				.sort()
 				.reduce((sorted: any, key: string | number) => {
@@ -150,9 +150,9 @@ export class JsonCodec {
 			// If ensure_ascii is false, these characters will be output as-is.
 			// Reference: https://stackoverflow.com/a/31652607
 			json_str = json_str.replace(/[\u007F-\uFFFF]/g, (chr) => {
-				const full_str = "0000" + chr.charCodeAt(0).toString(16);
+				const full_str = `0000${chr.charCodeAt(0).toString(16)}`;
 				const sub_str = full_str.substring(full_str.length - 4);
-				return "\\u" + sub_str;
+				return `\\u${sub_str}`;
 			});
 		}
 		return new TextEncoder().encode(json_str);
@@ -170,10 +170,9 @@ export class JsonCodec {
 		if (!shape) {
 			// O-d case
 			throw new Error("0D not implemented for JsonCodec.");
-		} else {
-			const stride = get_strides(shape, "C");
-			const data = items;
-			return { data, shape, stride };
 		}
+		const stride = get_strides(shape, "C");
+		const data = items;
+		return { data, shape, stride };
 	}
 }

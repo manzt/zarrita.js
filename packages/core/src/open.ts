@@ -119,7 +119,7 @@ async function _open_v3<Store extends Readable>(location: Location<Store>) {
 	if (
 		meta_doc.node_type === "array" &&
 		(meta_doc.data_type === "uint64" || meta_doc.data_type === "int64") &&
-		meta_doc.fill_value != undefined
+		meta_doc.fill_value !== undefined
 	) {
 		meta_doc.fill_value = BigInt(meta_doc.fill_value);
 	}

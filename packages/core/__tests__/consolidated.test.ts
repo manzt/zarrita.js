@@ -102,7 +102,7 @@ describe("withConsolidated", () => {
 		let try_open = () => withConsolidated(new FileSystemStore(root));
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			`[NodeNotFoundError: Node not found: v2 consolidated metadata]`,
+			"[NodeNotFoundError: Node not found: v2 consolidated metadata]",
 		);
 	});
 });

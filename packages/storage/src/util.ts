@@ -19,7 +19,7 @@ export function uri2href(url: string | URL) {
 	if (protocol === "s3") {
 		return `https://s3.amazonaws.com/${rest}`;
 	}
-	throw Error("Protocol not supported, got: " + JSON.stringify(protocol));
+	throw Error(`Protocol not supported, got: ${JSON.stringify(protocol)}`);
 }
 
 export function fetch_range(

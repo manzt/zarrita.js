@@ -43,7 +43,7 @@ describe("normalize_integer_selection", () => {
 		[-2.2, 5, 3],
 		[4.3, 5, 4],
 	])(
-		`normalize_integer_selection(%i, %i) -> %i`,
+		"normalize_integer_selection(%i, %i) -> %i",
 		(dim_selection, dim_length, expected) => {
 			expect(normalize_integer_selection(dim_selection, dim_length)).toBe(
 				expected,
@@ -55,7 +55,7 @@ describe("normalize_integer_selection", () => {
 		[6, 5],
 		[-6, 5],
 	])(
-		`normalize_integer_selection(%i, %i) -> throws`,
+		"normalize_integer_selection(%i, %i) -> throws",
 		(dim_selection, dim_length) => {
 			expect(() =>
 				normalize_integer_selection(dim_selection, dim_length),

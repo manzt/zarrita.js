@@ -116,7 +116,7 @@ export function run_suite(name: string, getter: any) {
 					stride: [1],
 				},
 			],
-		])(`Reads fancy slices: selection - %j`, async (sel, expected) => {
+		])("Reads fancy slices: selection - %j", async (sel, expected) => {
 			let { data, shape, stride } = await get(arr, sel);
 			expect({ data, shape, stride }).toStrictEqual(expected);
 		});
