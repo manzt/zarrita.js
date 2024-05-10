@@ -71,7 +71,7 @@ export type Scalar<D extends DataType> = D extends Bool ? boolean
 	: D extends BigintDataType ? bigint
 	: D extends StringDataType ? string
 	: D extends NumberDataType ? number
-	: D extends ObjectType ? any
+	: D extends ObjectType ? unknown
 	: never;
 
 export type CodecMetadata = {
@@ -110,16 +110,18 @@ export type GroupMetadata = {
 	attributes: Attributes;
 };
 
+type V2CodecConfiguration = { id: string } & Record<string, unknown>;
+
 /** Zarr v2 Array Metadata. Stored as JSON with key `.zarray`. */
 export type ArrayMetadataV2 = {
 	zarr_format: 2;
 	shape: number[];
 	chunks: number[];
 	dtype: string;
-	compressor: null | Record<string, any>;
-	fill_value: any;
+	compressor: null | V2CodecConfiguration;
+	fill_value: unknown;
 	order: "C" | "F";
-	filters: null | Record<string, any>[];
+	filters: null | V2CodecConfiguration[];
 	dimension_separator?: "." | "/";
 };
 
@@ -142,7 +144,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Bool ? BoolArray
 	: D extends UnicodeStr ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
-	: D extends ObjectType ? Array<any>
+	: D extends ObjectType ? Array<unknown>
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {

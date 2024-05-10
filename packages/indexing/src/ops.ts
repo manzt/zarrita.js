@@ -96,6 +96,7 @@ function compat_scalar<D extends core.DataType>(
 		return object_array_view([value]);
 	}
 	let TypedArray = get_typed_array_constructor(arr.data);
+	// @ts-expect-error - value is a scalar and matches
 	let data = new TypedArray([value]);
 	return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 }

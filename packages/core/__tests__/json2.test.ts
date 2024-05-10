@@ -90,7 +90,7 @@ describe("JsonCodec", () => {
 		expect(() => jsonCodec.encode(chunk)).toThrowError();
 	});
 	test("throws on encode with check_circular and circular reference", () => {
-		let data: any[] = ["A", null];
+		let data: unknown[] = ["A", null];
 		data[1] = data;
 		const chunk = {
 			data,
@@ -117,7 +117,7 @@ describe("JsonCodec", () => {
 		};
 		const jsonCodec = new JsonCodec({ sort_keys: true });
 		const decodedChunk = jsonCodec.decode(jsonCodec.encode(chunk));
-		expect(Object.keys(decodedChunk.data[0])).toEqual(["1", "2", "3"]);
+		expect(decodedChunk.data[0]).toEqual({ "1": 1, "2": 2, "3": 3 });
 	});
 	test("supports ensure_ascii", () => {
 		const chunk = {

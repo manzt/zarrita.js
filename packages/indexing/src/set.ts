@@ -73,9 +73,11 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 						chunk_shape.slice(),
 						chunk_stride.slice(),
 					);
+					// @ts-expect-error - Value is not a scalar
 					setter.set_from_chunk(chunk, value, flipped);
 				} else {
-					chunk_data.fill(value as any);
+					// @ts-expect-error - Value is a scalar
+					chunk_data.fill(value);
 				}
 			} else {
 				// partially replace the contents of this chunk
@@ -89,6 +91,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 				// Modify chunk data
 				if (typeof value === "object") {
+					// @ts-expect-error - Value is not a scalar
 					setter.set_from_chunk(chunk, value, flipped);
 				} else {
 					setter.set_scalar(chunk, chunk_selection, value);

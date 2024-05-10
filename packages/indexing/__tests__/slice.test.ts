@@ -13,7 +13,7 @@ const DATA = {
 };
 
 // biome-ignore lint/suspicious/noExportsInTest: <explanation>
-export function run_suite(name: string, getter: unknwon) {
+export function run_suite(name: string, getter: unknown) {
 	let get = getter as typeof ops.get;
 
 	describe(name, async () => {

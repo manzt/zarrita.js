@@ -8,7 +8,8 @@
 		"rules": {
 			"recommended": true,
 			"style": {
-				"useConst": "off"
+				"useConst": "off",
+				"noParameterAssign": "off"
 			},
 			"suspicious": {
 				"noShadowRestrictedNames": "off"
