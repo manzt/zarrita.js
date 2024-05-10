@@ -1,5 +1,15 @@
 # @zarrita/core
 
+## 0.1.0-next.9
+
+### Patch Changes
+
+- Remove use of public any from API in favor of unknown ([#173](https://github.com/manzt/zarrita.js/pull/173))
+
+- Updated dependencies [[`cf7524cbaf04940b92896b9053970a196d82ecea`](https://github.com/manzt/zarrita.js/commit/cf7524cbaf04940b92896b9053970a196d82ecea)]:
+  - @zarrita/typedarray@0.1.0-next.3
+  - @zarrita/storage@0.1.0-next.5
+
 ## 0.1.0-next.8
 
 ### Patch Changes

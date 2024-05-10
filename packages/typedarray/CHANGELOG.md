@@ -1,5 +1,11 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.3
+
+### Patch Changes
+
+- Remove use of public any from API in favor of unknown ([#173](https://github.com/manzt/zarrita.js/pull/173))
+
 ## 0.1.0-next.2
 
 ### Patch Changes
