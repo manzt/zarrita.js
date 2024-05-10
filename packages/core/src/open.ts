@@ -8,7 +8,7 @@ import type {
 import { Array, Group, Location } from "./hierarchy.js";
 import { KeyError, NodeNotFoundError } from "./errors.js";
 import {
-    ensure_correct_scalar,
+	ensure_correct_scalar,
 	json_decode_object,
 	v2_to_v3_array_metadata,
 	v2_to_v3_group_metadata,
@@ -118,7 +118,7 @@ async function _open_v3<Store extends Readable>(location: Location<Store>) {
 	let meta_doc: ArrayMetadata<DataType> | GroupMetadata =
 		json_decode_object(meta);
 	if (meta_doc.node_type === "array") {
-		meta_doc.fill_value = ensure_correct_scalar(meta_doc)
+		meta_doc.fill_value = ensure_correct_scalar(meta_doc);
 	}
 	return meta_doc.node_type === "array"
 		? new Array(store, location.path, meta_doc)

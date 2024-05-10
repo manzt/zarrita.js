@@ -41,14 +41,20 @@ function throw_on_nan_replacer(_key: string | number, value: number): number {
 }
 
 // Reference: https://gist.github.com/davidfurlong/463a83a33b70a3b6618e97ec9679e490
-function sort_keys_replacer(_key: string | number, value: Record<string, unknown>) {
+function sort_keys_replacer(
+	_key: string | number,
+	value: Record<string, unknown>,
+) {
 	return value instanceof Object && !Array.isArray(value)
 		? Object.keys(value)
 				.sort()
-				.reduce((sorted, key: string | number) => {
-					sorted[key] = value[key];
-					return sorted;
-				}, {} as Record<string, unknown>)
+				.reduce(
+					(sorted, key: string | number) => {
+						sorted[key] = value[key];
+						return sorted;
+					},
+					{} as Record<string, unknown>,
+				)
 		: value;
 }
 
