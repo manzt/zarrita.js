@@ -33,4 +33,5 @@ jobs:
           version: 8
       - run: |
           pnpm install
+          pnpm format
           pnpm lint
