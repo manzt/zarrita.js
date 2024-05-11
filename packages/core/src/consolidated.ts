@@ -14,10 +14,15 @@ type ConsolidatedMetadata = {
 	zarr_consolidated_format: 1;
 };
 
-type Listable<Store extends Readable> = {
+/**
+ * Represents a read-only store that can list its contents.
+ */
+export interface Listable<Store extends Readable> {
+	/** Get the bytes at a given path. */
 	get: Store["get"];
+	/** List the contents of the store. */
 	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
-};
+}
 
 async function get_consolidated_metadata(
 	store: Readable,
