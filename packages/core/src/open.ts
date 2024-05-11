@@ -1,12 +1,12 @@
 import type { Readable } from "@zarrita/storage";
+import { KeyError, NodeNotFoundError } from "./errors.js";
+import { Array, Group, Location } from "./hierarchy.js";
 import type {
 	ArrayMetadata,
 	Attributes,
 	DataType,
 	GroupMetadata,
 } from "./metadata.js";
-import { Array, Group, Location } from "./hierarchy.js";
-import { KeyError, NodeNotFoundError } from "./errors.js";
 import {
 	ensure_correct_scalar,
 	json_decode_object,

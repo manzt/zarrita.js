@@ -1,11 +1,11 @@
 import type { Codec } from "numcodecs";
 import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 
-import { TransposeCodec } from "./codecs/transpose.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
-import { VLenUTF8 } from "./codecs/vlen-utf8.js";
 import { JsonCodec } from "./codecs/json2.js";
+import { TransposeCodec } from "./codecs/transpose.js";
+import { VLenUTF8 } from "./codecs/vlen-utf8.js";
 
 type ChunkMetadata<D extends DataType> = {
 	data_type: D;

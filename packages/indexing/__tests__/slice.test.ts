@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import * as zarr from "@zarrita/core";
+import { describe, expect, it } from "vitest";
 
+import { IndexError } from "../src/indexer.js";
 import * as ops from "../src/ops.js";
 import { slice } from "../src/util.js";
-import { IndexError } from "../src/indexer.js";
 
 const DATA = {
 	// biome-ignore format: the array should not be formatted

@@ -1,16 +1,16 @@
-import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
+import { describe, expect, it } from "vitest";
 
 import { get } from "../src/index.js";
 
 import * as zarr from "@zarrita/core";
+import { FileSystemStore } from "@zarrita/storage";
 import {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
 } from "@zarrita/typedarray";
-import { FileSystemStore } from "@zarrita/storage";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

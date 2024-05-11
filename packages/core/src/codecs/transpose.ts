@@ -1,3 +1,8 @@
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "@zarrita/typedarray";
 import type {
 	Chunk,
 	DataType,
@@ -5,11 +10,6 @@ import type {
 	TypedArray,
 	TypedArrayConstructor,
 } from "../metadata.js";
-import {
-	BoolArray,
-	ByteStringArray,
-	UnicodeStringArray,
-} from "@zarrita/typedarray";
 import { get_strides } from "../util.js";
 
 type TypedArrayProxy<D extends DataType> = {

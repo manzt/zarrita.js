@@ -1,5 +1,5 @@
-import type { Readable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
+import type { Readable } from "@zarrita/storage";
 import type {
 	GetOptions,
 	Prepare,

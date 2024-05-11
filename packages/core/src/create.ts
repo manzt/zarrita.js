@@ -1,5 +1,6 @@
 import type { Mutable } from "@zarrita/storage";
 
+import { Array, Group, Location } from "./hierarchy.js";
 import type {
 	ArrayMetadata,
 	Attributes,
@@ -9,7 +10,6 @@ import type {
 	Scalar,
 } from "./metadata.js";
 import { json_encode_object } from "./util.js";
-import { Array, Group, Location } from "./hierarchy.js";
 
 interface CreateGroupOptions {
 	attributes?: Record<string, unknown>;

@@ -1,5 +1,5 @@
-import type { Mutable, Readable } from "@zarrita/storage";
 import type * as core from "@zarrita/core";
+import type { Mutable, Readable } from "@zarrita/storage";
 import { get as get_with_setter } from "./get.js";
 import { set as set_with_setter } from "./set.js";
 import type {
