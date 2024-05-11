@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.10
+
+### Patch Changes
+
+- Export `Listable` type ([#176](https://github.com/manzt/zarrita.js/pull/176))
+
 ## 0.1.0-next.9
 
 ### Patch Changes
