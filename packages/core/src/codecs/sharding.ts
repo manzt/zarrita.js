@@ -2,8 +2,8 @@ import type { Location } from "../hierarchy.js";
 import type { Chunk } from "../metadata.js";
 import type { ShardingCodecMetadata } from "../util.js";
 
-import { create_codec_pipeline } from "../codecs.js";
 import type { Readable } from "@zarrita/storage";
+import { create_codec_pipeline } from "../codecs.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
 

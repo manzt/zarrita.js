@@ -1,12 +1,12 @@
-import { describe, expect, it } from "vitest";
 import * as path from "node:path";
 import * as url from "node:url";
+import { describe, expect, it } from "vitest";
 
 import { FileSystemStore } from "@zarrita/storage";
 import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
-import { open } from "../src/open.js";
-import { Array as ZarrArray } from "../src/hierarchy.js";
 import { NodeNotFoundError } from "../src/errors.js";
+import { Array as ZarrArray } from "../src/hierarchy.js";
+import { open } from "../src/open.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

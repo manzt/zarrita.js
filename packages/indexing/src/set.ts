@@ -1,8 +1,7 @@
 import { _internal_get_array_context } from "@zarrita/core";
-import type { Mutable } from "@zarrita/storage";
 import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
+import type { Mutable } from "@zarrita/storage";
 
-import { create_queue } from "./util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
 	Indices,
@@ -12,6 +11,7 @@ import type {
 	SetScalar,
 	Slice,
 } from "./types.js";
+import { create_queue } from "./util.js";
 
 function flip_indexer_projection(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };

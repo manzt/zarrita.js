@@ -1,6 +1,6 @@
 import { parse } from "reference-spec-reader";
-import { fetch_range, merge_init, strip_prefix, uri2href } from "./util.js";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
+import { fetch_range, merge_init, strip_prefix, uri2href } from "./util.js";
 
 /**
  * This is for the "binary" loader (custom code is ~2x faster than "atob") from esbuild.

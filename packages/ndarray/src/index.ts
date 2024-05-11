@@ -1,6 +1,7 @@
 import ndarray from "ndarray";
 import ops from "ndarray-ops";
 
+import type * as core from "@zarrita/core";
 import { get_with_setter, set_with_setter } from "@zarrita/indexing";
 import type {
 	GetOptions,
@@ -9,7 +10,6 @@ import type {
 	SetOptions,
 	Slice,
 } from "@zarrita/indexing";
-import type * as core from "@zarrita/core";
 import type { Mutable, Readable } from "@zarrita/storage";
 
 export const setter = {

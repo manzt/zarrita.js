@@ -1,10 +1,10 @@
-import { expect, test } from "vitest";
 import ndarray from "ndarray";
+import { expect, test } from "vitest";
 
 import * as zarr from "@zarrita/core";
 
-import { range, slice } from "../src/util.js";
 import { get, set } from "../src/ops.js";
+import { range, slice } from "../src/util.js";
 
 test("Read and write array data - builtin", async () => {
 	let h = zarr.root(new Map());

@@ -4,8 +4,9 @@
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
-		"format": "biome format .",
+		"format": "format .",
 		"lint": "biome lint .",
+		"fix": "biome check --apply .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
 	},
 	"devDependencies": {

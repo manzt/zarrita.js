@@ -1,5 +1,4 @@
 import type { AbsolutePath, Readable } from "@zarrita/storage";
-import { json_decode_object, json_encode_object } from "./util.js";
 import { KeyError, NodeNotFoundError } from "./errors.js";
 import type {
 	ArrayMetadata,
@@ -8,6 +7,7 @@ import type {
 	GroupMetadata,
 	GroupMetadataV2,
 } from "./metadata.js";
+import { json_decode_object, json_encode_object } from "./util.js";
 
 type ConsolidatedMetadata = {
 	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;

@@ -1,22 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
-import * as url from "node:url";
 import * as path from "node:path";
+import * as url from "node:url";
 import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
 import {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
 } from "@zarrita/typedarray";
+import { describe, expect, it, vi } from "vitest";
 
-import { open } from "../src/open.js";
-import { root } from "../src/hierarchy.js";
 import { NodeNotFoundError } from "../src/errors.js";
+import { root } from "../src/hierarchy.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
 	GroupMetadata,
 	GroupMetadataV2,
 } from "../src/metadata.js";
+import { open } from "../src/open.js";
 
 function range(n: number) {
 	return Array.from({ length: n }, (_, i) => i);
