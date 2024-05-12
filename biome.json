@@ -17,6 +17,12 @@
 		}
 	},
 	"files": {
-		"ignore": ["fixtures", "**/dist", "docs/.vitepress/cache", ".changeset"]
+		"ignore": [
+			"fixtures",
+			"**/dist",
+			"docs/.vitepress/cache",
+			".changeset",
+			"package.json"
+		]
 	}
 }
