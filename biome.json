@@ -17,12 +17,11 @@
 		}
 	},
 	"files": {
-		"ignore": [
-			"fixtures",
-			"**/dist",
-			"docs/.vitepress/cache",
-			".changeset",
-			"package.json"
-		]
+		"ignore": ["fixtures", ".changeset", "package.json"]
+	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
 	}
 }
