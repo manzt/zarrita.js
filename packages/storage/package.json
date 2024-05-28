@@ -10,9 +10,21 @@
 			"types": "./src/index.ts",
 			"import": "./src/index.ts"
 		},
-		"./*": {
-			"types": "./src/*.ts",
-			"import": "./src/*.ts"
+		"./fetch": {
+			"types": "./src/fetch.ts",
+			"import": "./src/fetch.ts"
+		},
+		"./fs": {
+			"types": "./src/fs.ts",
+			"import": "./src/fs.ts"
+		},
+		"./ref": {
+			"types": "./src/ref.ts",
+			"import": "./src/ref.ts"
+		},
+		"./zip": {
+			"types": "./src/zip.ts",
+			"import": "./src/zip.ts"
 		}
 	},
 	"dependencies": {
@@ -26,9 +38,21 @@
 				"types": "./dist/src/index.d.ts",
 				"import": "./dist/src/index.js"
 			},
-			"./*": {
-				"types": "./dist/src/*.d.ts",
-				"import": "./dist/src/*.js"
+			"./fetch": {
+				"types": "./dist/src/fetch.d.ts",
+				"import": "./dist/src/fetch.js"
+			},
+			"./fs": {
+				"types": "./dist/src/fs.d.ts",
+				"import": "./dist/src/fs.js"
+			},
+			"./ref": {
+				"types": "./dist/src/ref.d.ts",
+				"import": "./dist/src/ref.js"
+			},
+			"./zip": {
+				"types": "./dist/src/zip.d.ts",
+				"import": "./dist/src/zip.js"
 			}
 		}
 	}

@@ -1,0 +1,21 @@
+{
+	"name": "@zarrita/ndarray",
+	"version": "0.1.0-next.12",
+	"imports": {
+		"@types/ndarray": "npm:@types/ndarray@^1.0.11",
+		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.10",
+		"@zarrita/indexing": "jsr:@zarrita/indexing@^0.1.0-next.12",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.5",
+		"ndarray": "npm:ndarray@^1.0.19",
+		"ndarray-ops": "npm:ndarray-ops@^1.2.2"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+		"package.json"
+	]
+}

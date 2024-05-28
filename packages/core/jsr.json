@@ -1,0 +1,17 @@
+{
+	"name": "@zarrita/core",
+	"version": "0.1.0-next.10",
+	"imports": {
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.5",
+		"@zarrita/typedarray": "jsr:@zarrita/typedarray@^0.1.0-next.3",
+		"numcodecs": "npm:numcodecs@^0.3.1"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+		"package.json"
+	]
+}
