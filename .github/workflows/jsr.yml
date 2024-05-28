@@ -23,7 +23,7 @@ jobs:
 
       - name: Publish @zarrita/typedarray
         run: deno publish --unstable-sloppy-imports
-        working-directory: packages/typearray
+        working-directory: packages/typedarray
 
       - name: Publish @zarrita/core
         run: deno publish --unstable-sloppy-imports
