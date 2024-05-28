@@ -19,7 +19,7 @@ export const setter = {
 		selection: (number | Indices)[],
 		value: core.Scalar<D>,
 	) {
-		// @ts-expect-error - ndarray-ops types are incorrect
+		// @ts-ignore - ndarray-ops types are incorrect
 		ops.assigns(view(dest, selection), value);
 	},
 	set_from_chunk<D extends core.DataType>(
@@ -41,7 +41,13 @@ export async function get<
 	arr: core.Array<D, Store>,
 	selection: Sel | null = null,
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
-) {
+): Promise<
+	null extends Sel[number]
+	? ndarray.NdArray<core.TypedArray<D>>
+	: Slice extends Sel[number]
+	? ndarray.NdArray<core.TypedArray<D>>
+	: core.Scalar<D>
+> {
 	return get_with_setter<D, Store, ndarray.NdArray<core.TypedArray<D>>, Sel>(
 		arr,
 		selection,
@@ -56,7 +62,7 @@ export async function set<D extends core.DataType>(
 	selection: (null | Slice | number)[] | null,
 	value: core.Scalar<D> | ndarray.NdArray<core.TypedArray<D>>,
 	opts: SetOptions = {},
-) {
+): Promise<void> {
 	return set_with_setter<D, ndarray.NdArray<core.TypedArray<D>>>(
 		arr,
 		selection,
