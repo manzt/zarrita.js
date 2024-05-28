@@ -1,4 +1,4 @@
-import type { Codec } from "numcodecs";
+import type { Codec as _Codec } from "numcodecs";
 import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 
 import { BytesCodec } from "./codecs/bytes.js";
@@ -17,6 +17,8 @@ type CodecEntry = {
 	fromConfig: (config: unknown, meta: ChunkMetadata<DataType>) => Codec;
 	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
 };
+
+type Codec = _Codec & { kind: CodecEntry["kind"] };
 
 function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 	return new Map()
