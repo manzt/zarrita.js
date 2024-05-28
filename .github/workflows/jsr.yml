@@ -8,13 +8,35 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        packages: [ 'zarrita', 'core', 'typedarray', 'storage', 'indexing', 'ndarray' ]
     permissions:
       contents: read
       id-token: write # The OIDC ID token is used for authentication with JSR.
     steps:
       - uses: actions/checkout@v4
-      - run: npx jsr publish
-        working-directory: packages/${{ matrix.packages }}
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Publish @zarrita/storage
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/storage
+
+      - name: Publish @zarrita/typedarray
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/typearray
+
+      - name: Publish @zarrita/core
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/core
+
+      - name: Publish @zarrita/indexing
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/indexing
+
+      - name: Publish @zarrita/ndarray
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/ndarray
+
+      - name: Publish @zarrita/zarrita
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/zarrita
