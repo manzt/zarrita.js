@@ -12,7 +12,26 @@ import type {
 } from "@zarrita/indexing";
 import type { Mutable, Readable } from "@zarrita/storage";
 
-export const setter = {
+/**
+ * @internal - For testing, don't use in production code.
+ */
+export const _setter: {
+	prepare: <D extends core.DataType>(
+		data: core.TypedArray<D>,
+		shape: number[],
+		stride: number[],
+	) => ndarray.NdArray<core.TypedArray<D>>;
+	set_scalar: <D extends core.DataType>(
+		target: ndarray.NdArray<core.TypedArray<D>>,
+		selection: (Indices | number)[],
+		value: core.Scalar<D>,
+	) => void;
+	set_from_chunk: <D extends core.DataType>(
+		a: ndarray.NdArray<core.TypedArray<D>>,
+		b: ndarray.NdArray<core.TypedArray<D>>,
+		proj: Projection[],
+	) => void;
+} = {
 	prepare: ndarray,
 	set_scalar<D extends core.DataType>(
 		dest: ndarray.NdArray<core.TypedArray<D>>,
@@ -52,7 +71,7 @@ export async function get<
 		arr,
 		selection,
 		opts,
-		setter,
+		_setter,
 	);
 }
 
@@ -68,7 +87,7 @@ export async function set<D extends core.DataType>(
 		selection,
 		value,
 		opts,
-		setter,
+		_setter,
 	);
 }
 
