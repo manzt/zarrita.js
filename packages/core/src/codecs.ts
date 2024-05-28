@@ -32,7 +32,8 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 		.set("json2", () => JsonCodec);
 }
 
-export const registry: Map<string, () => Promise<CodecEntry>> = create_default_registry();
+export const registry: Map<string, () => Promise<CodecEntry>> =
+	create_default_registry();
 
 export function create_codec_pipeline<Dtype extends DataType>(
 	chunk_metadata: ChunkMetadata<Dtype>,

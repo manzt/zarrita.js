@@ -3,12 +3,12 @@ import { create_codec_pipeline } from "./codecs.js";
 import { create_sharded_chunk_getter } from "./codecs/sharding.js";
 import type {
 	ArrayMetadata,
+	Attributes,
 	Chunk,
 	DataType,
 	GroupMetadata,
 	Scalar,
 	TypedArrayConstructor,
-	Attributes,
 } from "./metadata.js";
 import {
 	type DataTypeQuery,

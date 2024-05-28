@@ -175,7 +175,7 @@ export class UnicodeStringArray {
 			const values = x;
 			const d = new UnicodeStringArray(chars, 1);
 			this.#data = new Int32Array(
-				(function*() {
+				(function* () {
 					for (let str of values) {
 						d.set(0, str);
 						yield* d.#data;

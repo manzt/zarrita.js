@@ -148,10 +148,10 @@ export async function get<
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ): Promise<
 	null extends Sel[number]
-	? core.Chunk<D>
-	: Slice extends Sel[number]
-	? core.Chunk<D>
-	: core.Scalar<D>
+		? core.Chunk<D>
+		: Slice extends Sel[number]
+			? core.Chunk<D>
+			: core.Scalar<D>
 > {
 	return get_with_setter<D, Store, core.Chunk<D>, Sel>(
 		arr,

@@ -62,10 +62,10 @@ export async function get<
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ): Promise<
 	null extends Sel[number]
-	? ndarray.NdArray<core.TypedArray<D>>
-	: Slice extends Sel[number]
-	? ndarray.NdArray<core.TypedArray<D>>
-	: core.Scalar<D>
+		? ndarray.NdArray<core.TypedArray<D>>
+		: Slice extends Sel[number]
+			? ndarray.NdArray<core.TypedArray<D>>
+			: core.Scalar<D>
 > {
 	return get_with_setter<D, Store, ndarray.NdArray<core.TypedArray<D>>, Sel>(
 		arr,

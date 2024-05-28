@@ -5,7 +5,7 @@
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
 		"format": "format .",
-		"lint": "biome lint .",
+		"lint": "biome ci .",
 		"fix": "biome check --apply .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
 	},
