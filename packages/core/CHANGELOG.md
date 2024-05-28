@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.11
+
+### Patch Changes
+
+- Fix codec mapping ([#180](https://github.com/manzt/zarrita.js/pull/180))
+
 ## 0.1.0-next.10
 
 ### Patch Changes
