@@ -146,7 +146,13 @@ export async function get<
 	arr: core.Array<D, Store>,
 	selection: Sel | null = null,
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
-) {
+): Promise<
+	null extends Sel[number]
+	? core.Chunk<D>
+	: Slice extends Sel[number]
+	? core.Chunk<D>
+	: core.Scalar<D>
+> {
 	return get_with_setter<D, Store, core.Chunk<D>, Sel>(
 		arr,
 		selection,
@@ -161,7 +167,7 @@ export async function set<D extends core.DataType>(
 	selection: (null | Slice | number)[] | null,
 	value: core.Scalar<D> | core.Chunk<D>,
 	opts: SetOptions = {},
-) {
+): Promise<void> {
 	return set_with_setter<D, core.Chunk<D>>(arr, selection, value, opts, setter);
 }
 
