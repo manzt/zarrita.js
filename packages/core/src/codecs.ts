@@ -32,11 +32,15 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 		.set("json2", () => JsonCodec);
 }
 
-export const registry = create_default_registry();
+export const registry: Map<string, () => Promise<CodecEntry>> =
+	create_default_registry();
 
 export function create_codec_pipeline<Dtype extends DataType>(
 	chunk_metadata: ChunkMetadata<Dtype>,
-) {
+): {
+	encode(chunk: Chunk<Dtype>): Promise<Uint8Array>;
+	decode(bytes: Uint8Array): Promise<Chunk<Dtype>>;
+} {
 	let codecs: Awaited<ReturnType<typeof load_codecs>>;
 	return {
 		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
@@ -94,13 +98,13 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 		let codec = Codec.fromConfig(meta.configuration, chunk_meta);
 		switch (codec.kind) {
 			case "array_to_array":
-				array_to_array.push(codec);
+				array_to_array.push(codec as unknown as ArrayToArrayCodec<D>);
 				break;
 			case "array_to_bytes":
-				array_to_bytes = codec;
+				array_to_bytes = codec as unknown as ArrayToBytesCodec<D>;
 				break;
 			default:
-				bytes_to_bytes.push(codec);
+				bytes_to_bytes.push(codec as unknown as BytesToBytesCodec);
 		}
 	}
 	if (!array_to_bytes) {

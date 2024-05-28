@@ -90,13 +90,19 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 		);
 	}
 
-	static fromSpec(spec: Record<string, unknown>, opts?: ReferenceStoreOptions) {
+	static fromSpec(
+		spec: Record<string, unknown>,
+		opts?: ReferenceStoreOptions,
+	): ReferenceStore {
 		// @ts-expect-error - TS doesn't like the type of `parse`
 		let refs = parse(spec);
 		return new ReferenceStore(refs, opts);
 	}
 
-	static async fromUrl(url: string | URL, opts?: ReferenceStoreOptions) {
+	static async fromUrl(
+		url: string | URL,
+		opts?: ReferenceStoreOptions,
+	): Promise<ReferenceStore> {
 		let spec = await fetch(url, opts?.overrides).then((res) => res.json());
 		return ReferenceStore.fromSpec(spec, opts);
 	}

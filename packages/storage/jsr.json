@@ -1,0 +1,20 @@
+{
+	"name": "@zarrita/storage",
+	"version": "0.1.0-next.5",
+	"imports": {
+		"reference-spec-reader": "npm:reference-spec-reader@^0.2.0",
+		"unzipit": "npm:unzipit@^1.4.3"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./fetch": "./src/fetch.ts",
+		"./fs": "./src/fs.ts",
+		"./ref": "./src/ref.ts",
+		"./zip": "./src/zip.ts"
+	},
+	"publish": {
+		"exclude": [
+			"package.json"
+		]
+	}
+}

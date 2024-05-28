@@ -1,0 +1,13 @@
+{
+	"name": "@zarrita/typedarray",
+	"version": "0.1.0-next.3",
+	"imports": {},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"publish": {
+		"exclude": [
+			"package.json"
+		]
+	}
+}

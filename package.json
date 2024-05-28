@@ -5,9 +5,10 @@
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
 		"format": "format .",
-		"lint": "biome lint .",
+		"lint": "biome ci .",
 		"fix": "biome check --apply .",
-		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
+		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
+		"version": "changeset version && node ./scripts/sync-jsr.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.7.3",

@@ -18,25 +18,23 @@ export class BoolArray {
 		}
 	}
 
-	get BYTES_PER_ELEMENT() {
+	get BYTES_PER_ELEMENT(): 1 {
 		return 1;
 	}
 
-	get byteOffset() {
+	get byteOffset(): number {
 		return this.#bytes.byteOffset;
 	}
 
-	get byteLength() {
+	get byteLength(): number {
 		return this.#bytes.byteLength;
 	}
 
-	/** @type {ArrayBuffer} */
-	get buffer() {
+	get buffer(): ArrayBuffer {
 		return this.#bytes.buffer;
 	}
 
-	/** @type {number} */
-	get length() {
+	get length(): number {
 		return this.#bytes.length;
 	}
 
@@ -49,7 +47,7 @@ export class BoolArray {
 		this.#bytes[idx] = value ? 1 : 0;
 	}
 
-	fill(value: boolean) {
+	fill(value: boolean): void {
 		this.#bytes.fill(value ? 1 : 0);
 	}
 
@@ -95,29 +93,27 @@ export class ByteStringArray {
 		}
 	}
 
-	get BYTES_PER_ELEMENT() {
+	get BYTES_PER_ELEMENT(): number {
 		return this.chars;
 	}
 
-	get byteOffset() {
+	get byteOffset(): number {
 		return this._data.byteOffset;
 	}
 
-	get byteLength() {
+	get byteLength(): number {
 		return this._data.byteLength;
 	}
 
-	/** @type {ArrayBuffer} */
-	get buffer() {
+	get buffer(): ArrayBuffer {
 		return this._data.buffer;
 	}
 
-	/** @type {number} */
-	get length() {
+	get length(): number {
 		return this.byteLength / this.BYTES_PER_ELEMENT;
 	}
 
-	get(idx: number) {
+	get(idx: number): string {
 		const view = new Uint8Array(
 			this.buffer,
 			this.byteOffset + this.chars * idx,
@@ -127,7 +123,7 @@ export class ByteStringArray {
 		return new TextDecoder().decode(view).replace(/\x00/g, "");
 	}
 
-	set(idx: number, value: string) {
+	set(idx: number, value: string): void {
 		const view = new Uint8Array(
 			this.buffer,
 			this.byteOffset + this.chars * idx,
@@ -137,7 +133,7 @@ export class ByteStringArray {
 		view.set(this.#encoder.encode(value));
 	}
 
-	fill(value: string) {
+	fill(value: string): void {
 		const encoded = this.#encoder.encode(value);
 		for (let i = 0; i < this.length; i++) {
 			this._data.set(encoded, i * this.chars);
@@ -189,29 +185,27 @@ export class UnicodeStringArray {
 		}
 	}
 
-	get BYTES_PER_ELEMENT() {
+	get BYTES_PER_ELEMENT(): number {
 		return this.#data.BYTES_PER_ELEMENT * this.chars;
 	}
 
-	get byteLength() {
+	get byteLength(): number {
 		return this.#data.byteLength;
 	}
 
-	get byteOffset() {
+	get byteOffset(): number {
 		return this.#data.byteOffset;
 	}
 
-	/** @type {ArrayBuffer} */
-	get buffer() {
+	get buffer(): ArrayBuffer {
 		return this.#data.buffer;
 	}
 
-	/** @type {number} */
-	get length() {
+	get length(): number {
 		return this.#data.length / this.chars;
 	}
 
-	get(idx: number) {
+	get(idx: number): string {
 		const offset = this.chars * idx;
 		let result = "";
 		for (let i = 0; i < this.chars; i++) {
@@ -221,7 +215,7 @@ export class UnicodeStringArray {
 		return result.replace(/\u0000/g, "");
 	}
 
-	set(idx: number, value: string) {
+	set(idx: number, value: string): void {
 		const offset = this.chars * idx;
 		const view = this.#data.subarray(offset, offset + this.chars);
 		view.fill(0); // clear current
@@ -230,7 +224,7 @@ export class UnicodeStringArray {
 		}
 	}
 
-	fill(value: string) {
+	fill(value: string): void {
 		// encode once
 		this.set(0, value);
 		// copy the encoded values to all other elements

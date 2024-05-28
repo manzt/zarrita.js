@@ -17,7 +17,7 @@
 		}
 	},
 	"files": {
-		"ignore": ["fixtures", ".changeset", "package.json"]
+		"ignore": ["fixtures", ".changeset", "package.json", "jsr.json"]
 	},
 	"vcs": {
 		"enabled": true,

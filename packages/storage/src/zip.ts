@@ -6,10 +6,10 @@ import type { AbsolutePath, AsyncReadable } from "./types.js";
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}
-	async getLength() {
+	async getLength(): Promise<number> {
 		return this.blob.size;
 	}
-	async read(offset: number, length: number) {
+	async read(offset: number, length: number): Promise<Uint8Array> {
 		const blob = this.blob.slice(offset, offset + length);
 		return new Uint8Array(await blob.arrayBuffer());
 	}
@@ -29,7 +29,7 @@ export class HTTPRangeReader implements Reader {
 		this.#overrides = opts.overrides ?? {};
 	}
 
-	async getLength() {
+	async getLength(): Promise<number> {
 		if (this.length === undefined) {
 			const req = await fetch(this.url as string, {
 				...this.#overrides,
@@ -48,7 +48,7 @@ export class HTTPRangeReader implements Reader {
 		return this.length;
 	}
 
-	async read(offset: number, size: number) {
+	async read(offset: number, size: number): Promise<Uint8Array> {
 		if (size === 0) {
 			return new Uint8Array(0);
 		}
@@ -69,21 +69,24 @@ class ZipFileStore<R extends Reader> implements AsyncReadable {
 		this.info = unzip(reader);
 	}
 
-	async get(key: AbsolutePath) {
+	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
 		let entry = (await this.info).entries[strip_prefix(key)];
 		if (!entry) return;
 		return new Uint8Array(await entry.arrayBuffer());
 	}
 
-	async has(key: AbsolutePath) {
+	async has(key: AbsolutePath): Promise<boolean> {
 		return strip_prefix(key) in (await this.info).entries;
 	}
 
-	static fromUrl(href: string | URL, opts: ZipFileStoreOptions = {}) {
+	static fromUrl(
+		href: string | URL,
+		opts: ZipFileStoreOptions = {},
+	): ZipFileStore<HTTPRangeReader> {
 		return new ZipFileStore(new HTTPRangeReader(href, opts));
 	}
 
-	static fromBlob(blob: Blob) {
+	static fromBlob(blob: Blob): ZipFileStore<BlobReader> {
 		return new ZipFileStore(new BlobReader(blob));
 	}
 }
