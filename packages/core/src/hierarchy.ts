@@ -8,6 +8,7 @@ import type {
 	GroupMetadata,
 	Scalar,
 	TypedArrayConstructor,
+	Attributes,
 } from "./metadata.js";
 import {
 	type DataTypeQuery,
@@ -57,7 +58,7 @@ export class Group<Store extends Readable> extends Location<Store> {
 		super(store, path);
 		this.#metadata = metadata;
 	}
-	get attrs() {
+	get attrs(): Attributes {
 		return this.#metadata.attributes;
 	}
 }
@@ -166,19 +167,19 @@ export class Array<
 		this[CONTEXT_MARKER] = create_context(this, metadata);
 	}
 
-	get attrs() {
+	get attrs(): Attributes {
 		return this.#metadata.attributes;
 	}
 
-	get shape() {
+	get shape(): number[] {
 		return this.#metadata.shape;
 	}
 
-	get chunks() {
+	get chunks(): number[] {
 		return this[CONTEXT_MARKER].chunk_shape;
 	}
 
-	get dtype() {
+	get dtype(): Dtype {
 		return this.#metadata.data_type;
 	}
 
