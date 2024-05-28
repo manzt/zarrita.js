@@ -1,9 +1,9 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.4.0-next.12",
+	"version": "0.4.0-next.13",
 	"imports": {
-		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.10",
-		"@zarrita/indexing": "jsr:@zarrita/indexing@^0.1.0-next.12",
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.11",
+		"@zarrita/indexing": "jsr:@zarrita/indexing@^0.1.0-next.13",
 		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.5"
 	},
 	"exports": {
