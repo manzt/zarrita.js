@@ -7,7 +7,8 @@
 		"format": "format .",
 		"lint": "biome ci .",
 		"fix": "biome check --apply .",
-		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
+		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
+		"version": "changesets version && node ./scripts/sync-jsr.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.7.3",
