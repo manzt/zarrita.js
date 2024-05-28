@@ -13,9 +13,9 @@
 	"exports": {
 		".": "./src/index.ts"
 	},
-	"exclude": [
-		"node_modules",
-		"dist",
-		"package.json"
-	]
+	"publish": {
+		"exclude": [
+			"package.json"
+		]
+	}
 }

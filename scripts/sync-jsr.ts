@@ -12,7 +12,7 @@ interface JsrJson {
 	version: string;
 	imports: Record<string, string>;
 	exports: Record<string, string>;
-	exclude: string[];
+	publish: { exclude: string[] };
 }
 
 let MANIFEST: Record<string, JsrJson> = {};
@@ -30,7 +30,9 @@ for await (const pkg of Deno.readDir(new URL("../packages", import.meta.url))) {
 			key,
 			value,
 		]),
-		exclude: ["node_modules", "dist", "package.json"],
+		publish: {
+			exclude: ["package.json"],
+		},
 	};
 }
 

@@ -12,9 +12,9 @@
 		"./ref": "./src/ref.ts",
 		"./zip": "./src/zip.ts"
 	},
-	"exclude": [
-		"node_modules",
-		"dist",
-		"package.json"
-	]
+	"publish": {
+		"exclude": [
+			"package.json"
+		]
+	}
 }
