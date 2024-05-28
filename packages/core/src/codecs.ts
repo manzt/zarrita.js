@@ -95,7 +95,7 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 	let bytes_to_bytes: BytesToBytesCodec[] = [];
 	for await (let { Codec, meta } of promises) {
 		let codec = Codec.fromConfig(meta.configuration, chunk_meta);
-		switch (Codec.kind) {
+		switch (codec.kind) {
 			case "array_to_array":
 				array_to_array.push(codec as unknown as ArrayToArrayCodec<D>);
 				break;
