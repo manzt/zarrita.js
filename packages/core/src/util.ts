@@ -114,7 +114,7 @@ export function create_chunk_key_encoder({
 			["c", ...chunk_coords].join(configuration?.separator || "/");
 	}
 	if (name === "v2") {
-		return (chunk_coords) => chunk_coords.join(configuration.separator) || "0";
+		return (chunk_coords) => chunk_coords.join(configuration?.separator) || ".";
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
