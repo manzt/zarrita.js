@@ -94,7 +94,7 @@ export type ArrayMetadata<D extends DataType = DataType> = {
 	};
 	chunk_key_encoding: {
 		name: "v2" | "default";
-		configuration: {
+		configuration?: {
 			separator: "." | "/";
 		};
 	};
