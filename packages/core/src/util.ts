@@ -111,7 +111,7 @@ export function create_chunk_key_encoder({
 }: ArrayMetadata["chunk_key_encoding"]): (chunk_coords: number[]) => string {
 	if (name === "default") {
 		return (chunk_coords) =>
-			["c", ...chunk_coords].join(configuration.separator);
+			["c", ...chunk_coords].join(configuration?.separator || "/");
 	}
 	if (name === "v2") {
 		return (chunk_coords) => chunk_coords.join(configuration.separator) || "0";
