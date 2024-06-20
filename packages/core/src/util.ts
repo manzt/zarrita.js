@@ -105,16 +105,18 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
+// https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#chunk-key-encoding
 export function create_chunk_key_encoder({
 	name,
 	configuration,
 }: ArrayMetadata["chunk_key_encoding"]): (chunk_coords: number[]) => string {
 	if (name === "default") {
-		return (chunk_coords) =>
-			["c", ...chunk_coords].join(configuration.separator);
+		const separator = configuration?.separator ?? "/";
+		return (chunk_coords) => ["c", ...chunk_coords].join(separator);
 	}
 	if (name === "v2") {
-		return (chunk_coords) => chunk_coords.join(configuration.separator) || "0";
+		const separator = configuration?.separator ?? ".";
+		return (chunk_coords) => chunk_coords.join(separator) || "0";
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
