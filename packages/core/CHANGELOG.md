@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.12
+
+### Patch Changes
+
+- Fix: Handle missing v3 chunk_key_encoding.configuration ([#188](https://github.com/manzt/zarrita.js/pull/188))
+
 ## 0.1.0-next.11
 
 ### Patch Changes
