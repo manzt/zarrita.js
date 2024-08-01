@@ -15,7 +15,7 @@
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@types/node": "^22.0.2",
 		"publint": "^0.2.8",
-		"typescript": "5.6.0-dev.20240620",
+		"typescript": "5.6.0-dev.20240801",
 		"vitest": "^1.6.0"
 	},
 	"packageManager": "pnpm@9.4.0"
