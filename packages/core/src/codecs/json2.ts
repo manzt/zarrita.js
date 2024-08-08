@@ -68,7 +68,7 @@ export class JsonCodec {
 	#encoder_config: EncoderConfig;
 	#decoder_config: DecoderConfig;
 
-	constructor(public configuration: JsonCodecConfig) {
+	constructor(public configuration: JsonCodecConfig = {}) {
 		// Reference: https://github.com/zarr-developers/numcodecs/blob/0878717a3613d91a453fe3d3716aa9c67c023a8b/numcodecs/json.py#L36
 		const {
 			encoding = "utf-8",
