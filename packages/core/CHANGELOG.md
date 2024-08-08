@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.13
+
+### Patch Changes
+
+- fix: Allow omitting codec configuration ([#199](https://github.com/manzt/zarrita.js/pull/199))
+
 ## 0.1.0-next.12
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @zarrita/ndarray
 
+## 0.1.0-next.15
+
+### Patch Changes
+
+- Updated dependencies [[`1deb39aacdc0db42ce099f726e8e9a3fd989d1b2`](https://github.com/manzt/zarrita.js/commit/1deb39aacdc0db42ce099f726e8e9a3fd989d1b2)]:
+  - @zarrita/core@0.1.0-next.13
+  - @zarrita/indexing@0.1.0-next.15
+
 ## 0.1.0-next.14
 
 ### Patch Changes
