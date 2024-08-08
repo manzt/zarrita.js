@@ -38,10 +38,10 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 	#endian?: "little" | "big";
 
 	constructor(
-		configuration: { endian?: "little" | "big" },
+		configuration: { endian?: "little" | "big" } | undefined,
 		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	) {
-		this.#endian = configuration.endian;
+		this.#endian = configuration?.endian;
 		this.#TypedArray = get_ctr(meta.data_type);
 		this.#shape = meta.shape;
 		this.#strides = get_strides(meta.shape, get_array_order(meta.codecs));

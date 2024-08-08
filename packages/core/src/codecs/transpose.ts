@@ -109,17 +109,17 @@ function get_order(arr: Chunk<DataType>): "C" | "F" {
 export class TransposeCodec {
 	kind = "array_to_array";
 
-	constructor(public configuration: { order: "C" | "F" }) {}
+	constructor(public configuration?: { order: "C" | "F" }) {}
 
 	static fromConfig(configuration: { order: "C" | "F" }) {
 		return new TransposeCodec(configuration);
 	}
 
 	encode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
-		if (get_order(arr) === this.configuration.order) {
+		if (get_order(arr) === this.configuration?.order) {
 			return arr;
 		}
-		return convert_array_order(arr, this.configuration.order);
+		return convert_array_order(arr, this.configuration?.order ?? "C");
 	}
 
 	decode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
