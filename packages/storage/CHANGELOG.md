@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.6
+
+### Patch Changes
+
+- Enable creation of ReferenceStore via non-async functions. ([#203](https://github.com/manzt/zarrita.js/pull/203))
+
 ## 0.1.0-next.5
 
 ### Patch Changes
