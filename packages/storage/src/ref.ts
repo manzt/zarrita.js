@@ -45,10 +45,10 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	#overrides: RequestInit;
 
 	constructor(
-		refs: Promise<Map<string, ReferenceEntry>>,
+		refs: Promise<Map<string, ReferenceEntry>> | Map<string, ReferenceEntry>,
 		opts: ReferenceStoreOptions = {},
 	) {
-		this.#refs = refs;
+		this.#refs = Promise.resolve(refs);
 		this.#opts = opts;
 		this.#overrides = opts.overrides || {};
 	}
@@ -91,11 +91,11 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	}
 
 	static fromSpec(
-		spec: Promise<Record<string, unknown>>,
+		spec: Promise<Record<string, unknown>> | Record<string, unknown>,
 		opts?: ReferenceStoreOptions,
 	): ReferenceStore {
 		// @ts-expect-error - TS doesn't like the type of `parse`
-		let refs = spec.then((spec) => parse(spec));
+		let refs = Promise.resolve(spec).then((spec) => parse(spec));
 		return new ReferenceStore(refs, opts);
 	}
 
