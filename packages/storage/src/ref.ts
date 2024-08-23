@@ -40,15 +40,15 @@ interface ReferenceStoreOptions {
 
 /** @experimental */
 class ReferenceStore implements AsyncReadable<RequestInit> {
-	#refs: Map<string, ReferenceEntry>;
+	#refs: Promise<Map<string, ReferenceEntry>>;
 	#opts: ReferenceStoreOptions;
 	#overrides: RequestInit;
 
 	constructor(
-		refs: Map<string, ReferenceEntry>,
+		refs: Promise<Map<string, ReferenceEntry>> | Map<string, ReferenceEntry>,
 		opts: ReferenceStoreOptions = {},
 	) {
-		this.#refs = refs;
+		this.#refs = Promise.resolve(refs);
 		this.#opts = opts;
 		this.#overrides = opts.overrides || {};
 	}
@@ -57,7 +57,7 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 		key: AbsolutePath,
 		opts: RequestInit = {},
 	): Promise<Uint8Array | undefined> {
-		let ref = this.#refs.get(strip_prefix(key));
+		let ref = (await this.#refs).get(strip_prefix(key));
 
 		if (!ref) return;
 
@@ -91,19 +91,19 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 	}
 
 	static fromSpec(
-		spec: Record<string, unknown>,
+		spec: Promise<Record<string, unknown>> | Record<string, unknown>,
 		opts?: ReferenceStoreOptions,
 	): ReferenceStore {
 		// @ts-expect-error - TS doesn't like the type of `parse`
-		let refs = parse(spec);
+		let refs = Promise.resolve(spec).then((spec) => parse(spec));
 		return new ReferenceStore(refs, opts);
 	}
 
-	static async fromUrl(
+	static fromUrl(
 		url: string | URL,
 		opts?: ReferenceStoreOptions,
-	): Promise<ReferenceStore> {
-		let spec = await fetch(url, opts?.overrides).then((res) => res.json());
+	): ReferenceStore {
+		let spec = fetch(url, opts?.overrides).then((res) => res.json());
 		return ReferenceStore.fromSpec(spec, opts);
 	}
 }
