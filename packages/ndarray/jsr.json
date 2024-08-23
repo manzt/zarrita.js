@@ -1,6 +1,7 @@
 {
 	"name": "@zarrita/ndarray",
 	"version": "0.1.0-next.13",
+	"license": "MIT",
 	"imports": {
 		"@types/ndarray": "npm:@types/ndarray@^1.0.11",
 		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
