@@ -13,7 +13,7 @@
 		"@biomejs/biome": "1.8.3",
 		"@changesets/cli": "^2.27.5",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"@types/node": "^22.0.2",
+		"@types/node": "^22.5.2",
 		"publint": "^0.2.8",
 		"typescript": "5.6.0-dev.20240808",
 		"vitest": "^2.0.5"
