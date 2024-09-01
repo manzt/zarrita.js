@@ -14,7 +14,7 @@
 		"@changesets/cli": "^2.27.5",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@types/node": "^22.0.2",
-		"publint": "^0.2.8",
+		"publint": "^0.2.10",
 		"typescript": "5.6.0-dev.20240808",
 		"vitest": "^2.0.5"
 	},
