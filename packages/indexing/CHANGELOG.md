@@ -1,5 +1,13 @@
 # @zarrita/indexing
 
+## 0.1.0-next.17
+
+### Patch Changes
+
+- Updated dependencies [[`361a7aa0a038317fe469c1ca62385cc3dfdc28b1`](https://github.com/manzt/zarrita.js/commit/361a7aa0a038317fe469c1ca62385cc3dfdc28b1)]:
+  - @zarrita/storage@0.1.0-next.7
+  - @zarrita/core@0.1.0-next.15
+
 ## 0.1.0-next.16
 
 ### Patch Changes
