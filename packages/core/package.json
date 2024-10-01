@@ -16,7 +16,7 @@
 	"dependencies": {
 		"@zarrita/storage": "workspace:^",
 		"@zarrita/typedarray": "workspace:^",
-		"numcodecs": "^0.3.1"
+		"numcodecs": "^0.3.2"
 	},
 	"publishConfig": {
 		"main": "dist/src/index.js",
