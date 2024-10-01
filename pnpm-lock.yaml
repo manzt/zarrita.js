@@ -51,8 +51,8 @@ importers:
         specifier: workspace:^
         version: link:../typedarray
       numcodecs:
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: ^0.3.2
+        version: 0.3.2
 
   packages/indexing:
     dependencies:
@@ -1144,8 +1144,8 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     hasBin: true
 
-  numcodecs@0.3.1:
-    resolution: {integrity: sha512-ywIyGpJ+c6Ojktq9a8jsWSy12ZSUcW/W+I3jlH0q0zv9aR/ZiMsN7IrWaNq9YV2FRdLu6r/M6lp35jMA6fug/A==}
+  numcodecs@0.3.2:
+    resolution: {integrity: sha512-6YSPnmZgg0P87jnNhi3s+FVLOcIn3y+1CTIgUulA3IdASzK9fJM87sUFkpyA+be9GibGRaST2wCgkD+6U+fWKw==}
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
@@ -2567,7 +2567,7 @@ snapshots:
       npm-bundled: 2.0.1
       npm-normalize-package-bin: 2.0.0
 
-  numcodecs@0.3.1:
+  numcodecs@0.3.2:
     dependencies:
       fflate: 0.8.2
 
