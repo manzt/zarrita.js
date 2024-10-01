@@ -7,23 +7,23 @@
  * Colors
  * -------------------------------------------------------------------------- */
 
- :root {
-  --vp-c-pink-1: #ec4899;  /* Base Pink */
-  --vp-c-pink-2: #f062a4;  /* Lighter Pink */
-  --vp-c-pink-3: #d4267e;  /* Darker Pink */
-  --vp-c-pink-soft: rgba(236, 72, 153, 0.14); /* Soft Pink */
+:root {
+	--vp-c-pink-1: #ec4899; /* Base Pink */
+	--vp-c-pink-2: #f062a4; /* Lighter Pink */
+	--vp-c-pink-3: #d4267e; /* Darker Pink */
+	--vp-c-pink-soft: rgba(236, 72, 153, 0.14); /* Soft Pink */
 
-  --vp-c-brand-1: var(--vp-c-pink-1);
-  --vp-c-brand-2: var(--vp-c-pink-2);
-  --vp-c-brand-3: var(--vp-c-pink-3);
-  --vp-c-brand-soft: var(--vp-c-pink-soft);
+	--vp-c-brand-1: var(--vp-c-pink-1);
+	--vp-c-brand-2: var(--vp-c-pink-2);
+	--vp-c-brand-3: var(--vp-c-pink-3);
+	--vp-c-brand-soft: var(--vp-c-pink-soft);
 }
 
 .dark {
-  --vp-c-pink-1: #bf3470;  /* Dark Theme Base Pink */
-  --vp-c-pink-2: #a8306c;  /* Dark Theme Lighter Pink */
-  --vp-c-pink-3: #8d2c63;  /* Dark Theme Darker Pink */
-  --vp-c-pink-soft: rgba(188, 52, 112, 0.16); /* Dark Theme Soft Pink */
+	--vp-c-pink-1: #bf3470; /* Dark Theme Base Pink */
+	--vp-c-pink-2: #a8306c; /* Dark Theme Lighter Pink */
+	--vp-c-pink-3: #8d2c63; /* Dark Theme Darker Pink */
+	--vp-c-pink-soft: rgba(188, 52, 112, 0.16); /* Dark Theme Soft Pink */
 }
 
 /**
@@ -31,6 +31,5 @@
  * -------------------------------------------------------------------------- */
 
 .DocSearch {
-  --docsearch-primary-color: var(--vp-c-brand-1) !important;
+	--docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
-
