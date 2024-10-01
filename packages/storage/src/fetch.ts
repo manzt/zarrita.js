@@ -16,7 +16,7 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 async function handle_response(
 	response: Response,
 ): Promise<Uint8Array | undefined> {
-	if (response.status === 404 || response.status === 403) {
+	if (response.status === 404) {
 		return undefined;
 	}
 	if (response.status === 200 || response.status === 206) {
