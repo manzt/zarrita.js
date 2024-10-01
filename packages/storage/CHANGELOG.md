@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.7
+
+### Patch Changes
+
+- `FetchStore` throws an error for 403 (forbidden) responses. This is a **breaking** change because previously `404` and `403` responses were treated the same way. Now, only `404` responses signify a "missing" key from the store. ([#212](https://github.com/manzt/zarrita.js/pull/212))
+
 ## 0.1.0-next.6
 
 ### Patch Changes
