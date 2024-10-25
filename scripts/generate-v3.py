@@ -1,11 +1,21 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["zarrita==0.2.7"]
+# ///
+
 import shutil
+import pathlib
+import json
 
 import zarrita
 import numpy as np
 
-shutil.rmtree("data.zarr", ignore_errors=True)
+SELF_DIR = pathlib.Path(__file__).parent
+ROOT = SELF_DIR / ".." / "fixtures" / "v3" / "data.zarr"
 
-store = zarrita.LocalStore("data.zarr")
+shutil.rmtree(ROOT, ignore_errors=True)
+
+store = zarrita.LocalStore(ROOT)
 zarrita.Group.create(store)
 
 # 1d.contiguous.gzip.i2
@@ -141,6 +151,15 @@ a = zarrita.Array.create(
     ],
 )
 a[:] = [1, 2, 3, 4]
+
+
+# Just to have an edge case where dimension_names is 'null' in our snapshots
+with open(ROOT / "1d.chunked.i2/zarr.json", "r") as f:
+    meta = json.load(f)
+    meta["dimension_names"] = None
+
+    with open(ROOT / "1d.chunked.i2/zarr.json", "w") as f:
+        json.dump(meta, f)
 
 # 1d.chunked.ragged.i2
 a = zarrita.Array.create(
@@ -527,4 +546,3 @@ a = zarrita.Array.create(
     ],
 )
 a[:, :, :] = data
-

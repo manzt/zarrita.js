@@ -103,7 +103,9 @@ classDiagram
 
 ## Development
 
-This library uses the [`pnpm`](https://pnpm.io/) package manager.
+This library uses the [`pnpm`](https://pnpm.io/) package manager and
+[`uv`](https://github.com/astral-sh/uv) for creating fixtures with Python.
+Please make sure you have both installed before running the following commands:
 
 ```bash
 pnpm install

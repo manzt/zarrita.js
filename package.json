@@ -7,7 +7,8 @@
 		"format": "format .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
-		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint"
+		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
+		"update-fixtures": "uv run scripts/generate-v2.py && uv run scripts/generate-v3.py"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3",

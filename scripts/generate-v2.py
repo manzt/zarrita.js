@@ -1,11 +1,24 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "zarr==2.18.1",
+# ]
+# ///
+import pathlib
+import shutil
+
 import zarr
 import numpy as np
-import shutil
 from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8
 
-shutil.rmtree("data.zarr", ignore_errors=True)
+SELF_DIR = pathlib.Path(__file__).parent
 
-store = zarr.DirectoryStore("data.zarr")
+ROOT = SELF_DIR / ".." / "fixtures" / "v2" / "data.zarr"
+
+ROOT.mkdir(parents=True, exist_ok=True)
+shutil.rmtree(ROOT, ignore_errors=True)
+
+store = zarr.DirectoryStore(ROOT)
 root = zarr.open_group(store)
 root.attrs["answer"] = 42
 
