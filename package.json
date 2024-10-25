@@ -3,12 +3,14 @@
 	"scripts": {
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
-		"test": "npm run create-fixtures && vitest --api",
+		"test": "npm run fixtures && vitest --api",
 		"format": "format .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
-		"create-fixtures": "uv run ./fixtures/v2/generate-v2.py"
+		"fixtures-v2": "uv run ./fixtures/v2/generate-v2.py",
+		"fixtures-v3": "uv run ./fixtures/v3/generate-v3.py",
+		"fixtures": "npm run fixtures-v2 && npm run fixtures-v3"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3",
