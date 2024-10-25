@@ -5,3 +5,4 @@ dist/
 
 .venv
 docs/.vitepress/cache
+fixtures/

@@ -13,9 +13,12 @@ from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8
 
 SELF_DIR = pathlib.Path(__file__).parent
 
-shutil.rmtree(SELF_DIR / "data.zarr", ignore_errors=True)
+ROOT = SELF_DIR / ".." / "fixtures" / "v2" / "data.zarr"
 
-store = zarr.DirectoryStore(SELF_DIR / "data.zarr")
+ROOT.mkdir(parents=True, exist_ok=True)
+shutil.rmtree(ROOT, ignore_errors=True)
+
+store = zarr.DirectoryStore(ROOT)
 root = zarr.open_group(store)
 root.attrs["answer"] = 42
 
@@ -182,4 +185,3 @@ root.create_dataset(
 )
 
 zarr.consolidate_metadata(store)
-

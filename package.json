@@ -8,8 +8,8 @@
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
-		"fixtures-v2": "uv run ./fixtures/v2/generate-v2.py",
-		"fixtures-v3": "uv run ./fixtures/v3/generate-v3.py",
+		"fixtures-v2": "uv run scripts/generate-v2.py",
+		"fixtures-v3": "uv run scripts/generate-v3.py",
 		"fixtures": "npm run fixtures-v2 && npm run fixtures-v3"
 	},
 	"devDependencies": {
