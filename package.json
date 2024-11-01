@@ -14,7 +14,7 @@
 		"@biomejs/biome": "1.9.3",
 		"@changesets/cli": "^2.27.8",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"@types/node": "^22.7.4",
+		"@types/node": "^22.8.6",
 		"publint": "^0.2.11",
 		"typescript": "5.6.2",
 		"vitest": "^2.1.1"
