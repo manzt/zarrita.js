@@ -11,7 +11,7 @@
 		"update-fixtures": "uv run scripts/generate-v2.py && uv run scripts/generate-v3.py"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.3",
+		"@biomejs/biome": "1.9.4",
 		"@changesets/cli": "^2.27.8",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@types/node": "^22.7.4",
