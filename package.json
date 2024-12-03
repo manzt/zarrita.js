@@ -17,7 +17,7 @@
 		"@types/node": "^22.7.4",
 		"publint": "^0.2.12",
 		"typescript": "5.6.2",
-		"vitest": "^2.1.6"
+		"vitest": "^2.1.8"
 	},
 	"packageManager": "pnpm@9.7.0"
 }
