@@ -13,7 +13,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@changesets/cli": "^2.27.8",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
+		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"@types/node": "^22.7.4",
 		"publint": "^0.2.12",
 		"typescript": "5.6.2",
