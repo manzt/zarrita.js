@@ -31,7 +31,7 @@ export class BoolArray {
 	}
 
 	get buffer(): ArrayBuffer {
-		return this.#bytes.buffer;
+		return this.#bytes.buffer as ArrayBuffer;
 	}
 
 	get length(): number {
@@ -106,7 +106,7 @@ export class ByteStringArray {
 	}
 
 	get buffer(): ArrayBuffer {
-		return this._data.buffer;
+		return this._data.buffer as ArrayBuffer;
 	}
 
 	get length(): number {
@@ -198,7 +198,7 @@ export class UnicodeStringArray {
 	}
 
 	get buffer(): ArrayBuffer {
-		return this.#data.buffer;
+		return this.#data.buffer as ArrayBuffer;
 	}
 
 	get length(): number {

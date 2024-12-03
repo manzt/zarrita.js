@@ -26,7 +26,9 @@ export class VLenUTF8 {
 		for (let i = 0; i < data.length; i++) {
 			let item_length = view.getUint32(pos, true);
 			pos += 4;
-			data[i] = decoder.decode(bytes.buffer.slice(pos, pos + item_length));
+			data[i] = decoder.decode(
+				(bytes.buffer as ArrayBuffer).slice(pos, pos + item_length),
+			);
 			pos += item_length;
 		}
 		return { data, shape: this.#shape, stride: this.#strides };
