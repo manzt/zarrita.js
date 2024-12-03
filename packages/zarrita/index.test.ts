@@ -26,6 +26,7 @@ it("exports all the things", () => {
 		    "crc32c" => [Function],
 		    "vlen-utf8" => [Function],
 		    "json2" => [Function],
+		    "bitround" => [Function],
 		  },
 		  "root": [Function],
 		  "set": [Function],
