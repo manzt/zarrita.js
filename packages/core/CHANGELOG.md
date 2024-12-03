@@ -1,5 +1,13 @@
 # @zarrita/core
 
+## 0.1.0-next.16
+
+### Patch Changes
+
+- Support read-only `bitround` codec ([#234](https://github.com/manzt/zarrita.js/pull/234))
+
+  Introduces `BitroundCodec` with a no-op for decoding because bit-rounding is lossy, and precision cannot be restored. Encoding is not yet implemented, reflecting zarrita's current focus on read-heavy contexts. Open an issue if encoding support is needed.
+
 ## 0.1.0-next.15
 
 ### Patch Changes
