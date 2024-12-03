@@ -11,3 +11,14 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+        - "patch"
+        - "minor"
+      prod-dependencies:
+        dependency-type: "production"
+        update-types:
+        - "patch"
+        - "minor"
