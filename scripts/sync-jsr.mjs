@@ -33,6 +33,7 @@ for (const pkg of packageDirs) {
 		MANIFEST[pkg.name] = {
 			name: meta.name === "zarrita" ? "@zarrita/zarrita" : meta.name,
 			version: meta.version,
+			license: "MIT",
 			imports: meta.dependencies ?? {},
 			exports: mapEntries(meta.exports, ([key, { import: value }]) => [
 				key,

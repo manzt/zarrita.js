@@ -1,13 +1,12 @@
 {
 	"name": "@zarrita/ndarray",
-	"version": "0.1.0-next.13",
+	"version": "0.1.0-next.19",
 	"license": "MIT",
 	"imports": {
-		"@types/ndarray": "npm:@types/ndarray@^1.0.11",
 		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
-		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.11",
-		"@zarrita/indexing": "jsr:@zarrita/indexing@^0.1.0-next.13",
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.5",
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.17",
+		"@zarrita/indexing": "jsr:@zarrita/indexing@^0.1.0-next.19",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.8",
 		"ndarray": "npm:ndarray@^1.0.19",
 		"ndarray-ops": "npm:ndarray-ops@^1.2.2"
 	},
