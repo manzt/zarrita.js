@@ -18,7 +18,7 @@ export class VLenUTF8 {
 		throw new Error("Method not implemented.");
 	}
 
-	decode(bytes: Uint8Array<ArrayBuffer>): Chunk<ObjectType> {
+	decode(bytes: Uint8Array): Chunk<ObjectType> {
 		let decoder = new TextDecoder();
 		let view = new DataView(bytes.buffer);
 		let data = Array(view.getUint32(0, true));
