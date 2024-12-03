@@ -10,6 +10,7 @@
     "zarrita": "0.3.2"
   },
   "changesets": [
+    "breezy-windows-notice",
     "clever-moose-hear",
     "cold-dancers-chew",
     "dull-apricots-work",
