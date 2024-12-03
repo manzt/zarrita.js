@@ -1,5 +1,5 @@
 export class BoolArray {
-	#bytes: Uint8Array;
+	#bytes: Uint8Array<ArrayBuffer>;
 
 	constructor(size: number);
 	constructor(arr: Iterable<boolean>);
@@ -59,7 +59,7 @@ export class BoolArray {
 }
 
 export class ByteStringArray {
-	_data: Uint8Array;
+	_data: Uint8Array<ArrayBuffer>;
 	chars: number;
 	#encoder: TextEncoder;
 
@@ -148,7 +148,7 @@ export class ByteStringArray {
 }
 
 export class UnicodeStringArray {
-	#data: Int32Array;
+	#data: Int32Array<ArrayBuffer>;
 	chars: number;
 
 	constructor(chars: number, size: number);

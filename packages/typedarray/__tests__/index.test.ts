@@ -188,7 +188,9 @@ describe("ByteStringArray", () => {
 		let data = new TextEncoder().encode(
 			"Hello\x00world!\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
 		);
-		let arr = new ByteStringArray(2, data.buffer, 3, 4);
+		// @ts-expect-error - We know this is an ArrayBuffer but `encode` returns Uint8Array<ArrayBufferLike>
+		let buffer: ArrayBuffer = data.buffer;
+		let arr = new ByteStringArray(2, buffer, 3, 4);
 		expect({
 			length: arr.length,
 			BYTES_PER_ELEMENT: arr.BYTES_PER_ELEMENT,
