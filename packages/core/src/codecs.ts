@@ -1,6 +1,7 @@
 import type { Codec as _Codec } from "numcodecs";
 import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 
+import { BitroundCodec } from "./codecs/bitround.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
 import { JsonCodec } from "./codecs/json2.js";
@@ -31,7 +32,8 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 		.set("bytes", () => BytesCodec)
 		.set("crc32c", () => Crc32cCodec)
 		.set("vlen-utf8", () => VLenUTF8)
-		.set("json2", () => JsonCodec);
+		.set("json2", () => JsonCodec)
+		.set("bitround", () => BitroundCodec);
 }
 
 export const registry: Map<string, () => Promise<CodecEntry>> =
