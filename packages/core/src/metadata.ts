@@ -131,16 +131,16 @@ export type GroupMetadataV2 = {
 };
 
 // biome-ignore format: easier to read this way
-export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array<ArrayBuffer>
-	: D extends Int16 ? Int16Array<ArrayBuffer>
-	: D extends Int32 ? Int32Array<ArrayBuffer>
-	: D extends Int64 ? BigInt64Array<ArrayBuffer>
-	: D extends Uint8 ? Uint8Array<ArrayBuffer>
-	: D extends Uint16 ? Uint16Array<ArrayBuffer>
-	: D extends Uint32 ? Uint32Array<ArrayBuffer>
-	: D extends Uint64 ? BigUint64Array<ArrayBuffer>
-	: D extends Float32 ? Float32Array<ArrayBuffer>
-	: D extends Float64 ? Float64Array<ArrayBuffer>
+export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
+	: D extends Int16 ? Int16Array
+	: D extends Int32 ? Int32Array
+	: D extends Int64 ? BigInt64Array
+	: D extends Uint8 ? Uint8Array
+	: D extends Uint16 ? Uint16Array
+	: D extends Uint32 ? Uint32Array
+	: D extends Uint64 ? BigUint64Array
+	: D extends Float32 ? Float32Array
+	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
 	: D extends UnicodeStr ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
