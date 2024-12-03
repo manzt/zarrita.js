@@ -31,6 +31,7 @@ export class BoolArray {
 	}
 
 	get buffer(): ArrayBuffer {
+		// @ts-expect-error - we know this is an ArrayBuffer (and not SharedArrayBuffer)
 		return this.#bytes.buffer;
 	}
 
@@ -106,6 +107,7 @@ export class ByteStringArray {
 	}
 
 	get buffer(): ArrayBuffer {
+		// @ts-expect-error - we know this is an ArrayBuffer (and not SharedArrayBuffer)
 		return this._data.buffer;
 	}
 
@@ -198,6 +200,7 @@ export class UnicodeStringArray {
 	}
 
 	get buffer(): ArrayBuffer {
+		// @ts-expect-error - we know this is an ArrayBuffer (and not SharedArrayBuffer)
 		return this.#data.buffer;
 	}
 

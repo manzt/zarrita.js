@@ -36,6 +36,7 @@ function to_c<D extends DataType>({ data, shape, stride }: Chunk<D>): Chunk<D> {
 	let size = shape.reduce((a, b) => a * b, 1);
 	// @ts-expect-error - We know constructor exists on TypedArray
 	let out = ndarray(new data.constructor(size), shape);
+	// @ts-expect-error - ndarray types are a mismatch with ours but this operation is safe
 	assign(out, ndarray(data, shape, stride));
 	return out;
 }
@@ -59,7 +60,7 @@ describe("setter", () => {
 			1, 1, 1, 1,
 			1, 1, 1, 1,
 			1, 1, 1, 1,
-			
+
 			1, 1, 1, 1,
 			1, 1, 1, 1,
 			1, 1, 1, 1,
@@ -79,7 +80,7 @@ describe("setter", () => {
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
-			
+
 			0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -91,7 +92,7 @@ describe("setter", () => {
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
-			
+
 			0, 0, 0, 0,
 			0, 2, 0, 0,
 			0, 0, 0, 0,
@@ -103,7 +104,7 @@ describe("setter", () => {
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
-			
+
 			0, 0, 0, 0,
 			0, 2, 0, 0,
 			0, 0, 0, 3,
@@ -115,7 +116,7 @@ describe("setter", () => {
 			1, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
-			
+
 			0, 0, 0, 0,
 			0, 2, 0, 0,
 			0, 0, 4, 3,
@@ -136,7 +137,7 @@ describe("setter", () => {
 			1, 0, 0, 0,
 			1, 0, 0, 0,
 			0, 0, 0, 0,
-			
+
 			1, 0, 0, 0,
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -150,7 +151,7 @@ describe("setter", () => {
 			2, 2, 2, 2,
 			2, 2, 2, 2,
 			2, 2, 2, 2,
-			
+
 			1, 0, 0, 0,
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -190,7 +191,7 @@ describe("setter", () => {
 			2, 2, 2, 2,
 			2, 2, 2, 2,
 			2, 2, 2, 2,
-			
+
 			1, 0, 0, 0,
 			1, 0, 0, 0,
 			0, 0, 0, 0,
@@ -222,7 +223,7 @@ describe("setter", () => {
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
-			
+
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
@@ -254,7 +255,7 @@ describe("setter", () => {
 			2, 0, 2, 0,
 			0, 0, 0, 0,
 			2, 0, 2, 0,
-			
+
 			2, 0, 2, 0,
 			0, 0, 0, 0,
 			2, 0, 2, 0,
@@ -274,7 +275,7 @@ describe("setter", () => {
 				2, 0, 2, 0,
 				0, 0, 0, 0,
 				2, 0, 2, 0,
-				
+
 				2, 0, 2, 0,
 				0, 0, 0, 0,
 				2, 0, 2, 0,
@@ -318,7 +319,7 @@ describe("setter", () => {
 			0, 2, 0, 0,
 			0, 0, 0, 0,
 			0, 2, 0, 0,
-			
+
 			0, 0, 0, 0,
 			0, 0, 0, 0,
 			0, 0, 0, 0,
@@ -334,7 +335,7 @@ describe("setter", () => {
 				0, 2, 0, 0,
 				0, 0, 0, 0,
 				0, 2, 0, 0,
-				
+
 				0, 0, 0, 0,
 				0, 0, 0, 0,
 				0, 0, 0, 0,
@@ -378,7 +379,7 @@ describe("setter", () => {
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
-			
+
 			1, 1, 0, 0,
 			1, 1, 0, 0,
 			0, 0, 0, 0,
@@ -439,14 +440,14 @@ describe("setter", () => {
 		setter.set_from_chunk(dest, src, mapping);
 		// biome-ignore format: the array should not be formatted
 		expect(to_c(dest).data).toStrictEqual(new Float32Array([
-				0, 2, 0, 0,
-				0, 0, 0, 0,
-				0, 2, 0, 0,
+			0, 2, 0, 0,
+			0, 0, 0, 0,
+			0, 2, 0, 0,
 
-				0, 0, 0, 0,
-				0, 0, 0, 0,
-				0, 0, 0, 0,
-			]));
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+			0, 0, 0, 0,
+		]));
 	});
 
 	it("set_from_chunk - dest=C order, src=F order", async () => {

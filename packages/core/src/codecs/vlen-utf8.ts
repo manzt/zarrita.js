@@ -26,7 +26,9 @@ export class VLenUTF8 {
 		for (let i = 0; i < data.length; i++) {
 			let item_length = view.getUint32(pos, true);
 			pos += 4;
-			data[i] = decoder.decode(bytes.buffer.slice(pos, pos + item_length));
+			// @ts-expect-error - we know this is an ArrayBuffer, TS just isn't smart enough to know it's not a SharedArrayBuffer
+			let buffer: ArrayBuffer = bytes.buffer;
+			data[i] = decoder.decode(buffer.slice(pos, pos + item_length));
 			pos += item_length;
 		}
 		return { data, shape: this.#shape, stride: this.#strides };
