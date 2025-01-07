@@ -292,3 +292,43 @@ export function ensure_correct_scalar<D extends DataType>(
 	}
 	return metadata.fill_value;
 }
+
+// biome-ignore lint/suspicious/noExplicitAny: Necessary for type inference
+type InstanceType<T> = T extends new (...args: any[]) => infer R ? R : never;
+
+// biome-ignore lint/suspicious/noExplicitAny: Abstract base type
+type ErrorConstructor = new (...args: any[]) => Error;
+
+/**
+ * Ensures an error matches expected type(s), otherwise rethrows.
+ *
+ * Unmatched errors bubble up, like Python's `except`. Narrows error types for
+ * type-safe property access.
+ *
+ * @see {@link https://gist.github.com/manzt/3702f19abb714e21c22ce48851c75abf}
+ *
+ * @example
+ * ```ts
+ * class DatabaseError extends Error { }
+ * class NetworkError extends Error { }
+ *
+ * try {
+ *   await db.query();
+ * } catch (err) {
+ *   rethrow_unless(err, DatabaseError, NetworkError);
+ *   err // DatabaseError | NetworkError
+ * }
+ * ```
+ *
+ * @param error - The error to check
+ * @param errors - Expected error type(s)
+ * @throws The original error if it doesn't match expected type(s)
+ */
+export function rethrow_unless<E extends ReadonlyArray<ErrorConstructor>>(
+	error: unknown,
+	...errors: E
+): asserts error is InstanceType<E[number]> {
+	if (!errors.some((ErrorClass) => error instanceof ErrorClass)) {
+		throw error;
+	}
+}
