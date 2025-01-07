@@ -7,7 +7,11 @@ import type {
 	GroupMetadata,
 	GroupMetadataV2,
 } from "./metadata.js";
-import { json_decode_object, json_encode_object } from "./util.js";
+import {
+	json_decode_object,
+	json_encode_object,
+	rethrow_unless,
+} from "./util.js";
 
 type ConsolidatedMetadata = {
 	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;
@@ -134,10 +138,8 @@ export async function withConsolidated<Store extends Readable>(
 export async function tryWithConsolidated<Store extends Readable>(
 	store: Store,
 ): Promise<Listable<Store> | Store> {
-	return withConsolidated(store).catch((e: unknown) => {
-		if (e instanceof NodeNotFoundError) {
-			return store;
-		}
-		throw e;
+	return withConsolidated(store).catch((error: unknown) => {
+		rethrow_unless(error, NodeNotFoundError);
+		return store;
 	});
 }
