@@ -8,6 +8,7 @@ import type {
 	GroupMetadataV2,
 } from "./metadata.js";
 import {
+	assert,
 	json_decode_object,
 	json_encode_object,
 	rethrow_unless,
@@ -38,9 +39,10 @@ async function get_consolidated_metadata(
 		});
 	}
 	let meta: ConsolidatedMetadata = json_decode_object(bytes);
-	if (meta.zarr_consolidated_format !== 1) {
-		throw new Error("Unsupported consolidated format.");
-	}
+	assert(
+		meta.zarr_consolidated_format === 1,
+		"Unsupported consolidated format.",
+	);
 	return meta;
 }
 

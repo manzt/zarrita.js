@@ -1,6 +1,6 @@
 import type { Location } from "../hierarchy.js";
 import type { Chunk } from "../metadata.js";
-import type { ShardingCodecMetadata } from "../util.js";
+import { assert, type ShardingCodecMetadata } from "../util.js";
 
 import type { Readable } from "@zarrita/storage";
 import { create_codec_pipeline } from "../codecs.js";
@@ -13,9 +13,7 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 	encode_shard_key: (coord: number[]) => string,
 	sharding_config: ShardingCodecMetadata["configuration"],
 ) {
-	if (location.store.getRange === undefined) {
-		throw new Error("Store does not support range requests");
-	}
+	assert(location.store.getRange, "Store does not support range requests");
 	let get_range = location.store.getRange.bind(location.store);
 	let index_shape = shard_shape.map(
 		(d, i) => d / sharding_config.chunk_shape[i],

@@ -1,5 +1,5 @@
 import { unzip } from "unzipit";
-import { fetch_range, strip_prefix } from "./util.js";
+import { assert, fetch_range, strip_prefix } from "./util.js";
 
 import type { Reader, ZipInfo } from "unzipit";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
@@ -35,11 +35,10 @@ export class HTTPRangeReader implements Reader {
 				...this.#overrides,
 				method: "HEAD",
 			});
-			if (!req.ok) {
-				throw new Error(
-					`failed http request ${this.url}, status: ${req.status}: ${req.statusText}`,
-				);
-			}
+			assert(
+				req.ok,
+				`failed http request ${this.url}, status: ${req.status}: ${req.statusText}`,
+			);
 			this.length = Number(req.headers.get("content-length"));
 			if (Number.isNaN(this.length)) {
 				throw Error("could not get length");
@@ -53,11 +52,10 @@ export class HTTPRangeReader implements Reader {
 			return new Uint8Array(0);
 		}
 		const req = await fetch_range(this.url, offset, size, this.#overrides);
-		if (!req.ok) {
-			throw new Error(
-				`failed http request ${this.url}, status: ${req.status} offset: ${offset} size: ${size}: ${req.statusText}`,
-			);
-		}
+		assert(
+			req.ok,
+			`failed http request ${this.url}, status: ${req.status} offset: ${offset} size: ${size}: ${req.statusText}`,
+		);
 		return new Uint8Array(await req.arrayBuffer());
 	}
 }
