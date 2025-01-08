@@ -73,10 +73,8 @@ export function get_ctr<D extends DataType>(
 		);
 	}
 	// @ts-expect-error - We've checked that the key exists
-	let ctr: TypedArrayConstructor<D> = CONSTRUCTORS[data_type];
-	if (!ctr) {
-		throw new Error(`Unknown or unsupported data_type: ${data_type}`);
-	}
+	let ctr: TypedArrayConstructor<D> | undefined = CONSTRUCTORS[data_type];
+	assert(ctr, `Unknown or unsupported data_type: ${data_type}`);
 	return ctr;
 }
 
@@ -136,9 +134,8 @@ function coerce_dtype(
 	}
 
 	let match = dtype.match(endian_regex);
-	if (!match) {
-		throw new Error(`Invalid dtype: ${dtype}`);
-	}
+	assert(match, `Invalid dtype: ${dtype}`);
+
 	let [, endian, rest] = match;
 	let data_type =
 		{
@@ -155,9 +152,7 @@ function coerce_dtype(
 			f8: "float64",
 		}[rest] ??
 		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
-	if (!data_type) {
-		throw new Error(`Unsupported or unknown dtype: ${dtype}`);
-	}
+	assert(data_type, `Unsupported or unknown dtype: ${dtype}`);
 	if (endian === "|") {
 		return { data_type } as { data_type: DataType };
 	}
@@ -330,5 +325,29 @@ export function rethrow_unless<E extends ReadonlyArray<ErrorConstructor>>(
 ): asserts error is InstanceType<E[number]> {
 	if (!errors.some((ErrorClass) => error instanceof ErrorClass)) {
 		throw error;
+	}
+}
+
+/**
+ * Make an assertion.
+ *
+ * Usage
+ * @example
+ * ```ts
+ * const value: boolean = Math.random() <= 0.5;
+ * assert(value, "value is greater than than 0.5!");
+ * value // true
+ * ```
+ *
+ * @param expression - The expression to test.
+ * @param msg - The optional message to display if the assertion fails.
+ * @throws an {@link Error} if `expression` is not truthy.
+ */
+export function assert(
+	expression: unknown,
+	msg: string | undefined = "",
+): asserts expression {
+	if (!expression) {
+		throw new Error(msg);
 	}
 }

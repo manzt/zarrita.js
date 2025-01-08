@@ -7,6 +7,7 @@ import { Crc32cCodec } from "./codecs/crc32c.js";
 import { JsonCodec } from "./codecs/json2.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
+import { assert } from "./util.js";
 
 type ChunkMetadata<D extends DataType> = {
 	data_type: D;
@@ -90,9 +91,7 @@ type BytesToBytesCodec = {
 async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 	let promises = chunk_meta.codecs.map(async (meta) => {
 		let Codec = await registry.get(meta.name)?.();
-		if (!Codec) {
-			throw new Error(`Unknown codec: ${meta.name}`);
-		}
+		assert(Codec, `Unknown codec: ${meta.name}`);
 		return { Codec, meta };
 	});
 	let array_to_array: ArrayToArrayCodec<D>[] = [];
@@ -112,11 +111,10 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 		}
 	}
 	if (!array_to_bytes) {
-		if (!is_typed_array_like_meta(chunk_meta)) {
-			throw new Error(
-				`Cannot encode ${chunk_meta.data_type} to bytes without a codec`,
-			);
-		}
+		assert(
+			is_typed_array_like_meta(chunk_meta),
+			`Cannot encode ${chunk_meta.data_type} to bytes without a codec`,
+		);
 		array_to_bytes = BytesCodec.fromConfig({ endian: "little" }, chunk_meta);
 	}
 	return { array_to_array, array_to_bytes, bytes_to_bytes };

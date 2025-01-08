@@ -1,6 +1,6 @@
 // Adapted from https://github.com/hms-dbmi/vizarr/blob/5b0e3ea6fbb42d19d0e38e60e49bb73d1aca0693/src/utils.ts#L26
 import type { Chunk, ObjectType } from "../metadata.js";
-import { get_strides, json_decode_object } from "../util.js";
+import { assert, get_strides, json_decode_object } from "../util.js";
 
 type EncoderConfig = {
 	encoding?: "utf-8";
@@ -24,23 +24,18 @@ type ReplacerFunction = (key: string | number, value: any) => any;
 
 // Reference: https://stackoverflow.com/a/21897413
 function throw_on_nan_replacer(_key: string | number, value: number): number {
-	if (Number.isNaN(value)) {
-		throw new Error(
-			"JsonCodec allow_nan is false but NaN was encountered during encoding.",
-		);
-	}
-
-	if (value === Number.POSITIVE_INFINITY) {
-		throw new Error(
-			"JsonCodec allow_nan is false but Infinity was encountered during encoding.",
-		);
-	}
-
-	if (value === Number.NEGATIVE_INFINITY) {
-		throw new Error(
-			"JsonCodec allow_nan is false but -Infinity was encountered during encoding.",
-		);
-	}
+	assert(
+		!Number.isNaN(value),
+		"JsonCodec allow_nan is false but NaN was encountered during encoding.",
+	);
+	assert(
+		value !== Number.POSITIVE_INFINITY,
+		"JsonCodec allow_nan is false but Infinity was encountered during encoding.",
+	);
+	assert(
+		value !== Number.NEGATIVE_INFINITY,
+		"JsonCodec allow_nan is false but -Infinity was encountered during encoding.",
+	);
 	return value;
 }
 
@@ -117,17 +112,19 @@ export class JsonCodec {
 			allow_nan,
 			sort_keys,
 		} = this.#encoder_config;
-		if (encoding !== "utf-8") {
-			throw new Error("JsonCodec does not yet support non-utf-8 encoding.");
-		}
+		assert(
+			encoding === "utf-8",
+			"JsonCodec does not yet support non-utf-8 encoding.",
+		);
 		const replacer_functions: ReplacerFunction[] = [];
-		if (!check_circular) {
-			// By default, for JSON.stringify,
-			// a TypeError will be thrown if one attempts to encode an object with circular references
-			throw new Error(
-				"JsonCodec does not yet support skipping the check for circular references during encoding.",
-			);
-		}
+
+		// By default, for JSON.stringify,
+		// a TypeError will be thrown if one attempts to encode an object with circular references
+		assert(
+			check_circular,
+			"JsonCodec does not yet support skipping the check for circular references during encoding.",
+		);
+
 		if (!allow_nan) {
 			// Throw if NaN/Infinity/-Infinity are encountered during encoding.
 			replacer_functions.push(throw_on_nan_replacer);
@@ -170,17 +167,15 @@ export class JsonCodec {
 
 	decode(bytes: Uint8Array): Chunk<ObjectType> {
 		const { strict } = this.#decoder_config;
-		if (!strict) {
-			// (i.e., allowing control characters inside strings)
-			throw new Error("JsonCodec does not yet support non-strict decoding.");
-		}
+		// (i.e., allowing control characters inside strings)
+		assert(strict, "JsonCodec does not yet support non-strict decoding.");
+
 		const items = json_decode_object(bytes);
 		const shape = items.pop();
 		items.pop(); // Pop off dtype (unused)
-		if (!shape) {
-			// O-d case
-			throw new Error("0D not implemented for JsonCodec.");
-		}
+
+		// O-d case
+		assert(shape, "0D not implemented for JsonCodec.");
 		const stride = get_strides(shape, "C");
 		const data = items;
 		return { data, shape, stride };

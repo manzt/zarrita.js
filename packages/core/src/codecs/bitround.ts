@@ -1,4 +1,5 @@
 import type { Chunk, Float32, Float64 } from "../metadata.js";
+import { assert } from "../util.js";
 
 /**
  * A codec for bit-rounding.
@@ -20,9 +21,7 @@ export class BitroundCodec<D extends Float64 | Float32> {
 	kind = "array_to_array";
 
 	constructor(configuration: { keepbits: number }, _meta: { data_type: D }) {
-		if (configuration.keepbits < 0) {
-			throw new Error("keepbits must be zero or positive");
-		}
+		assert(configuration.keepbits >= 0, "keepbits must be zero or positive");
 	}
 
 	static fromConfig<D extends Float32 | Float64>(
