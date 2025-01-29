@@ -6,7 +6,7 @@ import {
 	ByteStringArray,
 	UnicodeStringArray,
 } from "@zarrita/typedarray";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NodeNotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
@@ -83,6 +83,10 @@ describe("open (v2 vs v3 priority)", () => {
 				},
 			}),
 		);
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 
 	it("prioritizes v2 by default", async () => {
 		let store = store_root();
