@@ -18,6 +18,7 @@ describe("FetchStore", () => {
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
 			  "attributes": {},
+			  "consolidated_metadata": null,
 			  "node_type": "group",
 			  "zarr_format": 3,
 			}
@@ -31,6 +32,7 @@ describe("FetchStore", () => {
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
 			  "attributes": {},
+			  "consolidated_metadata": null,
 			  "node_type": "group",
 			  "zarr_format": 3,
 			}
@@ -83,6 +85,7 @@ describe("FetchStore", () => {
 			  "shape": [
 			    4,
 			  ],
+			  "storage_transformers": [],
 			  "zarr_format": 3,
 			}
 		`);
@@ -127,7 +130,11 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let bytes = await store.getRange("/zarr.json", { suffixLength: 50 });
 		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
-			`"utes": {}, "zarr_format": 3, "node_type": "group"}"`,
+			`
+			"olidated_metadata": null,
+			  "node_type": "group"
+			}"
+		`,
 		);
 	});
 
@@ -135,7 +142,11 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let bytes = await store.getRange("/zarr.json", { offset: 4, length: 50 });
 		expect(new TextDecoder().decode(bytes)).toMatchInlineSnapshot(
-			`"tributes": {}, "zarr_format": 3, "node_type": "gro"`,
+			`
+			""attributes": {},
+			  "zarr_format": 3,
+			  "consolida"
+		`,
 		);
 	});
 });
