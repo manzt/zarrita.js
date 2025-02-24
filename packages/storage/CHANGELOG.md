@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.9
+
+### Patch Changes
+
+- Add default generic paramter to `ZipFileStore` ([#248](https://github.com/manzt/zarrita.js/pull/248))
+
 ## 0.1.0-next.8
 
 ### Patch Changes
