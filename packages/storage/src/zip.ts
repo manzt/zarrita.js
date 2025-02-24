@@ -61,7 +61,7 @@ export class HTTPRangeReader implements Reader {
 }
 
 /** @experimental */
-class ZipFileStore<R extends Reader> implements AsyncReadable {
+class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	private info: Promise<ZipInfo>;
 	constructor(reader: R) {
 		this.info = unzip(reader);
