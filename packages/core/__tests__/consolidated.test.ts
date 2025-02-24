@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as url from "node:url";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 
 import { FileSystemStore } from "@zarrita/storage";
 import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
@@ -122,5 +122,17 @@ describe("tryWithConsolidated", () => {
 		);
 		let store = await tryWithConsolidated(new FileSystemStore(root));
 		expect(store).toBeInstanceOf(FileSystemStore);
+	});
+});
+
+describe("Listable.getRange", () => {
+	it("does not expose getRange if the underlying store does not support it", async () => {
+		let store = await tryWithConsolidated(new Map());
+		expect("getRange" in store).toBeFalsy();
+	});
+	it("retrieves a byte range from an underlying store", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await tryWithConsolidated(new FileSystemStore(root));
+		assert(typeof store.getRange === "function");
 	});
 });

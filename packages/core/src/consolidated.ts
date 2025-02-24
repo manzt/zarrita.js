@@ -24,7 +24,9 @@ type ConsolidatedMetadata = {
  */
 export interface Listable<Store extends Readable> {
 	/** Get the bytes at a given path. */
-	get: Store["get"];
+	get: (...args: Parameters<Store["get"]>) => Promise<Uint8Array | undefined>;
+	/** Get a byte range at a given path. */
+	getRange: Store["getRange"];
 	/** List the contents of the store. */
 	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
 }
@@ -93,6 +95,7 @@ export async function withConsolidated<Store extends Readable>(
 	for (let [key, value] of Object.entries(v2_meta.metadata)) {
 		known_meta[`/${key}`] = value;
 	}
+
 	return {
 		async get(
 			...args: Parameters<Store["get"]>
@@ -108,6 +111,10 @@ export async function withConsolidated<Store extends Readable>(
 			}
 			return maybe_bytes;
 		},
+		// Delegate range requests to the underlying store.
+		// Note: Supporting range requests for consolidated metadata is possible
+		// but unlikely to be useful enough to justify the effort.
+		getRange: store.getRange?.bind(store),
 		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
 			let contents: { path: AbsolutePath; kind: "array" | "group" }[] = [];
 			for (let [key, value] of Object.entries(known_meta)) {
