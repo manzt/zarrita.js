@@ -50,6 +50,7 @@ const CONSTRUCTORS = {
 	uint16: Uint16Array,
 	uint32: Uint32Array,
 	uint64: globalThis.BigUint64Array,
+	float16: globalThis.Float16Array,
 	float32: Float32Array,
 	float64: Float64Array,
 	bool: BoolArray,
@@ -143,6 +144,7 @@ function coerce_dtype(
 			u4: "uint32",
 			i8: "int64",
 			u8: "uint64",
+			f2: "float16",
 			f4: "float32",
 			f8: "float64",
 		}[rest] ??

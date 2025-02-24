@@ -23,6 +23,8 @@ export type Uint32 = "uint32";
 export type Uint64 = "uint64";
 
 /** @category Number */
+export type Float16 = "float16";
+/** @category Number */
 export type Float32 = "float32";
 /** @category Number */
 export type Float64 = "float64";
@@ -49,6 +51,7 @@ export type NumberDataType =
 	| Uint8
 	| Uint16
 	| Uint32
+	| Float16
 	| Float32
 	| Float64;
 
@@ -139,6 +142,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Uint16 ? Uint16Array
 	: D extends Uint32 ? Uint32Array
 	: D extends Uint64 ? BigUint64Array
+	: D extends Float16 ? Float16Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray

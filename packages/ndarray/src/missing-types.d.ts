@@ -48,6 +48,7 @@ declare module "ndarray" {
 			| Uint8ClampedArray
 			| Uint16Array
 			| Uint32Array
+			| Float16Array
 			| Float32Array
 			| Float64Array;
 
@@ -72,17 +73,19 @@ declare module "ndarray" {
 								? "uint16"
 								: D extends Uint32Array
 									? "uint32"
-									: D extends Float32Array
-										? "float32"
-										: D extends Float64Array
-											? "float64"
-											: D extends BigInt64Array
-												? "bigint64"
-												: D extends BigUint64Array
-													? "biguint64"
-													: D extends GenericArray<unknown>
-														? "generic"
-														: "array";
+									: D extends Float16Array
+										? "float16"
+										: D extends Float32Array
+											? "float32"
+											: D extends Float64Array
+												? "float64"
+												: D extends BigInt64Array
+													? "bigint64"
+													: D extends BigUint64Array
+														? "biguint64"
+														: D extends GenericArray<unknown>
+															? "generic"
+															: "array";
 	}
 
 	export = ndarray;
