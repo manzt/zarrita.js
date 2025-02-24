@@ -1,30 +1,61 @@
 {
-  "shape": [4],
+  "shape": [
+    4
+  ],
   "data_type": "int16",
-  "chunk_grid": { "configuration": { "chunk_shape": [2] }, "name": "regular" },
+  "chunk_grid": {
+    "name": "regular",
+    "configuration": {
+      "chunk_shape": [
+        2
+      ]
+    }
+  },
   "chunk_key_encoding": {
-    "configuration": { "separator": "/" },
-    "name": "default"
+    "name": "default",
+    "configuration": {
+      "separator": "/"
+    }
   },
   "fill_value": 0,
   "codecs": [
     {
+      "name": "sharding_indexed",
       "configuration": {
-        "chunk_shape": [1],
+        "chunk_shape": [
+          1
+        ],
         "codecs": [
-          { "configuration": { "endian": "little" }, "name": "bytes" },
-          { "configuration": { "level": 5 }, "name": "gzip" }
+          {
+            "name": "bytes",
+            "configuration": {
+              "endian": "little"
+            }
+          },
+          {
+            "name": "gzip",
+            "configuration": {
+              "level": 5
+            }
+          }
         ],
         "index_codecs": [
-          { "configuration": { "endian": "little" }, "name": "bytes" },
-          { "name": "crc32c" }
+          {
+            "name": "bytes",
+            "configuration": {
+              "endian": "little"
+            }
+          },
+          {
+            "name": "crc32c"
+          }
         ],
         "index_location": "end"
-      },
-      "name": "sharding_indexed"
+      }
     }
   ],
   "attributes": {},
   "zarr_format": 3,
-  "node_type": "array"
+  "node_type": "array",
+  "storage_transformers": []
 }

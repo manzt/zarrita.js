@@ -18,6 +18,8 @@ import numpy as np
 SELF_DIR = pathlib.Path(__file__).parent
 ROOT = SELF_DIR / ".." / "fixtures" / "v3" / "data.zarr"
 
+np.random.seed(42)
+
 shutil.rmtree(ROOT, ignore_errors=True)
 
 store = zarr.storage.LocalStore(ROOT)
@@ -231,7 +233,9 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(3, 3, 1),
     shape=(3, 3, 3),
-    order="F",
+    filters=[
+        zarr.codecs.TransposeCodec(order=[2, 1, 0])  # column major
+    ],
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
