@@ -1,10 +1,10 @@
 {
 	"name": "@zarrita/indexing",
-	"version": "0.1.0-next.19",
+	"version": "0.1.0-next.20",
 	"license": "MIT",
 	"imports": {
-		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.17",
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.8",
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.18",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.9",
 		"@zarrita/typedarray": "jsr:@zarrita/typedarray@^0.1.0-next.4"
 	},
 	"exports": {
