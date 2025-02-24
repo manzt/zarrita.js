@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.19
+
+### Patch Changes
+
+- Propagate getRange support in `Listable` when available ([#252](https://github.com/manzt/zarrita.js/pull/252))
+
 ## 0.1.0-next.18
 
 ### Patch Changes
