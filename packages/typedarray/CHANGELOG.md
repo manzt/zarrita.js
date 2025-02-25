@@ -1,5 +1,12 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - zarrita@0.4.0-next.23
+
 ## 0.1.0-next.5
 
 ### Patch Changes
