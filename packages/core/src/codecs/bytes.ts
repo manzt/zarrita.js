@@ -4,12 +4,7 @@ import type {
 	DataType,
 	TypedArrayConstructor,
 } from "../metadata.js";
-import {
-	byteswap_inplace,
-	get_array_order,
-	get_ctr,
-	get_strides,
-} from "../util.js";
+import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 
@@ -31,10 +26,10 @@ function bytes_per_element<D extends DataType>(
 
 export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 	kind = "array_to_bytes";
-	#strides: number[];
+	#stride: Array<number>;
 	#TypedArray: TypedArrayConstructor<D>;
 	#BYTES_PER_ELEMENT: number;
-	#shape: number[];
+	#shape: Array<number>;
 	#endian?: "little" | "big";
 
 	constructor(
@@ -44,7 +39,7 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 		this.#endian = configuration?.endian;
 		this.#TypedArray = get_ctr(meta.data_type);
 		this.#shape = meta.shape;
-		this.#strides = get_strides(meta.shape, get_array_order(meta.codecs));
+		this.#stride = get_strides(meta.shape, "C");
 		// TODO: fix me.
 		// hack to get bytes per element since it's dynamic for string types.
 		const sample = new this.#TypedArray(0);
@@ -77,7 +72,7 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 				bytes.byteLength / this.#BYTES_PER_ELEMENT,
 			),
 			shape: this.#shape,
-			stride: this.#strides,
+			stride: this.#stride,
 		};
 	}
 }
