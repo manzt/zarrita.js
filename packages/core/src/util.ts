@@ -121,13 +121,6 @@ export function create_chunk_key_encoder({
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
-export function get_array_order(codecs: CodecMetadata[]): "C" | "F" {
-	const maybe_transpose_codec = codecs.find((c) => c.name === "transpose");
-	return maybe_transpose_codec?.configuration?.order === "F" ? "F" : "C";
-}
-
-const endian_regex = /^([<|>])(.*)$/;
-
 function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
@@ -135,7 +128,7 @@ function coerce_dtype(
 		return { data_type: "v2:object" };
 	}
 
-	let match = dtype.match(endian_regex);
+	let match = dtype.match(/^([<|>])(.*)$/);
 	assert(match, `Invalid dtype: ${dtype}`);
 
 	let [, endian, rest] = match;

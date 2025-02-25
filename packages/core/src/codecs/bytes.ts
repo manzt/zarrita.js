@@ -4,12 +4,7 @@ import type {
 	DataType,
 	TypedArrayConstructor,
 } from "../metadata.js";
-import {
-	byteswap_inplace,
-	get_array_order,
-	get_ctr,
-	get_strides,
-} from "../util.js";
+import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
 
 const LITTLE_ENDIAN_OS = system_is_little_endian();
 

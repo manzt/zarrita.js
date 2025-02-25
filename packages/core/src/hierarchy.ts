@@ -5,6 +5,7 @@ import type {
 	ArrayMetadata,
 	Attributes,
 	Chunk,
+	CodecMetadata,
 	DataType,
 	GroupMetadata,
 	Scalar,
@@ -19,7 +20,6 @@ import {
 import {
 	create_chunk_key_encoder,
 	ensure_correct_scalar,
-	get_array_order,
 	get_ctr,
 	get_strides,
 } from "./util.js";
@@ -61,6 +61,14 @@ export class Group<Store extends Readable> extends Location<Store> {
 	get attrs(): Attributes {
 		return this.#metadata.attributes;
 	}
+}
+
+function get_array_order(
+	codecs: CodecMetadata[],
+): "C" | "F" | globalThis.Array<number> {
+	const maybe_transpose_codec = codecs.find((c) => c.name === "transpose");
+	// @ts-expect-error - TODO: Should validate?
+	return maybe_transpose_codec?.configuration?.order ?? "C";
 }
 
 const CONTEXT_MARKER = Symbol("zarrita.context");
