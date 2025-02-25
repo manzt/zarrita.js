@@ -79,27 +79,29 @@ export function get_ctr<D extends DataType>(
 }
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
-export function get_strides(shape: readonly number[], order: "C" | "F") {
-	return (order === "C" ? row_major_stride : col_major_stride)(shape);
-}
-
-function row_major_stride(shape: readonly number[]) {
-	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
-	for (let i = ndim - 1, step = 1; i >= 0; i--) {
-		stride[i] = step;
-		step *= shape[i];
+export function get_strides(
+	shape: readonly number[],
+	order: "C" | "F" | Array<number>,
+) {
+	const rank = shape.length;
+	if (typeof order === "string") {
+		order =
+			order === "C"
+				? Array.from({ length: rank }, (_, i) => i) // Row-major (identity order)
+				: Array.from({ length: rank }, (_, i) => rank - 1 - i); // Column-major (reverse order)
 	}
-	return stride;
-}
+	assert(
+		rank === order.length,
+		"Order length must match the number of dimensions.",
+	);
 
-function col_major_stride(shape: readonly number[]) {
-	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
-	for (let i = 0, step = 1; i < ndim; i++) {
-		stride[i] = step;
-		step *= shape[i];
+	let step = 1;
+	let stride = new Array(rank);
+	for (let i = order.length - 1; i >= 0; i--) {
+		stride[order[i]] = step;
+		step *= shape[order[i]];
 	}
+
 	return stride;
 }
 
