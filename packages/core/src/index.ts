@@ -1,5 +1,10 @@
 export { KeyError, NodeNotFoundError } from "./errors.js";
 export {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "./typedarray.js";
+export {
 	Array,
 	get_context as _internal_get_array_context,
 	Group,

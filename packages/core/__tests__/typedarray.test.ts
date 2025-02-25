@@ -4,7 +4,7 @@ import {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
-} from "../src/index.js";
+} from "../src/typedarray.js";
 
 describe("BoolArray.constructor", () => {
 	test("new (size: number) -> BoolArray", () => {

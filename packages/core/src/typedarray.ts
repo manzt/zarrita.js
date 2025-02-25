@@ -1,3 +1,14 @@
+/**
+ * Custom array-like views (i.e., TypedArrays) for Zarr binary data buffers.
+ *
+ * @module
+ */
+
+/**
+ * An array-like view of a fixed-length boolean buffer.
+ *
+ * Encoded as 1 byte per value.
+ */
 export class BoolArray {
 	#bytes: Uint8Array;
 
@@ -58,6 +69,11 @@ export class BoolArray {
 	}
 }
 
+/**
+ * An array-like view of a fixed-length byte buffer.
+ *
+ * Encodes a raw byte sequences without enforced encoding.
+ */
 export class ByteStringArray {
 	_data: Uint8Array;
 	chars: number;
@@ -147,6 +163,11 @@ export class ByteStringArray {
 	}
 }
 
+/**
+ * An array-like view of a fixed-length Unicode string buffer.
+ *
+ * Encoded as UTF-32 code points.
+ */
 export class UnicodeStringArray {
 	#data: Int32Array;
 	chars: number;
