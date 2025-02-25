@@ -18,9 +18,7 @@
 		"ndarray": "^1.0.19",
 		"ndarray-ops": "^1.2.2"
 	},
-	"devDependencies": {
-		"@zarrita/typedarray": "workspace:^"
-	},
+	"files": ["dist"],
 	"publishConfig": {
 		"main": "dist/src/index.js",
 		"exports": {
