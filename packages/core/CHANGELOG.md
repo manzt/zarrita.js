@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.21
+
+### Patch Changes
+
+- Support transpose wiht explicit permutation ([#256](https://github.com/manzt/zarrita.js/pull/256))
+
 ## 0.1.0-next.20
 
 ### Patch Changes

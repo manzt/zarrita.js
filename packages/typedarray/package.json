@@ -1,6 +1,6 @@
 {
 	"name": "@zarrita/typedarray",
-	"version": "0.1.0-next.5",
+	"version": "0.1.0-next.6",
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,
