@@ -6,11 +6,14 @@ it("exports all the things", () => {
 	expect(mod).toMatchInlineSnapshot(`
 		{
 		  "Array": [Function],
+		  "BoolArray": [Function],
+		  "ByteStringArray": [Function],
 		  "FetchStore": [Function],
 		  "Group": [Function],
 		  "KeyError": [Function],
 		  "Location": [Function],
 		  "NodeNotFoundError": [Function],
+		  "UnicodeStringArray": [Function],
 		  "_internal_get_array_context": [Function],
 		  "create": [Function],
 		  "get": [Function],

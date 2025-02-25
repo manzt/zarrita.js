@@ -2,7 +2,7 @@ import {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
-} from "@zarrita/typedarray";
+} from "./typedarray.js";
 
 import type {
 	ArrayMetadata,

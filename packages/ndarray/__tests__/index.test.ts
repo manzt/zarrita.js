@@ -6,11 +6,6 @@ import { get } from "../src/index.js";
 
 import * as zarr from "@zarrita/core";
 import { FileSystemStore } from "@zarrita/storage";
-import {
-	BoolArray,
-	ByteStringArray,
-	UnicodeStringArray,
-} from "@zarrita/typedarray";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -124,7 +119,7 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		expect(res.data).toBeInstanceOf(UnicodeStringArray);
+		expect(res.data).toBeInstanceOf(zarr.UnicodeStringArray);
 		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
@@ -134,13 +129,8 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual([
-			"a",
-			"b",
-			"cc",
-			"d",
-		]);
+		expect(res.data).toBeInstanceOf(zarr.UnicodeStringArray);
+		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -149,13 +139,8 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		expect(res.data).toBeInstanceOf(UnicodeStringArray);
-		expect(Array.from(res.data as UnicodeStringArray)).toStrictEqual([
-			"a",
-			"b",
-			"cc",
-			"d",
-		]);
+		expect(res.data).toBeInstanceOf(zarr.UnicodeStringArray);
+		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -164,13 +149,8 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		expect(res.data).toBeInstanceOf(ByteStringArray);
-		expect(Array.from(res.data as ByteStringArray)).toStrictEqual([
-			"a",
-			"b",
-			"cc",
-			"d",
-		]);
+		expect(res.data).toBeInstanceOf(zarr.ByteStringArray);
+		expect(Array.from(res.data)).toStrictEqual(["a", "b", "cc", "d"]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -179,13 +159,8 @@ describe("ndarray", () => {
 			kind: "array",
 		});
 		let res = await get(arr);
-		expect(res.data).toBeInstanceOf(BoolArray);
-		expect(Array.from(res.data as BoolArray)).toStrictEqual([
-			true,
-			false,
-			true,
-			false,
-		]);
+		expect(res.data).toBeInstanceOf(zarr.BoolArray);
+		expect(Array.from(res.data)).toStrictEqual([true, false, true, false]);
 		expect(res.shape).toStrictEqual([4]);
 	});
 
@@ -290,9 +265,9 @@ describe("ndarray", () => {
 		let res = await get(arr);
 		// biome-ignore format: the array should not be formatted
 		expect(res.data).toStrictEqual(new Int16Array([
-			0,  9, 18,  3, 12, 21,  6, 15, 24,
-			1, 10, 19,  4, 13, 22,  7, 16, 25,
-			2, 11, 20,  5, 14, 23,  8, 17, 26, 
+			0, 9, 18, 3, 12, 21, 6, 15, 24,
+			1, 10, 19, 4, 13, 22, 7, 16, 25,
+			2, 11, 20, 5, 14, 23, 8, 17, 26,
 		]));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 		expect(res.stride).toStrictEqual([1, 3, 9]);

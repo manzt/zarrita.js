@@ -11,7 +11,7 @@ import {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
-} from "@zarrita/typedarray";
+} from "../src/typedarray.js";
 
 describe("get_ctr", () => {
 	test.each<[DataType, unknown]>([

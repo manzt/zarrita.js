@@ -1,11 +1,6 @@
 import * as path from "node:path";
 import * as url from "node:url";
 import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
-import {
-	BoolArray,
-	ByteStringArray,
-	UnicodeStringArray,
-} from "@zarrita/typedarray";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NodeNotFoundError } from "../src/errors.js";
@@ -17,6 +12,11 @@ import type {
 	GroupMetadataV2,
 } from "../src/metadata.js";
 import { open } from "../src/open.js";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "../src/typedarray.js";
 
 function range(n: number) {
 	return Array.from({ length: n }, (_, i) => i);

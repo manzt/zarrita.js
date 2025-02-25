@@ -2,7 +2,7 @@ import type {
 	BoolArray,
 	ByteStringArray,
 	UnicodeStringArray,
-} from "@zarrita/typedarray";
+} from "./typedarray.js";
 
 /** @category Number */
 export type Int8 = "int8";

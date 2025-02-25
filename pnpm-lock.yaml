@@ -47,9 +47,6 @@ importers:
       '@zarrita/storage':
         specifier: workspace:^
         version: link:../storage
-      '@zarrita/typedarray':
-        specifier: workspace:^
-        version: link:../typedarray
       numcodecs:
         specifier: ^0.3.2
         version: 0.3.2
@@ -113,7 +110,11 @@ importers:
         specifier: ^1.4.3
         version: 1.4.3
 
-  packages/typedarray: {}
+  packages/typedarray:
+    dependencies:
+      zarrita:
+        specifier: workspace:^
+        version: link:../zarrita
 
   packages/zarrita:
     dependencies:
