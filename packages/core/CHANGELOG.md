@@ -1,5 +1,11 @@
 # @zarrita/core
 
+## 0.1.0-next.20
+
+### Patch Changes
+
+- Remove \`@zarrita/typedarray\` package (now included in zarrita) ([`cbf160a`](https://github.com/manzt/zarrita.js/commit/cbf160a0e9a526d044dbb1909cd5ad190240ba59))
+
 ## 0.1.0-next.19
 
 ### Patch Changes
