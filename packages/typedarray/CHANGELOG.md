@@ -1,5 +1,16 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.5
+
+### Patch Changes
+
+- Remove \`@zarrita/typedarray\` package (now included in zarrita) ([`cbf160a`](https://github.com/manzt/zarrita.js/commit/cbf160a0e9a526d044dbb1909cd5ad190240ba59))
+
+- Deprecate package and move into zarrita ([`cbf160a`](https://github.com/manzt/zarrita.js/commit/cbf160a0e9a526d044dbb1909cd5ad190240ba59))
+
+- Updated dependencies [[`cbf160a`](https://github.com/manzt/zarrita.js/commit/cbf160a0e9a526d044dbb1909cd5ad190240ba59), [`cbf160a`](https://github.com/manzt/zarrita.js/commit/cbf160a0e9a526d044dbb1909cd5ad190240ba59)]:
+  - zarrita@0.4.0-next.22
+
 ## 0.1.0-next.4
 
 ### Patch Changes
