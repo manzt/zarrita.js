@@ -1,5 +1,11 @@
 # zarrita
 
+## 0.4.0-next.24
+
+### Patch Changes
+
+- Export `Slice` type from `@zarrita/indexing` ([#258](https://github.com/manzt/zarrita.js/pull/258))
+
 ## 0.4.0-next.23
 
 ### Patch Changes
