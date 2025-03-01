@@ -32,11 +32,3 @@ jobs:
       - name: Publish @zarrita/ndarray
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/ndarray
-
-      - name: Publish @zarrita/typedarray
-        run: deno publish --unstable-sloppy-imports
-        working-directory: packages/typedarray
-
-      - name: Publish @zarrita/indexing
-        run: deno publish --unstable-sloppy-imports
-        working-directory: packages/indexing
