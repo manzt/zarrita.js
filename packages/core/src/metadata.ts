@@ -51,7 +51,7 @@ export type NumberDataType =
 	| Uint8
 	| Uint16
 	| Uint32
-	| Float16
+	| MaybeFloat16
 	| Float32
 	| Float64;
 
@@ -137,6 +137,11 @@ export type GroupMetadataV2 = {
 type MaybeFloat16Array = InstanceType<
 	typeof globalThis extends { Float16Array: infer T } ? T : never
 >;
+
+// Conditionally resolves Float16Array type if it exists on globalThis (determined by end-user TS version)
+type MaybeFloat16 = typeof globalThis extends { Float16Array: unknown }
+	? Float16
+	: never;
 
 // biome-ignore format: easier to read this way
 export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array

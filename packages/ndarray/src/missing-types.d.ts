@@ -42,8 +42,8 @@ declare module "ndarray" {
 		type Data<T = any> = T extends number
 			? GenericArray<T> | T[] | TypedArray
 			: T extends bigint
-			? GenericArray<T> | T[] | BigInt64Array | BigUint64Array
-			: GenericArray<T> | T[];
+				? GenericArray<T> | T[] | BigInt64Array | BigUint64Array
+				: GenericArray<T> | T[];
 
 		type TypedArray =
 			| Int8Array

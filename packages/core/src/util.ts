@@ -41,31 +41,13 @@ export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
 	}
 }
 
-const CONSTRUCTORS = {
-	int8: Int8Array,
-	int16: Int16Array,
-	int32: Int32Array,
-	int64: globalThis.BigInt64Array,
-	uint8: Uint8Array,
-	uint16: Uint16Array,
-	uint32: Uint32Array,
-	uint64: globalThis.BigUint64Array,
-	// @ts-expect-error - Not available in TS<5.8. We infer it's type availability in ./metadata.ts
-	float16: globalThis.Float16Array,
-	float32: Float32Array,
-	float64: Float64Array,
-	bool: BoolArray,
-};
-
-const V2_STRING_REGEX = /v2:([US])(\d+)/;
-
 export function get_ctr<D extends DataType>(
 	data_type: D,
 ): TypedArrayConstructor<D> {
 	if (data_type === "v2:object") {
 		return globalThis.Array as unknown as TypedArrayConstructor<D>;
 	}
-	let match = data_type.match(V2_STRING_REGEX);
+	let match = data_type.match(/v2:([US])(\d+)/);
 	if (match) {
 		let [, kind, chars] = match;
 		// @ts-expect-error
@@ -75,7 +57,23 @@ export function get_ctr<D extends DataType>(
 		);
 	}
 	// @ts-expect-error - We've checked that the key exists
-	let ctr: TypedArrayConstructor<D> | undefined = CONSTRUCTORS[data_type];
+	let ctr: TypedArrayConstructor<D> | undefined = (
+		{
+			int8: Int8Array,
+			int16: Int16Array,
+			int32: Int32Array,
+			int64: globalThis.BigInt64Array,
+			uint8: Uint8Array,
+			uint16: Uint16Array,
+			uint32: Uint32Array,
+			uint64: globalThis.BigUint64Array,
+			// @ts-expect-error - Not available in TS<5.8. We infer it's type availability in ./metadata.ts
+			float16: globalThis.Float16Array,
+			float32: Float32Array,
+			float64: Float64Array,
+			bool: BoolArray,
+		} as const
+	)[data_type];
 	assert(ctr, `Unknown or unsupported data_type: ${data_type}`);
 	return ctr;
 }
@@ -233,6 +231,11 @@ export type NarrowDataType<
 			: Query extends "object"
 				? ObjectType
 				: Extract<Query, Dtype>;
+
+function supportsFloat16() {
+	// @ts-expect-error - Float16Array not available in TS<8
+	return globalThis.Float16Array !== undefined;
+}
 
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,

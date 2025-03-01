@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import type { DataType } from "../src/metadata.js";
 import {
 	byteswap_inplace,
@@ -14,27 +14,65 @@ import {
 } from "../src/typedarray.js";
 
 describe("get_ctr", () => {
-	test.each<[DataType, unknown]>([
-		["int8", Int8Array],
-		["int16", Int16Array],
-		["int32", Int32Array],
-		["int64", BigInt64Array],
-		["uint8", Uint8Array],
-		["uint16", Uint16Array],
-		["uint32", Uint32Array],
-		["uint64", BigUint64Array],
-		["float32", Float32Array],
-		["float64", Float64Array],
-		["bool", BoolArray],
-		["v2:U6", UnicodeStringArray],
-		["v2:S6", ByteStringArray],
-	])("%s -> %o", (dtype, ctr) => {
-		const T = get_ctr(dtype);
-		expect(new T(1)).toBeInstanceOf(ctr);
+	describe("without Float16Array", () => {
+		beforeAll(() => {
+			vi.stubGlobal("Float16Array", undefined);
+		});
+		afterAll(() => {
+			vi.unstubAllGlobals();
+		});
+		test.each<[DataType, unknown]>([
+			["int8", Int8Array],
+			["int16", Int16Array],
+			["int32", Int32Array],
+			["int64", BigInt64Array],
+			["uint8", Uint8Array],
+			["uint16", Uint16Array],
+			["uint32", Uint32Array],
+			["uint64", BigUint64Array],
+			["float32", Float32Array],
+			["float64", Float64Array],
+			["bool", BoolArray],
+			["v2:U6", UnicodeStringArray],
+			["v2:S6", ByteStringArray],
+		])("%s -> %o", (dtype, ctr) => {
+			const T = get_ctr(dtype);
+			expect(new T(1)).toBeInstanceOf(ctr);
+		});
+
+		test.each(["float16"])("%s -> throws", (dtype) => {
+			expect(() => get_ctr(dtype as DataType)).toThrowError();
+		});
 	});
 
-	test.each(["float16"])("%s -> throws", (dtype) => {
-		expect(() => get_ctr(dtype as DataType)).toThrowError();
+	describe("with Float16Array", () => {
+		class Float16ArrayStub {}
+		beforeAll(() => {
+			vi.stubGlobal("Float16Array", Float16ArrayStub);
+		});
+		afterAll(() => {
+			vi.unstubAllGlobals();
+		});
+		test.each<[DataType, unknown]>([
+			["int8", Int8Array],
+			["int16", Int16Array],
+			["int32", Int32Array],
+			["int64", BigInt64Array],
+			["uint8", Uint8Array],
+			["uint16", Uint16Array],
+			["uint32", Uint32Array],
+			["uint64", BigUint64Array],
+			// @ts-expect-error - 'float16' not allowed in TS<5.8
+			["float16", Float16ArrayStub],
+			["float32", Float32Array],
+			["float64", Float64Array],
+			["bool", BoolArray],
+			["v2:U6", UnicodeStringArray],
+			["v2:S6", ByteStringArray],
+		])("%s -> %o", (dtype, ctr) => {
+			const T = get_ctr(dtype);
+			expect(new T(1)).toBeInstanceOf(ctr);
+		});
 	});
 });
 
@@ -77,6 +115,8 @@ describe("is_dtype", () => {
 		["uint8", true],
 		["uint16", true],
 		["uint32", true],
+		// @ts-expect-error - 'float16' not allowed in TS<5.8
+		["float16", true],
 		["float32", true],
 		["float64", true],
 		["bool", false],
@@ -96,6 +136,8 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
+		// @ts-expect-error - 'float16' not allowed in TS<5.8
+		["float16", false],
 		["float32", false],
 		["float64", false],
 		["bool", true],
@@ -115,6 +157,8 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
+		// @ts-expect-error - 'float16' not allowed in TS<5.8
+		["float16", false],
 		["float32", false],
 		["float64", false],
 		["bool", false],
@@ -134,6 +178,8 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
+		// @ts-expect-error - 'float16' not allowed in TS<5.8
+		["float16", false],
 		["float32", false],
 		["float64", false],
 		["bool", false],
@@ -153,6 +199,7 @@ describe("is_dtype", () => {
 		"uint8",
 		"uint16",
 		"uint32",
+		"float16" as DataType,
 		"float32",
 		"float64",
 		"bool",
