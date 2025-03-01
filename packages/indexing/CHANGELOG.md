@@ -1,5 +1,11 @@
 # @zarrita/indexing
 
+## 0.1.0-next.26
+
+### Patch Changes
+
+- Add deprecation notice to @zarrita/indexing ([`59e8cbb`](https://github.com/manzt/zarrita.js/commit/59e8cbb3734475ee77fcbfb3f084d5b6d97dd1f8))
+
 ## 0.1.0-next.25
 
 ### Patch Changes
