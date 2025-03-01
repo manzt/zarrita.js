@@ -41,7 +41,6 @@ export default defineConfig({
 				items: [
 					{ text: "@zarrita/core", link: "/packages/core" },
 					{ text: "@zarrita/storage", link: "/packages/storage" },
-					{ text: "@zarrita/indexing", link: "/packages/indexing" },
 					{ text: "@zarrita/ndarray", link: "/packages/ndarray" },
 				],
 			},
