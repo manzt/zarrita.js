@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { range, slice, slice_indices } from "../src/util.js";
+
+import { range, slice, slice_indices } from "../../src/indexing/util.js";
 
 describe("slice", () => {
 	test("slice(null)", () => {

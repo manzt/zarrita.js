@@ -1,5 +1,13 @@
-import type * as core from "@zarrita/core";
 import type { Mutable, Readable } from "@zarrita/storage";
+
+import type { Array } from "../hierarchy.js";
+import type {
+	Chunk,
+	DataType,
+	Scalar,
+	TypedArray,
+	TypedArrayConstructor,
+} from "../metadata.js";
 import { get as get_with_setter } from "./get.js";
 import { set as set_with_setter } from "./set.js";
 import type {
@@ -39,8 +47,8 @@ function object_array_view<T>(arr: T[], offset = 0, size?: number) {
  * In the case of `Array` instances, it will return a `object_array_view` of
  * the underlying, which is supported by our binary set functions.
  */
-function compat_chunk<D extends core.DataType>(
-	arr: core.Chunk<D>,
+function compat_chunk<D extends DataType>(
+	arr: Chunk<D>,
 ): {
 	data: Uint8Array;
 	stride: number[];
@@ -66,15 +74,15 @@ function compat_chunk<D extends core.DataType>(
 }
 
 /** Hack to get the constructor of a typed array constructor from an existing TypedArray. */
-function get_typed_array_constructor<
-	D extends Exclude<core.DataType, "v2:object">,
->(arr: core.TypedArray<D>): core.TypedArrayConstructor<D> {
+function get_typed_array_constructor<D extends Exclude<DataType, "v2:object">>(
+	arr: TypedArray<D>,
+): TypedArrayConstructor<D> {
 	if ("chars" in arr) {
 		// our custom TypedArray needs to bind the number of characters per
 		// element to the constructor.
 		return arr.constructor.bind(null, arr.chars);
 	}
-	return arr.constructor as core.TypedArrayConstructor<D>;
+	return arr.constructor as TypedArrayConstructor<D>;
 }
 
 /**
@@ -87,9 +95,9 @@ function get_typed_array_constructor<
  * In the case of `Array` instances, it will return a `object_array_view` of
  * the scalar, which is supported by our binary set functions.
  */
-function compat_scalar<D extends core.DataType>(
-	arr: core.Chunk<D>,
-	value: core.Scalar<D>,
+function compat_scalar<D extends DataType>(
+	arr: Chunk<D>,
+	value: Scalar<D>,
 ): Uint8Array {
 	if (globalThis.Array.isArray(arr.data)) {
 		// @ts-expect-error
@@ -102,17 +110,17 @@ function compat_scalar<D extends core.DataType>(
 }
 
 export const setter = {
-	prepare<D extends core.DataType>(
-		data: core.TypedArray<D>,
+	prepare<D extends DataType>(
+		data: TypedArray<D>,
 		shape: number[],
 		stride: number[],
 	) {
 		return { data, shape, stride };
 	},
-	set_scalar<D extends core.DataType>(
-		dest: core.Chunk<D>,
+	set_scalar<D extends DataType>(
+		dest: Chunk<D>,
 		sel: (number | Indices)[],
-		value: core.Scalar<D>,
+		value: Scalar<D>,
 	) {
 		let view = compat_chunk(dest);
 		set_scalar_binary(
@@ -122,9 +130,9 @@ export const setter = {
 			view.bytes_per_element,
 		);
 	},
-	set_from_chunk<D extends core.DataType>(
-		dest: core.Chunk<D>,
-		src: core.Chunk<D>,
+	set_from_chunk<D extends DataType>(
+		dest: Chunk<D>,
+		src: Chunk<D>,
 		projections: Projection[],
 	) {
 		let view = compat_chunk(dest);
@@ -139,36 +147,31 @@ export const setter = {
 
 /** @category Utility */
 export async function get<
-	D extends core.DataType,
+	D extends DataType,
 	Store extends Readable,
 	Sel extends (null | Slice | number)[],
 >(
-	arr: core.Array<D, Store>,
+	arr: Array<D, Store>,
 	selection: Sel | null = null,
 	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
 ): Promise<
 	null extends Sel[number]
-		? core.Chunk<D>
+		? Chunk<D>
 		: Slice extends Sel[number]
-			? core.Chunk<D>
-			: core.Scalar<D>
+			? Chunk<D>
+			: Scalar<D>
 > {
-	return get_with_setter<D, Store, core.Chunk<D>, Sel>(
-		arr,
-		selection,
-		opts,
-		setter,
-	);
+	return get_with_setter<D, Store, Chunk<D>, Sel>(arr, selection, opts, setter);
 }
 
 /** @category Utility */
-export async function set<D extends core.DataType>(
-	arr: core.Array<D, Mutable>,
+export async function set<D extends DataType>(
+	arr: Array<D, Mutable>,
 	selection: (null | Slice | number)[] | null,
-	value: core.Scalar<D> | core.Chunk<D>,
+	value: Scalar<D> | Chunk<D>,
 	opts: SetOptions = {},
 ): Promise<void> {
-	return set_with_setter<D, core.Chunk<D>>(arr, selection, value, opts, setter);
+	return set_with_setter<D, Chunk<D>>(arr, selection, value, opts, setter);
 }
 
 function indices_len(start: number, stop: number, step: number) {

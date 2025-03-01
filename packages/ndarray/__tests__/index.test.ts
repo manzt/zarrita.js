@@ -2,10 +2,10 @@ import * as path from "node:path";
 import * as url from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { get } from "../src/index.js";
-
-import * as zarr from "@zarrita/core";
 import { FileSystemStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
+
+import { get } from "../src/index.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 

@@ -31,7 +31,7 @@ for (const pkg of packageDirs) {
 		/** @type {PackageJson} */
 		const meta = JSON.parse(await fs.readFile(pkgJsonPath, "utf-8"));
 		// Skip some packages
-		if (["@zarrita/typedarray"].includes(meta.name)) {
+		if (["@zarrita/typedarray", "@zarrita/indexing"].includes(meta.name)) {
 			continue;
 		}
 		MANIFEST[pkg.name] = {

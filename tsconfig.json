@@ -9,8 +9,6 @@
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
 		"declaration": true,
-		"allowJs": true,
-		"checkJs": true,
 		/* Linting */
 		"strict": true,
 		"noUnusedLocals": true,
@@ -21,7 +19,6 @@
 	"references": [
 		{ "path": "packages/storage" },
 		{ "path": "packages/core" },
-		{ "path": "packages/indexing" },
 		{ "path": "packages/ndarray" },
 		{ "path": "packages/zarrita" }
 	]

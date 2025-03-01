@@ -17,7 +17,6 @@
 	},
 	"dependencies": {
 		"@zarrita/core": "workspace:^",
-		"@zarrita/indexing": "workspace:^",
 		"@zarrita/storage": "workspace:^"
 	},
 	"publishConfig": {

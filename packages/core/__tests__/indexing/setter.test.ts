@@ -1,11 +1,11 @@
-import type { Chunk, DataType } from "@zarrita/core";
 import ndarray from "ndarray";
 import { assign } from "ndarray-ops";
 import { describe, expect, it } from "vitest";
 
-import { setter } from "../src/ops.js";
-import type { Projection } from "../src/types.js";
-import { slice, slice_indices } from "../src/util.js";
+import type * as zarr from "../../src/index.js";
+import { setter } from "../../src/indexing/ops.js";
+import type { Projection } from "../../src/indexing/types.js";
+import { slice, slice_indices } from "../../src/indexing/util.js";
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 function get_strides(shape: readonly number[], order: "C" | "F") {
@@ -32,7 +32,11 @@ function col_major_stride(shape: readonly number[]) {
 	return stride;
 }
 
-function to_c<D extends DataType>({ data, shape, stride }: Chunk<D>): Chunk<D> {
+function to_c<D extends zarr.DataType>({
+	data,
+	shape,
+	stride,
+}: zarr.Chunk<D>): zarr.Chunk<D> {
 	let size = shape.reduce((a, b) => a * b, 1);
 	// @ts-expect-error - We know constructor exists on TypedArray
 	let out = ndarray(new data.constructor(size), shape);

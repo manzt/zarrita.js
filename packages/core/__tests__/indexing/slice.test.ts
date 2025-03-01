@@ -1,8 +1,8 @@
-import ndarray from "ndarray";
 import { describe, expect, it } from "vitest";
-import { IndexError, create, slice } from "zarrita";
 
-import { get, set } from "../src/index.js";
+import * as zarr from "../../src/index.js";
+import { get, set, slice } from "../../src/index.js";
+import { IndexError } from "../../src/indexing/indexer.js";
 
 const DATA = {
 	// biome-ignore format: the array should not be formatted
@@ -11,13 +11,13 @@ const DATA = {
 	stride: [12, 4, 1],
 };
 
-describe("builtin slice", async () => {
-	let arr = await create(new Map(), {
+describe("slice", async () => {
+	let arr = await zarr.create(new Map(), {
 		shape: [2, 3, 4],
 		data_type: "int32",
 		chunk_shape: [1, 2, 2],
 	});
-	await set(arr, null, ndarray(DATA.data, DATA.shape, DATA.stride));
+	await set(arr, null, DATA);
 
 	it.each([
 		undefined,
@@ -26,8 +26,8 @@ describe("builtin slice", async () => {
 		[slice(null), slice(null), slice(null)],
 		[null, slice(null), slice(null)],
 	])("Reads entire array: selection = %j", async (sel) => {
-		let { data, shape, stride } = await get(arr, sel);
-		expect({ data, shape, stride }).toStrictEqual(DATA);
+		let chunk = await get(arr, sel);
+		expect(chunk).toStrictEqual(DATA);
 	});
 
 	it.each([

@@ -1,5 +1,8 @@
-import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 import type { Readable } from "@zarrita/storage";
+
+import { type Array, get_context } from "../hierarchy.js";
+import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
+import { BasicIndexer } from "./indexer.js";
 import type {
 	GetOptions,
 	Prepare,
@@ -7,9 +10,6 @@ import type {
 	SetScalar,
 	Slice,
 } from "./types.js";
-
-import { _internal_get_array_context } from "@zarrita/core";
-import { BasicIndexer } from "./indexer.js";
 import { create_queue } from "./util.js";
 
 function unwrap<D extends DataType>(
@@ -36,7 +36,7 @@ export async function get<
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
 > {
-	let context = _internal_get_array_context(arr);
+	let context = get_context(arr);
 	let indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,

@@ -53,15 +53,6 @@ importers:
       numcodecs:
         specifier: ^0.3.2
         version: 0.3.2
-
-  packages/indexing:
-    dependencies:
-      '@zarrita/core':
-        specifier: workspace:^
-        version: link:../core
-      '@zarrita/storage':
-        specifier: workspace:^
-        version: link:../storage
     devDependencies:
       '@types/ndarray':
         specifier: ^1.0.11
@@ -76,26 +67,30 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
 
+  packages/indexing:
+    dependencies:
+      zarrita:
+        specifier: workspace:^
+        version: link:../zarrita
+
   packages/ndarray:
     dependencies:
       '@types/ndarray-ops':
         specifier: ^1.2.4
         version: 1.2.7
-      '@zarrita/core':
-        specifier: workspace:^
-        version: link:../core
-      '@zarrita/indexing':
-        specifier: workspace:^
-        version: link:../indexing
-      '@zarrita/storage':
-        specifier: workspace:^
-        version: link:../storage
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
       ndarray-ops:
         specifier: ^1.2.2
         version: 1.2.2
+      zarrita:
+        specifier: workspace:^
+        version: link:../zarrita
+    devDependencies:
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
 
   packages/storage:
     dependencies:
@@ -117,9 +112,6 @@ importers:
       '@zarrita/core':
         specifier: workspace:^
         version: link:../core
-      '@zarrita/indexing':
-        specifier: workspace:^
-        version: link:../indexing
       '@zarrita/storage':
         specifier: workspace:^
         version: link:../storage
