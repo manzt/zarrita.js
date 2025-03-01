@@ -6,7 +6,8 @@
     <script type="importmap">
       {
         "imports": {
-          "zarrita": "./packages/core/dist/src/index.js",
+          "zarrita": "./packages/zarrita/dist/index.js",
+          "@zarrita/core": "./packages/core/dist/src/index.js",
           "@zarrita/storage/fetch": "./packages/storage/dist/src/fetch.js",
           "numcodecs/blosc": "./packages/core/node_modules/numcodecs/blosc.js",
           "numcodecs/lz4": "./packages/core/node_modules/numcodecs/lz4.js",
@@ -19,9 +20,7 @@
   </head>
   <script type="module">
     import * as zarr from "zarrita";
-    import FetchStore from "@zarrita/storage/fetch";
-
-    let store = zarr.root(new FetchStore(new URL("fixtures", import.meta.url)));
+    let store = zarr.root(new zarr.FetchStore(new URL("fixtures", import.meta.url)));
 
     {
       let grp = await zarr.open.v2(store.resolve("v2/data.zarr"), {

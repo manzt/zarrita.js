@@ -1,36 +1,14 @@
 import ndarray, { type TypedArray } from "ndarray";
 import { assign } from "ndarray-ops";
 import { describe, expect, it } from "vitest";
+import {
+	type Projection,
+	_zarrita_internal_get_strides as get_strides,
+	slice,
+	_zarrita_internal_slice_indices as slice_indices,
+} from "zarrita";
 
-import { type Projection, slice } from "zarrita";
-
-import { slice_indices } from "../../core/src/indexing/util.js";
 import { _internal_setter } from "../src/index.js";
-
-/** Compute strides for 'C' or 'F' ordered array from shape */
-function get_strides(shape: readonly number[], order: "C" | "F") {
-	return (order === "C" ? row_major_stride : col_major_stride)(shape);
-}
-
-function row_major_stride(shape: readonly number[]) {
-	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
-	for (let i = ndim - 1, step = 1; i >= 0; i--) {
-		stride[i] = step;
-		step *= shape[i];
-	}
-	return stride;
-}
-
-function col_major_stride(shape: readonly number[]) {
-	const ndim = shape.length;
-	const stride: number[] = globalThis.Array(ndim);
-	for (let i = 0, step = 1; i < ndim; i++) {
-		stride[i] = step;
-		step *= shape[i];
-	}
-	return stride;
-}
 
 function to_c<T extends TypedArray>({
 	data,
