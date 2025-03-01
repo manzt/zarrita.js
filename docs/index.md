@@ -65,17 +65,4 @@ features:
   - title: Type safe
     icon: 🦺
     details: Built in TypeScript, offering rich type information.
-
-  - title: "@zarrita/core"
-    link: /packages/core
-    linkText: Open arrays and groups
-  - title: "@zarrita/storage"
-    link: /packages/storage
-    linkText: Pick a storage backend
-  - title: "@zarrita/indexing"
-    linkText: Slice and index arrays
-    link: /packages/indexing
-  - title: "@zarrita/ndarray"
-    linkText: Load with scijs/ndarray
-    link: /packages/ndarray
 ---

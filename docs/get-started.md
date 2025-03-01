@@ -76,8 +76,6 @@ automatically loads the other dependencies.
     "imports": {
       "zarrita": "https://unpkg.com/zarrita@next",
       "@zarrita/core": "https://unpkg.com/@zarrita/core@next",
-      "@zarrita/typedarray": "https://unpkg.com/@zarrita/typedarray@next",
-      "@zarrita/indexing": "https://unpkg.com/@zarrita/indexing@next",
       "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@next/dist/src/fetch.js",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.3/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.3/lz4",
