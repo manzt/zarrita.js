@@ -539,7 +539,7 @@ async function get_v3(
 	abs_path: string,
 	...args: unknown[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
-	let root = path.resolve(__dirname, "../../../fixtures/v3/data.zarr");
+	let root = path.resolve(__dirname, "../../../../fixtures/v3/data.zarr");
 	let store = zarr.root(new FSStore(root));
 	let arr = await zarr.open.v3(store.resolve(abs_path), { kind: "array" });
 	// @ts-expect-error - TS not happy about spreading these args

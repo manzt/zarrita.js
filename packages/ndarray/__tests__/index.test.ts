@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { get } from "../src/index.js";
 
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 import { FileSystemStore } from "@zarrita/storage";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));

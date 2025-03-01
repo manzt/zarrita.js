@@ -87,6 +87,10 @@ importers:
       zarrita:
         specifier: workspace:^
         version: link:../zarrita
+    devDependencies:
+      '@zarrita/storage':
+        specifier: workspace:^
+        version: link:../storage
 
   packages/storage:
     dependencies:

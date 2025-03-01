@@ -5,7 +5,7 @@ import * as zarr from "zarrita";
 /**
  * @internal - For testing, don't use in production code.
  */
-export const _setter: {
+export const _internal_setter: {
 	prepare: <D extends zarr.DataType>(
 		data: zarr.TypedArray<D>,
 		shape: number[],
@@ -52,17 +52,17 @@ export async function get<
 	opts: zarr.GetOptions<Parameters<Store["get"]>[1]> = {},
 ): Promise<
 	null extends Sel[number]
-		? ndarray.NdArray<zarr.TypedArray<D>>
-		: zarr.Slice extends Sel[number]
-			? ndarray.NdArray<zarr.TypedArray<D>>
-			: zarr.Scalar<D>
+	? ndarray.NdArray<zarr.TypedArray<D>>
+	: zarr.Slice extends Sel[number]
+	? ndarray.NdArray<zarr.TypedArray<D>>
+	: zarr.Scalar<D>
 > {
 	return zarr._zarrita_internal_get<
 		D,
 		Store,
 		ndarray.NdArray<zarr.TypedArray<D>>,
 		Sel
-	>(arr, selection, opts, _setter);
+	>(arr, selection, opts, _internal_setter);
 }
 
 /** @category Utility */
@@ -77,7 +77,7 @@ export async function set<D extends zarr.DataType>(
 		selection,
 		value,
 		opts,
-		_setter,
+		_internal_setter,
 	);
 }
 
