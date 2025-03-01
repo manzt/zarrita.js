@@ -29,7 +29,7 @@ allows **zarrita** to be both <u>minimal and feature complete</u> if necessary.
 **zarrita** is broken down into several packages to create and interact with
 Zarr.
 
-### [@zarrita/core](/packages/core)
+### [zarrita](/packages/zarrita)
 
 - Navigate a storage hierarchy and `open` or `create` **groups** and **arrays**.
 - Load individual array **chunks** on-demand based on their key.

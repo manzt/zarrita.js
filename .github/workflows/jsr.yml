@@ -19,16 +19,16 @@ jobs:
 
       - name: Publish @zarrita/storage
         run: deno publish --unstable-sloppy-imports
-        working-directory: packages/storage
-
-      - name: Publish @zarrita/core
-        run: deno publish --unstable-sloppy-imports
-        working-directory: packages/core
+        working-directory: packages/@zarrita-storage
 
       - name: Publish @zarrita/zarrita
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/zarrita
 
+      - name: Publish @zarrita/core
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/@zarrita-core
+
       - name: Publish @zarrita/ndarray
         run: deno publish --unstable-sloppy-imports
-        working-directory: packages/ndarray
+        working-directory: packages/@zarrita-ndarray

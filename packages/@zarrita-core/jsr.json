@@ -3,11 +3,10 @@
 	"version": "0.1.0-next.23",
 	"license": "MIT",
 	"imports": {
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.9",
-		"numcodecs": "npm:numcodecs@^0.3.2"
+		"zarrita": "jsr:@zarrita/zarrita@^0.4.0-next.26"
 	},
 	"exports": {
-		".": "./src/index.ts"
+		".": "./index.ts"
 	},
 	"publish": {
 		"exclude": [
