@@ -1,9 +1,9 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.4.0-next.25",
+	"version": "0.4.0-next.26",
 	"license": "MIT",
 	"imports": {
-		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.22",
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.23",
 		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.9"
 	},
 	"exports": {
