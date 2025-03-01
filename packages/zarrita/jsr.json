@@ -1,9 +1,9 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.4.0-next.27",
+	"version": "0.4.0",
 	"license": "MIT",
 	"imports": {
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.10",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0",
 		"numcodecs": "npm:numcodecs@^0.3.2"
 	},
 	"exports": {
