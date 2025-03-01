@@ -9,8 +9,6 @@
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
 		"declaration": true,
-		"allowJs": true,
-		"checkJs": true,
 		/* Linting */
 		"strict": true,
 		"noUnusedLocals": true,

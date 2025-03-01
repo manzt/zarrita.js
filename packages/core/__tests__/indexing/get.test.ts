@@ -1,9 +1,9 @@
 import * as path from "node:path";
 import * as url from "node:url";
-import * as zarr from "@zarrita/core";
-import FSStore from "@zarrita/storage/fs";
+import FileSystemStore from "@zarrita/storage/fs";
 import { describe, expect, it } from "vitest";
 
+import * as zarr from "../../src/index.js";
 import { get } from "../../src/indexing/ops.js";
 import { range } from "../../src/indexing/util.js";
 
@@ -14,7 +14,7 @@ async function get_v2(
 	...args: unknown[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
 	let root = path.resolve(__dirname, "../../../../fixtures/v2/data.zarr");
-	let store = zarr.root(new FSStore(root));
+	let store = zarr.root(new FileSystemStore(root));
 	let arr = await zarr.open.v2(store.resolve(abs_path), { kind: "array" });
 	// @ts-expect-error - TS not happy about spreading these args and its fine for this func
 	return get(arr, ...args);
@@ -540,7 +540,7 @@ async function get_v3(
 	...args: unknown[]
 ): Promise<zarr.Chunk<zarr.DataType>> {
 	let root = path.resolve(__dirname, "../../../../fixtures/v3/data.zarr");
-	let store = zarr.root(new FSStore(root));
+	let store = zarr.root(new FileSystemStore(root));
 	let arr = await zarr.open.v3(store.resolve(abs_path), { kind: "array" });
 	// @ts-expect-error - TS not happy about spreading these args
 	return get(arr, ...args);

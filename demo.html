@@ -6,9 +6,7 @@
     <script type="importmap">
       {
         "imports": {
-          "@zarrita/core": "./packages/core/dist/src/index.js",
-          "@zarrita/typedarray": "./packages/typedarray/dist/src/index.js",
-          "@zarrita/indexing": "./packages/indexing/dist/src/index.js",
+          "zarrita": "./packages/core/dist/src/index.js",
           "@zarrita/storage/fetch": "./packages/storage/dist/src/fetch.js",
           "numcodecs/blosc": "./packages/core/node_modules/numcodecs/blosc.js",
           "numcodecs/lz4": "./packages/core/node_modules/numcodecs/lz4.js",
@@ -20,8 +18,7 @@
     </script>
   </head>
   <script type="module">
-    import * as zarr from "@zarrita/core";
-    import { get } from "@zarrita/indexing";
+    import * as zarr from "zarrita";
     import FetchStore from "@zarrita/storage/fetch";
 
     let store = zarr.root(new FetchStore(new URL("fixtures", import.meta.url)));
@@ -58,7 +55,7 @@
         "3d.contiguous.i2",
       ]) {
         let arr = await zarr.open.v2(grp.resolve(fixture), { kind: "array", attrs: false });
-        let { data, shape, stride } = await get(arr);
+        let { data, shape, stride } = await zarr.get(arr);
         let pre = document.createElement("pre");
         pre.textContent = `\
 {
@@ -111,7 +108,7 @@
         "3d.contiguous.i2",
       ]) {
         let arr = await zarr.open.v3(grp.resolve(fixture), { kind: "array" });
-        let { data, shape, stride } = await get(arr);
+        let { data, shape, stride } = await zarr.get(arr);
         let pre = document.createElement("pre");
         pre.textContent = `\
 {
