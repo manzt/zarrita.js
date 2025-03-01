@@ -1,4 +1,3 @@
-import assert from "node:assert";
 import type {
 	Chunk,
 	DataType,
@@ -11,7 +10,7 @@ import {
 	ByteStringArray,
 	UnicodeStringArray,
 } from "../typedarray.js";
-import { get_strides } from "../util.js";
+import { assert, get_strides } from "../util.js";
 
 type TypedArrayProxy<D extends DataType> = {
 	[x: number]: Scalar<D>;
