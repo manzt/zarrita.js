@@ -62,7 +62,6 @@ describe("get_ctr", () => {
 			["uint16", Uint16Array],
 			["uint32", Uint32Array],
 			["uint64", BigUint64Array],
-			// @ts-expect-error - 'float16' not allowed in TS<5.8
 			["float16", Float16ArrayStub],
 			["float32", Float32Array],
 			["float64", Float64Array],
@@ -115,7 +114,6 @@ describe("is_dtype", () => {
 		["uint8", true],
 		["uint16", true],
 		["uint32", true],
-		// @ts-expect-error - 'float16' not allowed in TS<5.8
 		["float16", true],
 		["float32", true],
 		["float64", true],
@@ -136,7 +134,6 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
-		// @ts-expect-error - 'float16' not allowed in TS<5.8
 		["float16", false],
 		["float32", false],
 		["float64", false],
@@ -157,7 +154,6 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
-		// @ts-expect-error - 'float16' not allowed in TS<5.8
 		["float16", false],
 		["float32", false],
 		["float64", false],
@@ -178,7 +174,6 @@ describe("is_dtype", () => {
 		["uint8", false],
 		["uint16", false],
 		["uint32", false],
-		// @ts-expect-error - 'float16' not allowed in TS<5.8
 		["float16", false],
 		["float32", false],
 		["float64", false],
@@ -199,7 +194,7 @@ describe("is_dtype", () => {
 		"uint8",
 		"uint16",
 		"uint32",
-		"float16" as DataType,
+		"float16",
 		"float32",
 		"float64",
 		"bool",

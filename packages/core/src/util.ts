@@ -67,7 +67,6 @@ export function get_ctr<D extends DataType>(
 			uint16: Uint16Array,
 			uint32: Uint32Array,
 			uint64: globalThis.BigUint64Array,
-			// @ts-expect-error - Not available in TS<5.8. We infer it's type availability in ./metadata.ts
 			float16: globalThis.Float16Array,
 			float32: Float32Array,
 			float64: Float64Array,

@@ -579,7 +579,6 @@ describe("v3", () => {
 	describe("1d.contiguous.f2", () => {
 		describe("with Float16Array", () => {
 			beforeAll(() => {
-				// @ts-expect-error - Not supported in all environments
 				vi.stubGlobal("Float16Array", globalThis.Float16Array ?? Float16Array);
 			});
 			afterAll(() => {
