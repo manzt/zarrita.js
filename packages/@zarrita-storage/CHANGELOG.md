@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.0-next.10
+
+### Patch Changes
+
+- Consolidate @zarrita/core into zarrita ([#269](https://github.com/manzt/zarrita.js/pull/269))
+
 ## 0.1.0-next.9
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @zarrita/ndarray
 
+## 0.1.0-next.26
+
+### Patch Changes
+
+- Consolidate @zarrita/core into zarrita ([#269](https://github.com/manzt/zarrita.js/pull/269))
+
+- Updated dependencies [[`97210f6`](https://github.com/manzt/zarrita.js/commit/97210f64f56f475b9d4f4ee56673d713a5e8e93c)]:
+  - zarrita@0.4.0-next.27
+
 ## 0.1.0-next.25
 
 ### Patch Changes
