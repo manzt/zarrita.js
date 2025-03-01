@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { type Projection, slice } from "zarrita";
 
-import { _internal_setter } from "../src/index.js";
 import { slice_indices } from "../../core/src/indexing/util.js";
+import { _internal_setter } from "../src/index.js";
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 function get_strides(shape: readonly number[], order: "C" | "F") {
@@ -326,7 +326,11 @@ describe("setter", () => {
 	});
 
 	it("set_from_chunk - dest squeezed", async () => {
-		let dest = _internal_setter.prepare(new Float32Array(4), [4], get_strides([4], "C"));
+		let dest = _internal_setter.prepare(
+			new Float32Array(4),
+			[4],
+			get_strides([4], "C"),
+		);
 
 		let src = _internal_setter.prepare(
 			// biome-ignore format: the array should not be formatted

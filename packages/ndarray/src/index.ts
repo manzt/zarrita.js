@@ -52,10 +52,10 @@ export async function get<
 	opts: zarr.GetOptions<Parameters<Store["get"]>[1]> = {},
 ): Promise<
 	null extends Sel[number]
-	? ndarray.NdArray<zarr.TypedArray<D>>
-	: zarr.Slice extends Sel[number]
-	? ndarray.NdArray<zarr.TypedArray<D>>
-	: zarr.Scalar<D>
+		? ndarray.NdArray<zarr.TypedArray<D>>
+		: zarr.Slice extends Sel[number]
+			? ndarray.NdArray<zarr.TypedArray<D>>
+			: zarr.Scalar<D>
 > {
 	return zarr._zarrita_internal_get<
 		D,
