@@ -25,10 +25,6 @@ jobs:
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/zarrita
 
-      - name: Publish @zarrita/core
-        run: deno publish --unstable-sloppy-imports
-        working-directory: packages/@zarrita-core
-
       - name: Publish @zarrita/ndarray
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/@zarrita-ndarray
