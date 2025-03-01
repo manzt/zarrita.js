@@ -29,20 +29,11 @@ allows **zarrita** to be both <u>minimal and feature complete</u> if necessary.
 **zarrita** is broken down into several packages to create and interact with
 Zarr.
 
-### [@zarrita/storage](/packages/storage)
-
-- A collection of useful of storage backends for Zarr.
-- Implement your own `Readable` and (optionally `Writable`) stores.
-
 ### [@zarrita/core](/packages/core)
 
 - Navigate a storage hierarchy and `open` or `create` **groups** and **arrays**.
 - Load individual array **chunks** on-demand based on their key.
-
-### [@zarrita/indexing](/packages/indexing)
-
 - Slice and index an **array**, stitching together one or more chunks.
-- Offers an ergonomic API familiar to Zarr/numpy users.
 
 ```javascript
 const region = await get(arr, [null, null]);
@@ -53,10 +44,16 @@ const region = await get(arr, [null, null]);
 // }
 ```
 
+### [@zarrita/storage](/packages/storage)
+
+- A collection of useful of storage backends for Zarr.
+- Implement your own `Readable` and (optionally `Writable`) stores.
+
+
 ### [@zarrita/ndarray](/packages/ndarray)
 
-- Similar to `@zarrita/indexing` but returns `scijs/ndarray` objects.
-- Ideal for applications already using or require `scijs/ndarray` objects.
+- Similar to `zarrita`'s builtin slicing but returns `scijs/ndarray` objects.
+- Ideal for applications already using or require `scijs/ndarray`.
 
 ```javascript
 const region = await get(arr, [null, null]);

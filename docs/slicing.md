@@ -9,7 +9,7 @@ While slicing and indexing are foundational concepts as in Zarr, they are
 presented through a higher-level (optional) API in **zarrita**. This choice
 caters to applications that might prefer direct interaction with chunks.
 
-You can use either **@zarrita/indexing** or **@zarrita/ndarray** to conveniently
+You can use either **zarrita** or **@zarrita/ndarray** to conveniently
 access specific data subsets without thinking about chunking details.
 
 ## How to slice
@@ -26,8 +26,10 @@ access 10 elements from the first dimension, all from the second, and the first
 from the third (resulting in a 2D array shaped `[10, 256]`), you'd use:
 
 ```javascript
-import { get, slice } from "@zarrita/indexing";
-const region = await get(arr, [slice(10, 20), null, 0]);
+import * as zarr from "zarrita";
+
+const arr = await zarr.open(store, { kind: "array" });
+const region = await zarr.get(arr, [zarr.slice(10, 20), null, 0]);
 ```
 
 ::: info

@@ -64,30 +64,25 @@ to be both minimal and more feature-complete if necessary.
 
 ```mermaid
 classDiagram
-    indexing --|> core : uses
-    ndarray --|> indexing : uses
     ndarray --|> core : uses
     core --|> storage : uses
-
-    class indexing {
-        - get(arr: zarr.Array, selection)
-        - set(arr: zarr.Array, selection, view)
-        - slice and index multiple chunks
-        - returns strided arrays
-    }
 
     class ndarray {
         - get(arr: zarr.Array, selection)
         - set(arr: zarr.Array,  selection, view)
-        - slice and index multiple chunks
+        - slice and index multiple chunks with scijs/ndarray
         - returns scijs/ndarray objects
     }
 
     class core {
         - open(store: Readable)
         - create(store: Writable)
+        - get(arr: zarr.Array, selection)
+        - set(arr: zarr.Array, selection, view)
         - zarr.Array and zarr.Group
         - access and decode individual chunks
+        - slice and index multiple chunks
+        - returns strided arrays
     }
 
     class storage {

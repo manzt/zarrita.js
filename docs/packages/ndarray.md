@@ -1,6 +1,6 @@
 # @zarrita/ndarray
 
-- Similar to `@zarrita/indexing` but returns `scijs/ndarray` objects.
+- Similar to `zarr.get` and `zarr.set` but returns `scijs/ndarray` objects.
 - Ideal for applications already using or require `scijs/ndarray` objects.
 
 ```javascript
