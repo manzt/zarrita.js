@@ -23,6 +23,8 @@ export type Uint32 = "uint32";
 export type Uint64 = "uint64";
 
 /** @category Number */
+export type Float16 = "float16";
+/** @category Number */
 export type Float32 = "float32";
 /** @category Number */
 export type Float64 = "float64";
@@ -49,6 +51,7 @@ export type NumberDataType =
 	| Uint8
 	| Uint16
 	| Uint32
+	| MaybeFloat16
 	| Float32
 	| Float64;
 
@@ -130,6 +133,16 @@ export type GroupMetadataV2 = {
 	zarr_format: 2;
 };
 
+// Conditionally resolves Float16Array type if it exists on globalThis (determined by end-user TS version)
+type MaybeFloat16Array = InstanceType<
+	typeof globalThis extends { Float16Array: infer T } ? T : never
+>;
+
+// Conditionally resolves Float16Array type if it exists on globalThis (determined by end-user TS version)
+type MaybeFloat16 = typeof globalThis extends { Float16Array: unknown }
+	? Float16
+	: never;
+
 // biome-ignore format: easier to read this way
 export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Int16 ? Int16Array
@@ -139,6 +152,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Uint16 ? Uint16Array
 	: D extends Uint32 ? Uint32Array
 	: D extends Uint64 ? BigUint64Array
+	: D extends Float16 ? MaybeFloat16Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
