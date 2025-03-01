@@ -81,7 +81,7 @@ export function get_ctr<D extends DataType>(
 export function get_strides(
 	shape: readonly number[],
 	order: "C" | "F" | Array<number>,
-) {
+): Array<number> {
 	const rank = shape.length;
 	if (typeof order === "string") {
 		order =

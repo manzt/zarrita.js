@@ -30,10 +30,6 @@ for (const pkg of packageDirs) {
 		const pkgJsonPath = path.resolve(pkgPath, "package.json");
 		/** @type {PackageJson} */
 		const meta = JSON.parse(await fs.readFile(pkgJsonPath, "utf-8"));
-		// Skip some packages
-		if (["@zarrita/typedarray", "@zarrita/indexing"].includes(meta.name)) {
-			continue;
-		}
 		MANIFEST[pkg.name] = {
 			name: meta.name === "zarrita" ? "@zarrita/zarrita" : meta.name,
 			version: meta.version,
@@ -55,10 +51,11 @@ for (const meta of Object.values(MANIFEST)) {
 	meta.imports = mapEntries(meta.imports, ([name, version]) => {
 		if (version.startsWith("workspace:")) {
 			const semanticResolution = version.slice("workspace:".length);
-			const workspaceVersion = MANIFEST[name.slice("@zarrita/".length)].version;
+			const workspaceVersion = MANIFEST[name.replace("@zarrita/", "")]?.version;
 			assert(workspaceVersion, `Missing workspace version for ${name}`);
 			assert(semanticResolution, `Missing semantic resolution for ${name}`);
-			return [name, `jsr:${name}@${semanticResolution}${workspaceVersion}`];
+			const jsrName = name === "zarrita" ? "@zarrita/zarrita" : name;
+			return [name, `jsr:${jsrName}@${semanticResolution}${workspaceVersion}`];
 		}
 		return [name, `npm:${name}@${version}`];
 	});

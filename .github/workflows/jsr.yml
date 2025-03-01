@@ -25,14 +25,18 @@ jobs:
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/core
 
-      - name: Publish @zarrita/indexing
+      - name: Publish @zarrita/zarrita
         run: deno publish --unstable-sloppy-imports
-        working-directory: packages/indexing
+        working-directory: packages/zarrita
 
       - name: Publish @zarrita/ndarray
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/ndarray
 
-      - name: Publish @zarrita/zarrita
+      - name: Publish @zarrita/typedarray
         run: deno publish --unstable-sloppy-imports
-        working-directory: packages/zarrita
+        working-directory: packages/typedarray
+
+      - name: Publish @zarrita/indexing
+        run: deno publish --unstable-sloppy-imports
+        working-directory: packages/indexing
