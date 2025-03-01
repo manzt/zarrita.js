@@ -14,7 +14,7 @@ npm install @zarrita/storage@next
 ## Usage
 
 ```javascript
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 import { FetchStore, FileSystemStore } from "@zarrita/storage";
 
 let remoteStore = new FetchStore("http://localhost:8080/data.zarr");

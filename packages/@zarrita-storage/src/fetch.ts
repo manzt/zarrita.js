@@ -54,7 +54,7 @@ async function fetch_suffix(
  * Must polyfill `fetch` for use in Node.js.
  *
  * ```typescript
- * import * as zarr from "@zarrita/core";
+ * import * as zarr from "zarrita";
  * const store = new FetchStore("http://localhost:8080/data.zarr");
  * const arr = await zarr.get(store, { kind: "array" });
  * ```

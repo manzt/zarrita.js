@@ -28,3 +28,8 @@ export { get as _zarrita_internal_get } from "./indexing/get.js";
 export { set as _zarrita_internal_set } from "./indexing/set.js";
 export { get_strides as _zarrita_internal_get_strides } from "./util.js";
 export { slice_indices as _zarrita_internal_slice_indices } from "./indexing/util.js";
+
+// re-export fetch store from storage
+export { default as FetchStore } from "@zarrita/storage/fetch";
+// re-export all the storage interface types
+export type * from "@zarrita/storage";

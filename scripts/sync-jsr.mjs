@@ -51,7 +51,8 @@ for (const meta of Object.values(MANIFEST)) {
 	meta.imports = mapEntries(meta.imports, ([name, version]) => {
 		if (version.startsWith("workspace:")) {
 			const semanticResolution = version.slice("workspace:".length);
-			const workspaceVersion = MANIFEST[name.replace("@zarrita/", "")]?.version;
+			const workspaceVersion =
+				MANIFEST[name.replace("@zarrita/", "@zarrita-")]?.version;
 			assert(workspaceVersion, `Missing workspace version for ${name}`);
 			assert(semanticResolution, `Missing semantic resolution for ${name}`);
 			const jsrName = name === "zarrita" ? "@zarrita/zarrita" : name;

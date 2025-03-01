@@ -1,4 +1,4 @@
-# @zarrita/core
+# zarrita
 
 The primary engine for interacting with Zarr in JavaScript. Navigate a store
 hierarchy and load individual array chunks.
@@ -42,16 +42,15 @@ array chunks on-demand.
 
 ## Navigation
 
-The **@zarrita/core** module introduces a `Location` primitive to navigate
+The **zarrita** module introduces a `Location` primitive to navigate
 through a storage hierarchy. This object associates a **path** with a **store**
 (i.e., a specific location in the hierarchy), and exposes a useful `resolve`
 helper:
 
 ```javascript
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-let root = zarr.root(new FetchStore("http://localhost:8080/data.zarr"));
+let root = zarr.root(new zarr.FetchStore("http://localhost:8080/data.zarr"));
 root.store; // FetchStore
 root.path; // "/"
 
@@ -69,10 +68,9 @@ foo.path; // "/foo"
 Using a `Location`, you can access an **array** or **group** with `open`:
 
 ```javascript
-import * as zarr from "@zarrita/core";
-import { FetchStore } from "@zarrita/storage";
+import * as zarr from "zarrita";
 
-let root = zarr.root(new FetchStore("http://localhost:8080/data.zarr"));
+let root = zarr.root(new zarr.FetchStore("http://localhost:8080/data.zarr"));
 let node = await zarr.open(root);
 node; // zarr.Array<DataType, FetchStore> | zarr.Group
 ```
@@ -142,7 +140,7 @@ view.get(1, 3); // 7
 Given a `Location`, you can also create an **array** or **group** with `create`:
 
 ```javascript
-import * as zarr from "@zarrita/core";
+import * as zarr from "zarrita";
 
 let root = zarr.root(new Map());
 let grp = await zarr.create(root);
@@ -170,7 +168,7 @@ While slicing and indexing are foundational concepts as in Zarr, they are
 presented through a higher-level (optional) API in **zarrita**. This choice
 caters to applications that might prefer direct interaction with chunks.
 
-You can use either **@zarrita/core** or **@zarrita/ndarray** to conveniently
+You can use either **zarrita** or **@zarrita/ndarray** to conveniently
 access specific data subsets without thinking about chunking details.
 
 ### How to slice
@@ -212,12 +210,12 @@ region = arr[10:20, ..., 0]
 ## Data Typing in TypeScript
 
 Zarr's dynamic nature presents a challenge in accurately representing data types
-to static type systems. **@zarrita/core** leverages TypeScript's advanced typing
+to static type systems. **zarrita** leverages TypeScript's advanced typing
 capabilities to extract and communicate Zarr `data_type` metadata across its
 APIs.
 
 In essense, you (moreover your editor) is always informed about the data types
-at hand when working with Zarr via **@zarrita/core**. TypeScript assists in
+at hand when working with Zarr via **zarrita**. TypeScript assists in
 covering edge cases, but (importantly) steps back once you've demonstrated data
 correctness.
 
@@ -259,7 +257,7 @@ But what about when the data type isn't known? Let's say we now `open` a remote
 Zarr array:
 
 ```javascript
-let store = new FetchStore("http://localhost:8080/data.zarr");
+let store = new zarr.FetchStore("http://localhost:8080/data.zarr");
 let arr = await zarr.open(store);
 let chunk = await arr.getChunk([0, 0]);
 
@@ -289,8 +287,7 @@ Instead, wouldn't it be convenient if you could verify the data type once, and
 then TypeScript would automatically understand the expected data type for all
 subsequent `getChunk` calls?
 
-**@zarrita/core** introduces the `zarr.Array.is` type guard to achieve just
-that:
+**zarrita** introduces the `zarr.Array.is` type guard to achieve just that:
 
 ```javascript
 if (!arr.is("int64") || !arr.is("uint64")) {
