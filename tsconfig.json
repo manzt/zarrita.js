@@ -21,7 +21,7 @@
 	"references": [
 		{ "path": "packages/storage" },
 		{ "path": "packages/core" },
-		{ "path": "packages/ndarray" },
-		{ "path": "packages/zarrita" }
+		{ "path": "packages/zarrita" },
+		{ "path": "packages/ndarray" }
 	]
 }
