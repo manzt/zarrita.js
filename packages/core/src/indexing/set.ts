@@ -1,7 +1,7 @@
-import { _internal_get_array_context } from "@zarrita/core";
-import type { Array, Chunk, DataType, Scalar, TypedArray } from "@zarrita/core";
 import type { Mutable } from "@zarrita/storage";
 
+import { type Array, get_context } from "../hierarchy.js";
+import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
 	Indices,
@@ -29,7 +29,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		set_from_chunk: SetFromChunk<Dtype, Arr>;
 	},
 ) {
-	const context = _internal_get_array_context(arr);
+	const context = get_context(arr);
 	if (context.kind === "sharded") {
 		throw new Error("Set not supported for sharded arrays.");
 	}
