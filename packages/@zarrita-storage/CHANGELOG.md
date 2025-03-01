@@ -1,5 +1,29 @@
 # @zarrita/storage
 
+## 0.1.0
+
+### Minor Changes
+
+- fix(storage): Rename storage type `Writeable` to `Writable` ([#114](https://github.com/manzt/zarrita.js/pull/114))
+
+### Patch Changes
+
+- Fix TypedArray types for TypeScript < 5.7 ([#239](https://github.com/manzt/zarrita.js/pull/239))
+
+  TypeScript changed the typing behavior of all `TypedArray` objects to now be generic over the underlying `ArrayBufferLike` type. In order to have our types be consistent with these changes, we needed to specify the `ArrayBuffer` explicitly, but that breaks for older versions of TypeScript. This PR fixes the version of TypeScript to 5.6. We will need to bump again when we want to support 5.7.
+
+- Use a counter to prioritize v2/v3 when opening. ([#109](https://github.com/manzt/zarrita.js/pull/109))
+
+- Remove use of public any from API in favor of unknown ([#173](https://github.com/manzt/zarrita.js/pull/173))
+
+- Consolidate @zarrita/core into zarrita ([#269](https://github.com/manzt/zarrita.js/pull/269))
+
+- Add default generic paramter to `ZipFileStore` ([#248](https://github.com/manzt/zarrita.js/pull/248))
+
+- `FetchStore` throws an error for 403 (forbidden) responses. This is a **breaking** change because previously `404` and `403` responses were treated the same way. Now, only `404` responses signify a "missing" key from the store. ([#212](https://github.com/manzt/zarrita.js/pull/212))
+
+- Add support for passing fetch options to ReferenceStore. ([#155](https://github.com/manzt/zarrita.js/pull/155))
+
 ## 0.1.0-next.10
 
 ### Patch Changes
