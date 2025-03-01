@@ -1,7 +1,6 @@
 ---
 "@zarrita/ndarray": patch
 "zarrita": patch
-"@zarrita/core": patch
 ---
 
 Conslidate `@zarrita/indexing` package into `@zarrita/core`
