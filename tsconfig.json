@@ -19,7 +19,6 @@
 	"references": [
 		{ "path": "packages/@zarrita-storage" },
 		{ "path": "packages/zarrita" },
-		{ "path": "packages/@zarrita-core" },
 		{ "path": "packages/@zarrita-ndarray" }
 	]
 }
