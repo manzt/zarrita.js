@@ -1,5 +1,12 @@
 # @zarrita/typedarray
 
+## 0.1.0-next.9
+
+### Patch Changes
+
+- Updated dependencies [[`574b809`](https://github.com/manzt/zarrita.js/commit/574b80933b5a9140327bb8e9d74f376613eab4e0)]:
+  - zarrita@0.4.0-next.26
+
 ## 0.1.0-next.8
 
 ### Patch Changes
