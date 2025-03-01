@@ -21,7 +21,6 @@
 	"references": [
 		{ "path": "packages/storage" },
 		{ "path": "packages/core" },
-		{ "path": "packages/indexing" },
 		{ "path": "packages/ndarray" },
 		{ "path": "packages/zarrita" }
 	]
