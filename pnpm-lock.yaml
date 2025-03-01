@@ -21,7 +21,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@types/node':
-        specifier: ^22.13.8
+        specifier: ^22.13.0
         version: 22.13.8
       publint:
         specifier: ^0.3.7
@@ -30,7 +30,7 @@ importers:
         specifier: 5.7.3
         version: 5.7.3
       vitest:
-        specifier: ^3.0.4
+        specifier: ^3.0.7
         version: 3.0.7(@types/node@22.13.8)
 
   docs:

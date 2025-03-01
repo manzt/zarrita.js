@@ -1,7 +1,16 @@
 import * as path from "node:path";
 import * as url from "node:url";
 import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
+import { Float16Array } from "@petamoriken/float16";
 
 import { NodeNotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
@@ -564,6 +573,41 @@ describe("v3", () => {
 			data: new Uint8Array([255, 0, 255, 0]),
 			shape: [4],
 			stride: [1],
+		});
+	});
+
+	describe("1d.contiguous.f2", () => {
+		describe("with Float16Array", () => {
+			beforeAll(() => {
+				// @ts-expect-error - Not supported in all environments
+				vi.stubGlobal("Float16Array", globalThis.Float16Array ?? Float16Array);
+			});
+			afterAll(() => {
+				vi.unstubAllGlobals();
+			});
+			it("1d.contiguous.f2.le", async () => {
+				let arr = await open.v3(store.resolve("1d.contiguous.f2.le"), {
+					kind: "array",
+				});
+				expect(await arr.getChunk([0])).toStrictEqual({
+					data: new Float16Array([-1000.5, 0, 1000.5, 0]),
+					shape: [4],
+					stride: [1],
+				});
+			});
+		});
+		describe("without Float16Array", () => {
+			beforeAll(() => {
+				vi.stubGlobal("Float16Array", undefined);
+			});
+			afterAll(() => {
+				vi.unstubAllGlobals();
+			});
+			it("1d.contiguous.f2.le", async () => {
+				await expect(() =>
+					open.v3(store.resolve("1d.contiguous.f2.le"), { kind: "array" }),
+				).rejects.toThrowError();
+			});
 		});
 	});
 

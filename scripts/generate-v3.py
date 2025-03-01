@@ -82,6 +82,16 @@ a = zarr.create_array(
 )
 a[:] = [255, 0, 255, 0]
 
+# 1d.contiguous.<f2
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.f2.le",
+    dtype="float16",
+    chunks=(4,),
+    shape=(4,),
+    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+)
+a[:] = [-1000.5, 0, 1000.5, 0]
 
 # 1d.contiguous.<f4
 a = zarr.create_array(
