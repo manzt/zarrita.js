@@ -12,11 +12,9 @@
 	},
 	"dependencies": {
 		"@types/ndarray-ops": "^1.2.4",
-		"@zarrita/core": "workspace:^",
-		"@zarrita/indexing": "workspace:^",
-		"@zarrita/storage": "workspace:^",
 		"ndarray": "^1.0.19",
-		"ndarray-ops": "^1.2.2"
+		"ndarray-ops": "^1.2.2",
+		"zarrita": "workspace:^"
 	},
 	"files": [
 		"dist"

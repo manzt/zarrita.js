@@ -1,7 +1,1 @@
-export {
-	get,
-	set,
-	slice,
-	type Slice,
-	type Indices,
-} from "zarrita";
+export * from "zarrita";
