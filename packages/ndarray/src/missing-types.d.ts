@@ -33,12 +33,17 @@ declare module "ndarray" {
 			length: number;
 		}
 
+		// Conditionally resolves Float16Array type if it exists on globalThis (determined by end-user TS version)
+		type MaybeFloat16Array = InstanceType<
+			typeof globalThis extends { Float16Array: infer T } ? T : never
+		>;
+
 		// biome-ignore lint/suspicious/noExplicitAny: not our library
 		type Data<T = any> = T extends number
 			? GenericArray<T> | T[] | TypedArray
 			: T extends bigint
-				? GenericArray<T> | T[] | BigInt64Array | BigUint64Array
-				: GenericArray<T> | T[];
+			? GenericArray<T> | T[] | BigInt64Array | BigUint64Array
+			: GenericArray<T> | T[];
 
 		type TypedArray =
 			| Int8Array
@@ -48,7 +53,7 @@ declare module "ndarray" {
 			| Uint8ClampedArray
 			| Uint16Array
 			| Uint32Array
-			| Float16Array
+			| MaybeFloat16Array
 			| Float32Array
 			| Float64Array;
 
@@ -59,33 +64,34 @@ declare module "ndarray" {
 			? T
 			: never;
 
+		// biome-ignore format: avoids indentation
 		type DataType<D extends Data = Data> = D extends Int8Array
 			? "int8"
 			: D extends Int16Array
-				? "int16"
-				: D extends Int32Array
-					? "int32"
-					: D extends Uint8Array
-						? "uint8"
-						: D extends Uint8ClampedArray
-							? "uint8_clamped"
-							: D extends Uint16Array
-								? "uint16"
-								: D extends Uint32Array
-									? "uint32"
-									: D extends Float16Array
-										? "float16"
-										: D extends Float32Array
-											? "float32"
-											: D extends Float64Array
-												? "float64"
-												: D extends BigInt64Array
-													? "bigint64"
-													: D extends BigUint64Array
-														? "biguint64"
-														: D extends GenericArray<unknown>
-															? "generic"
-															: "array";
+			? "int16"
+			: D extends Int32Array
+			? "int32"
+			: D extends Uint8Array
+			? "uint8"
+			: D extends Uint8ClampedArray
+			? "uint8_clamped"
+			: D extends Uint16Array
+			? "uint16"
+			: D extends Uint32Array
+			? "uint32"
+			: D extends MaybeFloat16Array
+			? "float16"
+			: D extends Float32Array
+			? "float32"
+			: D extends Float64Array
+			? "float64"
+			: D extends BigInt64Array
+			? "bigint64"
+			: D extends BigUint64Array
+			? "biguint64"
+			: D extends GenericArray<unknown>
+			? "generic"
+			: "array";
 	}
 
 	export = ndarray;
