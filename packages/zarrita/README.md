@@ -18,7 +18,7 @@ a minimal & modular Zarr implementation in TypeScript
 ## Installation
 
 ```sh
-npm install zarrita@next
+npm install zarrita
 ```
 
 Read

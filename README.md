@@ -1,6 +1,6 @@
 # zarrita.js <a href="https://manzt.github.io/zarrita.js"><img align="right" src="https://raw.githubusercontent.com/manzt/zarrita.js/main/docs/public/favicon.svg" height="38"></img></a>
 
-[![NPM](https://img.shields.io/npm/v/zarrita/next.svg?color=black)](https://www.npmjs.com/package/zarrita)
+[![NPM](https://img.shields.io/npm/v/zarrita.svg?color=black)](https://www.npmjs.com/package/zarrita)
 [![License](https://img.shields.io/npm/l/zarrita.svg?color=black)](https://github.com/manzt/zarrita.js/raw/main/LICENSE)
 ![GitHub Actions](https://github.com/manzt/zarrita.js/actions/workflows/ci.yml/badge.svg)
 
@@ -24,7 +24,7 @@ If you're developing an application with Node.js, you can install **zarrita**
 with yarn, npm, or pnpm:
 
 ```sh
-npm install zarrita@next
+npm install zarrita
 ```
 
 Read

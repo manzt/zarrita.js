@@ -8,7 +8,7 @@
 ## Installation
 
 ```sh
-npm install @zarrita/storage@next
+npm install @zarrita/storage
 ```
 
 ## Usage

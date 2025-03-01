@@ -9,7 +9,7 @@
 ## Installation
 
 ```sh
-npm install @zarrita/ndarray@next
+npm install @zarrita/ndarray
 ```
 
 ## Usage

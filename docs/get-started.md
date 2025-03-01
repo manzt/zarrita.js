@@ -24,7 +24,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita@next/+esm";
+  import * as zarr from "https://cdn.jsdelivr.net/npm/zarrita/+esm";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -48,7 +48,7 @@ automatically loads the other dependencies.
 ```html
 <!DOCTYPE html>
 <script type="module">
-  import * as zarr from "https://esm.sh/zarrita@next";
+  import * as zarr from "https://esm.sh/zarrita";
   const store = new zarr.FetchStore("https://raw.githubusercontent.com/zarr-developers/zarr_implementations/5dc998ac72/examples/zarr.zr/blosc");
   const arr = await zarr.open(store, { kind: "array" });
   // {
@@ -74,8 +74,8 @@ automatically loads the other dependencies.
 <script type="importmap">
   {
     "imports": {
-      "zarrita": "https://unpkg.com/zarrita@next",
-      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage@next/dist/src/fetch.js",
+      "zarrita": "https://unpkg.com/zarrita",
+      "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage/dist/src/fetch.js",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.3/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.3/lz4",
       "numcodecs/zlib": "https://unpkg.com/numcodecs@0.3/zlib",
@@ -116,19 +116,19 @@ via yarn, npm, pnpm:
 == npm
 
 ```sh
-npm install zarrita@next
+npm install zarrita
 ```
 
 == pnpm
 
 ```sh
-pnpm add zarrita@next
+pnpm add zarrita
 ```
 
 == yarn
 
 ```sh
-yarn add zarrita@next
+yarn add zarrita
 ```
 
 :::
