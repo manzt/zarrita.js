@@ -99,8 +99,8 @@ function create_context<Store extends Readable, D extends DataType>(
 				shape: configuration.chunk_shape,
 				codecs: configuration.codecs,
 			}),
-			get_strides(shape: number[], order?: "C" | "F") {
-				return get_strides(shape, order ?? native_order);
+			get_strides(shape: number[]) {
+				return get_strides(shape, native_order);
 			},
 			get_chunk_bytes: create_sharded_chunk_getter(
 				location,
@@ -121,8 +121,8 @@ function create_context<Store extends Readable, D extends DataType>(
 			shape: metadata.chunk_grid.configuration.chunk_shape,
 			codecs: metadata.codecs,
 		}),
-		get_strides(shape: number[], order?: "C" | "F") {
-			return get_strides(shape, order ?? native_order);
+		get_strides(shape: number[]) {
+			return get_strides(shape, native_order);
 		},
 		async get_chunk_bytes(chunk_coords, options) {
 			let chunk_key = shared_context.encode_chunk_key(chunk_coords);
@@ -142,7 +142,7 @@ interface ArrayContext<Store extends Readable, D extends DataType> {
 	/** The TypedArray constructor for this array chunks. */
 	TypedArray: TypedArrayConstructor<D>;
 	/** A function to get the strides for a given shape, using the array order */
-	get_strides(shape: number[], order?: "C" | "F"): number[];
+	get_strides(shape: number[]): number[];
 	/** The fill value for this array. */
 	fill_value: Scalar<D> | null;
 	/** A function to get the bytes for a given chunk. */

@@ -272,14 +272,4 @@ describe("ndarray", () => {
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 		expect(res.stride).toStrictEqual([1, 3, 9]);
 	});
-
-	it("3d.chunked.mixed.i2.F -- force C", async () => {
-		let arr = await zarr.open.v2(store.resolve("/3d.chunked.mixed.i2.F"), {
-			kind: "array",
-		});
-		let res = await get(arr, null, { order: "C" });
-		expect(res.data).toStrictEqual(new Int16Array(range(27)));
-		expect(res.shape).toStrictEqual([3, 3, 3]);
-		expect(res.stride).toStrictEqual([9, 3, 1]);
-	});
 });
