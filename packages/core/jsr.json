@@ -1,13 +1,13 @@
 {
-	"name": "@zarrita/core",
-	"version": "0.1.0-next.23",
+	"name": "@zarrita/zarrita",
+	"version": "0.4.0-next.26",
 	"license": "MIT",
 	"imports": {
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.9",
-		"numcodecs": "npm:numcodecs@^0.3.2"
+		"@zarrita/core": "jsr:@zarrita/core@^0.1.0-next.23",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.0-next.9"
 	},
 	"exports": {
-		".": "./src/index.ts"
+		".": "./index.ts"
 	},
 	"publish": {
 		"exclude": [

@@ -1,31 +1,34 @@
 {
-	"name": "zarrita",
-	"version": "0.4.0-next.26",
+	"name": "@zarrita/core",
+	"version": "0.1.0-next.23",
 	"license": "MIT",
-	"homepage": "https://manzt.github.io/zarrita.js/",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/manzt/zarrita.js.git"
-	},
 	"type": "module",
 	"sideEffects": false,
+	"files": [
+		"dist/"
+	],
 	"exports": {
 		".": {
-			"types": "./index.ts",
-			"import": "./index.ts"
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
 		}
 	},
 	"dependencies": {
-		"@zarrita/core": "workspace:^",
-		"@zarrita/storage": "workspace:^"
+		"@zarrita/storage": "workspace:^",
+		"numcodecs": "^0.3.2"
+	},
+	"devDependencies": {
+		"@types/ndarray": "^1.0.11",
+		"@types/ndarray-ops": "^1.2.4",
+		"ndarray": "^1.0.19",
+		"ndarray-ops": "^1.2.2"
 	},
 	"publishConfig": {
-		"main": "dist/index.js",
-		"types": "dist/index.d.ts",
+		"main": "dist/src/index.js",
 		"exports": {
 			".": {
-				"types": "./dist/index.d.ts",
-				"import": "./dist/index.js"
+				"types": "./dist/src/index.d.ts",
+				"import": "./dist/src/index.js"
 			}
 		}
 	}
