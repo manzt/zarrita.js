@@ -1,5 +1,16 @@
 # zarrita
 
+## 0.4.0-next.26
+
+### Patch Changes
+
+- Conslidate `@zarrita/indexing` package into `@zarrita/core` ([#262](https://github.com/manzt/zarrita.js/pull/262))
+
+  Now `@zarrita/indexing` re-exports from `zarrita`. End users should prefer to import from `zarrita`.
+
+- Updated dependencies [[`574b809`](https://github.com/manzt/zarrita.js/commit/574b80933b5a9140327bb8e9d74f376613eab4e0), [`cef0c89`](https://github.com/manzt/zarrita.js/commit/cef0c89b608b3312836f07de12f24029a19456d6)]:
+  - @zarrita/core@0.1.0-next.23
+
 ## 0.4.0-next.25
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @zarrita/core
 
+## 0.1.0-next.23
+
+### Patch Changes
+
+- Conslidate `@zarrita/indexing` package into `@zarrita/core` ([#262](https://github.com/manzt/zarrita.js/pull/262))
+
+  Now `@zarrita/indexing` re-exports from `zarrita`. End users should prefer to import from `zarrita`.
+
+- Remove import from `node:assert` ([#263](https://github.com/manzt/zarrita.js/pull/263))
+
 ## 0.1.0-next.22
 
 ### Minor Changes
