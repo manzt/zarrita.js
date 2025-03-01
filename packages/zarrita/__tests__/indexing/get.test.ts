@@ -518,13 +518,6 @@ describe("get v2", () => {
 		expect(res.stride).toStrictEqual([1, 3, 9]);
 	});
 
-	it("3d.chunked.mixed.i2.F -- force C", async () => {
-		let res = await get_v2("/3d.chunked.mixed.i2.F", null, { order: "C" });
-		expect(res.data).toStrictEqual(new Int16Array(range(27)));
-		expect(res.shape).toStrictEqual([3, 3, 3]);
-		expect(res.stride).toStrictEqual([9, 3, 1]);
-	});
-
 	it("3d.chunked.O", async () => {
 		let arr = await get_v2("/3d.chunked.O");
 		expect(arr).toStrictEqual({
@@ -666,14 +659,5 @@ describe("get v3", () => {
 		]));
 		expect(res.shape).toStrictEqual([3, 3, 3]);
 		expect(res.stride).toStrictEqual([1, 3, 9]);
-	});
-
-	it("3d.chunked.mixed.i2.F -- force C", async () => {
-		let res = await get_v3("/3d.chunked.mixed.i2.F", null, {
-			order: "C",
-		});
-		expect(res.data).toStrictEqual(new Int16Array(range(27)));
-		expect(res.shape).toStrictEqual([3, 3, 3]);
-		expect(res.stride).toStrictEqual([9, 3, 1]);
 	});
 });

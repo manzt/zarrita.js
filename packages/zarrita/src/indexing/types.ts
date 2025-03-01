@@ -44,7 +44,7 @@ export type Options = {
 	create_queue?: () => ChunkQueue;
 };
 
-export type GetOptions<O> = Options & { opts?: O; order?: "C" | "F" };
+export type GetOptions<O> = Options & { opts?: O };
 
 export type SetOptions = Options;
 

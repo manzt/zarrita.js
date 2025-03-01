@@ -42,10 +42,11 @@ export async function get<
 		shape: arr.shape,
 		chunk_shape: arr.chunks,
 	});
+
 	let out = setter.prepare(
 		new context.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
 		indexer.shape,
-		context.get_strides(indexer.shape, opts.order),
+		context.get_strides(indexer.shape),
 	);
 
 	let queue = opts.create_queue?.() ?? create_queue();
