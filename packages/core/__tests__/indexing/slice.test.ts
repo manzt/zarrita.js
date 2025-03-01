@@ -1,13 +1,13 @@
-import * as zarr from "@zarrita/core";
 import { describe, expect, it } from "vitest";
 
-import { IndexError } from "../src/indexer.js";
-import * as ops from "../src/ops.js";
-import { slice } from "../src/util.js";
+import * as zarr from "../../src/index.js";
+import { IndexError } from "../../src/indexing/indexer.js";
+import * as ops from "../../src/indexing/ops.js";
+import { slice } from "../../src/indexing/util.js";
 
 const DATA = {
 	// biome-ignore format: the array should not be formatted
-	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 ]),
+	data: new Int32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]),
 	shape: [2, 3, 4],
 	stride: [12, 4, 1],
 };

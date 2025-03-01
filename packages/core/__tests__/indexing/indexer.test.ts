@@ -3,9 +3,9 @@ import {
 	BasicIndexer,
 	normalize_integer_selection,
 	normalize_selection,
-} from "../src/indexer.js";
-import type { Slice } from "../src/types.js";
-import { slice } from "../src/util.js";
+} from "../../src/indexing/indexer.js";
+import type { Slice } from "../../src/indexing/types.js";
+import { slice } from "../../src/indexing/util.js";
 
 describe("normalize_selection", () => {
 	// null !== null, so need custom compare

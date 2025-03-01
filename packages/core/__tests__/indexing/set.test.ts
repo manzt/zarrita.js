@@ -1,10 +1,9 @@
 import ndarray from "ndarray";
 import { expect, test } from "vitest";
 
-import * as zarr from "@zarrita/core";
-
-import { get, set } from "../src/ops.js";
-import { range, slice } from "../src/util.js";
+import * as zarr from "../../src/index.js";
+import { get, set } from "../../src/indexing/ops.js";
+import { range, slice } from "../../src/indexing/util.js";
 
 test("Read and write array data - builtin", async () => {
 	let h = zarr.root(new Map());
@@ -71,9 +70,9 @@ test("Read and write array data - builtin", async () => {
 	res = await get(a, [null, slice(0, 7)]);
 	expect(res.shape).toStrictEqual([5, 7]);
 	// biome-ignore format: the array should not be formatted
-	expect(res.data).toStrictEqual(new Int32Array([ 
-		 0,  1,  2,  3,  4,
-		 5,  6, 10, 11, 12,
+	expect(res.data).toStrictEqual(new Int32Array([
+		0, 1, 2, 3, 4,
+		5, 6, 10, 11, 12,
 		13, 14, 15, 16, 20,
 		21, 22, 23, 24, 25,
 		26, 30, 31, 32, 33,
@@ -85,7 +84,7 @@ test("Read and write array data - builtin", async () => {
 	expect(res.shape).toStrictEqual([3, 10]);
 	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([
-		 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 	]));
@@ -93,7 +92,7 @@ test("Read and write array data - builtin", async () => {
 	expect(res.shape).toStrictEqual([3, 7]);
 	// biome-ignore format: the array should not be formatted
 	expect(res.data).toStrictEqual(new Int32Array([
-		 0,  1,  2,  3,  4,  5,  6,
+		0, 1, 2, 3, 4, 5, 6,
 		10, 11, 12, 13, 14, 15, 16,
 		20, 21, 22, 23, 24, 25, 26,
 	]));
