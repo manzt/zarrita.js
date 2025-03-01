@@ -1,5 +1,5 @@
 ---
-"@zarrita/indexing": minor
+"zarrita": minor
 "@zarrita/ndarray": minor
 ---
 

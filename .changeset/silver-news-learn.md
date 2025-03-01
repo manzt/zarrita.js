@@ -1,5 +1,5 @@
 ---
-"@zarrita/core": patch
+"zarrita": patch
 ---
 
 fix: Allow omitting codec configuration

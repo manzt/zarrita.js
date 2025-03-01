@@ -1,5 +1,5 @@
 ---
-"@zarrita/core": minor
+"zarrita": minor
 ---
 
 feat: Add `tryWithConsolidated` store helper

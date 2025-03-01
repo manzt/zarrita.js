@@ -1,5 +1,5 @@
 ---
-"@zarrita/indexing": patch
+"zarrita": patch
 ---
 
 feat: generalize chunk-indexing/slicing operations

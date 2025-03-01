@@ -1,5 +1,5 @@
 ---
-"@zarrita/core": patch
+"zarrita": patch
 ---
 
 Add json2 codec.

@@ -1,5 +1,5 @@
 ---
-"@zarrita/indexing": patch
+"zarrita": patch
 ---
 
 Add deprecation notice to @zarrita/indexing

@@ -1,9 +1,6 @@
 ---
-"@zarrita/core": patch
-"@zarrita/indexing": patch
 "@zarrita/ndarray": patch
 "@zarrita/storage": patch
-"@zarrita/typedarray": patch
 "zarrita": patch
 ---
 

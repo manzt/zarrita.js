@@ -1,7 +1,5 @@
 ---
-"@zarrita/indexing": minor
 "zarrita": minor
-"@zarrita/core": minor
 ---
 
 feat: Add `withConsolidated` store utility

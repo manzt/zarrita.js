@@ -1,5 +1,5 @@
 ---
-"@zarrita/core": patch
+"zarrita": patch
 ---
 
 Support read-only `bitround` codec

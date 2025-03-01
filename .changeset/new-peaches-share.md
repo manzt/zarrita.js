@@ -1,5 +1,4 @@
 ---
-"@zarrita/core": patch
 "@zarrita/ndarray": patch
 "@zarrita/storage": patch
 "zarrita": patch
