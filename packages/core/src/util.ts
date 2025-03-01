@@ -232,11 +232,6 @@ export type NarrowDataType<
 				? ObjectType
 				: Extract<Query, Dtype>;
 
-function supportsFloat16() {
-	// @ts-expect-error - Float16Array not available in TS<8
-	return globalThis.Float16Array !== undefined;
-}
-
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,
 	query: Query,

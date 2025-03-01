@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as url from "node:url";
+import { Float16Array } from "@petamoriken/float16";
 import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
 import {
 	afterAll,
@@ -10,7 +11,6 @@ import {
 	it,
 	vi,
 } from "vitest";
-import { Float16Array } from "@petamoriken/float16";
 
 import { NodeNotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
