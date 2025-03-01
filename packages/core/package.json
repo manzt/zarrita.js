@@ -1,6 +1,6 @@
 {
 	"name": "@zarrita/core",
-	"version": "0.1.0-next.21",
+	"version": "0.1.0-next.22",
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,

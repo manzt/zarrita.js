@@ -1,5 +1,19 @@
 # @zarrita/ndarray
 
+## 0.1.0-next.24
+
+### Minor Changes
+
+- Support `float16` in environments with [`Float16Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float16Array) typed array. Since `Float16Array` is a new standard and not yet widely supported, some JavaScript runtimes may not support it. If unavailable, you can still use `float16` with `zarrita` by adding a [polyfill](https://github.com/petamoriken/float16). ([#250](https://github.com/manzt/zarrita.js/pull/250))
+
+  Support is provided at both the type level (depending on the TypeScript config) and at runtime by checking `globalThis`. TypeScript users should ensure their target environment aligns with the expected types.
+
+### Patch Changes
+
+- Updated dependencies [[`918267a`](https://github.com/manzt/zarrita.js/commit/918267a116b16c742127439702e0790e592d0f7f)]:
+  - @zarrita/core@0.1.0-next.22
+  - @zarrita/indexing@0.1.0-next.24
+
 ## 0.1.0-next.23
 
 ### Patch Changes
