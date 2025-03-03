@@ -39,7 +39,7 @@ export default defineConfig({
 				text: "Packages",
 				collapsed: false,
 				items: [
-					{ text: "@zarrita/core", link: "/packages/core" },
+					{ text: "zarrita", link: "/packages/zarrita" },
 					{ text: "@zarrita/storage", link: "/packages/storage" },
 					{ text: "@zarrita/ndarray", link: "/packages/ndarray" },
 				],

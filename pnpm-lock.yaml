@@ -45,12 +45,6 @@ importers:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.8.2)
 
-  packages/@zarrita-core:
-    dependencies:
-      zarrita:
-        specifier: workspace:^
-        version: link:../zarrita
-
   packages/@zarrita-ndarray:
     dependencies:
       '@types/ndarray-ops':

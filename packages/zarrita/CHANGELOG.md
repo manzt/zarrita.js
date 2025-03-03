@@ -1,4 +1,4 @@
-# @zarrita/core
+# zarrita
 
 ## 0.4.0
 
