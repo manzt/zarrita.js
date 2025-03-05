@@ -51,6 +51,9 @@ hero:
     - theme: alt
       text: View on GitHub
       link: https://github.com/manzt/zarrita.js
+    - theme: alt
+      text: API Docs
+      link: https://jsr.io/@zarrita/zarrita
 
 features:
   - title: Modular design

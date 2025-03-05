@@ -22,7 +22,7 @@
     {
       "name": "bytes",
       "configuration": {
-        "endian": "little"
+        "endian": "big"
       }
     },
     {

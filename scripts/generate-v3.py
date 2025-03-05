@@ -32,6 +32,7 @@ a = zarr.create_array(
     dtype="int16",
     shape=(4,),
     chunks=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = [1, 2, 3, 4]
@@ -43,6 +44,7 @@ a = zarr.create_array(
     dtype="int16",
     shape=(4,),
     chunks=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [1, 2, 3, 4]
@@ -54,6 +56,7 @@ a = zarr.create_array(
     dtype="int16",
     shape=(4,),
     chunks=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=None,
 )
 a[:] = [1, 2, 3, 4]
@@ -66,6 +69,7 @@ a = zarr.create_array(
     dtype="int32",
     chunks=(4,),
     shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [1, 2, 3, 4]
@@ -89,7 +93,10 @@ a = zarr.create_array(
     dtype="float16",
     chunks=(4,),
     shape=(4,),
-    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=[
+        zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle"),
+    ],
 )
 a[:] = [-1000.5, 0, 1000.5, 0]
 
@@ -100,6 +107,7 @@ a = zarr.create_array(
     dtype="float32",
     chunks=(4,),
     shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [-1000.5, 0, 1000.5, 0]
@@ -111,6 +119,7 @@ a = zarr.create_array(
     dtype="float32",
     chunks=(4,),
     shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="big"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [-1000.5, 0, 1000.5, 0]
@@ -122,6 +131,7 @@ a = zarr.create_array(
     dtype="float64",
     chunks=(4,),
     shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [1.5, 2.5, 3.5, 4.5]
@@ -146,6 +156,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(2,),
     shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [1, 2, 3, 4]
@@ -166,6 +177,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(2,),
     shape=(5,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [1, 2, 3, 4, 5]
@@ -177,6 +189,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(2, 2),
     shape=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [[1, 2], [3, 4]]
@@ -188,6 +201,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(1, 1),
     shape=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [[1, 2], [3, 4]]
@@ -199,6 +213,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(2, 2),
     shape=(3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -210,6 +225,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(3, 3, 3),
     shape=(3, 3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
@@ -221,6 +237,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(1, 1, 1),
     shape=(3, 3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
@@ -232,6 +249,7 @@ a = zarr.create_array(
     dtype="int16",
     chunks=(3, 3, 1),
     shape=(3, 3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
@@ -246,6 +264,7 @@ a = zarr.create_array(
     filters=[
         zarr.codecs.TransposeCodec(order=[2, 1, 0])  # column major
     ],
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
@@ -261,6 +280,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(4,),
     shards=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -274,6 +294,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(4,),
     shards=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -301,6 +322,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(4,),
     shards=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -314,6 +336,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(4,),
     shards=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -341,6 +364,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1,),
     shards=(2,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -354,6 +378,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1,),
     shards=(2,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:] = data
@@ -380,6 +405,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(2, 2),
     shards=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :] = data
@@ -393,6 +419,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1, 1),
     shards=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :] = data
@@ -406,6 +433,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1, 1),
     shards=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :] = data
@@ -419,6 +447,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1, 1),
     shards=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :] = data
@@ -433,6 +462,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(3, 3, 3),
     shards=(3, 3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :, :] = data
@@ -446,6 +476,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(1, 1, 1),
     shards=(2, 2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :, :] = data
@@ -459,6 +490,7 @@ a = zarr.create_array(
     dtype=data.dtype,
     chunks=(3, 3, 1),
     shards=(3, 3, 3),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :, :] = data
