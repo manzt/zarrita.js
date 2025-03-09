@@ -4,9 +4,11 @@ import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 import { BitroundCodec } from "./codecs/bitround.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
+import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
+import { ZlibCodec } from "./codecs/zlib.js";
 import { assert } from "./util.js";
 
 type ChunkMetadata<D extends DataType> = {
@@ -25,10 +27,10 @@ type Codec = _Codec & { kind: CodecEntry["kind"] };
 function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 	return new Map()
 		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
-		.set("gzip", () => import("numcodecs/gzip").then((m) => m.default))
 		.set("lz4", () => import("numcodecs/lz4").then((m) => m.default))
-		.set("zlib", () => import("numcodecs/zlib").then((m) => m.default))
 		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
+		.set("gzip", () => GzipCodec)
+		.set("zlib", () => ZlibCodec)
 		.set("transpose", () => TransposeCodec)
 		.set("bytes", () => BytesCodec)
 		.set("crc32c", () => Crc32cCodec)
