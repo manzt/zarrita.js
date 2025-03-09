@@ -4,9 +4,9 @@
 
 Replace default `gzip`/`zlib` codecs with dependency-less decode-only versions
 
-This is a **breaking change**. Since usage of **zarrita** is primarily read-only, this change replaces the default `numcodecs/gzip` and `numcodecs/zlib` codecs with custom decode-only codecs based on the builtin `DecompressionStream` API.
+This is a **breaking change** since by default **zarrita** no longer supports _encoding_ with these codecs. The new implementation is based on the [`DecompressionStream`](https://developer.mozilla.org/en-US/docs/Web/API/DecompressionStream) API, preferring a built-in (i.e., dependency-free) solution for the majority use case (read-only) with zarrita.
 
-These changes reduce dynamic imports and remove additional dependencies for the majority use case. Users who require encoding must explicitly register their own codecs from `numcodecs`.
+Encoding remains supported but must be explicitly enabled with a custom codec from `numcodecs`:
 
 ```ts
 import * as zarr from "zarrita";
