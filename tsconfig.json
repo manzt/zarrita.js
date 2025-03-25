@@ -9,6 +9,7 @@
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
 		"declaration": true,
+		"sourceMap": true,
 		/* Linting */
 		"strict": true,
 		"noUnusedLocals": true,
