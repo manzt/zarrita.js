@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.1
+
+### Patch Changes
+
+- Emit and publish [sourcemap files](http://web.dev/articles/source-maps) ([#278](https://github.com/manzt/zarrita.js/pull/278))
+
 ## 0.1.0
 
 ### Minor Changes

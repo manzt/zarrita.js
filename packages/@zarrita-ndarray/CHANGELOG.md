@@ -1,5 +1,14 @@
 # @zarrita/ndarray
 
+## 0.1.2
+
+### Patch Changes
+
+- Emit and publish [sourcemap files](http://web.dev/articles/source-maps) ([#278](https://github.com/manzt/zarrita.js/pull/278))
+
+- Updated dependencies [[`e6b580c`](https://github.com/manzt/zarrita.js/commit/e6b580c0c8e4c2088cce924236f9a3a7273f522f)]:
+  - zarrita@0.5.1
+
 ## 0.1.1
 
 ### Patch Changes
