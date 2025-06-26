@@ -72,12 +72,12 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 
 /** Options for {@linkcode withConsolidated} and {@linkcode tryWithConsolidated}. */
 export interface WithConsolidatedOptions {
-  /**
-   * Key to read consolidated metadata from.
-   *
-   * @default {".zmetadata"}
-   */
-  readonly metadataKey?: string;
+	/**
+	 * Key to read consolidated metadata from.
+	 *
+	 * @default {".zmetadata"}
+	 */
+	readonly metadataKey?: string;
 }
 
 /**
