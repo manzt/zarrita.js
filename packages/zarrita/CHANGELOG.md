@@ -1,5 +1,11 @@
 # zarrita
 
+## 0.5.2
+
+### Patch Changes
+
+- Add support for options.metadataKey in withConsolidated and tryWithConsolidated" ([#283](https://github.com/manzt/zarrita.js/pull/283))
+
 ## 0.5.1
 
 ### Patch Changes
