@@ -70,8 +70,14 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 	return "zarr_format" in meta && meta.zarr_format === 3;
 }
 
-interface WithConsolidatedOptions {
-	metadataKey?: string;
+/** Options for {@linkcode withConsolidated} and {@linkcode tryWithConsolidated}. */
+export interface WithConsolidatedOptions {
+  /**
+   * Key to read consolidated metadata from.
+   *
+   * @default {".zmetadata"}
+   */
+  readonly metadataKey?: string;
 }
 
 /**
