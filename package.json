@@ -4,7 +4,7 @@
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest --api",
-		"format": "biome format .",
+		"format": "format .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
