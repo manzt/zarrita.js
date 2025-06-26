@@ -33,11 +33,13 @@ export interface Listable<Store extends Readable> {
 
 async function get_consolidated_metadata(
 	store: Readable,
+	metadataKeyOption: string | undefined,
 ): Promise<ConsolidatedMetadata> {
-	let bytes = await store.get("/.zmetadata");
+	const metadataKey = metadataKeyOption ?? ".zmetadata";
+	let bytes = await store.get(`/${metadataKey}`);
 	if (!bytes) {
 		throw new NodeNotFoundError("v2 consolidated metadata", {
-			cause: new KeyError("/.zmetadata"),
+			cause: new KeyError(`/${metadataKey}`),
 		});
 	}
 	let meta: ConsolidatedMetadata = json_decode_object(bytes);
@@ -68,6 +70,16 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 	return "zarr_format" in meta && meta.zarr_format === 3;
 }
 
+/** Options for {@linkcode withConsolidated} and {@linkcode tryWithConsolidated}. */
+export interface WithConsolidatedOptions {
+	/**
+	 * Key to read consolidated metadata from.
+	 *
+	 * @default {".zmetadata"}
+	 */
+	readonly metadataKey?: string;
+}
+
 /**
  * Open a consolidated store.
  *
@@ -75,6 +87,7 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
  * @see {@link https://zarr.readthedocs.io/en/stable/spec/v2.html#consolidated-metadata}
  *
  * @param store The store to open.
+ * @param opts Options object.
  * @returns A listable store.
  *
  * @example
@@ -89,8 +102,9 @@ function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
  */
 export async function withConsolidated<Store extends Readable>(
 	store: Store,
+	opts: WithConsolidatedOptions = {},
 ): Promise<Listable<Store>> {
-	let v2_meta = await get_consolidated_metadata(store);
+	let v2_meta = await get_consolidated_metadata(store, opts.metadataKey);
 	let known_meta: Record<AbsolutePath, Metadata> = {};
 	for (let [key, value] of Object.entries(v2_meta.metadata)) {
 		known_meta[`/${key}`] = value;
@@ -142,12 +156,14 @@ export async function withConsolidated<Store extends Readable>(
  * additional network requests when accessing underlying groups and arrays.
  *
  * @param store The store to open.
+ * @param opts Options to pass to withConsolidated.
  * @returns A listable store.
  */
 export async function tryWithConsolidated<Store extends Readable>(
 	store: Store,
+	opts: WithConsolidatedOptions = {},
 ): Promise<Listable<Store> | Store> {
-	return withConsolidated(store).catch((error: unknown) => {
+	return withConsolidated(store, opts).catch((error: unknown) => {
 		rethrow_unless(error, NodeNotFoundError);
 		return store;
 	});
