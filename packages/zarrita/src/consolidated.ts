@@ -35,7 +35,7 @@ async function get_consolidated_metadata(
 	store: Readable,
 	metadataKeyOption: string | undefined,
 ): Promise<ConsolidatedMetadata> {
-	const metadataKey = metadataKeyOption ?? '.zmetadata';
+	const metadataKey = metadataKeyOption ?? ".zmetadata";
 	let bytes = await store.get(`/${metadataKey}`);
 	if (!bytes) {
 		throw new NodeNotFoundError("v2 consolidated metadata", {
