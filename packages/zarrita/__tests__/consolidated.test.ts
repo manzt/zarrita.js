@@ -123,6 +123,18 @@ describe("tryWithConsolidated", () => {
 		let store = await tryWithConsolidated(new FileSystemStore(root));
 		expect(store).toBeInstanceOf(FileSystemStore);
 	});
+
+	it("supports a zmetadataKey option", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await tryWithConsolidated(new FileSystemStore(root), { metadataKey: '.zmetadata' });
+		expect(store).toHaveProperty("contents");
+	});
+
+	it("falls back to original store if metadataKey is incorrect", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await tryWithConsolidated(new FileSystemStore(root), { metadataKey: '.nonexistent' });
+		expect(store).toBeInstanceOf(FileSystemStore);
+	});
 });
 
 describe("Listable.getRange", () => {
