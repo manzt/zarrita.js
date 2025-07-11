@@ -1,6 +1,6 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"license": "MIT",
 	"imports": {
 		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.1",
