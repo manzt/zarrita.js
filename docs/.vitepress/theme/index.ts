@@ -1,6 +1,6 @@
-import { enhanceAppWithTabs } from "vitepress-plugin-tabs/client";
 // https://vitepress.dev/guide/custom-theme
 import Theme from "vitepress/theme";
+import { enhanceAppWithTabs } from "vitepress-plugin-tabs/client";
 
 import "./style.css";
 

@@ -139,7 +139,7 @@ export class JsonCodec {
 		items.push("|O");
 		items.push(buf.shape);
 
-		let replacer: ReplacerFunction | undefined = undefined;
+		let replacer: ReplacerFunction | undefined;
 		if (replacer_functions.length) {
 			replacer = (key, value) => {
 				let new_value = value;

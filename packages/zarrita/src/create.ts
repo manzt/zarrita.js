@@ -27,12 +27,12 @@ interface CreateArrayOptions<Dtype extends DataType> {
 
 export async function create<
 	Store extends Mutable,
-	Dtype extends DataType = DataType,
+	_Dtype extends DataType = DataType,
 >(location: Location<Store> | Store): Promise<Group<Store>>;
 
 export async function create<
 	Store extends Mutable,
-	Dtype extends DataType = DataType,
+	_Dtype extends DataType = DataType,
 >(
 	location: Location<Store> | Store,
 	options: CreateGroupOptions,

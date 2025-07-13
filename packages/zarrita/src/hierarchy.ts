@@ -1,6 +1,6 @@
 import type { AbsolutePath, Readable } from "@zarrita/storage";
-import { create_codec_pipeline } from "./codecs.js";
 import { create_sharded_chunk_getter } from "./codecs/sharding.js";
+import { create_codec_pipeline } from "./codecs.js";
 import type {
 	ArrayMetadata,
 	Attributes,
@@ -12,16 +12,14 @@ import type {
 	TypedArrayConstructor,
 } from "./metadata.js";
 import {
-	type DataTypeQuery,
-	type NarrowDataType,
-	is_dtype,
-	is_sharding_codec,
-} from "./util.js";
-import {
 	create_chunk_key_encoder,
+	type DataTypeQuery,
 	ensure_correct_scalar,
 	get_ctr,
 	get_strides,
+	is_dtype,
+	is_sharding_codec,
+	type NarrowDataType,
 } from "./util.js";
 
 export class Location<Store> {

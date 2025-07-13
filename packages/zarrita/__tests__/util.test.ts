@@ -1,17 +1,16 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import type { DataType } from "../src/metadata.js";
 import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "../src/typedarray.js";
+import {
 	byteswap_inplace,
 	get_ctr,
 	get_strides,
 	is_dtype,
 } from "../src/util.js";
-
-import {
-	BoolArray,
-	ByteStringArray,
-	UnicodeStringArray,
-} from "../src/typedarray.js";
 
 describe("get_ctr", () => {
 	describe("without Float16Array", () => {

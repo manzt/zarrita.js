@@ -1,6 +1,6 @@
 import ndarray from "ndarray";
 import { describe, expect, it } from "vitest";
-import { IndexError, create, slice } from "zarrita";
+import { create, IndexError, slice } from "zarrita";
 
 import { get, set } from "../src/index.js";
 
