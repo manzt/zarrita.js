@@ -589,7 +589,9 @@ describe("v3", () => {
 					kind: "array",
 				});
 				expect(await arr.getChunk([0])).toStrictEqual({
-					data: new Float16Array([-1000.5, 0, 1000.5, 0]),
+					data: new (globalThis.Float16Array ?? Float16Array)([
+						-1000.5, 0, 1000.5, 0,
+					]),
 					shape: [4],
 					stride: [1],
 				});

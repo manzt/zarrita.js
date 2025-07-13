@@ -1,7 +1,9 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-	"organizeImports": {
-		"enabled": true
+	"$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
+	"assist": {
+		"actions": {
+			"source": { "organizeImports": "on" }
+		}
 	},
 	"linter": {
 		"enabled": true,
@@ -17,7 +19,13 @@
 		}
 	},
 	"files": {
-		"ignore": ["fixtures", ".changeset", "package.json", "jsr.json"]
+		"includes": [
+			"**",
+			"!**/fixtures",
+			"!**/.changeset",
+			"!**/package.json",
+			"!**/jsr.json"
+		]
 	},
 	"vcs": {
 		"enabled": true,

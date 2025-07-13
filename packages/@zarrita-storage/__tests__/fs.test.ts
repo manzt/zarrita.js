@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import FileSystemStore from "../src/fs.js";
 

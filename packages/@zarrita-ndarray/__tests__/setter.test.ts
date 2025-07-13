@@ -2,8 +2,8 @@ import ndarray, { type TypedArray } from "ndarray";
 import { assign } from "ndarray-ops";
 import { describe, expect, it } from "vitest";
 import {
-	type Projection,
 	_zarrita_internal_get_strides as get_strides,
+	type Projection,
 	slice,
 	_zarrita_internal_slice_indices as slice_indices,
 } from "zarrita";

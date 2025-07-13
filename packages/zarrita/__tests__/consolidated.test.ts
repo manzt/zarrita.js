@@ -1,8 +1,7 @@
 import * as path from "node:path";
 import * as url from "node:url";
-import { assert, describe, expect, it } from "vitest";
-
 import { FileSystemStore } from "@zarrita/storage";
+import { assert, describe, expect, it } from "vitest";
 import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
 import { NodeNotFoundError } from "../src/errors.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";

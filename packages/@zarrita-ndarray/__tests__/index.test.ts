@@ -1,8 +1,7 @@
 import * as path from "node:path";
 import * as url from "node:url";
-import { describe, expect, it } from "vitest";
-
 import { FileSystemStore } from "@zarrita/storage";
+import { describe, expect, it } from "vitest";
 import * as zarr from "zarrita";
 
 import { get } from "../src/index.js";

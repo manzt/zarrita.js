@@ -1,9 +1,3 @@
-import {
-	BoolArray,
-	ByteStringArray,
-	UnicodeStringArray,
-} from "./typedarray.js";
-
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -17,6 +11,11 @@ import type {
 	StringDataType,
 	TypedArrayConstructor,
 } from "./metadata.js";
+import {
+	BoolArray,
+	ByteStringArray,
+	UnicodeStringArray,
+} from "./typedarray.js";
 
 export function json_encode_object(o: Record<string, unknown>): Uint8Array {
 	const str = JSON.stringify(o, null, 2);

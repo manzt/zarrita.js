@@ -1,8 +1,7 @@
-import { unzip } from "unzipit";
-import { assert, fetch_range, strip_prefix } from "./util.js";
-
 import type { Reader, ZipInfo } from "unzipit";
+import { unzip } from "unzipit";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
+import { assert, fetch_range, strip_prefix } from "./util.js";
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}

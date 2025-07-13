@@ -1,9 +1,8 @@
+import type { Readable } from "@zarrita/storage";
+import { create_codec_pipeline } from "../codecs.js";
 import type { Location } from "../hierarchy.js";
 import type { Chunk } from "../metadata.js";
 import { assert, type ShardingCodecMetadata } from "../util.js";
-
-import type { Readable } from "@zarrita/storage";
-import { create_codec_pipeline } from "../codecs.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
 
