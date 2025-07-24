@@ -5,7 +5,7 @@ hierarchy and load individual array chunks.
 
 ## Zarr hierarchy
 
-A Zarr dataset is structured as a hierarchy, composed up of **arrays** and
+A Zarr dataset is structured as a hierarchy, composed of **arrays** and
 **groups**. This hierarchy can be visualized in a manner similar to a file
 system:
 
@@ -96,7 +96,7 @@ let arr = await zarr.open.v2(root.resolve("foo/bar"), { kind: "array" });
 
 ### Access a chunk
 
-To load individual **array** chunks on demand base on their key, use the
+To load individual **array** chunks on demand based on their key, use the
 `Array.getChunk` method. This feature is useful in applications where you want
 to load chunks lazily (i.e. a tiled image viewer).
 
@@ -123,7 +123,7 @@ console.log(chunk);
 - `stride` – the number of elements needed to advance one value along each
   dimension
 
-This is the minimal representation of the chunk data is often suitable for many
+This minimal representation of the chunk data is often suitable for many
 applications. However, for further processing or manipulations of the chunk
 data, you can integrate with [`scijs/ndarray`](https://github.com/scijs/ndarray)
 to convert it into an `ndarray` object.
@@ -214,7 +214,7 @@ to static type systems. **zarrita** leverages TypeScript's advanced typing
 capabilities to extract and communicate Zarr `data_type` metadata across its
 APIs.
 
-In essense, you (moreover your editor) is always informed about the data types
+In essence, you (moreover your editor) is always informed about the data types
 at hand when working with Zarr via **zarrita**. TypeScript assists in
 covering edge cases, but (importantly) steps back once you've demonstrated data
 correctness.
@@ -281,7 +281,7 @@ if (
 }
 ```
 
-Assert data types like this repeatedly can be cumbersome and repetative.
+Assert data types like this repeatedly can be cumbersome and repetitive.
 
 Instead, wouldn't it be convenient if you could verify the data type once, and
 then TypeScript would automatically understand the expected data type for all
@@ -291,11 +291,11 @@ subsequent `getChunk` calls?
 
 ```javascript
 if (!arr.is("int64") || !arr.is("uint64")) {
-  thow Error("data type not supported!");
+  throw Error("data type not supported!");
 }
 const chunk = await arr.getChunk([0, 0]);
    // ^ Chunk<"int64" | "uint64">
-getBigIntValue(cunk.data, 0); // 0n
+getBigIntValue(chunk.data, 0); // 0n
 ```
 
 With this method, you've informed TypeScript about the possible data types for

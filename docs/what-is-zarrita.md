@@ -46,7 +46,7 @@ const region = await get(arr, [null, null]);
 
 ### [@zarrita/storage](/packages/storage)
 
-- A collection of useful of storage backends for Zarr.
+- A collection of useful storage backends for Zarr.
 - Implement your own `Readable` and (optionally `Writable`) stores.
 
 

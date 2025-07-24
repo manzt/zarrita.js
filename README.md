@@ -59,7 +59,7 @@ Read [the documentation](https://manzt.github.io/zarrita.js) to learn more.
 
 zarrita's API is almost entirely tree-shakeable, meaning developers are able to
 pick and choose the features necessary for an application. This design choice
-differs from existing implemenations of Zarr in JavaScript, and allows zarrita
+differs from existing implementations of Zarr in JavaScript, and allows zarrita
 to be both minimal and more feature-complete if necessary.
 
 ```mermaid
