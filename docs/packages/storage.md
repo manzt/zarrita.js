@@ -44,7 +44,7 @@ creating their custom stores as needed.
 
 ## Implementations
 
-The **@zarrita/storage** package provides some useful storage implementions;
+The **@zarrita/storage** package provides some useful storage implementations;
 some are tailored for browsers, while others are designed for various JS
 runtimes like Node.js and Deno.
 
@@ -93,9 +93,8 @@ These options override the defaults for the store, except headers are merged
 
 ### FileSystemStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writable" />
 
-Designed for JavaScript runtimes with file system access, the The
-**FileSystemStore** is designed for JavaScript runtimes with file system access
-(i.e., server-side JavaScript). It is build atop the Node.js
+The **FileSystemStore** is designed for JavaScript runtimes with file system access
+(i.e., server-side JavaScript). It is built atop the Node.js
 [`fs`](https://nodejs.org/api/fs.html) module and is compatible with
 environments like Node.js, Bun, and Deno.
 
