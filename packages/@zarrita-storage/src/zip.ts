@@ -89,7 +89,7 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 
 	static fromUrl(
 		href: string | URL,
-		opts: ZipFileStoreOptions = {},
+		opts: { overrides?: RequestInit } & ZipFileStoreOptions = {},
 	): ZipFileStore<HTTPRangeReader> {
 		return new ZipFileStore(new HTTPRangeReader(href, opts), opts);
 	}
