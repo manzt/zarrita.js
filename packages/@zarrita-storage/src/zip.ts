@@ -29,7 +29,7 @@ export class HTTPRangeReader implements Reader {
 	#overrides: RequestInit;
 	constructor(
 		public url: string | URL,
-		opts: Pick<ZipFileStoreOptions, "overrides"> = {},
+		opts: { overrides?: RequestInit } = {},
 	) {
 		this.#overrides = opts.overrides ?? {};
 	}
