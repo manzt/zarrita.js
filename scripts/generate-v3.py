@@ -1,6 +1,8 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["zarr==3.1.1"]
+# dependencies = [
+#     "zarr==3.1.1",
+# ]
 #
 # [tool.uv]
 # exclude-newer = "2025-08-06T10:57:26.55032-05:00"

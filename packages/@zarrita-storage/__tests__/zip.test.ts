@@ -7,10 +7,11 @@ import type { ZipInfo } from "unzipit";
 import ZipFileStore from "../src/zip.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const store_v2_zipped_from_within_path = path.join(__dirname, "..", "..", "..", "fixtures", "v2", "data.zipped_from_within.zarr.zip");
-const store_v2_zipped_from_parent_path = path.join(__dirname, "..", "..", "..", "fixtures", "v2", "data.zipped_from_parent.zarr.zip");
-const store_v3_zipped_from_within_path = path.join(__dirname, "..", "..", "..", "fixtures", "v3", "data.zipped_from_within.zarr.zip");
-const store_v3_zipped_from_parent_path = path.join(__dirname, "..", "..", "..", "fixtures", "v3", "data.zipped_from_parent.zarr.zip");
+const fixtures_dir = path.join(__dirname, "..", "..", "..", "fixtures");
+const store_v2_zipped_from_within_path = path.join(fixtures_dir, "v2", "data.zipped_from_within.zarr.zip");
+const store_v2_zipped_from_parent_path = path.join(fixtures_dir, "v2", "data.zipped_from_parent.zarr.zip");
+const store_v3_zipped_from_within_path = path.join(fixtures_dir, "v3", "data.zipped_from_within.zarr.zip");
+const store_v3_zipped_from_parent_path = path.join(fixtures_dir, "v3", "data.zipped_from_parent.zarr.zip");
 
 describe("ZipFileStore", () => {
 	afterEach(() => {
