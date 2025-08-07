@@ -14,10 +14,13 @@ export class BlobReader implements Reader {
 	}
 }
 
+/** Options for {@linkcode ZipFileStore}. */
 interface ZipFileStoreOptions {
-	overrides?: RequestInit;
-	// Optional function to transform entries after unzipping.
-	// This can be used to modify the paths in the zip file.
+	/**
+	 * Optional function to transform entries after unzipping.
+	 *
+	 * Useful for modifying or restructuring the paths of extracted zip entries.
+	 */
 	transformEntries?: (entries: ZipInfo["entries"]) => ZipInfo["entries"];
 }
 
