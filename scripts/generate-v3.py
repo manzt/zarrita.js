@@ -1,9 +1,9 @@
 # /// script
 # requires-python = ">=3.13"
-# dependencies = ["zarr"]
+# dependencies = ["zarr==3.1.1"]
 #
 # [tool.uv]
-# exclude-newer = "2025-02-24T10:57:26.55032-05:00"
+# exclude-newer = "2025-08-06T10:57:26.55032-05:00"
 # ///
 
 import shutil

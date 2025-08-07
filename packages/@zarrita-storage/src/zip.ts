@@ -16,6 +16,9 @@ export class BlobReader implements Reader {
 
 interface ZipFileStoreOptions {
 	overrides?: RequestInit;
+	// Optional function to transform entries after unzipping.
+	// This can be used to modify the paths in the zip file.
+	transformEntries?: (entries: ZipInfo["entries"]) => ZipInfo["entries"];
 }
 
 export class HTTPRangeReader implements Reader {
@@ -23,7 +26,7 @@ export class HTTPRangeReader implements Reader {
 	#overrides: RequestInit;
 	constructor(
 		public url: string | URL,
-		opts: ZipFileStoreOptions = {},
+		opts: Pick<ZipFileStoreOptions, 'overrides'> = {},
 	) {
 		this.#overrides = opts.overrides ?? {};
 	}
@@ -62,8 +65,14 @@ export class HTTPRangeReader implements Reader {
 /** @experimental */
 class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	private info: Promise<ZipInfo>;
-	constructor(reader: R) {
-		this.info = unzip(reader);
+	constructor(reader: R, opts: ZipFileStoreOptions = {}) {
+		this.info = unzip(reader).then((info) => {
+			if (opts.transformEntries) {
+				info.entries = opts.transformEntries(info.entries);
+			}
+			return info;
+		});
+		
 	}
 
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
@@ -80,11 +89,14 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		href: string | URL,
 		opts: ZipFileStoreOptions = {},
 	): ZipFileStore<HTTPRangeReader> {
-		return new ZipFileStore(new HTTPRangeReader(href, opts));
+		return new ZipFileStore(new HTTPRangeReader(href, opts), opts);
 	}
 
-	static fromBlob(blob: Blob): ZipFileStore<BlobReader> {
-		return new ZipFileStore(new BlobReader(blob));
+	static fromBlob(
+		blob: Blob,
+		opts: ZipFileStoreOptions = {},
+	): ZipFileStore<BlobReader> {
+		return new ZipFileStore(new BlobReader(blob), opts);
 	}
 }
 
