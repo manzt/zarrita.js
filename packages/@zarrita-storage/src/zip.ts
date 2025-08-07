@@ -26,7 +26,7 @@ export class HTTPRangeReader implements Reader {
 	#overrides: RequestInit;
 	constructor(
 		public url: string | URL,
-		opts: Pick<ZipFileStoreOptions, 'overrides'> = {},
+		opts: Pick<ZipFileStoreOptions, "overrides"> = {},
 	) {
 		this.#overrides = opts.overrides ?? {};
 	}
@@ -72,7 +72,6 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 			}
 			return info;
 		});
-		
 	}
 
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
