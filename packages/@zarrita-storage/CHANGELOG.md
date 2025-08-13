@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.1.2
+
+### Patch Changes
+
+- Add a transformEntries option for the ZipFileStore, to allow for transformation of internal zip paths (e.g., to remove a root folder). ([#294](https://github.com/manzt/zarrita.js/pull/294))
+
 ## 0.1.1
 
 ### Patch Changes
