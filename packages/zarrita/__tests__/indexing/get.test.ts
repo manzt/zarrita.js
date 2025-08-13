@@ -840,9 +840,11 @@ describe("chunk caching", () => {
 		await get(arr2, null, { cache });
 
 		expect(cache.size).toBeGreaterThan(0);
-		const storePrefixes = new Set(Array.from(cache.keys()).map((key) => {
-			return key.split(":")[0]; // Extract store ID from cache key
-		}));
+		const storePrefixes = new Set(
+			Array.from(cache.keys()).map((key) => {
+				return key.split(":")[0]; // Extract store ID from cache key
+			}),
+		);
 		expect(storePrefixes.size).toBe(2); // Should have entries for both stores
 	});
 
