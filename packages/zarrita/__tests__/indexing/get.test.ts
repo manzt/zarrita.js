@@ -688,12 +688,14 @@ describe("chunk caching", () => {
 		// First call should populate cache
 		let result1 = await get(arr, null, { cache });
 		expect(result1.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(cache.size).toBeGreaterThan(0);
+		const cacheSize = cache.size;
+		expect(cacheSize).toBeGreaterThan(0);
 
 		// Second call should use cache
 		let result2 = await get(arr, null, { cache });
 		expect(result2.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(result2.shape).toStrictEqual([2, 2]);
+		expect(cache.size).toBe(cacheSize);
 	});
 
 	it("should cache chunks with proper keys", async () => {
@@ -702,7 +704,6 @@ describe("chunk caching", () => {
 
 		await get(arr, null, { cache });
 
-		// Check that cache keys are properly formatted
 		let keys = Array.from(cache.keys());
 		expect(keys.length).toBeGreaterThan(0);
 
@@ -718,7 +719,6 @@ describe("chunk caching", () => {
 		let arr = await get_array_with_cache();
 		let cache = new Map();
 
-		// Mock getChunk to count calls
 		let originalGetChunk = arr.getChunk;
 		let getChunkCallCount = 0;
 		arr.getChunk = async (...args) => {
@@ -819,6 +819,31 @@ describe("chunk caching", () => {
 		let keys = Array.from(cache.keys());
 		expect(keys.some((k) => k.includes("/1d.contiguous.raw.i2:"))).toBe(true);
 		expect(keys.some((k) => k.includes("/2d.contiguous.i2:"))).toBe(true);
+	});
+
+	it("should handle multiple stores", async () => {
+		let root1 = path.resolve(__dirname, "../../../../fixtures/v3/data.zarr");
+		let store1 = zarr.root(new FileSystemStore(root1));
+		let arr1 = await zarr.open.v3(store1.resolve("/2d.chunked.i2"), {
+			kind: "array",
+		});
+
+		let root2 = path.resolve(__dirname, "../../../../fixtures/v2/data.zarr");
+		let store2 = zarr.root(new FileSystemStore(root2));
+		let arr2 = await zarr.open.v2(store2.resolve("/1d.contiguous.i4"), {
+			kind: "array",
+		});
+
+		let cache = new Map();
+
+		await get(arr1, null, { cache });
+		await get(arr2, null, { cache });
+
+		expect(cache.size).toBeGreaterThan(0);
+		const storePrefixes = new Set(Array.from(cache.keys()).map((key) => {
+			return key.split(":")[0]; // Extract store ID from cache key
+		}));
+		expect(storePrefixes.size).toBe(2); // Should have entries for both stores
 	});
 
 	it("should work with sliced access using cache", async () => {
