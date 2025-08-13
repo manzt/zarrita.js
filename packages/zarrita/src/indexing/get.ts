@@ -16,14 +16,17 @@ import { create_queue } from "./util.js";
 const storeIdMap = new WeakMap<object, number>();
 let storeIdCounter = 0;
 
-function getStoreId(store: any): string {
+function getStoreId(store: Readable): string {
 	if (!storeIdMap.has(store)) {
 		storeIdMap.set(store, storeIdCounter++);
 	}
 	return `store_${storeIdMap.get(store)}`;
 }
 
-function createCacheKey(arr: Array<any, any>, chunk_coords: number[]): string {
+function createCacheKey(
+	arr: Array<DataType, Readable>,
+	chunk_coords: number[],
+): string {
 	let context = get_context(arr);
 	let chunkKey = context.encode_chunk_key(chunk_coords);
 	let storeId = getStoreId(arr.store);
@@ -73,14 +76,22 @@ export async function get<
 		queue.add(async () => {
 			let cacheKey = createCacheKey(arr, chunk_coords);
 			let cachedChunk = cache.get(cacheKey);
-			
+
 			if (cachedChunk) {
-				let chunk = setter.prepare(cachedChunk.data as TypedArray<D>, cachedChunk.shape, cachedChunk.stride);
+				let chunk = setter.prepare(
+					cachedChunk.data as TypedArray<D>,
+					cachedChunk.shape,
+					cachedChunk.stride,
+				);
 				setter.set_from_chunk(out, chunk, mapping);
 			} else {
 				let chunkData = await arr.getChunk(chunk_coords, opts.opts);
 				cache.set(cacheKey, chunkData);
-				let chunk = setter.prepare(chunkData.data, chunkData.shape, chunkData.stride);
+				let chunk = setter.prepare(
+					chunkData.data,
+					chunkData.shape,
+					chunkData.stride,
+				);
 				setter.set_from_chunk(out, chunk, mapping);
 			}
 		});

@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import * as zarr from "../../src/index.js";
 import { get } from "../../src/indexing/ops.js";
-import { range } from "../../src/indexing/util.js";
 import type { ChunkCache } from "../../src/indexing/types.js";
+import { range } from "../../src/indexing/util.js";
+import type { Chunk, DataType } from "../../src/metadata.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -667,13 +668,15 @@ describe("chunk caching", () => {
 	async function get_array_with_cache(): Promise<zarr.Array<"int16">> {
 		let root = path.resolve(__dirname, "../../../../fixtures/v3/data.zarr");
 		let store = zarr.root(new FileSystemStore(root));
-		return zarr.open.v3(store.resolve("/2d.chunked.i2"), { kind: "array" }) as Promise<zarr.Array<"int16">>;
+		return zarr.open.v3(store.resolve("/2d.chunked.i2"), {
+			kind: "array",
+		}) as Promise<zarr.Array<"int16">>;
 	}
 
 	it("should work without cache (default behavior)", async () => {
 		let arr = await get_array_with_cache();
 		let result = await get(arr, null);
-		
+
 		expect(result.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(result.shape).toStrictEqual([2, 2]);
 	});
@@ -681,7 +684,7 @@ describe("chunk caching", () => {
 	it("should work with Map as cache", async () => {
 		let arr = await get_array_with_cache();
 		let cache = new Map();
-		
+
 		// First call should populate cache
 		let result1 = await get(arr, null, { cache });
 		expect(result1.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
@@ -696,23 +699,25 @@ describe("chunk caching", () => {
 	it("should cache chunks with proper keys", async () => {
 		let arr = await get_array_with_cache();
 		let cache = new Map();
-		
+
 		await get(arr, null, { cache });
-		
+
 		// Check that cache keys are properly formatted
 		let keys = Array.from(cache.keys());
 		expect(keys.length).toBeGreaterThan(0);
-		
-		// Keys should contain store ID, array path and chunk coordinates  
+
+		// Keys should contain store ID, array path and chunk coordinates
 		for (let key of keys) {
-			expect(key).toMatch(/^store_\d+:\/2d\.chunked\.i2:c[.\\/]\d+([.\\/]\d+)*$/);
+			expect(key).toMatch(
+				/^store_\d+:\/2d\.chunked\.i2:c[.\\/]\d+([.\\/]\d+)*$/,
+			);
 		}
 	});
 
 	it("should reuse cached chunks across multiple calls", async () => {
 		let arr = await get_array_with_cache();
 		let cache = new Map();
-		
+
 		// Mock getChunk to count calls
 		let originalGetChunk = arr.getChunk;
 		let getChunkCallCount = 0;
@@ -736,7 +741,7 @@ describe("chunk caching", () => {
 
 	it("should work with custom cache implementation", async () => {
 		let arr = await get_array_with_cache();
-		
+
 		// Custom cache that tracks operations
 		let operations: string[] = [];
 		let cache: ChunkCache = {
@@ -744,35 +749,35 @@ describe("chunk caching", () => {
 				operations.push(`get:${key}`);
 				return undefined; // Always miss for this test
 			},
-			set(key: string, _value: any) {
+			set(key: string, _value: Chunk<DataType>) {
 				operations.push(`set:${key}`);
-			}
+			},
 		};
 
 		let result = await get(arr, null, { cache });
-		
+
 		expect(result.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
 		expect(operations.length).toBeGreaterThan(0);
-		expect(operations.some(op => op.startsWith('get:'))).toBe(true);
-		expect(operations.some(op => op.startsWith('set:'))).toBe(true);
+		expect(operations.some((op) => op.startsWith("get:"))).toBe(true);
+		expect(operations.some((op) => op.startsWith("set:"))).toBe(true);
 	});
 
 	it("should handle cache hits correctly", async () => {
 		let arr = await get_array_with_cache();
-		
+
 		// First, find out what cache keys are needed by doing a real call
 		let cache = new Map();
 		await get(arr, null, { cache });
 		let realKeys = Array.from(cache.keys());
 		let realValues = Array.from(cache.values());
-		
+
 		// Clear cache and pre-populate ALL chunks with fake data using the correct keys
 		cache.clear();
 		for (let i = 0; i < realKeys.length; i++) {
 			let fakeChunkData = {
 				data: new Int16Array([99, 98, 97, 96]), // Use same fake data for all chunks
-				shape: realValues[i].shape,  // Use original shape
-				stride: realValues[i].stride  // Use original stride
+				shape: realValues[i].shape, // Use original shape
+				stride: realValues[i].stride, // Use original stride
 			};
 			cache.set(realKeys[i], fakeChunkData);
 		}
@@ -797,31 +802,35 @@ describe("chunk caching", () => {
 	it("should handle different arrays with separate cache entries", async () => {
 		let root = path.resolve(__dirname, "../../../../fixtures/v3/data.zarr");
 		let store = zarr.root(new FileSystemStore(root));
-		
-		let arr1 = await zarr.open.v3(store.resolve("/1d.contiguous.raw.i2"), { kind: "array" });
-		let arr2 = await zarr.open.v3(store.resolve("/2d.contiguous.i2"), { kind: "array" });
-		
+
+		let arr1 = await zarr.open.v3(store.resolve("/1d.contiguous.raw.i2"), {
+			kind: "array",
+		});
+		let arr2 = await zarr.open.v3(store.resolve("/2d.contiguous.i2"), {
+			kind: "array",
+		});
+
 		let cache = new Map();
-		
+
 		await get(arr1, null, { cache });
 		await get(arr2, null, { cache });
-		
+
 		// Should have separate cache entries for different arrays
 		let keys = Array.from(cache.keys());
-		expect(keys.some(k => k.includes('/1d.contiguous.raw.i2:'))).toBe(true);
-		expect(keys.some(k => k.includes('/2d.contiguous.i2:'))).toBe(true);
+		expect(keys.some((k) => k.includes("/1d.contiguous.raw.i2:"))).toBe(true);
+		expect(keys.some((k) => k.includes("/2d.contiguous.i2:"))).toBe(true);
 	});
 
 	it("should work with sliced access using cache", async () => {
 		let arr = await get_array_with_cache();
 		let cache = new Map();
-		
+
 		// Access a slice
 		let result = await get(arr, [zarr.slice(0, 1), null], { cache });
-		
+
 		expect(result.shape).toStrictEqual([1, 2]);
 		expect(cache.size).toBeGreaterThan(0);
-		
+
 		// Access another slice that might reuse same chunks
 		let result2 = await get(arr, [zarr.slice(1, 2), null], { cache });
 		expect(result2.shape).toStrictEqual([1, 2]);

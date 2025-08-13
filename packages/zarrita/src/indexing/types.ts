@@ -36,7 +36,7 @@ export type SetFromChunk<D extends DataType, NdArray extends Chunk<D>> = (
 
 export interface ChunkCache {
 	get(key: string): Chunk<DataType> | undefined;
-	set(key: string, value: Chunk<DataType>): any;
+	set(key: string, value: Chunk<DataType>): void;
 }
 
 export type Setter<D extends DataType, Arr extends Chunk<D>> = {
