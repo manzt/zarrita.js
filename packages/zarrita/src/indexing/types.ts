@@ -34,6 +34,11 @@ export type SetFromChunk<D extends DataType, NdArray extends Chunk<D>> = (
 	proj: Projection[],
 ) => void;
 
+export interface ChunkCache {
+	get(key: string): Chunk<DataType> | undefined;
+	set(key: string, value: Chunk<DataType>): any;
+}
+
 export type Setter<D extends DataType, Arr extends Chunk<D>> = {
 	prepare: Prepare<D, Arr>;
 	set_from_chunk: SetFromChunk<D, Arr>;
@@ -42,6 +47,7 @@ export type Setter<D extends DataType, Arr extends Chunk<D>> = {
 
 export type Options = {
 	create_queue?: () => ChunkQueue;
+	cache?: ChunkCache;
 };
 
 export type GetOptions<O> = Options & { opts?: O };
