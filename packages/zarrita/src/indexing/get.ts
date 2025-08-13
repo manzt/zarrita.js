@@ -4,6 +4,7 @@ import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
+	ChunkCache,
 	GetOptions,
 	Prepare,
 	SetFromChunk,
@@ -11,6 +12,11 @@ import type {
 	Slice,
 } from "./types.js";
 import { create_queue } from "./util.js";
+
+const NULL_CACHE: ChunkCache = {
+	get: () => undefined,
+	set: () => {},
+};
 
 // WeakMap to assign unique IDs to store instances
 const storeIdMap = new WeakMap<object, number>();
@@ -71,7 +77,7 @@ export async function get<
 	);
 
 	let queue = opts.create_queue?.() ?? create_queue();
-	let cache = opts.cache ?? { get: () => undefined, set: () => {} };
+	let cache = opts.cache ?? NULL_CACHE;
 	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(async () => {
 			let cacheKey = createCacheKey(arr, chunk_coords);
