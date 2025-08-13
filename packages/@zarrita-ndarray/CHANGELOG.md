@@ -1,5 +1,12 @@
 # @zarrita/ndarray
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - zarrita@0.5.3
+
 ## 0.1.3
 
 ### Patch Changes
