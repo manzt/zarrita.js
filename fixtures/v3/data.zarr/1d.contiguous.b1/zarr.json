@@ -20,10 +20,7 @@
   "fill_value": false,
   "codecs": [
     {
-      "name": "bytes",
-      "configuration": {
-        "endian": "little"
-      }
+      "name": "bytes"
     },
     {
       "name": "blosc",
