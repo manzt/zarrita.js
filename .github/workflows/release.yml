@@ -26,6 +26,7 @@ jobs:
         with:
           title: Create Release
           publish: pnpm changeset publish
+          version: pnpm version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
