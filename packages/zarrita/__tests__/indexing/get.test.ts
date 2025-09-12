@@ -693,8 +693,7 @@ describe("chunk caching", () => {
 
 		// Second call should use cache
 		let result2 = await get(arr, null, { cache });
-		expect(result2.data).toStrictEqual(new Int16Array([1, 2, 3, 4]));
-		expect(result2.shape).toStrictEqual([2, 2]);
+		expect(result2).toStrictEqual(result1);
 		expect(cache.size).toBe(cacheSize);
 	});
 
