@@ -1,5 +1,12 @@
 # zarrita
 
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [[`b4e06c8`](https://github.com/manzt/zarrita.js/commit/b4e06c8475e9b2762b1288cd833d46ce702ad469)]:
+  - @zarrita/storage@0.1.2
+
 ## 0.5.2
 
 ### Patch Changes

@@ -8,7 +8,8 @@
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
-		"update-fixtures": "uv run scripts/generate-v2.py && uv run scripts/generate-v3.py"
+		"update-fixtures": "uv run scripts/generate-v2.py && uv run scripts/generate-v3.py && bash scripts/zip-fixtures.sh",
+		"version": "changeset version && node scripts/sync-jsr.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.1",
