@@ -496,3 +496,7 @@ a = zarr.create_array(
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :, :] = data
+
+# Group with spaces in the name
+g = zarr.create_group(store, path="my group with spaces")
+g.attrs["description"] = "A group with spaces in the name"

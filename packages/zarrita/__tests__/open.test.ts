@@ -1,7 +1,8 @@
 import * as path from "node:path";
 import * as url from "node:url";
+import * as fs from "node:fs/promises";
 import { Float16Array } from "@petamoriken/float16";
-import { type AbsolutePath, FileSystemStore } from "@zarrita/storage";
+import { type AbsolutePath, FileSystemStore, ZipFileStore } from "@zarrita/storage";
 import {
 	afterAll,
 	afterEach,
@@ -532,12 +533,31 @@ describe("v2", () => {
 	});
 });
 
-describe("v3", () => {
+describe("v3", async () => {
 	let store = root(
 		new FileSystemStore(
 			path.resolve(__dirname, "../../../fixtures/v3/data.zarr"),
 		),
 	);
+
+	let zip_buffer = await fs.readFile(path.resolve(__dirname, "../../../fixtures/v3/data.zipped_from_within.zarr.zip"));
+	let blob = new Blob([zip_buffer], { type: "application/zip" });
+	let zip_store = root(ZipFileStore.fromBlob(blob));
+
+	describe("supports spaces in key paths", async () => {
+		it("can be opened from FileSystemStore", async () => {
+			let grp = await open.v3(store.resolve("/my group with spaces"), { kind: "group" });
+			expect(grp.attrs).toStrictEqual({
+				description: "A group with spaces in the name",
+			});
+		});
+		it("can be opened from ZipFileStore", async () => {
+			let grp = await open.v3(zip_store.resolve("/my group with spaces"), { kind: "group" });
+			expect(grp.attrs).toStrictEqual({
+				description: "A group with spaces in the name",
+			});
+		});
+	});
 
 	describe("1d.contiguous.i2", async () => {
 		it.each([
