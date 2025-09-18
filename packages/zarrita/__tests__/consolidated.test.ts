@@ -43,6 +43,7 @@ describe("withConsolidated", () => {
 			  "/3d.chunked.mixed.i2.C" => "array",
 			  "/3d.chunked.mixed.i2.F" => "array",
 			  "/3d.contiguous.i2" => "array",
+			  "/my group with spaces" => "group",
 			}
 		`);
 	});

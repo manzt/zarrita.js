@@ -1,7 +1,7 @@
 import type { Reader, ZipInfo } from "unzipit";
 import { unzip } from "unzipit";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
-import { assert, fetch_range, strip_prefix, url_encode_entry_keys } from "./util.js";
+import { assert, fetch_range, strip_prefix } from "./util.js";
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}
@@ -70,14 +70,9 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	private info: Promise<ZipInfo>;
 	constructor(reader: R, opts: ZipFileStoreOptions = {}) {
 		this.info = unzip(reader).then((info) => {
-			// First, apply any user-provided transformation to the entries.
-			// Since the user will not be expecting to receive URL-encoded paths,
-			// we do this step first.
 			if (opts.transformEntries) {
 				info.entries = opts.transformEntries(info.entries);
 			}
-			// Then, URL-encode all entry keys to handle special characters.
-			info.entries = url_encode_entry_keys(info.entries);
 			return info;
 		});
 	}

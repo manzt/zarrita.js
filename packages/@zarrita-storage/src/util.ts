@@ -1,22 +1,4 @@
 import type { AbsolutePath } from "./types.js";
-import type { ZipInfo } from "unzipit";
-
-export function url_encode_path(path: string): string {
-	// Reuse the logic from zarrita's Location.resolve.
-	// Use the URL constructor to handle encoding.
-	let url = new URL(`file://root/${path}`);
-	// Remove the leading slash.
-	return url.pathname.slice(1);
-}
-
-export function url_encode_entry_keys(entries: ZipInfo["entries"]): ZipInfo["entries"] {
-	return Object.fromEntries(
-		Object.entries(entries).map(([key, value]) => [
-			url_encode_path(key),
-			value,
-		]),
-	);
-}
 
 export function strip_prefix<Path extends AbsolutePath>(
 	path: Path,

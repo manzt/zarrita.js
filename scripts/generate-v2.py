@@ -187,4 +187,8 @@ root.create_dataset(
     chunks=(1, 1, 2),
 )
 
+# Group with spaces in the name
+g = root.create_group("my group with spaces")
+g.attrs["description"] = "A group with spaces in the name"
+
 zarr.consolidate_metadata(store)
