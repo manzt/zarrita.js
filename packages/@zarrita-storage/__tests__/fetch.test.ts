@@ -25,6 +25,22 @@ describe("FetchStore", () => {
 		`);
 	});
 
+	it("reads data when path contains spaces", async () => {
+		let store = new FetchStore(href);
+		let bytes = await store.get("/my group with spaces/zarr.json");
+		expect(bytes).toBeInstanceOf(Uint8Array);
+		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
+			{
+			  "attributes": {
+			    "description": "A group with spaces in the name",
+			  },
+			  "consolidated_metadata": null,
+			  "node_type": "group",
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
 	it("reads a file from URL", async () => {
 		let store = new FetchStore(new URL(href));
 		let bytes = await store.get("/zarr.json");
