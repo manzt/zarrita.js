@@ -1,5 +1,12 @@
 # @zarrita/ndarray
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`a06a7e6`](https://github.com/manzt/zarrita.js/commit/a06a7e6a5a5ed64797d61f0fe81f8db46bff6659)]:
+  - zarrita@0.5.4
+
 ## 0.1.4
 
 ### Patch Changes
