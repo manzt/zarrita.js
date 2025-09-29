@@ -543,6 +543,12 @@
                 3
             ],
             "zarr_format": 2
+        },
+        "my group with spaces/.zattrs": {
+            "description": "A group with spaces in the name"
+        },
+        "my group with spaces/.zgroup": {
+            "zarr_format": 2
         }
     },
     "zarr_consolidated_format": 1

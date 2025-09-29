@@ -36,7 +36,7 @@ export class Location<Store> {
 		);
 		return new Location(
 			this.store,
-			new URL(path, root).pathname as AbsolutePath,
+			decodeURIComponent(new URL(path, root).pathname) as AbsolutePath,
 		);
 	}
 }

@@ -1,0 +1,8 @@
+{
+  "attributes": {
+    "description": "A group with spaces in the name"
+  },
+  "zarr_format": 3,
+  "consolidated_metadata": null,
+  "node_type": "group"
+}
