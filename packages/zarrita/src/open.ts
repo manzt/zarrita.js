@@ -118,7 +118,7 @@ async function _open_v3<Store extends Readable>(location: Location<Store>) {
 	}
 	let meta_doc: ArrayMetadata<DataType> | GroupMetadata =
 		json_decode_object(meta);
-	if (meta_doc.dimension_names){
+		if (meta_doc.node_type === "array" && meta_doc.dimension_names){
         meta_doc.attributes.dimension_names = meta_doc.dimension_names
     }
 	if (meta_doc.node_type === "array") {
