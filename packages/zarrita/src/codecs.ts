@@ -2,6 +2,7 @@ import type { Codec as _Codec } from "numcodecs";
 import { BitroundCodec } from "./codecs/bitround.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
+import { FixedScaleOffsetCodec } from "./codecs/fixedscaleoffset.js";
 import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
 import { TransposeCodec } from "./codecs/transpose.js";
@@ -35,7 +36,8 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 		.set("crc32c", () => Crc32cCodec)
 		.set("vlen-utf8", () => VLenUTF8)
 		.set("json2", () => JsonCodec)
-		.set("bitround", () => BitroundCodec);
+		.set("bitround", () => BitroundCodec)
+		.set("fixedscaleoffset", () => FixedScaleOffsetCodec);
 }
 
 export const registry: Map<string, () => Promise<CodecEntry>> =
