@@ -12,7 +12,7 @@ import shutil
 
 import zarr
 import numpy as np
-from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8
+from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, FixedScaleOffset
 
 SELF_DIR = pathlib.Path(__file__).parent
 
@@ -170,6 +170,25 @@ arr = root.create_dataset(
     chunks=(3, 3, 1),
 )
 
+# 3d.chunked.mixed.i2.C.fixedscaleoffset
+root.create_dataset(
+    "3d.chunked.mixed.i2.F.fixedscaleoffset",
+    data=np.arange(27).reshape(3, 3, 3),
+    order="F",
+    dtype="i2",
+    chunks=(3, 3, 1),
+    filters=[FixedScaleOffset(offset=1, scale=2, dtype="i2")],
+)
+
+# 3d.chunked.mixed.i2.C.fixedscaleoffset
+root.create_dataset(
+    "3d.chunked.mixed.i2.C.fixedscaleoffset",
+    data=np.arange(27).reshape(3, 3, 3),
+    order="C",
+    dtype="i2",
+    chunks=(3, 3, 1),
+    filters=[FixedScaleOffset(offset=1, scale=2, dtype="i2")],
+)
 
 # 3d.chunked.o
 data = np.array(
