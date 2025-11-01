@@ -119,7 +119,7 @@ export function create_chunk_key_encoder({
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
-function coerce_dtype(
+export function coerce_dtype(
 	dtype: string,
 ): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
 	if (dtype === "|O") {

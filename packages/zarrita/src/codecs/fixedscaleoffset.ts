@@ -1,5 +1,5 @@
 import type { Chunk, NumberDataType, TypedArrayConstructor } from "../metadata.js"
-import { coerce_dtype, get_ctr } from "../utils.js"
+import { coerce_dtype, get_ctr } from "../util.js"
 
 type FixedScaleOffsetConfig = {
     offset: number;
@@ -13,14 +13,14 @@ export class FixedScaleOffsetCodec<D extends NumberDataType, A extends NumberDat
 
     #offset: number;
     #scale: number;
-    #dtype: D;
     #TypedArray: TypedArrayConstructor<D>
-    #astype: A;
+    // #astype: A;
 
     constructor(configuration: FixedScaleOffsetConfig) {
-	this.#dtype = coerce_dtype(configuration.dtype);
-	this.#TypedArray = get_ctr(this.#dtype);
-	this.#astype = coerce_dtype(configuration.astype ?? configuration.dtype);
+        const { data_type } = coerce_dtype(configuration.dtype);
+	this.#TypedArray = get_ctr(data_type as NumberDataType);
+	// this.#astype = coerce_dtype(configuration.astype ?? configuration.dtype);
+
 	this.#offset = configuration.offset;
 	this.#scale = configuration.scale;
     }
@@ -29,7 +29,7 @@ export class FixedScaleOffsetCodec<D extends NumberDataType, A extends NumberDat
 	return new FixedScaleOffsetCodec(configuration);
     }
 
-    encode(arr: Chunk<D>): Chunk<A> {
+    encode(_arr: Chunk<D>): Chunk<A> {
 	throw new Error(
 	    "`FixedScaleOffsetCodec.encode` is not implemented.  Please open an issue at https://github.com/manzt/zarrita.js/issues."
 	);
@@ -37,7 +37,7 @@ export class FixedScaleOffsetCodec<D extends NumberDataType, A extends NumberDat
 
     decode(arr: Chunk<A>): Chunk<D> {
 	const out_data = new this.#TypedArray(arr.data.length);
-	arr.data.forEach((value, i) => {
+	arr.data.forEach((value: number, i: number) => {
 	    out_data[i] = (value / this.#scale) + this.#offset;
 	});
 	return {
