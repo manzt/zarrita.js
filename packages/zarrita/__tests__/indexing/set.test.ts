@@ -37,7 +37,7 @@ test("Read and write array data - builtin", async () => {
 	expected.fill(42);
 	expect((await get(a, null)).data).toStrictEqual(expected);
 
-	let arr = ndarray(new Int32Array([...Array(10).keys()]), [10]);
+	let arr = ndarray(new Int32Array(Array(10).keys()), [10]);
 	expected.set(arr.data);
 	await set(a, [0, null], arr);
 	expect((await get(a, null)).data).toStrictEqual(expected);
