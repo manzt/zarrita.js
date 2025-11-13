@@ -40,41 +40,100 @@ export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
 	}
 }
 
-export function get_ctr<D extends DataType>(
-	data_type: D,
-): TypedArrayConstructor<D> {
-	if (data_type === "v2:object") {
-		return globalThis.Array as unknown as TypedArrayConstructor<D>;
-	}
-	let match = data_type.match(/v2:([US])(\d+)/);
-	if (match) {
-		let [, kind, chars] = match;
-		// @ts-expect-error
-		return (kind === "U" ? UnicodeStringArray : ByteStringArray).bind(
-			null,
-			Number(chars),
-		);
-	}
-	// @ts-expect-error - We've checked that the key exists
-	let ctr: TypedArrayConstructor<D> | undefined = (
-		{
-			int8: Int8Array,
-			int16: Int16Array,
-			int32: Int32Array,
-			int64: globalThis.BigInt64Array,
-			uint8: Uint8Array,
-			uint16: Uint16Array,
-			uint32: Uint32Array,
-			uint64: globalThis.BigUint64Array,
-			float16: globalThis.Float16Array,
-			float32: Float32Array,
-			float64: Float64Array,
-			bool: BoolArray,
-		} as const
-	)[data_type];
-	assert(ctr, `Unknown or unsupported data_type: ${data_type}`);
-	return ctr;
+// Type guard helpers (optional)
+function isV3StringObject(v: unknown): v is { name: string; configuration?: Record<string, unknown> } {
+    return !!v && typeof v === "object" && "name" in (v as any);
 }
+
+export function get_ctr<D extends DataType>(data_type: D): TypedArrayConstructor<D> {
+    // v3 object forms
+    if (data_type && typeof data_type === "object") {
+        const dt: any = data_type;
+
+        // v3 fixed-length / null-terminated UTF-8
+        if (dt.name === "null_terminated_utf8" && dt.configuration?.length_bytes != null) {
+            return UnicodeStringArray.bind(
+                null,
+                dt.configuration.length_bytes,
+            ) as unknown as TypedArrayConstructor<D>;
+        }
+
+        // v3 fixed-length / null-terminated raw bytes (S<n>)
+        if (dt.name === "null_terminated_bytes" && dt.configuration?.length_bytes != null) {
+            return ByteStringArray.bind(
+                null,
+                dt.configuration.length_bytes,
+            ) as unknown as TypedArrayConstructor<D>;
+        }
+
+
+        // New spec form: { name, configuration }
+        if (isV3StringObject(dt)) {
+            const name = dt.name;
+            const cfg = dt.configuration ?? {};
+            if (name === "string") {
+                // variable-length UTF-8
+                return Array as unknown as TypedArrayConstructor<D>;
+            }
+
+            if (name === "fixed_length_utf32") {
+                const bytes: unknown = cfg.length_bytes;
+                if (typeof bytes !== "number") {
+                    throw new Error("Missing length_bytes for fixed_length_utf32");
+                }
+                if (bytes % 4 !== 0) {
+                    throw new Error(`length_bytes (${bytes}) not divisible by 4 for fixed_length_utf32`);
+                }
+                const codepoints = bytes / 4;
+                return UnicodeStringArray.bind(null, codepoints) as unknown as TypedArrayConstructor<D>;
+            }
+            throw new Error(`Unsupported string data_type object: ${JSON.stringify(dt)}`);
+        }
+
+        throw new Error(`Unsupported data_type object: ${JSON.stringify(dt)}`);
+    }
+
+    // v2 object dtype
+    if (data_type === "v2:object") {
+        return Array as unknown as TypedArrayConstructor<D>;
+    }
+
+    // v2 fixed-length string pattern (e.g. v2:U5 / v2:S6)
+    const match = typeof data_type === "string" && data_type.match(/v2:([US])(\d+)/);
+    if (match) {
+        const [, kind, chars] = match;
+        const length = Number(chars);
+        if (kind === "U") {
+            return UnicodeStringArray.bind(null, length) as unknown as TypedArrayConstructor<D>;
+        } else {
+            return ByteStringArray.bind(null, length) as unknown as TypedArrayConstructor<D>;
+        }
+    }
+
+
+    const ctr: TypedArrayConstructor<D> | undefined = (
+        {
+            int8: Int8Array,
+            int16: Int16Array,
+            int32: Int32Array,
+            int64: BigInt64Array,
+            uint8: Uint8Array,
+            uint16: Uint16Array,
+            uint32: Uint32Array,
+            uint64: BigUint64Array,
+            float16: (globalThis as any).Float16Array,
+            float32: Float32Array,
+            float64: Float64Array,
+            bool: BoolArray,
+            string: Array,
+        } as const
+    )[data_type as string];
+
+    assert(ctr, `Unknown or unsupported data_type: ${String(data_type)}`);
+    return ctr;
+}
+
+
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
 export function get_strides(
@@ -245,7 +304,7 @@ export function is_dtype<Query extends DataTypeQuery>(
 	}
 	let is_boolean = dtype === "bool";
 	if (query === "boolean") return is_boolean;
-	let is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
+	let is_string = dtype === "string" || dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
 	if (query === "string") return is_string;
 	let is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;

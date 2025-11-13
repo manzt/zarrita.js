@@ -740,6 +740,80 @@ describe("v3", async () => {
 		});
 	});
 
+    it("1d.contiguous.raw.string", async () => {
+        let arr = await open.v3(store.resolve("/1d.contiguous.raw.string"), {
+            kind: "array",
+        });
+        expect(await arr.getChunk([0])).toStrictEqual({
+            data: ["foo", "bar", "buzz", "b"],
+            shape: [4],
+            stride: [1],
+        });
+    });
+
+    it("1d.contiguous.gzip.string", async () => {
+        let arr = await open.v3(store.resolve("/1d.contiguous.gzip.string"), {
+            kind: "array",
+        });
+        expect(await arr.getChunk([0])).toStrictEqual({
+            data: ["foo", "bar", "buzz", "b"],
+            shape: [4],
+            stride: [1],
+        });
+    });
+
+    it("1d.contiguous.blosc.string", async () => {
+        let arr = await open.v3(store.resolve("/1d.contiguous.blosc.string"), {
+            kind: "array",
+        });
+        expect(await arr.getChunk([0])).toStrictEqual({
+            data: ["foo", "bar", "buzz", "b"],
+            shape: [4],
+            stride: [1],
+        });
+    });
+
+    describe("1d.chunks.blosc.string", async () => {
+        let arr = await open.v3(store.resolve("/1d.chunks.blosc.string"), {
+            kind: "array",
+        });
+        it.each([
+            [[0], ["foo", "bar"]],
+            [[1], ["buzz", "b"]],
+        ])("getChunk(%j) -> %j", async (index, expected) => {
+            let chunk = await arr.getChunk(index);
+            expect(chunk).toStrictEqual({
+                data: expected,
+                shape: [2],
+                stride: [1],
+            });
+        });
+    });
+
+
+    it("1d.contiguous.U5", async () => {
+        let arr = await open.v3(store.resolve("/1d.contiguous.U5"), {
+            kind: "array",
+        });
+        expect(await arr.getChunk([0])).toStrictEqual({
+            data: new UnicodeStringArray(5, ["apple", "banan", "orang", "kiwi"]),
+            shape: [4],
+            stride: [1],
+        });
+    });
+
+    it("1d.contiguous.S6", async () => {
+        let arr = await open.v3(store.resolve("/1d.contiguous.S6"), {
+            kind: "array",
+        });
+        expect(await arr.getChunk([0])).toStrictEqual({
+            data: new ByteStringArray(6, ["dog", "cat", "badger", "crocod"]),
+            shape: [4],
+            stride: [1],
+        });
+    });
+
+
 	describe("2d.chunked.i2", async () => {
 		let arr = await open.v3(store.resolve("/2d.chunked.i2"), {
 			kind: "array",
