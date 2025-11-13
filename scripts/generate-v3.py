@@ -1,12 +1,4 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "zarr==3.1.1",
-# ]
-#
-# [tool.uv]
-# exclude-newer = "2025-08-06T10:57:26.55032-05:00"
-# ///
+"""Generate Zarr v3 fixtures for testing."""
 
 import shutil
 import pathlib
@@ -150,6 +142,83 @@ a = zarr.create_array(
 )
 a[:] = [True, False, True, False]
 
+
+# 1d.contiguous.blosc.string
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.blosc.string",
+    dtype="string",
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.VLenUTF8Codec(),
+    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+)
+a[:] = ["foo", "bar", "buzz", "b"]
+
+# 1d.contiguous.gzip.string
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.gzip.string",
+    dtype="string",
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.VLenUTF8Codec(),
+    compressors=[zarr.codecs.GzipCodec()],
+)
+a[:] = ["foo", "bar", "buzz", "b"]
+
+# 1d.contiguous.raw.string
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.raw.string",
+    dtype="string",
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.VLenUTF8Codec(),
+    compressors=None,
+)
+a[:] = ["foo", "bar", "buzz", "b"]
+
+# 1d.chunks.blosc.string
+a = zarr.create_array(
+    store,
+    name="1d.chunks.blosc.string",
+    dtype="string",
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.VLenUTF8Codec(),
+    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+)
+a[:] = ["foo", "bar", "buzz", "b"]
+
+
+# 1d.contiguous.U5 - warning: this format is unstable. Prefer the vlen-utf8 codec above.
+a = zarr.create_array(
+    store=store,
+    name="1d.contiguous.U5",
+    dtype="U5",  # Fixed-length Unicode, max 5 characters
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+)
+
+# Assign values - truncated to 5 characters
+a[:] = ["apple", "banana", "orange", "kiwi"]
+
+# 1d.contiguous.S6 - warning: this format is unstable. Prefer the vlen-utf8 codec above.
+a = zarr.create_array(
+    store=store,
+    name="1d.contiguous.S6",
+    dtype="S6",  # Fixed-length Unicode, max 6 characters
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=[zarr.codecs.BloscCodec(typesize=4, shuffle="noshuffle")],
+)
+
+# Assign values - truncated to 6 characters
+a[:] = ["dog", "cat", "badger", "crocodile"]
 
 # 1d.chunked.i2
 a = zarr.create_array(

@@ -1,0 +1,29 @@
+[project]
+name = "zarrita-fixtures"
+version = "0.0.0"
+description = "Fixture data generators for Zarr v2 and v3"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+v2 = [
+    "zarr==2.18.1",
+    "numcodecs==0.15.1",
+    "numpy"
+]
+v3 = [
+    "zarr==3.1.3",
+    "numpy"
+]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "v2" },
+        { extra = "v3" },
+    ],
+]
+
+# exclude-newer = "2025-10-12T10:21:00.000-05:00"
+
+

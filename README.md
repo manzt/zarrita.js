@@ -118,3 +118,11 @@ python3 -m http.server .
 ```
 
 You can edit the contents of `demo.html` and refresh the page.
+
+
+### Generating fixtures
+Fixtures are generated with Python scripts located in the `scripts/` directory.
+To regenerate all fixtures, run:
+```sh
+pnpm run update-fixtures
+```

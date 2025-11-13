@@ -1,12 +1,4 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "zarr==2.18.1",
-# ]
-#
-# [tool.uv]
-# exclude-newer = "2025-02-24T10:57:26.55032-05:00"
-# ///
+"""Generate Zarr v2 fixture data."""
 import pathlib
 import shutil
 
