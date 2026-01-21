@@ -74,9 +74,9 @@ function compat_chunk<D extends DataType>(
 }
 
 /** Hack to get the constructor of a typed array constructor from an existing TypedArray. */
-function get_typed_array_constructor<D extends Exclude<DataType, "v2:object">>(
-	arr: TypedArray<D>,
-): TypedArrayConstructor<D> {
+function get_typed_array_constructor<
+	D extends Exclude<DataType, "v2:object" | "string">,
+>(arr: TypedArray<D>): TypedArrayConstructor<D> {
 	if ("chars" in arr) {
 		// our custom TypedArray needs to bind the number of characters per
 		// element to the constructor.

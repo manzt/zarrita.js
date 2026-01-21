@@ -500,3 +500,55 @@ a[:, :, :] = data
 # Group with spaces in the name
 g = zarr.create_group(store, path="my group with spaces")
 g.attrs["description"] = "A group with spaces in the name"
+
+# 1D contiguous string array
+data = np.array(["hello", "world", "zarr", "v3"], dtype=str)
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.string.vlen",
+    shape=data.shape,
+    dtype=str,
+    chunks=(4,),
+)
+a[:] = data
+
+# 1D chunked string array
+data = np.array(["a", "bb", "ccc", "dddd"], dtype=str)
+a = zarr.create_array(
+    store,
+    name="1d.chunked.string.vlen",
+    shape=data.shape,
+    dtype=str,
+    chunks=(2,),
+)
+a[:] = data
+
+# 2D chunked string array
+data = np.array([["hello", "world"], ["foo", "bar"]], dtype=str)
+a = zarr.create_array(
+    store,
+    name="2d.chunked.string.vlen",
+    shape=data.shape,
+    dtype=str,
+    chunks=(1, 2),
+)
+a[:] = data
+
+# Edge case: empty strings
+a = zarr.create_array(store, name="1d.string.empty", shape=(3,), dtype=str, chunks=(3,))
+a[:] = ["", "test", ""]
+
+# Edge case: Unicode characters
+a = zarr.create_array(store, name="1d.string.unicode", shape=(4,), dtype=str, chunks=(4,))
+a[:] = ["hello", "世界", "🚀🎉", "Ñoño"]
+
+# With compression
+data = np.array(["compressed", "string", "test"], dtype=str)
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.string.compressed",
+    shape=data.shape,
+    dtype=str,
+    chunks=(3,),
+)
+a[:] = data

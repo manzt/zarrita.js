@@ -1,4 +1,4 @@
-import type { Chunk, ObjectType } from "../metadata.js";
+import type { Chunk, String } from "../metadata.js";
 import { get_strides } from "../util.js";
 
 export class VLenUTF8 {
@@ -14,14 +14,14 @@ export class VLenUTF8 {
 		return new VLenUTF8(meta.shape);
 	}
 
-	encode(_chunk: Chunk<ObjectType>): Uint8Array {
+	encode(_chunk: Chunk<String>): Uint8Array {
 		throw new Error("Method not implemented.");
 	}
 
-	decode(bytes: Uint8Array): Chunk<ObjectType> {
+	decode(bytes: Uint8Array): Chunk<String> {
 		let decoder = new TextDecoder();
 		let view = new DataView(bytes.buffer);
-		let data = Array(view.getUint32(0, true));
+		let data: Array<string> = Array(view.getUint32(0, true));
 		let pos = 4;
 		for (let i = 0; i < data.length; i++) {
 			let item_length = view.getUint32(pos, true);

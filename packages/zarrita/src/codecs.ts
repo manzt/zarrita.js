@@ -123,6 +123,6 @@ async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
 
 function is_typed_array_like_meta<D extends DataType>(
 	meta: ChunkMetadata<D>,
-): meta is ChunkMetadata<Exclude<D, "v2:object">> {
-	return meta.data_type !== "v2:object";
+): meta is ChunkMetadata<Exclude<D, "v2:object" | "string">> {
+	return meta.data_type !== "v2:object" && meta.data_type !== "string";
 }

@@ -1146,4 +1146,84 @@ describe("v3", async () => {
 			});
 		});
 	});
+
+	describe("1d.contiguous.string.vlen", async () => {
+		let arr = await open.v3(store.resolve("/1d.contiguous.string.vlen"), {
+			kind: "array",
+		});
+
+		it("has correct metadata", () => {
+			expect(arr.dtype).toBe("string");
+			expect(arr.shape).toEqual([4]);
+		});
+
+		it("reads string data", async () => {
+			let chunk = await arr.getChunk([0]);
+			expect(chunk).toStrictEqual({
+				data: ["hello", "world", "zarr", "v3"],
+				shape: [4],
+				stride: [1],
+			});
+		});
+	});
+
+	describe("1d.chunked.string.vlen", async () => {
+		let arr = await open.v3(store.resolve("/1d.chunked.string.vlen"), {
+			kind: "array",
+		});
+
+		it.each([
+			[[0], ["a", "bb"]],
+			[[1], ["ccc", "dddd"]],
+		])("getChunk(%j) -> %j", async (index, expected) => {
+			let chunk = await arr.getChunk(index);
+			expect(chunk).toStrictEqual({
+				data: expected,
+				shape: [2],
+				stride: [1],
+			});
+		});
+	});
+
+	describe("2d.chunked.string.vlen", async () => {
+		let arr = await open.v3(store.resolve("/2d.chunked.string.vlen"), {
+			kind: "array",
+		});
+
+		it.each([
+			[
+				[0, 0],
+				["hello", "world"],
+			],
+			[
+				[1, 0],
+				["foo", "bar"],
+			],
+		])("getChunk(%j) -> %j", async (index, expected) => {
+			let chunk = await arr.getChunk(index);
+			expect(chunk).toStrictEqual({
+				data: expected,
+				shape: [1, 2],
+				stride: [2, 1],
+			});
+		});
+	});
+
+	describe("string edge cases", () => {
+		it("handles empty strings", async () => {
+			let arr = await open.v3(store.resolve("/1d.string.empty"), {
+				kind: "array",
+			});
+			let chunk = await arr.getChunk([0]);
+			expect(chunk.data).toEqual(["", "test", ""]);
+		});
+
+		it("handles unicode characters", async () => {
+			let arr = await open.v3(store.resolve("/1d.string.unicode"), {
+				kind: "array",
+			});
+			let chunk = await arr.getChunk([0]);
+			expect(chunk.data).toEqual(["hello", "世界", "🚀🎉", "Ñoño"]);
+		});
+	});
 });

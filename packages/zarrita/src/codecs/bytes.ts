@@ -24,7 +24,7 @@ function bytes_per_element<D extends DataType>(
 	return 4;
 }
 
-export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
+export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 	kind = "array_to_bytes";
 	#stride: Array<number>;
 	#TypedArray: TypedArrayConstructor<D>;
@@ -46,7 +46,7 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object">> {
 		this.#BYTES_PER_ELEMENT = sample.BYTES_PER_ELEMENT;
 	}
 
-	static fromConfig<D extends Exclude<DataType, "v2:object">>(
+	static fromConfig<D extends Exclude<DataType, "v2:object" | "string">>(
 		configuration: { endian: "little" | "big" },
 		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
 	): BytesCodec<D> {
