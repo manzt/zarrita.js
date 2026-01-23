@@ -1,6 +1,7 @@
 {
 	"name": "@zarrita/storage",
 	"version": "0.1.3",
+	"repository": "https://github.com/manzt/zarrita.js",
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,

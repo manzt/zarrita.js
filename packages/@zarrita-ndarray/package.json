@@ -1,6 +1,7 @@
 {
 	"name": "@zarrita/ndarray",
 	"version": "0.1.5",
+	"repository": "https://github.com/manzt/zarrita.js",
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,
