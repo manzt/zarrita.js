@@ -1,5 +1,24 @@
 # zarrita
 
+## 0.6.0
+
+### Minor Changes
+
+- Add support for `data_type: "string"` (Zarr v3). ([`8d5b2a6`](https://github.com/manzt/zarrita.js/commit/8d5b2a65066d9e22c84f8198217a90cc28c675fa))
+
+  From a TypeScript perspective, this is a minor change because narrowing with `arr.is("string")` now expands the container type to `ByteStringArray | UnicodeStringArray | Array<string>`. TypeScript will require handling this new case. In a future version of zarrita, we will likely coerce all string data types to `Array<string>`. In the meantime, you can normalize the result:
+
+  ```ts
+  if (arr.is("string")) {
+    const chunk = await get(arr);
+    const data = Array.from(chunk.data); // Array<string>
+  }
+  ```
+
+### Patch Changes
+
+- Fix options not being passed through to shard getRange requests ([`ed223a8`](https://github.com/manzt/zarrita.js/commit/ed223a817efdaa708a54df3099a095ab8586ab45))
+
 ## 0.5.4
 
 ### Patch Changes
