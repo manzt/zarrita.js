@@ -3,6 +3,8 @@ node_modules/
 dist/
 *.tgz
 
+.claude/
+
 .venv
 docs/.vitepress/cache
 .DS_Store
