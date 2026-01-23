@@ -1,6 +1,6 @@
 {
 	"name": "@zarrita/storage",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"license": "MIT",
 	"imports": {
 		"reference-spec-reader": "npm:reference-spec-reader@^0.2.0",
