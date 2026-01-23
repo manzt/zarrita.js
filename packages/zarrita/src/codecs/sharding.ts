@@ -24,7 +24,10 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 	});
 
 	let cache: Record<string, Chunk<"uint64"> | null> = {};
-	return async (chunk_coord: number[]) => {
+	return async (
+		chunk_coord: number[],
+		options?: Parameters<Store["get"]>[1],
+	) => {
 		let shard_coord = chunk_coord.map((d, i) => Math.floor(d / index_shape[i]));
 		let shard_path = location.resolve(encode_shard_key(shard_coord)).path;
 
@@ -34,9 +37,13 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		} else {
 			let checksum_size = 4;
 			let index_size = 16 * index_shape.reduce((a, b) => a * b, 1);
-			let bytes = await get_range(shard_path, {
-				suffixLength: index_size + checksum_size,
-			});
+			let bytes = await get_range(
+				shard_path,
+				{
+					suffixLength: index_size + checksum_size,
+				},
+				options,
+			);
 			index = cache[shard_path] = bytes
 				? await index_codec.decode(bytes)
 				: null;
@@ -57,9 +64,13 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		if (offset === MAX_BIG_UINT && length === MAX_BIG_UINT) {
 			return undefined;
 		}
-		return get_range(shard_path, {
-			offset: Number(offset),
-			length: Number(length),
-		});
+		return get_range(
+			shard_path,
+			{
+				offset: Number(offset),
+				length: Number(length),
+			},
+			options,
+		);
 	};
 }
