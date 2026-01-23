@@ -55,6 +55,10 @@ export function get_ctr<D extends DataType>(
 			Number(chars),
 		);
 	}
+	// Handle v3 variable-length string type
+	if (data_type === "string") {
+		return globalThis.Array as unknown as TypedArrayConstructor<D>;
+	}
 	// @ts-expect-error - We've checked that the key exists
 	let ctr: TypedArrayConstructor<D> | undefined = (
 		{
@@ -245,7 +249,8 @@ export function is_dtype<Query extends DataTypeQuery>(
 	}
 	let is_boolean = dtype === "bool";
 	if (query === "boolean") return is_boolean;
-	let is_string = dtype.startsWith("v2:U") || dtype.startsWith("v2:S");
+	let is_string =
+		dtype.startsWith("v2:U") || dtype.startsWith("v2:S") || dtype === "string";
 	if (query === "string") return is_string;
 	let is_bigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return is_bigint;

@@ -34,6 +34,7 @@ describe("get_ctr", () => {
 			["bool", BoolArray],
 			["v2:U6", UnicodeStringArray],
 			["v2:S6", ByteStringArray],
+			["string", Array],
 		])("%s -> %o", (dtype, ctr) => {
 			const T = get_ctr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
@@ -67,6 +68,7 @@ describe("get_ctr", () => {
 			["bool", BoolArray],
 			["v2:U6", UnicodeStringArray],
 			["v2:S6", ByteStringArray],
+			["string", Array],
 		])("%s -> %o", (dtype, ctr) => {
 			const T = get_ctr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
@@ -122,6 +124,7 @@ describe("is_dtype", () => {
 		["v2:U6", false],
 		["v2:S6", false],
 		["v2:object", false],
+		["string", false],
 	])("is_dtype(%s, 'number') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "number")).toBe(expected);
 	});
@@ -142,6 +145,7 @@ describe("is_dtype", () => {
 		["v2:U6", false],
 		["v2:S6", false],
 		["v2:object", false],
+		["string", false],
 	])("is_dtype(%s, 'boolean') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "boolean")).toBe(expected);
 	});
@@ -162,6 +166,7 @@ describe("is_dtype", () => {
 		["v2:U6", false],
 		["v2:S6", false],
 		["v2:object", false],
+		["string", false],
 	])("is_dtype(%s, 'bigint') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "bigint")).toBe(expected);
 	});
@@ -182,6 +187,7 @@ describe("is_dtype", () => {
 		["v2:U6", true],
 		["v2:S6", true],
 		["v2:object", false],
+		["string", true],
 	])("is_dtype(%s, 'string') -> %s", (dtype, expected) => {
 		expect(is_dtype(dtype, "string")).toBe(expected);
 	});
@@ -202,6 +208,7 @@ describe("is_dtype", () => {
 		"v2:U6",
 		"v2:S6",
 		"v2:object",
+		"string",
 	])("is_dtype(%s, %s) -> true", (dtype) => {
 		expect(is_dtype(dtype, dtype)).toBe(true);
 	});

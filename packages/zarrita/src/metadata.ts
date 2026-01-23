@@ -41,6 +41,9 @@ export type UnicodeStr = `v2:U${number}`;
 /** @category String */
 export type ByteStr = `v2:S${number}`;
 
+/** @category String */
+export type String = "string";
+
 /** @category Object */
 export type ObjectType = "v2:object";
 
@@ -57,7 +60,7 @@ export type NumberDataType =
 
 export type BigintDataType = Int64 | Uint64;
 
-export type StringDataType = UnicodeStr | ByteStr;
+export type StringDataType = UnicodeStr | ByteStr | String;
 
 export type DataType =
 	| NumberDataType
@@ -158,6 +161,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Bool ? BoolArray
 	: D extends UnicodeStr ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
+	: D extends String ? Array<string>
 	: D extends ObjectType ? Array<unknown>
 	: never;
 
