@@ -4,6 +4,7 @@ import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
+	ChunkCache,
 	GetOptions,
 	Prepare,
 	SetFromChunk,
@@ -11,6 +12,32 @@ import type {
 	Slice,
 } from "./types.js";
 import { create_queue } from "./util.js";
+
+const NULL_CACHE: ChunkCache = {
+	get: () => undefined,
+	set: () => {},
+};
+
+// WeakMap to assign unique IDs to store instances
+const storeIdMap = new WeakMap<object, number>();
+let storeIdCounter = 0;
+
+function getStoreId(store: Readable): string {
+	if (!storeIdMap.has(store)) {
+		storeIdMap.set(store, storeIdCounter++);
+	}
+	return `store_${storeIdMap.get(store)}`;
+}
+
+function createCacheKey(
+	arr: Array<DataType, Readable>,
+	chunk_coords: number[],
+): string {
+	let context = get_context(arr);
+	let chunkKey = context.encode_chunk_key(chunk_coords);
+	let storeId = getStoreId(arr.store);
+	return `${storeId}:${arr.path}:${chunkKey}`;
+}
 
 function unwrap<D extends DataType>(
 	arr: TypedArray<D>,
@@ -50,11 +77,29 @@ export async function get<
 	);
 
 	let queue = opts.create_queue?.() ?? create_queue();
+	let cache = opts.cache ?? NULL_CACHE;
 	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(async () => {
-			let { data, shape, stride } = await arr.getChunk(chunk_coords, opts.opts);
-			let chunk = setter.prepare(data, shape, stride);
-			setter.set_from_chunk(out, chunk, mapping);
+			let cacheKey = createCacheKey(arr, chunk_coords);
+			let cachedChunk = cache.get(cacheKey);
+
+			if (cachedChunk) {
+				let chunk = setter.prepare(
+					cachedChunk.data as TypedArray<D>,
+					cachedChunk.shape,
+					cachedChunk.stride,
+				);
+				setter.set_from_chunk(out, chunk, mapping);
+			} else {
+				let chunkData = await arr.getChunk(chunk_coords, opts.opts);
+				cache.set(cacheKey, chunkData);
+				let chunk = setter.prepare(
+					chunkData.data,
+					chunkData.shape,
+					chunkData.stride,
+				);
+				setter.set_from_chunk(out, chunk, mapping);
+			}
 		});
 	}
 
