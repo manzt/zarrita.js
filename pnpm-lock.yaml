@@ -70,7 +70,7 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       unzipit:
-        specifier: ^1.4.3
+        specifier: 1.4.3
         version: 1.4.3
 
   packages/zarrita:

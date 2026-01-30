@@ -25,6 +25,25 @@ interface ZipEntryInternal extends ZipEntry {
 	compressionMethod: number;
 }
 
+/**
+ * Type guard to verify a ZipEntry has the internal properties we rely on.
+ * This protects against changes in unzipit internals.
+ */
+function isZipEntryInternal(entry: ZipEntry): entry is ZipEntryInternal {
+	if (!("compressionMethod" in entry) || !("_rawEntry" in entry)) {
+		return false;
+	}
+
+	const rawEntry = (entry as ZipEntryInternal)._rawEntry;
+	return (
+		typeof (entry as ZipEntryInternal).compressionMethod === "number" &&
+		typeof rawEntry === "object" &&
+		rawEntry !== null &&
+		"relativeOffsetOfLocalHeader" in rawEntry &&
+		typeof rawEntry.relativeOffsetOfLocalHeader === "number"
+	);
+}
+
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}
 	async getLength(): Promise<number> {
@@ -128,10 +147,15 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		key: AbsolutePath,
 		range: RangeQuery,
 	): Promise<Uint8Array | undefined> {
-		const entry = (await this.info).entries[strip_prefix(key)] as
-			| ZipEntryInternal
-			| undefined;
+		const entry = (await this.info).entries[strip_prefix(key)];
 		if (!entry) return undefined;
+
+		if (!isZipEntryInternal(entry)) {
+			throw new Error(
+				"ZipFileStore.getRange requires internal unzipit properties that are not available. " +
+					"This may indicate an incompatible version of unzipit.",
+			);
+		}
 
 		// For compressed entries, fall back to reading full entry and slicing
 		if (entry.compressionMethod !== 0) {
