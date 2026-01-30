@@ -1,5 +1,16 @@
 # zarrita
 
+## 0.6.1
+
+### Patch Changes
+
+- Add `getRange()` to `ZipFileStore` for sharding support ([#337](https://github.com/manzt/zarrita.js/pull/337))
+
+  Enables reading sharded arrays from zip files by implementing partial byte-range reads. Uncompressed entries support true partial reads; compressed entries fall back to reading the full entry and slicing.
+
+- Updated dependencies [[`e9cfc57`](https://github.com/manzt/zarrita.js/commit/e9cfc577be4dd5cdf809516b45c63e4c80919c16)]:
+  - @zarrita/storage@0.1.4
+
 ## 0.6.0
 
 ### Minor Changes

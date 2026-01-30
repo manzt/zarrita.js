@@ -1,6 +1,6 @@
 {
 	"name": "zarrita",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"repository": "https://github.com/manzt/zarrita.js",
 	"license": "MIT",
 	"type": "module",
