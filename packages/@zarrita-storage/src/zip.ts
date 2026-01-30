@@ -1,7 +1,29 @@
-import type { Reader, ZipInfo } from "unzipit";
+import type { Reader, ZipEntry, ZipInfo } from "unzipit";
 import { unzip } from "unzipit";
-import type { AbsolutePath, AsyncReadable } from "./types.js";
+import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
 import { assert, fetch_range, strip_prefix } from "./util.js";
+
+/**
+ * Internal type for accessing unzipit internals that are not exposed in TypeScript types.
+ * These properties exist at runtime on ZipEntry objects.
+ */
+interface ZipEntryInternal extends ZipEntry {
+	/** The underlying Reader used to read the zip file */
+	_reader: Reader;
+	/** Raw entry data from the zip central directory */
+	_rawEntry: {
+		/** Offset of the local file header in the zip file */
+		relativeOffsetOfLocalHeader: number;
+		/** 0 = stored (no compression), 8 = deflate */
+		compressionMethod: number;
+		/** Size of compressed data */
+		compressedSize: number;
+		/** Size of uncompressed data */
+		uncompressedSize: number;
+	};
+	/** Compression method (0 = stored, 8 = deflate) */
+	compressionMethod: number;
+}
 
 export class BlobReader implements Reader {
 	constructor(public blob: Blob) {}
@@ -68,7 +90,10 @@ export class HTTPRangeReader implements Reader {
 /** @experimental */
 class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	private info: Promise<ZipInfo>;
+	private reader: R;
+
 	constructor(reader: R, opts: ZipFileStoreOptions = {}) {
+		this.reader = reader;
 		this.info = unzip(reader).then((info) => {
 			if (opts.transformEntries) {
 				info.entries = opts.transformEntries(info.entries);
@@ -77,10 +102,55 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		});
 	}
 
+	/**
+	 * Compute the byte offset where entry data begins in the zip file.
+	 * This requires reading the local file header to get filename and extra field lengths.
+	 */
+	private async getEntryDataOffset(entry: ZipEntryInternal): Promise<number> {
+		const localHeaderOffset = entry._rawEntry.relativeOffsetOfLocalHeader;
+		// Read local file header (30 bytes minimum)
+		const header = await this.reader.read(localHeaderOffset, 30);
+		// File name length at offset 26 (2 bytes, little-endian)
+		const fileNameLength = header[26] + header[27] * 256;
+		// Extra field length at offset 28 (2 bytes, little-endian)
+		const extraFieldLength = header[28] + header[29] * 256;
+		// Data starts after: local header (30) + filename + extra field
+		return localHeaderOffset + 30 + fileNameLength + extraFieldLength;
+	}
+
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
 		let entry = (await this.info).entries[strip_prefix(key)];
 		if (!entry) return;
 		return new Uint8Array(await entry.arrayBuffer());
+	}
+
+	async getRange(
+		key: AbsolutePath,
+		range: RangeQuery,
+	): Promise<Uint8Array | undefined> {
+		const entry = (await this.info).entries[strip_prefix(key)] as
+			| ZipEntryInternal
+			| undefined;
+		if (!entry) return undefined;
+
+		// For compressed entries, fall back to reading full entry and slicing
+		if (entry.compressionMethod !== 0) {
+			const bytes = await this.get(key);
+			if (!bytes) return undefined;
+			if ("suffixLength" in range) {
+				return bytes.slice(-range.suffixLength);
+			}
+			return bytes.slice(range.offset, range.offset + range.length);
+		}
+
+		// For uncompressed (stored) entries, read directly from underlying reader
+		const dataOffset = await this.getEntryDataOffset(entry);
+
+		if ("suffixLength" in range) {
+			const start = dataOffset + entry.size - range.suffixLength;
+			return this.reader.read(start, range.suffixLength);
+		}
+		return this.reader.read(dataOffset + range.offset, range.length);
 	}
 
 	async has(key: AbsolutePath): Promise<boolean> {

@@ -1226,4 +1226,68 @@ describe("v3", async () => {
 			expect(chunk.data).toEqual(["hello", "世界", "🚀🎉", "Ñoño"]);
 		});
 	});
+
+	describe("sharded arrays from ZipFileStore (uncompressed)", async () => {
+		let uncompressed_zip_buffer = await fs.readFile(
+			path.resolve(
+				__dirname,
+				"../../../fixtures/v3/data.uncompressed.zarr.zip",
+			),
+		);
+		let blob = new Blob([uncompressed_zip_buffer], { type: "application/zip" });
+		let uncompressed_zip_store = root(ZipFileStore.fromBlob(blob));
+
+		it("reads 1d.contiguous.compressed.sharded.i2 from uncompressed zip", async () => {
+			let arr = await open.v3(
+				uncompressed_zip_store.resolve("1d.contiguous.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk([0])).toStrictEqual({
+				data: new Int16Array([1, 2, 3, 4]),
+				shape: [4],
+				stride: [1],
+			});
+		});
+
+		it("reads 1d.chunked.compressed.sharded.i2 from uncompressed zip", async () => {
+			let arr = await open.v3(
+				uncompressed_zip_store.resolve("1d.chunked.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk([0])).toStrictEqual({
+				data: new Int16Array([1]),
+				shape: [1],
+				stride: [1],
+			});
+			expect(await arr.getChunk([2])).toStrictEqual({
+				data: new Int16Array([3]),
+				shape: [1],
+				stride: [1],
+			});
+		});
+
+		it("reads 2d.chunked.compressed.sharded.i2 from uncompressed zip", async () => {
+			let arr = await open.v3(
+				uncompressed_zip_store.resolve("2d.chunked.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk([1, 2])).toStrictEqual({
+				data: new Int16Array([7]),
+				shape: [1, 1],
+				stride: [1, 1],
+			});
+		});
+
+		it("reads 3d.chunked.compressed.sharded.i2 from uncompressed zip", async () => {
+			let arr = await open.v3(
+				uncompressed_zip_store.resolve("3d.chunked.compressed.sharded.i2"),
+				{ kind: "array" },
+			);
+			expect(await arr.getChunk([1, 1, 1])).toStrictEqual({
+				data: new Int16Array([21]),
+				shape: [1, 1, 1],
+				stride: [1, 1, 1],
+			});
+		});
+	});
 });

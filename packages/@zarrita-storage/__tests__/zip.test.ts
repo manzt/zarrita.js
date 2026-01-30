@@ -27,6 +27,11 @@ const store_v3_zipped_from_parent_path = path.join(
 	"v3",
 	"data.zipped_from_parent.zarr.zip",
 );
+const store_v3_uncompressed_path = path.join(
+	fixtures_dir,
+	"v3",
+	"data.uncompressed.zarr.zip",
+);
 
 describe("ZipFileStore", () => {
 	afterEach(() => {
@@ -121,5 +126,88 @@ describe("ZipFileStore", () => {
               "zarr_format": 2,
             }
 		`);
+	});
+});
+
+describe("ZipFileStore.getRange", () => {
+	it("reads partial data with offset and length from uncompressed zip", async () => {
+		let zipBuffer = await fs.readFile(store_v3_uncompressed_path);
+		let blob = new Blob([zipBuffer], { type: "application/zip" });
+		let store = ZipFileStore.fromBlob(blob);
+
+		// Read full file first to know what to expect
+		let fullBytes = await store.get("/zarr.json");
+		expect(fullBytes).toBeDefined();
+
+		// Read partial with offset and length
+		let partial = await store.getRange("/zarr.json", { offset: 4, length: 10 });
+		expect(partial).toEqual(fullBytes!.slice(4, 14));
+	});
+
+	it("reads suffix with suffixLength from uncompressed zip", async () => {
+		let zipBuffer = await fs.readFile(store_v3_uncompressed_path);
+		let blob = new Blob([zipBuffer], { type: "application/zip" });
+		let store = ZipFileStore.fromBlob(blob);
+
+		let fullBytes = await store.get("/zarr.json");
+		expect(fullBytes).toBeDefined();
+
+		let suffix = await store.getRange("/zarr.json", { suffixLength: 20 });
+		expect(suffix).toEqual(fullBytes!.slice(-20));
+	});
+
+	it("returns undefined for missing key", async () => {
+		let zipBuffer = await fs.readFile(store_v3_uncompressed_path);
+		let blob = new Blob([zipBuffer], { type: "application/zip" });
+		let store = ZipFileStore.fromBlob(blob);
+
+		let result = await store.getRange("/nonexistent", {
+			offset: 0,
+			length: 10,
+		});
+		expect(result).toBeUndefined();
+	});
+
+	it("reads partial data from compressed zip (fallback path)", async () => {
+		// The compressed zip uses deflate compression, so getRange falls back to
+		// reading full entry and slicing
+		let zipBuffer = await fs.readFile(store_v3_zipped_from_within_path);
+		let blob = new Blob([zipBuffer], { type: "application/zip" });
+		let store = ZipFileStore.fromBlob(blob);
+
+		let fullBytes = await store.get("/zarr.json");
+		expect(fullBytes).toBeDefined();
+
+		// Read partial with offset and length
+		let partial = await store.getRange("/zarr.json", { offset: 4, length: 10 });
+		expect(partial).toEqual(fullBytes!.slice(4, 14));
+
+		// Read suffix
+		let suffix = await store.getRange("/zarr.json", { suffixLength: 20 });
+		expect(suffix).toEqual(fullBytes!.slice(-20));
+	});
+
+	it("reads partial data from a shard file", async () => {
+		let zipBuffer = await fs.readFile(store_v3_uncompressed_path);
+		let blob = new Blob([zipBuffer], { type: "application/zip" });
+		let store = ZipFileStore.fromBlob(blob);
+
+		// Read full shard file
+		let fullBytes = await store.get("/1d.contiguous.compressed.sharded.i2/c/0");
+		expect(fullBytes).toBeDefined();
+
+		// Read the shard index (last 20 bytes: 16 bytes index + 4 bytes crc32)
+		let indexSuffix = await store.getRange(
+			"/1d.contiguous.compressed.sharded.i2/c/0",
+			{ suffixLength: 20 },
+		);
+		expect(indexSuffix).toEqual(fullBytes!.slice(-20));
+
+		// Read first 10 bytes
+		let prefix = await store.getRange(
+			"/1d.contiguous.compressed.sharded.i2/c/0",
+			{ offset: 0, length: 10 },
+		);
+		expect(prefix).toEqual(fullBytes!.slice(0, 10));
 	});
 });
