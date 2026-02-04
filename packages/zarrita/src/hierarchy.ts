@@ -9,10 +9,13 @@ import type {
 	DataType,
 	GroupMetadata,
 	Scalar,
+	TypedArray,
 	TypedArrayConstructor,
 } from "./metadata.js";
 import {
+	assertSharedArrayBufferAvailable,
 	create_chunk_key_encoder,
+	createBuffer,
 	type DataTypeQuery,
 	ensure_correct_scalar,
 	get_ctr,
@@ -192,12 +195,28 @@ export class Array<
 	async getChunk(
 		chunk_coords: number[],
 		options?: Parameters<Store["get"]>[1],
+		opts?: { useSharedArrayBuffer?: boolean },
 	): Promise<Chunk<Dtype>> {
+		if (opts?.useSharedArrayBuffer) {
+			assertSharedArrayBufferAvailable();
+		}
 		let context = this[CONTEXT_MARKER];
 		let maybe_bytes = await context.get_chunk_bytes(chunk_coords, options);
 		if (!maybe_bytes) {
 			let size = context.chunk_shape.reduce((a, b) => a * b, 1);
-			let data = new context.TypedArray(size);
+			let data: TypedArray<Dtype>;
+			if (opts?.useSharedArrayBuffer) {
+				let sample = new context.TypedArray(0);
+				if (!("BYTES_PER_ELEMENT" in sample)) {
+					throw new Error(
+						"useSharedArrayBuffer is not supported for string or object data types",
+					);
+				}
+				let buffer = createBuffer(size * sample.BYTES_PER_ELEMENT, true);
+				data = new context.TypedArray(buffer, 0, size);
+			} else {
+				data = new context.TypedArray(size);
+			}
 			// @ts-expect-error: TS can't infer that `fill_value` is union (assumes never) but this is ok
 			data.fill(context.fill_value);
 			return {

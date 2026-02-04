@@ -16,13 +16,13 @@ export class BoolArray {
 	constructor(arr: Iterable<boolean>);
 	constructor(buffer: ArrayBuffer, byteOffset?: number, length?: number);
 	constructor(
-		x: number | Iterable<boolean> | ArrayBuffer,
+		x: number | Iterable<boolean> | ArrayBufferLike,
 		byteOffset?: number,
 		length?: number,
 	) {
 		if (typeof x === "number") {
 			this.#bytes = new Uint8Array(x);
-		} else if (x instanceof ArrayBuffer) {
+		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
 			this.#bytes = new Uint8Array(x, byteOffset, length);
 		} else {
 			this.#bytes = new Uint8Array(Array.from(x, (v) => (v ? 1 : 0)));
@@ -41,8 +41,8 @@ export class BoolArray {
 		return this.#bytes.byteLength;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this.#bytes.buffer as ArrayBuffer;
+	get buffer(): ArrayBufferLike {
+		return this.#bytes.buffer;
 	}
 
 	get length(): number {
@@ -89,7 +89,7 @@ export class ByteStringArray {
 	constructor(chars: number, arr: Iterable<string>);
 	constructor(
 		chars: number,
-		x: number | ArrayBuffer | Iterable<string>,
+		x: number | ArrayBufferLike | Iterable<string>,
 		byteOffset?: number,
 		length?: number,
 	) {
@@ -97,7 +97,7 @@ export class ByteStringArray {
 		this.#encoder = new TextEncoder();
 		if (typeof x === "number") {
 			this._data = new Uint8Array(x * chars);
-		} else if (x instanceof ArrayBuffer) {
+		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
 			if (length) length = length * chars;
 			this._data = new Uint8Array(x, byteOffset, length);
 		} else {
@@ -121,8 +121,8 @@ export class ByteStringArray {
 		return this._data.byteLength;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this._data.buffer as ArrayBuffer;
+	get buffer(): ArrayBufferLike {
+		return this._data.buffer;
 	}
 
 	get length(): number {
@@ -182,14 +182,14 @@ export class UnicodeStringArray {
 	constructor(chars: number, arr: Iterable<string>);
 	constructor(
 		chars: number,
-		x: number | ArrayBuffer | Iterable<string>,
+		x: number | ArrayBufferLike | Iterable<string>,
 		byteOffset?: number,
 		length?: number,
 	) {
 		this.chars = chars;
 		if (typeof x === "number") {
 			this.#data = new Int32Array(x * chars);
-		} else if (x instanceof ArrayBuffer) {
+		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
 			if (length) length *= chars;
 			this.#data = new Int32Array(x, byteOffset, length);
 		} else {
@@ -218,8 +218,8 @@ export class UnicodeStringArray {
 		return this.#data.byteOffset;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this.#data.buffer as ArrayBuffer;
+	get buffer(): ArrayBufferLike {
+		return this.#data.buffer;
 	}
 
 	get length(): number {

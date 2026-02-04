@@ -2,6 +2,7 @@ import type { Readable } from "@zarrita/storage";
 
 import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
+import { assertSharedArrayBufferAvailable, createBuffer } from "../util.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
 	GetOptions,
@@ -36,6 +37,10 @@ export async function get<
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
 > {
+	if (opts.useSharedArrayBuffer) {
+		assertSharedArrayBufferAvailable();
+	}
+
 	let context = get_context(arr);
 	let indexer = new BasicIndexer({
 		selection,
@@ -43,8 +48,22 @@ export async function get<
 		chunk_shape: arr.chunks,
 	});
 
+	let size = indexer.shape.reduce((a, b) => a * b, 1);
+	let data: TypedArray<D>;
+	if (opts.useSharedArrayBuffer) {
+		let sample = new context.TypedArray(0);
+		if (!("BYTES_PER_ELEMENT" in sample)) {
+			throw new Error(
+				"useSharedArrayBuffer is not supported for string or object data types",
+			);
+		}
+		let buffer = createBuffer(size * sample.BYTES_PER_ELEMENT, true);
+		data = new context.TypedArray(buffer, 0, size);
+	} else {
+		data = new context.TypedArray(size);
+	}
 	let out = setter.prepare(
-		new context.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
+		data,
 		indexer.shape,
 		context.get_strides(indexer.shape),
 	);
@@ -52,7 +71,11 @@ export async function get<
 	let queue = opts.create_queue?.() ?? create_queue();
 	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(async () => {
-			let { data, shape, stride } = await arr.getChunk(chunk_coords, opts.opts);
+			let { data, shape, stride } = await arr.getChunk(
+				chunk_coords,
+				opts.opts,
+				{ useSharedArrayBuffer: opts.useSharedArrayBuffer },
+			);
 			let chunk = setter.prepare(data, shape, stride);
 			setter.set_from_chunk(out, chunk, mapping);
 		});

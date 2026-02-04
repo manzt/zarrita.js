@@ -22,6 +22,26 @@ export function json_encode_object(o: Record<string, unknown>): Uint8Array {
 	return new TextEncoder().encode(str);
 }
 
+export function assertSharedArrayBufferAvailable(): void {
+	if (typeof SharedArrayBuffer === "undefined") {
+		throw new Error(
+			"SharedArrayBuffer is not available. " +
+				"In browsers, this requires Cross-Origin-Opener-Policy and " +
+				"Cross-Origin-Embedder-Policy headers to be set.",
+		);
+	}
+}
+
+export function createBuffer(
+	byteLength: number,
+	useShared?: boolean,
+): ArrayBufferLike {
+	if (useShared) {
+		return new SharedArrayBuffer(byteLength);
+	}
+	return new ArrayBuffer(byteLength);
+}
+
 export function json_decode_object(bytes: Uint8Array) {
 	const str = new TextDecoder().decode(bytes);
 	return JSON.parse(str);

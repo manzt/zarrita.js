@@ -219,7 +219,7 @@ describe("ByteStringArray", () => {
 		expect({
 			length: arr.length,
 			data: Array.from(arr),
-			text: new TextDecoder().decode(arr.buffer),
+			text: new TextDecoder().decode(arr.buffer as ArrayBuffer),
 		}).toStrictEqual({
 			length: 5,
 			data,
