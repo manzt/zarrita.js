@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, test } from "vitest";
+import { assert, describe, expect, expectTypeOf, test } from "vitest";
 import { Array, Group } from "../src/hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -80,6 +80,34 @@ describe("Array", () => {
 		if (arr.is("int8")) {
 			expectTypeOf(arr.dtype).toMatchTypeOf<Int8>();
 		}
+	});
+
+	test("getChunk returns fill_value for missing uint64 chunk", async () => {
+		// Cast needed: fill_value is intentionally a number (not bigint) to
+		// simulate JSON-parsed metadata, which is how the bug manifests.
+		let arr = new Array(new Map(), "/", {
+			...array_metadata,
+			data_type: "uint64",
+			codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+		} as ArrayMetadata);
+		let chunk = await arr.getChunk([0, 0]);
+		expect(chunk.data).toBeInstanceOf(BigUint64Array);
+		assert(chunk.data instanceof BigUint64Array);
+		expect(chunk.data[0]).toBe(0n);
+	});
+
+	test("getChunk returns fill_value for missing int64 chunk", async () => {
+		// Cast needed: fill_value is intentionally a number (not bigint) to
+		// simulate JSON-parsed metadata, which is how the bug manifests.
+		let arr = new Array(new Map(), "/", {
+			...array_metadata,
+			data_type: "int64",
+			codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+		} as ArrayMetadata);
+		let chunk = await arr.getChunk([0, 0]);
+		expect(chunk.data).toBeInstanceOf(BigInt64Array);
+		assert(chunk.data instanceof BigInt64Array);
+		expect(chunk.data[0]).toBe(0n);
 	});
 });
 

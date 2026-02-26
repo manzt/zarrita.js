@@ -170,7 +170,7 @@ export class Array<
 			...metadata,
 			fill_value: ensure_correct_scalar(metadata),
 		};
-		this[CONTEXT_MARKER] = create_context(this, metadata);
+		this[CONTEXT_MARKER] = create_context(this, this.#metadata);
 	}
 
 	get attrs(): Attributes {
