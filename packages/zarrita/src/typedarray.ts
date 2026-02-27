@@ -4,6 +4,10 @@
  * @module
  */
 
+function isArrayBufferLike(x: unknown): x is ArrayBufferLike {
+	return x instanceof ArrayBuffer || x instanceof SharedArrayBuffer;
+}
+
 /**
  * An array-like view of a fixed-length boolean buffer.
  *
@@ -22,7 +26,7 @@ export class BoolArray {
 	) {
 		if (typeof x === "number") {
 			this.#bytes = new Uint8Array(x);
-		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
+		} else if (isArrayBufferLike(x)) {
 			this.#bytes = new Uint8Array(x, byteOffset, length);
 		} else {
 			this.#bytes = new Uint8Array(Array.from(x, (v) => (v ? 1 : 0)));
@@ -97,7 +101,7 @@ export class ByteStringArray {
 		this.#encoder = new TextEncoder();
 		if (typeof x === "number") {
 			this._data = new Uint8Array(x * chars);
-		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
+		} else if (isArrayBufferLike(x)) {
 			if (length) length = length * chars;
 			this._data = new Uint8Array(x, byteOffset, length);
 		} else {
@@ -189,7 +193,7 @@ export class UnicodeStringArray {
 		this.chars = chars;
 		if (typeof x === "number") {
 			this.#data = new Int32Array(x * chars);
-		} else if (x instanceof ArrayBuffer || x instanceof SharedArrayBuffer) {
+		} else if (isArrayBufferLike(x)) {
 			if (length) length *= chars;
 			this.#data = new Int32Array(x, byteOffset, length);
 		} else {
