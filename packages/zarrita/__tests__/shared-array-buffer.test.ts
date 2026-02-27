@@ -109,7 +109,7 @@ describe("SharedArrayBuffer support", () => {
 		expect(Array.from(chunk.data)).toEqual([true, true, true, true]);
 	});
 
-	test("useSharedArrayBuffer throws for string data type", async () => {
+	test("useSharedArrayBuffer warns and falls back for string data type", async () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [2],
@@ -118,11 +118,11 @@ describe("SharedArrayBuffer support", () => {
 			fill_value: "hello",
 		});
 
-		await expect(
-			zarr.get(arr, null, { useSharedArrayBuffer: true }),
-		).rejects.toThrow(
-			"useSharedArrayBuffer is not supported for string or object data types",
-		);
+		// Should warn but not throw, falling back to regular array
+		let chunk = await zarr.get(arr, null, { useSharedArrayBuffer: true });
+		// String arrays use regular JS arrays, not TypedArrays with buffers
+		expect(Array.isArray(chunk.data)).toBe(true);
+		expect(chunk.data.length).toBe(2);
 	});
 
 	test("get() with useSharedArrayBuffer works with written data", async () => {

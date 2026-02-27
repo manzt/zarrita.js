@@ -208,12 +208,14 @@ export class Array<
 			if (opts?.useSharedArrayBuffer) {
 				let sample = new context.TypedArray(0);
 				if (!("BYTES_PER_ELEMENT" in sample)) {
-					throw new Error(
-						"useSharedArrayBuffer is not supported for string or object data types",
+					console.warn(
+						"zarrita: useSharedArrayBuffer is not supported for non-buffer-backed data types.",
 					);
+					data = new context.TypedArray(size);
+				} else {
+					let buffer = createBuffer(size * sample.BYTES_PER_ELEMENT, true);
+					data = new context.TypedArray(buffer, 0, size);
 				}
-				let buffer = createBuffer(size * sample.BYTES_PER_ELEMENT, true);
-				data = new context.TypedArray(buffer, 0, size);
 			} else {
 				data = new context.TypedArray(size);
 			}
