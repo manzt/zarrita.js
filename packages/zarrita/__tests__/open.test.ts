@@ -598,6 +598,17 @@ describe("v3", async () => {
 		});
 	});
 
+	it("1d.contiguous.delta.i4", async () => {
+		let arr = await open.v3(store.resolve("/1d.contiguous.delta.i4"), {
+			kind: "array",
+		});
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int32Array([1, 2, 3, 4]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
 	it("1d.contiguous.u1", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",

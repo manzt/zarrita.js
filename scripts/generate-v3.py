@@ -1,11 +1,11 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "zarr==3.1.1",
+#     "zarr>=3.1.2",
 # ]
 #
 # [tool.uv]
-# exclude-newer = "2025-08-06T10:57:26.55032-05:00"
+# exclude-newer = "2026-03-07T00:00:00Z"
 # ///
 
 import shutil
@@ -15,6 +15,7 @@ import json
 import zarr
 import zarr.codecs
 import zarr.storage
+from zarr.codecs.numcodecs import Delta as NumcodecsDelta
 import numpy as np
 
 SELF_DIR = pathlib.Path(__file__).parent
@@ -496,6 +497,19 @@ a = zarr.create_array(
     compressors=[zarr.codecs.GzipCodec()],
 )
 a[:, :, :] = data
+
+# 1d.contiguous.delta.i4
+a = zarr.create_array(
+    store,
+    name="1d.contiguous.delta.i4",
+    dtype="int32",
+    shape=(4,),
+    chunks=(4,),
+    filters=[NumcodecsDelta(dtype="int32")],
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = [1, 2, 3, 4]
 
 # Group with spaces in the name
 g = zarr.create_group(store, path="my group with spaces")
