@@ -17,6 +17,28 @@ const SUPPORTED: ReadonlySet<string> = new Set<DeltaCompatibleType>([
   "float64",
 ]);
 
+// The python codecs flatten with arr.reshape(-1, order='A').
+// The zarrita codec uses the byte order of the data.
+// These two are only equivalent if the array strides are C style or Fortran style.
+function assert_c_or_f_contiguous(shape: number[], stride: number[]): void {
+  const n = shape.length;
+  let c = n === 0 || stride[n - 1] === 1;
+  for (let i = n - 2; i >= 0 && c; i--) {
+    c = stride[i] === stride[i + 1] * shape[i + 1];
+  }
+  if (c) return;
+  let f = n === 0 || stride[0] === 1;
+  for (let i = 1; i < n && f; i++) {
+    f = stride[i] === stride[i - 1] * shape[i - 1];
+  }
+  if (f) return;
+  throw new Error(
+    `DeltaCodec requires C- or Fortran-contiguous strides, got shape=${JSON.stringify(
+      shape,
+    )} stride=${JSON.stringify(stride)}`,
+  );
+}
+
 export class DeltaCodec<D extends DeltaCompatibleType> {
   kind = "array_to_array" as const;
   #ctr: ReturnType<typeof get_ctr<D>>;
@@ -37,6 +59,7 @@ export class DeltaCodec<D extends DeltaCompatibleType> {
   }
 
   encode(chunk: Chunk<D>): Chunk<D> {
+    assert_c_or_f_contiguous(chunk.shape, chunk.stride);
     const src = chunk.data;
     const out = new this.#ctr(src.length) as Chunk<D>["data"];
     out[0] = src[0];
@@ -48,6 +71,7 @@ export class DeltaCodec<D extends DeltaCompatibleType> {
   }
 
   decode(chunk: Chunk<D>): Chunk<D> {
+    assert_c_or_f_contiguous(chunk.shape, chunk.stride);
     const src = chunk.data;
     const out = new this.#ctr(src.length) as Chunk<D>["data"];
     out[0] = src[0];
