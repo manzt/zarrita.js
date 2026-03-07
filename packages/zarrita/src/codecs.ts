@@ -2,6 +2,7 @@ import type { Codec as _Codec } from "numcodecs";
 import { BitroundCodec } from "./codecs/bitround.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
+import { DeltaCodec } from "./codecs/delta.js";
 import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
 import { ShuffleCodec } from "./codecs/shuffle.js";
@@ -52,6 +53,7 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 			.set("numcodecs.zlib", zlib)
 			.set("numcodecs.vlen-utf8", () => VLenUTF8)
 			.set("numcodecs.shuffle", () => ShuffleCodec)
+			.set("numcodecs.delta", () => DeltaCodec)
 	);
 }
 
