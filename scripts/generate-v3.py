@@ -511,6 +511,19 @@ a = zarr.create_array(
 )
 a[:] = [1, 2, 3, 4]
 
+# 3d.contiguous.delta.i4.mixed (TransposeCodec([1,0,2]) then delta: swaps first two axes)
+a = zarr.create_array(
+    store,
+    name="3d.contiguous.delta.i4.mixed",
+    dtype="int32",
+    shape=(3, 3, 3),
+    chunks=(3, 3, 3),
+    filters=[zarr.codecs.TransposeCodec(order=[1, 0, 2]), NumcodecsDelta(dtype="int32")],
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = np.arange(27).reshape(3, 3, 3)
+
 # Group with spaces in the name
 g = zarr.create_group(store, path="my group with spaces")
 g.attrs["description"] = "A group with spaces in the name"

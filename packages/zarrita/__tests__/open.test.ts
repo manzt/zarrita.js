@@ -678,6 +678,29 @@ describe("v3", async () => {
 		});
 	});
 
+	it("3d.contiguous.delta.i4.mixed", async () => {
+		// TransposeCodec([1,0,2]) swaps first two axes via stride metadata.
+		// stride [3,9,1] means arr[i,j,k] = data[3*i + 9*j + k], correctly reconstructing arange(27).
+		const expectedData = new Int32Array(27);
+		let n = 0;
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
+				for (let k = 0; k < 3; k++) {
+					expectedData[i * 3 + j * 9 + k] = n++;
+				}
+			}
+		}
+		let arr = await open.v3(store.resolve("/3d.contiguous.delta.i4.mixed"), {
+			kind: "array",
+		});
+
+		expect(await arr.getChunk([0, 0, 0])).toStrictEqual({
+			data: expectedData,
+			shape: [3, 3, 3],
+			stride: [3, 9, 1],
+		});
+	});
+
 	it("1d.contiguous.u1", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
