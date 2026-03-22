@@ -107,15 +107,16 @@ function groupRequests(sorted: PendingRequest[]): RangeGroup[] {
 
 /**
  * A store wrapper that batches concurrent `getRange()` calls within a single
- * macrotask tick, merges adjacent byte ranges, and caches results in an LRU
+ * microtask tick, merges adjacent byte ranges, and caches results in an LRU
  * cache.
  *
  * Inspired by geotiff.js
  * {@link https://github.com/geotiffjs/geotiff.js/blob/master/src/source/blockedsource.js BlockedSource}.
  *
  * @remarks `options` (e.g. `AbortSignal`, custom headers) are taken from the
- * first `getRange()` call that schedules a flush tick; all other callers in
- * the same macrotask share those options.
+ * first `getRange()` call that schedules a flush tick; subsequent callers in
+ * the same batch silently share those options. If callers pass different
+ * signals or headers, only the first caller's options take effect.
  *
  * @see {@link withRangeBatching}
  */
@@ -209,7 +210,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 			if (!this.#scheduled) {
 				this.#scheduled = true;
 				this.#flushOptions = options;
-				setTimeout(() => this.#flush(), 0);
+				queueMicrotask(() => this.#flush());
 			}
 		});
 	}
@@ -268,7 +269,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 
 /**
  * Wraps a store with range-batching: concurrent `getRange()` calls within a
- * single macrotask tick are merged into fewer HTTP requests and cached in an
+ * single microtask tick are merged into fewer HTTP requests and cached in an
  * LRU cache.
  *
  * ```typescript

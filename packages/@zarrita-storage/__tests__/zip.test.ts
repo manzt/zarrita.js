@@ -141,7 +141,7 @@ describe("ZipFileStore.getRange", () => {
 
 		// Read partial with offset and length
 		let partial = await store.getRange("/zarr.json", { offset: 4, length: 10 });
-		expect(partial).toEqual(fullBytes?.slice(4, 14));
+		expect(partial).toEqual(fullBytes!.slice(4, 14));
 	});
 
 	it("reads suffix with suffixLength from uncompressed zip", async () => {
@@ -153,7 +153,7 @@ describe("ZipFileStore.getRange", () => {
 		expect(fullBytes).toBeDefined();
 
 		let suffix = await store.getRange("/zarr.json", { suffixLength: 20 });
-		expect(suffix).toEqual(fullBytes?.slice(-20));
+		expect(suffix).toEqual(fullBytes!.slice(-20));
 	});
 
 	it("returns undefined for missing key", async () => {
@@ -180,11 +180,11 @@ describe("ZipFileStore.getRange", () => {
 
 		// Read partial with offset and length
 		let partial = await store.getRange("/zarr.json", { offset: 4, length: 10 });
-		expect(partial).toEqual(fullBytes?.slice(4, 14));
+		expect(partial).toEqual(fullBytes!.slice(4, 14));
 
 		// Read suffix
 		let suffix = await store.getRange("/zarr.json", { suffixLength: 20 });
-		expect(suffix).toEqual(fullBytes?.slice(-20));
+		expect(suffix).toEqual(fullBytes!.slice(-20));
 	});
 
 	it("reads partial data from a shard file", async () => {
@@ -201,13 +201,13 @@ describe("ZipFileStore.getRange", () => {
 			"/1d.contiguous.compressed.sharded.i2/c/0",
 			{ suffixLength: 20 },
 		);
-		expect(indexSuffix).toEqual(fullBytes?.slice(-20));
+		expect(indexSuffix).toEqual(fullBytes!.slice(-20));
 
 		// Read first 10 bytes
 		let prefix = await store.getRange(
 			"/1d.contiguous.compressed.sharded.i2/c/0",
 			{ offset: 0, length: 10 },
 		);
-		expect(prefix).toEqual(fullBytes?.slice(0, 10));
+		expect(prefix).toEqual(fullBytes!.slice(0, 10));
 	});
 });

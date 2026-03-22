@@ -98,6 +98,44 @@ describe("withRangeBatching", () => {
 		});
 	});
 
+	describe("edge cases", () => {
+		it("handles overlapping ranges correctly", async () => {
+			let inner = fakeStore();
+			let store = withRangeBatching(inner);
+
+			let [r1, r2] = await Promise.all([
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+				store.getRange("/data/chunk", { offset: 50, length: 100 }),
+			]);
+
+			// Merged into single fetch [0, 150)
+			expect(inner.getRange).toHaveBeenCalledOnce();
+			let call = inner.getRange.mock.calls[0];
+			expect(call[1]).toEqual({ offset: 0, length: 150 });
+
+			expect(r1?.length).toBe(100);
+			expect(r2?.length).toBe(100);
+			expect(r1?.[0]).toBe(0);
+			expect(r2?.[0]).toBe(50);
+		});
+
+		it("resolves concurrent identical offset ranges correctly", async () => {
+			let inner = fakeStore();
+			let store = withRangeBatching(inner);
+
+			let [r1, r2] = await Promise.all([
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+			]);
+
+			expect(inner.getRange).toHaveBeenCalledOnce();
+			expect(r1?.length).toBe(100);
+			expect(r2?.length).toBe(100);
+			expect(r1?.[0]).toBe(0);
+			expect(r2?.[0]).toBe(0);
+		});
+	});
+
 	describe("caching", () => {
 		it("returns cached data on second request", async () => {
 			let inner = fakeStore();
@@ -169,6 +207,38 @@ describe("withRangeBatching", () => {
 			// Retry should succeed (not permanently poisoned)
 			let result = await store.getRange("/data/shard", { suffixLength: 1024 });
 			expect(result?.length).toBe(1024);
+		});
+	});
+
+	describe("LRU eviction", () => {
+		it("evicts oldest entry when cache capacity exceeded", async () => {
+			let inner = fakeStore();
+			let store = withRangeBatching(inner, { cacheSize: 2 });
+
+			// Fill cache with 3 entries (capacity 2)
+			await store.getRange("/a", { offset: 0, length: 10 });
+			await store.getRange("/b", { offset: 0, length: 10 });
+			await store.getRange("/c", { offset: 0, length: 10 });
+
+			// /a should be evicted, /b and /c cached
+			inner.getRange.mockClear();
+			await store.getRange("/b", { offset: 0, length: 10 });
+			expect(inner.getRange).not.toHaveBeenCalled();
+
+			await store.getRange("/a", { offset: 0, length: 10 });
+			expect(inner.getRange).toHaveBeenCalledOnce();
+		});
+
+		it("honors cacheSize option", async () => {
+			let inner = fakeStore();
+			let store = withRangeBatching(inner, { cacheSize: 1 });
+
+			await store.getRange("/a", { offset: 0, length: 10 });
+			await store.getRange("/b", { offset: 0, length: 10 });
+
+			inner.getRange.mockClear();
+			await store.getRange("/a", { offset: 0, length: 10 });
+			expect(inner.getRange).toHaveBeenCalledOnce();
 		});
 	});
 
