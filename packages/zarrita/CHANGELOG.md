@@ -1,5 +1,13 @@
 # zarrita
 
+## 0.6.2
+
+### Patch Changes
+
+- Fix "Cannot convert 0 to a BigInt" error when reading missing chunks from uint64/int64 arrays ([#342](https://github.com/manzt/zarrita.js/pull/342))
+
+- fix(sharding): deduplicate concurrent shard index fetches ([#346](https://github.com/manzt/zarrita.js/pull/346))
+
 ## 0.6.1
 
 ### Patch Changes
