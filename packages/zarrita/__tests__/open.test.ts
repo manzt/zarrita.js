@@ -1268,13 +1268,13 @@ describe("v3", async () => {
 			throw new Error("FileSystemStore must support getRange");
 		let original = fs_store.getRange.bind(fs_store);
 		let call_count = 0;
-		vi.spyOn(fs_store, "getRange").mockImplementation((key, range, options) => {
+		vi.spyOn(fs_store, "getRange").mockImplementation((key, range) => {
 			call_count++;
 			// Fail the first suffix range request (shard index), pass the rest
 			if (call_count === 1 && range && "suffixLength" in range) {
 				return Promise.reject(new Error("transient network error"));
 			}
-			return original(key, range, options);
+			return original(key, range);
 		});
 		let arr = await open.v3(
 			root(fs_store).resolve("2d.chunked.compressed.sharded.i2"),
