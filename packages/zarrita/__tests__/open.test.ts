@@ -1227,6 +1227,69 @@ describe("v3", async () => {
 		});
 	});
 
+	it("deduplicates concurrent shard index fetches", async () => {
+		let fs_store = new FileSystemStore(
+			path.resolve(__dirname, "../../../fixtures/v3/data.zarr"),
+		);
+		let spy = vi.spyOn(fs_store, "getRange");
+		// 2d.chunked.compressed.sharded.i2: shape [4,4], shard [2,2], inner [1,1]
+		// chunks [0,0],[0,1],[1,0],[1,1] are all in shard c/0/0
+		let arr = await open.v3(
+			root(fs_store).resolve("2d.chunked.compressed.sharded.i2"),
+			{
+				kind: "array",
+			},
+		);
+		spy.mockClear();
+		// Read 4 chunks from the same shard concurrently
+		let results = await Promise.all([
+			arr.getChunk([0, 0]),
+			arr.getChunk([0, 1]),
+			arr.getChunk([1, 0]),
+			arr.getChunk([1, 1]),
+		]);
+		expect(results[0].data).toStrictEqual(new Int16Array([1]));
+		expect(results[1].data).toStrictEqual(new Int16Array([2]));
+		expect(results[2].data).toStrictEqual(new Int16Array([5]));
+		expect(results[3].data).toStrictEqual(new Int16Array([6]));
+		// Count suffix range requests (shard index fetches)
+		let suffix_calls = spy.mock.calls.filter(
+			(call) => call[1] && "suffixLength" in call[1],
+		);
+		expect(suffix_calls).toHaveLength(1);
+		spy.mockRestore();
+	});
+
+	it("evicts cached shard index on fetch failure and retries", async () => {
+		let fs_store = new FileSystemStore(
+			path.resolve(__dirname, "../../../fixtures/v3/data.zarr"),
+		);
+		if (!fs_store.getRange)
+			throw new Error("FileSystemStore must support getRange");
+		let original = fs_store.getRange.bind(fs_store);
+		let call_count = 0;
+		vi.spyOn(fs_store, "getRange").mockImplementation((key, range, options) => {
+			call_count++;
+			// Fail the first suffix range request (shard index), pass the rest
+			if (call_count === 1 && range && "suffixLength" in range) {
+				return Promise.reject(new Error("transient network error"));
+			}
+			return original(key, range, options);
+		});
+		let arr = await open.v3(
+			root(fs_store).resolve("2d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		call_count = 0;
+		// First read should fail
+		await expect(arr.getChunk([0, 0])).rejects.toThrow(
+			"transient network error",
+		);
+		// Retry should succeed (cache evicted the failed Promise)
+		let chunk = await arr.getChunk([0, 0]);
+		expect(chunk.data).toStrictEqual(new Int16Array([1]));
+	});
+
 	describe("sharded arrays from ZipFileStore (uncompressed)", async () => {
 		let uncompressed_zip_buffer = await fs.readFile(
 			path.resolve(
