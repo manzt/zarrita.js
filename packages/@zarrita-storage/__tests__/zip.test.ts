@@ -48,8 +48,8 @@ describe("ZipFileStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "zarr_format": 2,
-            }
+			  "zarr_format": 2,
+			}
 		`);
 	});
 	it("store creation from blob works for v3", async () => {
@@ -62,11 +62,11 @@ describe("ZipFileStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "attributes": {},
-              "consolidated_metadata": null,
-              "node_type": "group",
-              "zarr_format": 3,
-            }
+			  "attributes": {},
+			  "consolidated_metadata": null,
+			  "node_type": "group",
+			  "zarr_format": 3,
+			}
 		`);
 	});
 	it("store creation from blob works for v3, second fixture", async () => {
@@ -79,11 +79,11 @@ describe("ZipFileStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "attributes": {},
-              "consolidated_metadata": null,
-              "node_type": "group",
-              "zarr_format": 3,
-            }
+			  "attributes": {},
+			  "consolidated_metadata": null,
+			  "node_type": "group",
+			  "zarr_format": 3,
+			}
 		`);
 	});
 	it("providing a transform entries function via zip store options works", async () => {
@@ -123,8 +123,8 @@ describe("ZipFileStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "zarr_format": 2,
-            }
+			  "zarr_format": 2,
+			}
 		`);
 	});
 });

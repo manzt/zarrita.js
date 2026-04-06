@@ -1,14 +1,7 @@
-import { assert, describe, expect, expectTypeOf, test } from "vitest";
+import { expectType } from "tintype";
+import { assert, describe, expect, test } from "vitest";
 import { Array, Group } from "../src/hierarchy.js";
-import type {
-	ArrayMetadata,
-	BigintDataType,
-	Bool,
-	DataType,
-	Int8,
-	NumberDataType,
-	StringDataType,
-} from "../src/metadata.js";
+import type { ArrayMetadata } from "../src/metadata.js";
 
 const array_metadata = {
 	zarr_format: 3,
@@ -62,24 +55,46 @@ describe("Array", () => {
 		`);
 	});
 
-	test("Array.is", () => {
+	test("Array.is narrows number", () => {
 		let arr = new Array(new Map(), "/", array_metadata as ArrayMetadata);
-		expectTypeOf(arr.dtype).toMatchTypeOf<DataType>();
-		if (arr.is("bigint")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<BigintDataType>();
-		}
-		if (arr.is("number")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<NumberDataType>();
-		}
-		if (arr.is("bool")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<Bool>();
-		}
-		if (arr.is("string")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<StringDataType>();
-		}
-		if (arr.is("int8")) {
-			expectTypeOf(arr.dtype).toMatchTypeOf<Int8>();
-		}
+		expectType(arr.dtype).toMatchInlineSnapshot(`DataType`);
+		assert(arr.is("number"));
+		expectType(arr.dtype).toMatchInlineSnapshot(`NumberDataType`);
+	});
+
+	test("Array.is narrows exact dtype", () => {
+		let arr = new Array(new Map(), "/", array_metadata as ArrayMetadata);
+		assert(arr.is("int8"));
+		expectType(arr.dtype).toMatchInlineSnapshot(`"int8"`);
+	});
+
+	test("Array.is narrows bigint", () => {
+		let arr = new Array(new Map(), "/", {
+			...array_metadata,
+			data_type: "uint64",
+		} as ArrayMetadata);
+		assert(arr.is("bigint"));
+		expectType(arr.dtype).toMatchInlineSnapshot(`BigintDataType`);
+	});
+
+	test("Array.is narrows bool", () => {
+		let arr = new Array(new Map(), "/", {
+			...array_metadata,
+			data_type: "bool",
+			fill_value: false,
+		} as ArrayMetadata);
+		assert(arr.is("bool"));
+		expectType(arr.dtype).toMatchInlineSnapshot(`"bool"`);
+	});
+
+	test("Array.is narrows string", () => {
+		let arr = new Array(new Map(), "/", {
+			...array_metadata,
+			data_type: "string",
+			fill_value: "",
+		} as ArrayMetadata);
+		assert(arr.is("string"));
+		expectType(arr.dtype).toMatchInlineSnapshot(`StringDataType`);
 	});
 
 	test("getChunk returns fill_value for missing uint64 chunk", async () => {
