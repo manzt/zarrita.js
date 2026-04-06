@@ -162,7 +162,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 		// Suffix requests (shard index reads) bypass batching - file size
 		// is unknown until the response arrives.
 		if ("suffixLength" in range) {
-			let cacheKey = `${key}:suffix:${range.suffixLength}`;
+			let cacheKey = `${key}\0suffix\0${range.suffixLength}`;
 			if (this.#cache.has(cacheKey)) {
 				this.#stats.hits++;
 				return Promise.resolve(this.#cache.get(cacheKey));
@@ -189,7 +189,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 		}
 
 		let { offset, length } = range;
-		let cacheKey = `${key}:${offset}:${length}`;
+		let cacheKey = `${key}\0${offset}\0${length}`;
 
 		if (this.#cache.has(cacheKey)) {
 			this.#stats.hits++;
@@ -245,8 +245,13 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 						{ offset: group.offset, length: group.length },
 						options,
 					);
+					if (data && data.length < group.length) {
+						throw new Error(
+							`Short read: expected ${group.length} bytes but received ${data.length}`,
+						);
+					}
 					for (let req of group.requests) {
-						let cacheKey = `${path}:${req.offset}:${req.length}`;
+						let cacheKey = `${path}\0${req.offset}\0${req.length}`;
 						if (!data) {
 							this.#cache.set(cacheKey, undefined);
 							req.resolve(undefined);

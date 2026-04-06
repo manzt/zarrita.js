@@ -261,6 +261,37 @@ describe("withRangeBatching", () => {
 		});
 	});
 
+	describe("short read", () => {
+		it("rejects all requests when server returns fewer bytes than expected", async () => {
+			let inner = fakeStore();
+			inner.getRange.mockImplementation(
+				(
+					_key: AbsolutePath,
+					range: RangeQuery,
+					_options?: RequestInit,
+				): Promise<Uint8Array | undefined> => {
+					if ("suffixLength" in range) {
+						return Promise.resolve(new Uint8Array(range.suffixLength));
+					}
+					// Return only half the requested bytes
+					return Promise.resolve(new Uint8Array(Math.floor(range.length / 2)));
+				},
+			);
+			let store = withRangeBatching(inner);
+
+			let results = await Promise.allSettled([
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+				store.getRange("/data/chunk", { offset: 100, length: 100 }),
+			]);
+
+			expect(results[0].status).toBe("rejected");
+			expect(results[1].status).toBe("rejected");
+			expect((results[0] as PromiseRejectedResult).reason.message).toMatch(
+				/Short read/,
+			);
+		});
+	});
+
 	describe("undefined data", () => {
 		it("resolves with undefined when inner returns undefined", async () => {
 			let inner = fakeStore();
