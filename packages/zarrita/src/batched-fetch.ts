@@ -61,19 +61,20 @@ export interface Stats {
 }
 
 /**
- * Default maximum gap (in bytes) between two requests before they are split
- * into separate groups. Fetching across a gap smaller than this is cheaper
- * than an extra round trip. 32 KB matches geotiff.js's BlockedSource heuristic.
+ * Default coalesce size (in bytes): two requests separated by less than this
+ * are merged into a single fetch. Fetching across a small gap is cheaper than
+ * an extra round trip. 32 KB matches geotiff.js's BlockedSource heuristic and
+ * Rust object_store's `OBJECT_STORE_COALESCE_DEFAULT`.
  */
-const DEFAULT_GAP_THRESHOLD = 32768;
+const DEFAULT_COALESCE_SIZE = 32768;
 
 /**
- * Groups sorted requests into contiguous ranges, merging across small gaps.
+ * Groups sorted requests into contiguous ranges, coalescing across small gaps.
  * Modelled after geotiff.js BlockedSource.groupBlocks().
  */
 function groupRequests(
 	sorted: PendingRequest[],
-	gapThreshold: number,
+	coalesceSize: number,
 ): RangeGroup[] {
 	if (sorted.length === 0) {
 		return [];
@@ -86,7 +87,7 @@ function groupRequests(
 	for (let i = 1; i < sorted.length; i++) {
 		let req = sorted[i];
 		let reqEnd = req.offset + req.length;
-		if (req.offset <= groupEnd + gapThreshold) {
+		if (req.offset <= groupEnd + coalesceSize) {
 			current.push(req);
 			groupEnd = Math.max(groupEnd, reqEnd);
 		} else {
@@ -129,7 +130,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 	#pending: Map<AbsolutePath, PendingRequest[]> = new Map();
 	#scheduled = false;
 	#flushOptions: RequestInit | undefined;
-	#gapThreshold: number;
+	#coalesceSize: number;
 	#cache: LRUCache<Uint8Array | undefined>;
 	#inflight: Map<string, Promise<Uint8Array | undefined>> = new Map();
 
@@ -141,14 +142,14 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 
 	constructor(
 		inner: AsyncReadable<RequestInit>,
-		options?: { cacheSize?: number; gapThreshold?: number },
+		options?: { cacheSize?: number; coalesceSize?: number },
 	) {
 		if (!inner.getRange) {
 			throw new Error("BatchedRangeStore requires a store with getRange");
 		}
 		this.#inner = inner;
 		this.#innerGetRange = inner.getRange.bind(inner);
-		this.#gapThreshold = options?.gapThreshold ?? DEFAULT_GAP_THRESHOLD;
+		this.#coalesceSize = options?.coalesceSize ?? DEFAULT_COALESCE_SIZE;
 		this.#cache = new LRUCache(options?.cacheSize ?? 256);
 	}
 
@@ -230,7 +231,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 		let pathPromises: Promise<void>[] = [];
 		for (let [path, requests] of work) {
 			requests.sort((a, b) => a.offset - b.offset);
-			let groups = groupRequests(requests, this.#gapThreshold);
+			let groups = groupRequests(requests, this.#coalesceSize);
 			this.#stats.mergedRequests += groups.length;
 			pathPromises.push(this.#fetchGroups(path, groups, options));
 		}
@@ -290,7 +291,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
  */
 export function withRangeBatching(
 	store: AsyncReadable<RequestInit>,
-	options?: { cacheSize?: number; gapThreshold?: number },
+	options?: { cacheSize?: number; coalesceSize?: number },
 ): BatchedRangeStore {
 	return new BatchedRangeStore(store, options);
 }
