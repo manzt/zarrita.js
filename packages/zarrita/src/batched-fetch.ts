@@ -71,7 +71,10 @@ const DEFAULT_GAP_THRESHOLD = 32768;
  * Groups sorted requests into contiguous ranges, merging across small gaps.
  * Modelled after geotiff.js BlockedSource.groupBlocks().
  */
-function groupRequests(sorted: PendingRequest[], gapThreshold: number): RangeGroup[] {
+function groupRequests(
+	sorted: PendingRequest[],
+	gapThreshold: number,
+): RangeGroup[] {
 	if (sorted.length === 0) {
 		return [];
 	}
