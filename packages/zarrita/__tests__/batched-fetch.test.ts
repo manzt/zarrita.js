@@ -85,6 +85,20 @@ describe("withRangeBatching", () => {
 			expect(store.stats.mergedRequests).toBe(2);
 		});
 
+		it("honors custom gapThreshold", async () => {
+			let inner = fakeStore();
+			// 50KB gap, default 32KB threshold would split
+			let store = withRangeBatching(inner, { gapThreshold: 65536 });
+
+			await Promise.all([
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+				store.getRange("/data/chunk", { offset: 51300, length: 100 }),
+			]);
+
+			// 50KB gap < 64KB threshold, should merge
+			expect(inner.getRange).toHaveBeenCalledOnce();
+		});
+
 		it("groups requests from different paths independently", async () => {
 			let inner = fakeStore();
 			let store = withRangeBatching(inner);
