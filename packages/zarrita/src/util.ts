@@ -2,6 +2,7 @@ import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
 	BigintDataType,
+	Bool,
 	CodecMetadata,
 	DataType,
 	GroupMetadata,
@@ -228,11 +229,13 @@ export type NarrowDataType<
 	? NumberDataType
 	: Query extends "bigint"
 		? BigintDataType
-		: Query extends "string"
-			? StringDataType
-			: Query extends "object"
-				? ObjectType
-				: Extract<Query, Dtype>;
+		: Query extends "boolean"
+			? Bool
+			: Query extends "string"
+				? StringDataType
+				: Query extends "object"
+					? ObjectType
+					: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,

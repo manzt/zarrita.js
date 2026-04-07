@@ -3,7 +3,7 @@
 	"scripts": {
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
-		"test": "vitest --api",
+		"test": "vitest",
 		"format": "biome format .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
@@ -18,8 +18,9 @@
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"@types/node": "^22.13.0",
 		"publint": "^0.3.7",
+		"tintype": "^0.0.2",
 		"typescript": "5.8.2",
-		"vitest": "^3.0.7"
+		"vitest": "^4.1.2"
 	},
 	"packageManager": "pnpm@9.7.0"
 }
