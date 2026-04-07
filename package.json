@@ -3,7 +3,7 @@
 	"scripts": {
 		"build": "tsc --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
-		"test": "vitest --api",
+		"test": "vitest",
 		"format": "biome format .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
