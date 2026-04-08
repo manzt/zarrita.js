@@ -38,13 +38,17 @@ class LRUCache<V> {
 			}
 		}
 	}
+
+	clear(): void {
+		this.#map.clear();
+	}
 }
 
 interface PendingRequest {
 	offset: number;
 	length: number;
 	resolve: (value: Uint8Array | undefined) => void;
-	reject: (reason: Error) => void;
+	reject: (reason: unknown) => void;
 }
 
 interface RangeGroup {
@@ -58,6 +62,21 @@ export interface Stats {
 	misses: number;
 	mergedRequests: number;
 	batchedRequests: number;
+}
+
+export interface BatchedRangeStoreOptions<Options> {
+	/** Maximum number of entries in the LRU cache (default: 256). */
+	cacheSize?: number;
+	/** Byte gap threshold for merging adjacent ranges (default: 32768). */
+	coalesceSize?: number;
+	/**
+	 * Merge options from all callers in a batch into a single value passed to
+	 * the inner store. By default, the first caller's options win. Use this to
+	 * combine `AbortSignal`s, merge headers, etc.
+	 */
+	mergeOptions?: (
+		batch: ReadonlyArray<Options | undefined>,
+	) => Options | undefined;
 }
 
 /**
@@ -112,15 +131,14 @@ function groupRequests(
 /**
  * A store wrapper that batches concurrent `getRange()` calls within a single
  * microtask tick, merges adjacent byte ranges, and caches results in an LRU
- * cache.
+ * cache. The cache assumes immutable data — there is no invalidation or TTL.
  *
  * Inspired by geotiff.js
  * {@link https://github.com/geotiffjs/geotiff.js/blob/master/src/source/blockedsource.js BlockedSource}.
  *
- * @remarks `options` (e.g. `AbortSignal`, custom headers) are taken from the
- * first `getRange()` call that schedules a flush tick; subsequent callers in
- * the same batch silently share those options. If callers pass different
- * signals or headers, only the first caller's options take effect.
+ * @remarks By default, `options` (e.g. `AbortSignal`, custom headers) are
+ * taken from the first `getRange()` call that schedules a flush tick. Pass a
+ * `mergeOptions` reducer to combine options from all callers in a batch.
  *
  * @see {@link withRangeBatching}
  */
@@ -131,7 +149,10 @@ export class BatchedRangeStore<Options = unknown>
 	#innerGetRange: NonNullable<AsyncReadable<Options>["getRange"]>;
 	#pending: Map<AbsolutePath, PendingRequest[]> = new Map();
 	#scheduled = false;
-	#flushOptions: Options | undefined;
+	#batchOptions: (Options | undefined)[] = [];
+	#mergeOptions:
+		| ((batch: ReadonlyArray<Options | undefined>) => Options | undefined)
+		| undefined;
 	#coalesceSize: number;
 	#cache: LRUCache<Uint8Array | undefined>;
 	#inflight: Map<string, Promise<Uint8Array | undefined>> = new Map();
@@ -144,7 +165,7 @@ export class BatchedRangeStore<Options = unknown>
 
 	constructor(
 		inner: AsyncReadable<Options>,
-		options?: { cacheSize?: number; coalesceSize?: number },
+		options?: BatchedRangeStoreOptions<Options>,
 	) {
 		if (!inner.getRange) {
 			throw new Error("BatchedRangeStore requires a store with getRange");
@@ -153,6 +174,7 @@ export class BatchedRangeStore<Options = unknown>
 		this.#innerGetRange = inner.getRange.bind(inner);
 		this.#coalesceSize = options?.coalesceSize ?? DEFAULT_COALESCE_SIZE;
 		this.#cache = new LRUCache(options?.cacheSize ?? 256);
+		this.#mergeOptions = options?.mergeOptions;
 	}
 
 	get(key: AbsolutePath, options?: Options): Promise<Uint8Array | undefined> {
@@ -212,20 +234,30 @@ export class BatchedRangeStore<Options = unknown>
 			}
 			pending.push({ offset, length, resolve, reject });
 
+			this.#batchOptions.push(options);
 			if (!this.#scheduled) {
 				this.#scheduled = true;
-				this.#flushOptions = options;
 				queueMicrotask(() => this.#flush());
 			}
 		});
 	}
 
 	async #flush(): Promise<void> {
-		let options: Options | undefined = this.#flushOptions;
-		this.#flushOptions = undefined;
+		let batch = this.#batchOptions;
+		this.#batchOptions = [];
 		let work = new Map(this.#pending);
 		this.#pending.clear();
 		this.#scheduled = false;
+
+		let options: Options | undefined;
+		try {
+			options = this.#mergeOptions ? this.#mergeOptions(batch) : batch[0];
+		} catch (err) {
+			for (let requests of work.values()) {
+				for (let req of requests) req.reject(err);
+			}
+			return;
+		}
 
 		let pathPromises: Promise<void>[] = [];
 		for (let [path, requests] of work) {
@@ -269,7 +301,7 @@ export class BatchedRangeStore<Options = unknown>
 					}
 				} catch (err) {
 					for (let req of group.requests) {
-						req.reject(err as Error);
+						req.reject(err);
 					}
 				}
 			}),
@@ -290,7 +322,7 @@ export class BatchedRangeStore<Options = unknown>
  */
 export function withRangeBatching<Options>(
 	store: AsyncReadable<Options>,
-	options?: { cacheSize?: number; coalesceSize?: number },
+	options?: BatchedRangeStoreOptions<Options>,
 ): BatchedRangeStore<Options> {
 	return new BatchedRangeStore(store, options);
 }

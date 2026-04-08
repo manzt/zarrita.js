@@ -2,7 +2,10 @@
 export type * from "@zarrita/storage";
 // re-export fetch store from storage
 export { default as FetchStore } from "@zarrita/storage/fetch";
-export type { Stats as RangeBatchingStats } from "./batched-fetch.js";
+export type {
+	BatchedRangeStoreOptions,
+	Stats as RangeBatchingStats,
+} from "./batched-fetch.js";
 export { BatchedRangeStore, withRangeBatching } from "./batched-fetch.js";
 export { registry } from "./codecs.js";
 export type { Listable } from "./consolidated.js";

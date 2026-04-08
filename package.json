@@ -4,7 +4,7 @@
 		"build": "tsgo --build",
 		"clean": "pnpm --recursive exec rm -rf dist",
 		"test": "vitest",
-		"format": "biome format .",
+		"format": "biome format --write .",
 		"lint": "biome ci .",
 		"fix": "biome check --write .",
 		"publint": "pnpm --recursive --filter=\"./packages/**\" exec publint",
