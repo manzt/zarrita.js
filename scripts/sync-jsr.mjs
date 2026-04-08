@@ -34,13 +34,14 @@ for (const pkg of packageDirs) {
 			name: meta.name === "zarrita" ? "@zarrita/zarrita" : meta.name,
 			version: meta.version,
 			license: "MIT",
+			nodeModulesDir: "auto",
 			imports: meta.dependencies ?? {},
 			exports: mapEntries(meta.exports, ([key, { import: value }]) => [
 				key,
 				value,
 			]),
 			publish: {
-				exclude: ["package.json"],
+				exclude: ["package.json", "__tests__"],
 			},
 		};
 	}
@@ -70,7 +71,9 @@ for (const [name, meta] of Object.entries(MANIFEST)) {
 		`${JSON.stringify(meta, null, "\t")}\n`,
 		"utf-8",
 	);
+	console.log(`  ${meta.name}@${meta.version} -> packages/${name}/jsr.json`);
 }
+console.log(`\nSynced ${Object.keys(MANIFEST).length} jsr.json files.`);
 
 /**
  * @param {unknown} condition
