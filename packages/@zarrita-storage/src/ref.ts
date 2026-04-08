@@ -13,7 +13,7 @@ for (let i = 0; i < 64; i++) {
 export function to_binary(base64: string): Uint8Array {
 	const n = base64.length;
 	const bytes = new Uint8Array(
-		// @ts-ignore
+		// @ts-expect-error
 		(((n - (base64[n - 1] === "=") - (base64[n - 2] === "=")) * 3) / 4) | 0,
 	);
 	for (let i = 0, j = 0; i < n; ) {

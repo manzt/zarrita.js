@@ -203,17 +203,17 @@ describe("v2", () => {
 	});
 
 	describe("1d.contiguous.f4", () => {
-		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
-			"%s",
-			async (path) => {
-				let arr = await open.v2(store.resolve(path), { kind: "array" });
-				expect(await arr.getChunk([0])).toStrictEqual({
-					data: new Float32Array([-1000.5, 0, 1000.5, 0]),
-					shape: [4],
-					stride: [1],
-				});
-			},
-		);
+		it.each([
+			"1d.contiguous.f4.le",
+			"1d.contiguous.f4.be",
+		])("%s", async (path) => {
+			let arr = await open.v2(store.resolve(path), { kind: "array" });
+			expect(await arr.getChunk([0])).toStrictEqual({
+				data: new Float32Array([-1000.5, 0, 1000.5, 0]),
+				shape: [4],
+				stride: [1],
+			});
+		});
 	});
 
 	it("1d.contiguous.f8", async () => {
@@ -228,21 +228,21 @@ describe("v2", () => {
 	});
 
 	describe("1d.contiguous.U13", () => {
-		it.each(["1d.contiguous.U13.le", "1d.contiguous.U13.le"])(
-			"%s",
-			async (path) => {
-				let arr = await open.v2(store.resolve(path), {
-					kind: "array",
-				});
-				let chunk = await arr.getChunk([0]);
-				expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
-				expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
-					data: ["a", "b", "cc", "d"],
-					shape: [4],
-					stride: [1],
-				});
-			},
-		);
+		it.each([
+			"1d.contiguous.U13.le",
+			"1d.contiguous.U13.le",
+		])("%s", async (path) => {
+			let arr = await open.v2(store.resolve(path), {
+				kind: "array",
+			});
+			let chunk = await arr.getChunk([0]);
+			expect(chunk.data).toBeInstanceOf(UnicodeStringArray);
+			expect({ ...chunk, data: Array.from(chunk.data) }).toStrictEqual({
+				data: ["a", "b", "cc", "d"],
+				shape: [4],
+				stride: [1],
+			});
+		});
 	});
 
 	it("1d.contiguous.U7", async () => {
@@ -646,17 +646,17 @@ describe("v3", async () => {
 	});
 
 	describe("1d.contiguous.f4", () => {
-		it.each(["1d.contiguous.f4.le", "1d.contiguous.f4.be"])(
-			"%s",
-			async (path) => {
-				let arr = await open.v3(store.resolve(path), { kind: "array" });
-				expect(await arr.getChunk([0])).toStrictEqual({
-					data: new Float32Array([-1000.5, 0, 1000.5, 0]),
-					shape: [4],
-					stride: [1],
-				});
-			},
-		);
+		it.each([
+			"1d.contiguous.f4.le",
+			"1d.contiguous.f4.be",
+		])("%s", async (path) => {
+			let arr = await open.v3(store.resolve(path), { kind: "array" });
+			expect(await arr.getChunk([0])).toStrictEqual({
+				data: new Float32Array([-1000.5, 0, 1000.5, 0]),
+				shape: [4],
+				stride: [1],
+			});
+		});
 	});
 
 	it("1d.contiguous.f8", async () => {

@@ -59,7 +59,6 @@ declare module "ndarray" {
 
 		type Value<D extends Data> = D extends
 			| GenericArray<infer T>
-			// biome-ignore lint/suspicious/noRedeclare: not our library
 			| Record<number, infer T>
 			? T
 			: never;
