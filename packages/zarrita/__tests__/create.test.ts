@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import * as zarr from "../src/index.js";
 import { json_decode_object } from "../src/util.js";
@@ -87,6 +87,25 @@ test("create group from another group", async () => {
 		  "/absolute/zarr.json",
 		}
 	`);
+});
+
+describe("create array with IEEE 754 special fill values", () => {
+	test.each([
+		["NaN", NaN, "NaN"],
+		["Infinity", Infinity, "Infinity"],
+		["-Infinity", -Infinity, "-Infinity"],
+	])("%s", async (_label, fill_value, expected_json) => {
+		let h = zarr.root();
+		await zarr.create(h.resolve("/test"), {
+			shape: [2],
+			chunk_shape: [2],
+			data_type: "float32",
+			fill_value,
+			codecs: [],
+		});
+		let meta = json_decode_object(h.store.get("/test/zarr.json")!);
+		expect(meta.fill_value).toBe(expected_json);
+	});
 });
 
 test("create nodes via groups", async () => {

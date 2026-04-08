@@ -19,7 +19,20 @@ import {
 } from "./typedarray.js";
 
 export function json_encode_object(o: Record<string, unknown>): Uint8Array {
-	const str = JSON.stringify(o, null, 2);
+	const str = JSON.stringify(
+		o,
+		(_key, value) => {
+			// JSON.stringify converts NaN/Infinity/-Infinity to null.
+			// Zarr v3 spec requires these as string representations.
+			if (typeof value === "number") {
+				if (Number.isNaN(value)) return "NaN";
+				if (value === Infinity) return "Infinity";
+				if (value === -Infinity) return "-Infinity";
+			}
+			return value;
+		},
+		2,
+	);
 	return new TextEncoder().encode(str);
 }
 
@@ -306,6 +319,22 @@ export function ensure_correct_scalar<D extends DataType>(
 	) {
 		// @ts-expect-error - We've narrowed the type of fill_value correctly
 		return BigInt(metadata.fill_value) as Scalar<D>;
+	}
+	// Zarr v3 represents IEEE 754 special float values as strings in JSON.
+	// Only applies to floating-point types.
+	let is_float =
+		metadata.data_type === "float16" ||
+		metadata.data_type === "float32" ||
+		metadata.data_type === "float64";
+	if (typeof metadata.fill_value === "string" && is_float) {
+		let mapping: Record<string, number> = {
+			NaN: NaN,
+			Infinity: Infinity,
+			"-Infinity": -Infinity,
+		};
+		if (metadata.fill_value in mapping) {
+			return mapping[metadata.fill_value] as Scalar<D>;
+		}
 	}
 	return metadata.fill_value;
 }

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
-import type { DataType } from "../src/metadata.js";
+import type { ArrayMetadata, DataType } from "../src/metadata.js";
 import {
 	BoolArray,
 	ByteStringArray,
@@ -7,6 +7,7 @@ import {
 } from "../src/typedarray.js";
 import {
 	byteswap_inplace,
+	ensure_correct_scalar,
 	get_ctr,
 	get_strides,
 	is_dtype,
@@ -211,5 +212,53 @@ describe("is_dtype", () => {
 		"string",
 	])("is_dtype(%s, %s) -> true", (dtype) => {
 		expect(is_dtype(dtype, dtype)).toBe(true);
+	});
+});
+
+describe("ensure_correct_scalar", () => {
+	function make_metadata(
+		data_type: DataType,
+		fill_value: unknown,
+	): ArrayMetadata {
+		return {
+			zarr_format: 3,
+			node_type: "array",
+			shape: [1],
+			data_type,
+			chunk_grid: { name: "regular", configuration: { chunk_shape: [1] } },
+			chunk_key_encoding: { name: "default" },
+			codecs: [],
+			fill_value,
+			attributes: {},
+		} as ArrayMetadata;
+	}
+
+	test.each([
+		["NaN", NaN],
+		["Infinity", Infinity],
+		["-Infinity", -Infinity],
+	])("float32 fill_value %s -> %s", (str, expected) => {
+		let result = ensure_correct_scalar(make_metadata("float32", str));
+		if (Number.isNaN(expected)) {
+			expect(result).toBeNaN();
+		} else {
+			expect(result).toBe(expected);
+		}
+	});
+
+	test.each([
+		"float16",
+		"float32",
+		"float64",
+	] as const)("%s preserves numeric fill_value", (dtype) => {
+		expect(ensure_correct_scalar(make_metadata(dtype, 1.5))).toBe(1.5);
+	});
+
+	test("string dtype fill_value 'NaN' stays as string", () => {
+		expect(ensure_correct_scalar(make_metadata("string", "NaN"))).toBe("NaN");
+	});
+
+	test("int64 fill_value converts to BigInt", () => {
+		expect(ensure_correct_scalar(make_metadata("int64", 42))).toBe(42n);
 	});
 });
