@@ -218,6 +218,10 @@ export function v2_to_v3_array_metadata(
 		let { id, ...configuration } = meta.compressor;
 		codecs.push({ name: id, configuration });
 	}
+	let dimension_names: string[] | undefined;
+	if (globalThis.Array.isArray(attributes._ARRAY_DIMENSIONS)) {
+		dimension_names = attributes._ARRAY_DIMENSIONS;
+	}
 	return {
 		zarr_format: 3,
 		node_type: "array",
@@ -237,6 +241,7 @@ export function v2_to_v3_array_metadata(
 		},
 		codecs,
 		fill_value: meta.fill_value,
+		dimension_names,
 		attributes,
 	};
 }

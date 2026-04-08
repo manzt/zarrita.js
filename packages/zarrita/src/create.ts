@@ -22,6 +22,7 @@ interface CreateArrayOptions<Dtype extends DataType> {
 	codecs?: CodecMetadata[];
 	fill_value?: Scalar<Dtype>;
 	chunk_separator?: "." | "/";
+	dimension_names?: string[];
 	attributes?: Attributes;
 }
 
@@ -94,6 +95,7 @@ async function create_array<Store extends Mutable, Dtype extends DataType>(
 		},
 		codecs: options.codecs ?? [],
 		fill_value: options.fill_value ?? null,
+		dimension_names: options.dimension_names,
 		attributes: options.attributes ?? {},
 	} satisfies ArrayMetadata<Dtype>;
 	await location.store.set(

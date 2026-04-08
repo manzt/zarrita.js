@@ -1,7 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { assert, describe, expect, test } from "vitest";
 
 import * as zarr from "../src/index.js";
 import { json_decode_object } from "../src/util.js";
+
+function json_decode(x: Uint8Array | undefined) {
+	assert(x);
+	return json_decode_object(x);
+}
 
 test("create root group", async () => {
 	let attributes = { hello: "world" };
@@ -9,10 +14,7 @@ test("create root group", async () => {
 	expect(grp.path).toBe("/");
 	expect(grp.attrs).toStrictEqual(attributes);
 	expect(grp.store.has("/zarr.json")).true;
-	expect(
-		// biome-ignore lint/style/noNonNullAssertion: we know it's there
-		json_decode_object(grp.store.get("/zarr.json")!),
-	).toMatchInlineSnapshot(`
+	expect(json_decode(grp.store.get("/zarr.json"))).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
 		    "hello": "world",
@@ -39,8 +41,7 @@ test("create array", async () => {
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
 	expect(
-		// biome-ignore lint/style/noNonNullAssertion: we know it's there
-		json_decode_object(h.store.get("/arthur/dent/zarr.json")!),
+		json_decode(h.store.get("/arthur/dent/zarr.json")),
 	).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
@@ -103,9 +104,33 @@ describe("create array with IEEE 754 special fill values", () => {
 			fill_value,
 			codecs: [],
 		});
-		let meta = json_decode_object(h.store.get("/test/zarr.json")!);
+		let meta = json_decode(h.store.get("/test/zarr.json"));
 		expect(meta.fill_value).toBe(expected_json);
 	});
+});
+
+test("create array with dimension_names", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [100, 200],
+		chunk_shape: [10, 20],
+		data_type: "float32",
+		dimension_names: ["x", "y"],
+	});
+	expect(a.dimensionNames).toStrictEqual(["x", "y"]);
+	expect(json_decode(h.store.get("/temp/zarr.json"))).toMatchObject({
+		dimension_names: ["x", "y"],
+	});
+});
+
+test("create array without dimension_names", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [10],
+		chunk_shape: [5],
+		data_type: "int32",
+	});
+	expect(a.dimensionNames).toBeUndefined();
 });
 
 test("create nodes via groups", async () => {
