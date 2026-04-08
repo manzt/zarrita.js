@@ -100,11 +100,101 @@ describe("withConsolidated", () => {
 			__dirname,
 			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
 		);
-		let try_open = () => withConsolidated(new FileSystemStore(root));
+		let try_open = () =>
+			withConsolidated(new FileSystemStore(root), { format: "v2" });
 		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
 			"[NodeNotFoundError: Node not found: v2 consolidated metadata]",
 		);
+	});
+});
+
+describe("withConsolidated (v3)", () => {
+	let v3root = path.join(
+		__dirname,
+		"../../../fixtures/v3/data.zarr/consolidated",
+	);
+
+	it("loads v3 consolidated metadata", async () => {
+		let store = await withConsolidated(new FileSystemStore(v3root), {
+			format: "v3",
+		});
+		let map = new Map(store.contents().map((x) => [x.path, x.kind]));
+		expect(map).toMatchInlineSnapshot(`
+			Map {
+			  "/" => "group",
+			  "/1d.chunked.i2" => "array",
+			  "/2d.contiguous.i2" => "array",
+			  "/nested" => "group",
+			  "/nested/1d.i2" => "array",
+			}
+		`);
+	});
+
+	it("loads chunk data from underlying store", async () => {
+		let store = await withConsolidated(new FileSystemStore(v3root), {
+			format: "v3",
+		});
+		let grp = await open(store, { kind: "group" });
+		let arr = await open(grp.resolve("/1d.chunked.i2"), { kind: "array" });
+		expect(arr).toBeInstanceOf(ZarrArray);
+		expect(await arr.getChunk([0])).toMatchInlineSnapshot(`
+			{
+			  "data": Int16Array [
+			    1,
+			    2,
+			  ],
+			  "shape": [
+			    2,
+			  ],
+			  "stride": [
+			    1,
+			  ],
+			}
+		`);
+	});
+
+	it("loads and navigates from root", async () => {
+		let store = await withConsolidated(new FileSystemStore(v3root), {
+			format: "v3",
+		});
+		let grp = await open(store, { kind: "group" });
+		expect(grp.kind).toBe("group");
+		expect(grp.attrs).toEqual({ answer: 42 });
+		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
+		expect(arr.kind).toBe("array");
+	});
+
+	it("throws if v3 consolidated metadata is missing", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let try_open = () =>
+			withConsolidated(new FileSystemStore(root), { format: "v3" });
+		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+	});
+});
+
+describe("withConsolidated (format array)", () => {
+	it("tries formats in order", async () => {
+		let root = path.join(
+			__dirname,
+			"../../../fixtures/v3/data.zarr/consolidated",
+		);
+		let store = await withConsolidated(new FileSystemStore(root), {
+			format: ["v3", "v2"],
+		});
+		let contents = store.contents();
+		expect(contents.length).toBeGreaterThan(0);
+		let map = new Map(contents.map((x) => [x.path, x.kind]));
+		expect(map.get("/")).toBe("group");
+	});
+
+	it("falls back to second format", async () => {
+		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
+		let store = await withConsolidated(new FileSystemStore(root), {
+			format: ["v3", "v2"],
+		});
+		let contents = store.contents();
+		expect(contents.length).toBeGreaterThan(0);
 	});
 });
 

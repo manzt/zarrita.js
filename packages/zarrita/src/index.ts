@@ -8,7 +8,11 @@ export type {
 } from "./batched-fetch.js";
 export { BatchedRangeStore, withRangeBatching } from "./batched-fetch.js";
 export { registry } from "./codecs.js";
-export type { Listable } from "./consolidated.js";
+export type {
+	ConsolidatedFormat,
+	Listable,
+	WithConsolidatedOptions,
+} from "./consolidated.js";
 export { tryWithConsolidated, withConsolidated } from "./consolidated.js";
 export { create } from "./create.js";
 export { KeyError, NodeNotFoundError } from "./errors.js";

@@ -16,7 +16,7 @@ import {
 	v2_to_v3_group_metadata,
 } from "./util.js";
 
-let VERSION_COUNTER = create_version_counter();
+export let VERSION_COUNTER = create_version_counter();
 function create_version_counter() {
 	let version_counts = new WeakMap<Readable, { v2: number; v3: number }>();
 	function get_counts(store: Readable) {
