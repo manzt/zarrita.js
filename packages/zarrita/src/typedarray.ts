@@ -4,28 +4,38 @@
  * @module
  */
 
+function isArrayBufferLike(x: unknown): x is ArrayBufferLike {
+	return x instanceof ArrayBuffer || x instanceof SharedArrayBuffer;
+}
+
 /**
  * An array-like view of a fixed-length boolean buffer.
  *
  * Encoded as 1 byte per value.
  */
-export class BoolArray {
-	#bytes: Uint8Array;
+export class BoolArray<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
+	#bytes: Uint8Array<TArrayBuffer>;
 
 	constructor(size: number);
 	constructor(arr: Iterable<boolean>);
-	constructor(buffer: ArrayBuffer, byteOffset?: number, length?: number);
+	constructor(buffer: TArrayBuffer, byteOffset?: number, length?: number);
 	constructor(
-		x: number | Iterable<boolean> | ArrayBuffer,
+		x: number | Iterable<boolean> | TArrayBuffer,
 		byteOffset?: number,
 		length?: number,
 	) {
 		if (typeof x === "number") {
-			this.#bytes = new Uint8Array(x);
-		} else if (x instanceof ArrayBuffer) {
-			this.#bytes = new Uint8Array(x, byteOffset, length);
+			this.#bytes = new Uint8Array(x) as Uint8Array<TArrayBuffer>;
+		} else if (isArrayBufferLike(x)) {
+			this.#bytes = new Uint8Array(
+				x,
+				byteOffset,
+				length,
+			) as Uint8Array<TArrayBuffer>;
 		} else {
-			this.#bytes = new Uint8Array(Array.from(x, (v) => (v ? 1 : 0)));
+			this.#bytes = new Uint8Array(
+				Array.from(x, (v) => (v ? 1 : 0)),
+			) as Uint8Array<TArrayBuffer>;
 		}
 	}
 
@@ -41,8 +51,8 @@ export class BoolArray {
 		return this.#bytes.byteLength;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this.#bytes.buffer as ArrayBuffer;
+	get buffer(): TArrayBuffer {
+		return this.#bytes.buffer;
 	}
 
 	get length(): number {
@@ -74,35 +84,43 @@ export class BoolArray {
  *
  * Encodes a raw byte sequences without enforced encoding.
  */
-export class ByteStringArray {
-	_data: Uint8Array;
+export class ByteStringArray<
+	TArrayBuffer extends ArrayBufferLike = ArrayBufferLike,
+> {
+	_data: Uint8Array<TArrayBuffer>;
 	chars: number;
 	#encoder: TextEncoder;
 
 	constructor(chars: number, size: number);
 	constructor(
 		chars: number,
-		buffer: ArrayBuffer,
+		buffer: TArrayBuffer,
 		byteOffset?: number,
 		length?: number,
 	);
 	constructor(chars: number, arr: Iterable<string>);
 	constructor(
 		chars: number,
-		x: number | ArrayBuffer | Iterable<string>,
+		x: number | TArrayBuffer | Iterable<string>,
 		byteOffset?: number,
 		length?: number,
 	) {
 		this.chars = chars;
 		this.#encoder = new TextEncoder();
 		if (typeof x === "number") {
-			this._data = new Uint8Array(x * chars);
-		} else if (x instanceof ArrayBuffer) {
+			this._data = new Uint8Array(x * chars) as Uint8Array<TArrayBuffer>;
+		} else if (isArrayBufferLike(x)) {
 			if (length) length = length * chars;
-			this._data = new Uint8Array(x, byteOffset, length);
+			this._data = new Uint8Array(
+				x,
+				byteOffset,
+				length,
+			) as Uint8Array<TArrayBuffer>;
 		} else {
 			let values = Array.from(x);
-			this._data = new Uint8Array(values.length * chars);
+			this._data = new Uint8Array(
+				values.length * chars,
+			) as Uint8Array<TArrayBuffer>;
 			for (let i = 0; i < values.length; i++) {
 				this.set(i, values[i]);
 			}
@@ -121,8 +139,8 @@ export class ByteStringArray {
 		return this._data.byteLength;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this._data.buffer as ArrayBuffer;
+	get buffer(): TArrayBuffer {
+		return this._data.buffer;
 	}
 
 	get length(): number {
@@ -168,32 +186,38 @@ export class ByteStringArray {
  *
  * Encoded as UTF-32 code points.
  */
-export class UnicodeStringArray {
-	#data: Int32Array;
+export class UnicodeStringArray<
+	TArrayBuffer extends ArrayBufferLike = ArrayBufferLike,
+> {
+	#data: Int32Array<TArrayBuffer>;
 	chars: number;
 
 	constructor(chars: number, size: number);
 	constructor(
 		chars: number,
-		buffer: ArrayBuffer,
+		buffer: TArrayBuffer,
 		byteOffset?: number,
 		length?: number,
 	);
 	constructor(chars: number, arr: Iterable<string>);
 	constructor(
 		chars: number,
-		x: number | ArrayBuffer | Iterable<string>,
+		x: number | TArrayBuffer | Iterable<string>,
 		byteOffset?: number,
 		length?: number,
 	) {
 		this.chars = chars;
 		if (typeof x === "number") {
-			this.#data = new Int32Array(x * chars);
-		} else if (x instanceof ArrayBuffer) {
+			this.#data = new Int32Array(x * chars) as Int32Array<TArrayBuffer>;
+		} else if (isArrayBufferLike(x)) {
 			if (length) length *= chars;
-			this.#data = new Int32Array(x, byteOffset, length);
+			this.#data = new Int32Array(
+				x,
+				byteOffset,
+				length,
+			) as Int32Array<TArrayBuffer>;
 		} else {
-			const values = x;
+			const values = x as Iterable<string>;
 			const d = new UnicodeStringArray(chars, 1);
 			this.#data = new Int32Array(
 				(function* () {
@@ -202,7 +226,7 @@ export class UnicodeStringArray {
 						yield* d.#data;
 					}
 				})(),
-			);
+			) as Int32Array<TArrayBuffer>;
 		}
 	}
 
@@ -218,8 +242,8 @@ export class UnicodeStringArray {
 		return this.#data.byteOffset;
 	}
 
-	get buffer(): ArrayBuffer {
-		return this.#data.buffer as ArrayBuffer;
+	get buffer(): TArrayBuffer {
+		return this.#data.buffer;
 	}
 
 	get length(): number {
