@@ -133,6 +133,7 @@ let store = await zarr.tryWithConsolidated(
 
 :::
 
+
 ## Batch and Cache Range Requests
 
 When reading chunked data over HTTP, many small range requests can be
@@ -186,3 +187,54 @@ You can inspect batching statistics via `store.stats`:
 store.stats;
 // { hits: 12, misses: 4, batchedRequests: 16, mergedRequests: 4 }
 ```
+
+
+## Read Data with SharedArrayBuffer <Badge type="tip" text="v2 & v3" />
+
+Pass `useSharedArrayBuffer: true` to `zarr.get` or `arr.getChunk` to allocate
+output arrays backed by
+[`SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
+This enables zero-copy transfer of chunk data to Web Workers, which is useful
+for offloading heavy computation (e.g., rendering, analysis) to background
+threads.
+
+```js
+import * as zarr from "zarrita";
+
+const store = new zarr.FetchStore("http://localhost:8080/data.zarr");
+const arr = await zarr.open(store, { kind: "array" });
+
+// Read a region backed by SharedArrayBuffer
+const region = await zarr.get(arr, [zarr.slice(10, 20), null], {
+	useSharedArrayBuffer: true,
+});
+region.data.buffer; // SharedArrayBuffer
+
+// Or read a single chunk
+const chunk = await arr.getChunk([0, 0], undefined, {
+	useSharedArrayBuffer: true,
+});
+chunk.data.buffer; // SharedArrayBuffer
+```
+
+::: warning
+
+`SharedArrayBuffer` requires the page to be
+[cross-origin isolated](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements).
+Your server must send the following headers:
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+If `SharedArrayBuffer` is not available, an error is thrown.
+
+:::
+
+::: info
+
+String and object data types do not support `SharedArrayBuffer` and will fall
+back to regular allocation with a console warning.
+
+:::
