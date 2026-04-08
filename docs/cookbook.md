@@ -88,17 +88,16 @@ const group = await zarr.create(store, {
 group; // zarr.Group
 ```
 
-## Open a Consolidated Store
+## Open a Consolidated Store <Badge type="tip" text="v2 & v3" />
 
-Zarr v2 allows
-[consolidating metadata](https://zarr.readthedocs.io/en/stable/tutorial.html#consolidating-metadata)
-for an entire hierarchy at the store root (under `/.zmetadata`). Metadata
-consolidation is particularly useful when interacting with remote stores, where
-each metadata fetch incurs a network request and hence, latency.
+Consolidated metadata stores the entire hierarchy's metadata in a single
+location, avoiding per-node network requests. This is particularly useful
+with remote stores where each metadata fetch incurs latency.
 
 The `withConsolidated` helper wraps an existing [store](/packages/storage),
 proxying metadata requests with the consolidated metadata, thereby minimizing
-network requests.
+network requests. It supports both Zarr v2 (`.zmetadata`) and v3
+(`consolidated_metadata` in root `zarr.json`).
 
 ```js{3}
 import * as zarr from "zarrita";
@@ -113,15 +112,29 @@ let foo = await zarr.open(root.resolve("foo"), { kind: "array" });
 ```
 
 The store returned from `withConsolidated` is **readonly** and adds
-`.contents()` list the known contents of the hierarchy:
+`.contents()` to list the known contents of the hierarchy:
 
 ```js
 store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
 ```
 
+By default, the format is auto-detected. You can explicitly specify the
+format with the `format` option, or provide an array to try formats in order:
+
+```js
+// v2 only
+let store = await zarr.withConsolidated(rawStore, { format: "v2" });
+
+// v3 only
+let store = await zarr.withConsolidated(rawStore, { format: "v3" });
+
+// try v3 first, fall back to v2
+let store = await zarr.withConsolidated(rawStore, { format: ["v3", "v2"] });
+```
+
 ::: tip
 
-The `withConsolidated` helper errors out if v2 consolidated metadata is absent.
+The `withConsolidated` helper errors out if consolidated metadata is absent.
 Use `tryWithConsolidated` for uncertain cases; it leverages consolidated
 metadata if available.
 
@@ -130,6 +143,15 @@ let store = await zarr.tryWithConsolidated(
 	new zarr.FetchStore("https://localhost:8080/data.zarr"),
 );
 ```
+
+:::
+
+::: warning
+
+Zarr v3 consolidated metadata (`format: "v3"`) targets the experimental
+consolidated metadata implemented in zarr-python, which is not yet part of the
+official Zarr v3 specification. See [zarr-specs#309](https://github.com/zarr-developers/zarr-specs/pull/309)
+for the ongoing spec discussion.
 
 :::
 
