@@ -48,7 +48,7 @@ interface PendingRequest {
 	offset: number;
 	length: number;
 	resolve: (value: Uint8Array | undefined) => void;
-	reject: (reason: Error) => void;
+	reject: (reason: unknown) => void;
 }
 
 interface RangeGroup {
@@ -301,7 +301,7 @@ export class BatchedRangeStore<Options = unknown>
 					}
 				} catch (err) {
 					for (let req of group.requests) {
-						req.reject(err as Error);
+						req.reject(err);
 					}
 				}
 			}),

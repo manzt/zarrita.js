@@ -329,6 +329,33 @@ describe("withRangeBatching", () => {
 			});
 		});
 
+		it("rejects pending requests and recovers when mergeOptions throws", async () => {
+			let inner = fakeStore();
+			let shouldThrow = true;
+			let store = withRangeBatching(inner, {
+				mergeOptions: () => {
+					if (shouldThrow) throw new Error("bad merge");
+					return undefined;
+				},
+			});
+
+			// First batch: mergeOptions throws, all requests should reject
+			let results = await Promise.allSettled([
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+				store.getRange("/data/chunk", { offset: 100, length: 100 }),
+			]);
+			expect(results[0].status).toBe("rejected");
+			expect(results[1].status).toBe("rejected");
+			expect((results[0] as PromiseRejectedResult).reason.message).toBe(
+				"bad merge",
+			);
+
+			// Second batch: store should not be deadlocked
+			shouldThrow = false;
+			let r = await store.getRange("/data/chunk", { offset: 0, length: 100 });
+			expect(r?.length).toBe(100);
+		});
+
 		it("applies mergeOptions reducer across batched callers", async () => {
 			interface TaggedOptions {
 				tags: string[];
