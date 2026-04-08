@@ -132,3 +132,57 @@ let store = await zarr.tryWithConsolidated(
 ```
 
 :::
+
+## Batch and Cache Range Requests
+
+When reading chunked data over HTTP, many small range requests can be
+expensive due to per-request latency. The `withRangeBatching` helper wraps a
+store so that concurrent `getRange()` calls within the same microtask tick are
+automatically merged into fewer, larger fetches. Results are cached in an LRU
+cache (assumes immutable data).
+
+```js{3-5}
+import * as zarr from "zarrita";
+
+let store = zarr.withRangeBatching(
+  new zarr.FetchStore("https://localhost:8080/data.zarr"),
+);
+
+let arr = await zarr.open(store, { kind: "array" });
+```
+
+Adjacent byte ranges separated by less than `coalesceSize` bytes (default
+32 KB) are coalesced into a single request. You can tune this along with the
+LRU cache capacity:
+
+```js
+let store = zarr.withRangeBatching(
+  new zarr.FetchStore("https://localhost:8080/data.zarr"),
+  {
+    coalesceSize: 65536, // merge ranges within 64 KB of each other
+    cacheSize: 512,      // keep up to 512 entries in the LRU cache
+  },
+);
+```
+
+By default the first caller's options (headers, signal, etc.) are forwarded to
+the inner store. If you need to combine options from all callers in a batch,
+pass a `mergeOptions` reducer:
+
+```js
+let store = zarr.withRangeBatching(
+  new zarr.FetchStore("https://localhost:8080/data.zarr"),
+  {
+    mergeOptions: (batch) => ({
+      signal: AbortSignal.any(batch.map((o) => o?.signal).filter(Boolean)),
+    }),
+  },
+);
+```
+
+You can inspect batching statistics via `store.stats`:
+
+```js
+store.stats;
+// { hits: 12, misses: 4, batchedRequests: 16, mergedRequests: 4 }
+```
