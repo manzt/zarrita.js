@@ -554,6 +554,45 @@ describe("v2", () => {
 			expect(a.path).toBe("/1d.chunked.i2");
 		});
 	});
+
+	it("exposes fillValue on array", async () => {
+		let arr = await open.v2(store.resolve("/1d.contiguous.i4"), {
+			kind: "array",
+		});
+		expect(arr.fillValue).toBe(0);
+	});
+});
+
+describe("fillValue with IEEE 754 special values", () => {
+	function v2_store(fill_value: unknown) {
+		let enc = new TextEncoder();
+		let store = new Map<string, Uint8Array>();
+		store.set(
+			"/.zarray" as AbsolutePath,
+			enc.encode(
+				JSON.stringify({
+					zarr_format: 2,
+					chunks: [2],
+					shape: [4],
+					compressor: null,
+					dtype: "<f4",
+					fill_value,
+					filters: null,
+					order: "C",
+				}),
+			),
+		);
+		return store;
+	}
+
+	it.each([
+		["NaN", NaN],
+		["Infinity", Infinity],
+		["-Infinity", -Infinity],
+	])("v2: %s", async (json_value, expected) => {
+		let arr = await open.v2(root(v2_store(json_value)), { kind: "array" });
+		expect(arr.fillValue).toBe(expected);
+	});
 });
 
 describe("v3", async () => {

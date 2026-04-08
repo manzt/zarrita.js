@@ -184,6 +184,10 @@ export class Array<
 		return this.#metadata.dimension_names;
 	}
 
+	get fillValue(): Scalar<Dtype> | null {
+		return this.#metadata.fill_value;
+	}
+
 	get shape(): number[] {
 		return this.#metadata.shape;
 	}
