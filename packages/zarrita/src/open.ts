@@ -160,17 +160,17 @@ async function open_v3<Store extends Readable>(
 
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "group" },
+	options: { kind: "group"; attrs?: boolean },
 ): Promise<Group<Store>>;
 
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "array" },
+	options: { kind: "array"; attrs?: boolean },
 ): Promise<Array<DataType, Store>>;
 
 export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind?: "array" | "group" },
+	options: { kind?: "array" | "group"; attrs?: boolean },
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 export function open<Store extends Readable>(
@@ -183,7 +183,7 @@ export function open<Store extends Readable>(
 
 export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind?: "array" | "group" } = {},
+	options: { kind?: "array" | "group"; attrs?: boolean } = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	let store = "store" in location ? location.store : location;
 	let version_max = VERSION_COUNTER.version_max(store);
