@@ -124,12 +124,14 @@ function groupRequests(
  *
  * @see {@link withRangeBatching}
  */
-export class BatchedRangeStore implements AsyncReadable<RequestInit> {
-	#inner: AsyncReadable<RequestInit>;
-	#innerGetRange: NonNullable<AsyncReadable<RequestInit>["getRange"]>;
+export class BatchedRangeStore<Options = unknown>
+	implements AsyncReadable<Options>
+{
+	#inner: AsyncReadable<Options>;
+	#innerGetRange: NonNullable<AsyncReadable<Options>["getRange"]>;
 	#pending: Map<AbsolutePath, PendingRequest[]> = new Map();
 	#scheduled = false;
-	#flushOptions: RequestInit | undefined;
+	#flushOptions: Options | undefined;
 	#coalesceSize: number;
 	#cache: LRUCache<Uint8Array | undefined>;
 	#inflight: Map<string, Promise<Uint8Array | undefined>> = new Map();
@@ -141,7 +143,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 	}
 
 	constructor(
-		inner: AsyncReadable<RequestInit>,
+		inner: AsyncReadable<Options>,
 		options?: { cacheSize?: number; coalesceSize?: number },
 	) {
 		if (!inner.getRange) {
@@ -153,17 +155,14 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 		this.#cache = new LRUCache(options?.cacheSize ?? 256);
 	}
 
-	get(
-		key: AbsolutePath,
-		options?: RequestInit,
-	): Promise<Uint8Array | undefined> {
+	get(key: AbsolutePath, options?: Options): Promise<Uint8Array | undefined> {
 		return this.#inner.get(key, options);
 	}
 
 	getRange(
 		key: AbsolutePath,
 		range: RangeQuery,
-		options?: RequestInit,
+		options?: Options,
 	): Promise<Uint8Array | undefined> {
 		// Suffix requests (shard index reads) bypass batching - file size
 		// is unknown until the response arrives.
@@ -222,7 +221,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 	}
 
 	async #flush(): Promise<void> {
-		let options = this.#flushOptions;
+		let options: Options | undefined = this.#flushOptions;
 		this.#flushOptions = undefined;
 		let work = new Map(this.#pending);
 		this.#pending.clear();
@@ -241,7 +240,7 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
 	async #fetchGroups(
 		path: AbsolutePath,
 		groups: RangeGroup[],
-		options?: RequestInit,
+		options?: Options,
 	): Promise<void> {
 		await Promise.all(
 			groups.map(async (group) => {
@@ -289,9 +288,9 @@ export class BatchedRangeStore implements AsyncReadable<RequestInit> {
  * let store = zarr.withRangeBatching(new zarr.FetchStore("https://example.com/data.zarr"));
  * ```
  */
-export function withRangeBatching(
-	store: AsyncReadable<RequestInit>,
+export function withRangeBatching<Options>(
+	store: AsyncReadable<Options>,
 	options?: { cacheSize?: number; coalesceSize?: number },
-): BatchedRangeStore {
+): BatchedRangeStore<Options> {
 	return new BatchedRangeStore(store, options);
 }
