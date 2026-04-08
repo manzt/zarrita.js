@@ -1,3 +1,6 @@
+import type { Readable } from "@zarrita/storage";
+import type { Array as ZarrArray } from "../hierarchy.js";
+import type { DataType } from "../metadata.js";
 import type { ChunkQueue, Indices, Slice } from "./types.js";
 
 /** Similar to python's `range` function. Supports positive ranges only. */
@@ -130,6 +133,25 @@ export function slice(
 		stop: to_int(stop),
 		step: to_int(step),
 	};
+}
+
+/** @category Utility */
+export function sel<D extends DataType, Store extends Readable>(
+	arr: ZarrArray<D, Store>,
+	selection: Record<string, Slice | number | null>,
+): (Slice | number | null)[] {
+	let names = arr.dimensionNames;
+	if (!names) {
+		throw new Error("Array does not have dimension_names in its metadata.");
+	}
+	for (let key of Object.keys(selection)) {
+		if (!names.includes(key)) {
+			throw new Error(
+				`Unknown dimension name: "${key}". Available dimensions: ${names.map((n) => `"${n}"`).join(", ")}`,
+			);
+		}
+	}
+	return names.map((name) => selection[name] ?? null);
 }
 
 /** Built-in "queue" for awaiting promises. */
