@@ -52,6 +52,19 @@ describe("slice", () => {
 	test("slice_indices(slice(40), 41)", () => {
 		expect(slice_indices(slice(40), 41)).toStrictEqual([0, 40, 1]);
 	});
+
+	test("slice(10n, 15n) coerces bigint to number", () => {
+		expect(slice(10n, 15n)).toStrictEqual({ start: 10, stop: 15, step: null });
+	});
+
+	test("slice(10n, 15n, 2n) coerces bigint to number", () => {
+		expect(slice(10n, 15n, 2n)).toStrictEqual({ start: 10, stop: 15, step: 2 });
+	});
+
+	test("slice throws on bigint exceeding MAX_SAFE_INTEGER", () => {
+		let big = BigInt(Number.MAX_SAFE_INTEGER) + 1n;
+		expect(() => slice(big)).toThrowError(RangeError);
+	});
 });
 
 describe("slice indices", () => {
