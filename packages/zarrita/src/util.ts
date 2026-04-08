@@ -380,6 +380,15 @@ type ErrorConstructor = new (...args: any[]) => Error;
  * @param errors - Expected error type(s)
  * @throws The original error if it doesn't match expected type(s)
  */
+export function isAbortable(opts: unknown): opts is { signal: AbortSignal } {
+	return (
+		opts != null &&
+		typeof opts === "object" &&
+		"signal" in opts &&
+		opts.signal instanceof AbortSignal
+	);
+}
+
 export function rethrow_unless<E extends ReadonlyArray<ErrorConstructor>>(
 	error: unknown,
 	...errors: E

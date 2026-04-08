@@ -2,7 +2,11 @@ import type { Readable } from "@zarrita/storage";
 
 import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
-import { assertSharedArrayBufferAvailable, createBuffer } from "../util.js";
+import {
+	assertSharedArrayBufferAvailable,
+	createBuffer,
+	isAbortable,
+} from "../util.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
 	GetOptions,
@@ -73,6 +77,9 @@ export async function get<
 	let queue = opts.create_queue?.() ?? create_queue();
 	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(async () => {
+			if (isAbortable(opts.opts)) {
+				opts.opts.signal.throwIfAborted();
+			}
 			let { data, shape, stride } = await arr.getChunk(
 				chunk_coords,
 				opts.opts,
