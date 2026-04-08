@@ -96,25 +96,7 @@ classDiagram
     }
 ```
 
-## Development
+## Contributing
 
-This library uses the [`pnpm`](https://pnpm.io/) package manager and
-[`uv`](https://github.com/astral-sh/uv) for creating fixtures with Python.
-Please make sure you have both installed before running the following commands:
-
-```bash
-pnpm install
-pnpm build
-pnpm test
-```
-
-The tests are run with [Vitest](https://github.com/vitest-dev/vitest), which is
-a Node.js test runner. To try our a development version of **zarrita** in the
-browser, run `pnpm build` and start a web-server in the root of the repository:
-
-```sh
-python3 -m http.server .
-# navigate to localhost:8000/demo.html
-```
-
-You can edit the contents of `demo.html` and refresh the page.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, commands, and
+how to submit changes.
