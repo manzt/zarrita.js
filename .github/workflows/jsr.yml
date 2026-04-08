@@ -17,6 +17,13 @@ jobs:
         with:
           deno-version: v2.x
 
+      - run: deno install
+        working-directory: packages/@zarrita-storage
+      - run: deno install
+        working-directory: packages/zarrita
+      - run: deno install
+        working-directory: packages/@zarrita-ndarray
+
       - name: Publish @zarrita/storage
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/@zarrita-storage
