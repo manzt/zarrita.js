@@ -18,7 +18,7 @@
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"@types/node": "^22.13.0",
 		"publint": "^0.3.7",
-		"tintype": "^0.0.2",
+		"tintype": "^0.1.1",
 		"typescript": "5.8.2",
 		"vitest": "^4.1.2"
 	},

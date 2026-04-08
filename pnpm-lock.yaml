@@ -27,8 +27,8 @@ importers:
         specifier: ^0.3.7
         version: 0.3.7
       tintype:
-        specifier: ^0.0.2
-        version: 0.0.2(typescript@5.8.2)(vitest@4.1.2(@types/node@22.13.8)(vite@6.2.0(@types/node@22.13.8)))
+        specifier: ^0.1.1
+        version: 0.1.1(typescript@5.8.2)(vitest@4.1.2(@types/node@22.13.8)(vite@6.2.0(@types/node@22.13.8)))
       typescript:
         specifier: 5.8.2
         version: 5.8.2
@@ -1497,8 +1497,8 @@ packages:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
     engines: {node: '>=8'}
 
-  tintype@0.0.2:
-    resolution: {integrity: sha512-udve6WPw3FnQjWF1yEMwHzjNzBmoJIBNYvEar8hxtP4vdg/F12AokM6pBzRfN24Gduh+pIcsvtboN1oHHlz24Q==}
+  tintype@0.1.1:
+    resolution: {integrity: sha512-P+VeyIa9OHOd7TB8bfs7y9iqQqKWDmmNx1IyhEVi2rtHzc9iEUmq/APmSradYWgTBpXZGbiehZpcFxNGQq3dPg==}
     peerDependencies:
       typescript: '>=5.0.0'
       vitest: '>=2.0.0'
@@ -3105,7 +3105,7 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  tintype@0.0.2(typescript@5.8.2)(vitest@4.1.2(@types/node@22.13.8)(vite@6.2.0(@types/node@22.13.8))):
+  tintype@0.1.1(typescript@5.8.2)(vitest@4.1.2(@types/node@22.13.8)(vite@6.2.0(@types/node@22.13.8))):
     dependencies:
       magic-string: 0.30.21
       typescript: 5.8.2
