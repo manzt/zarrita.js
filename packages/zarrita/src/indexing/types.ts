@@ -47,7 +47,7 @@ export type Options = {
 
 export type GetOptions<O> = Options & { opts?: O };
 
-export type SetOptions = Options;
+export type SetOptions<O = unknown> = Options & { opts?: O };
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

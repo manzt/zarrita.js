@@ -2,6 +2,7 @@ import type { Mutable } from "@zarrita/storage";
 
 import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
+import { isAbortable } from "../util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
 	Indices,
@@ -52,6 +53,10 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const chunk_selection = mapping.map((i) => i.from);
 		const flipped = mapping.map(flip_indexer_projection);
 		queue.add(async () => {
+			if (isAbortable(opts.opts)) {
+				opts.opts.signal.throwIfAborted();
+			}
+
 			// obtain key for chunk storage
 			const chunk_path = arr.resolve(
 				context.encode_chunk_key(chunk_coords),
