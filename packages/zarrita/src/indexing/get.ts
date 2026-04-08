@@ -52,6 +52,16 @@ export async function get<
 		chunk_shape: arr.chunks,
 	});
 
+	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
+	// for zero-dimensional arrays.
+	if (arr.shape.length === 0) {
+		let { data } = await arr.getChunk([], opts.opts, {
+			useSharedArrayBuffer: opts.useSharedArrayBuffer,
+		});
+		// @ts-expect-error - TS can't narrow this conditional type
+		return unwrap(data, 0);
+	}
+
 	let size = indexer.shape.reduce((a, b) => a * b, 1);
 	let data: TypedArray<D>;
 	if (opts.useSharedArrayBuffer) {
@@ -92,7 +102,7 @@ export async function get<
 
 	await queue.onIdle();
 
-	// If the final out shape is empty, we just return a scalar.
+	// If the final out shape is empty (point selection), return a scalar.
 	// @ts-expect-error - TS can't narrow this conditional type
 	return indexer.shape.length === 0 ? unwrap(out.data, 0) : out;
 }

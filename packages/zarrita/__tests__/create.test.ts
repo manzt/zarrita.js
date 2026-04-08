@@ -146,6 +146,34 @@ test("create array without dimension_names", async () => {
 	expect(a.dimensionNames).toBeUndefined();
 });
 
+test("get scalar array returns fill value before set", async () => {
+	let h = zarr.root();
+	let arr = await zarr.create(h.resolve("/scalar"), {
+		shape: [],
+		chunk_shape: [],
+		data_type: "float64",
+		fill_value: -9999,
+	});
+	let value = await zarr.get(arr);
+	expect(value).toBe(-9999);
+});
+
+test("set and get scalar array (shape=[])", async () => {
+	let h = zarr.root();
+	let arr = await zarr.create(h.resolve("/scalar"), {
+		shape: [],
+		chunk_shape: [],
+		data_type: "float64",
+		fill_value: 0,
+	});
+	expect(arr.shape).toStrictEqual([]);
+	expect(arr.chunks).toStrictEqual([]);
+
+	await zarr.set(arr, null, 42);
+	let value = await zarr.get(arr);
+	expect(value).toBe(42);
+});
+
 test("create nodes via groups", async () => {
 	let h = zarr.root();
 	let marvin = await zarr.create(h.resolve("/marvin"));
