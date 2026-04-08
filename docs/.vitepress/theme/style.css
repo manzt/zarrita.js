@@ -31,5 +31,6 @@
  * -------------------------------------------------------------------------- */
 
 .DocSearch {
+	/* biome-ignore lint/complexity/noImportantStyles: it's fine */
 	--docsearch-primary-color: var(--vp-c-brand-1) !important;
 }

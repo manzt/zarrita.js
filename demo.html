@@ -19,6 +19,7 @@
   </head>
   <script type="module">
     import * as zarr from "zarrita";
+
     let store = zarr.root(new zarr.FetchStore(new URL("fixtures", import.meta.url)));
 
     {
