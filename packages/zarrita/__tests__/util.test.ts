@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import * as zarr from "../src/index.js";
+import { sel, slice } from "../src/indexing/util.js";
 import type { ArrayMetadata, DataType } from "../src/metadata.js";
 import {
 	BoolArray,
@@ -261,6 +263,46 @@ describe("ensure_correct_scalar", () => {
 
 	test("int64 fill_value converts to BigInt", () => {
 		expect(ensure_correct_scalar(make_metadata("int64", 42))).toBe(42n);
+	});
+});
+
+describe("sel", () => {
+	async function make_array(dimension_names?: string[]) {
+		let h = zarr.root();
+		return zarr.create(h.resolve("/test"), {
+			shape: [100, 200, 300],
+			chunk_shape: [10, 20, 30],
+			data_type: "float32",
+			dimension_names,
+		});
+	}
+
+	test("maps named dimensions to positional selection", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(sel(arr, { lat: slice(10, 20), time: 0 })).toStrictEqual([
+			0,
+			{ start: 10, stop: 20, step: null },
+			null,
+		]);
+	});
+
+	test("unspecified dimensions default to null", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(sel(arr, { lon: 5 })).toStrictEqual([null, null, 5]);
+	});
+
+	test("throws for unknown dimension name", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(() => sel(arr, { bad: 0 })).toThrowError(
+			/Unknown dimension name: "bad"/,
+		);
+	});
+
+	test("throws when array has no dimension_names", async () => {
+		let arr = await make_array();
+		expect(() => sel(arr, { time: 0 })).toThrowError(
+			/does not have dimension_names/,
+		);
 	});
 });
 
