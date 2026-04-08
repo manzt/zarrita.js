@@ -180,6 +180,10 @@ export class Array<
 		return this.#metadata.attributes;
 	}
 
+	get dimensionNames(): string[] | undefined {
+		return this.#metadata.dimension_names;
+	}
+
 	get shape(): number[] {
 		return this.#metadata.shape;
 	}

@@ -11,6 +11,7 @@ import {
 	get_ctr,
 	get_strides,
 	is_dtype,
+	v2_to_v3_array_metadata,
 } from "../src/util.js";
 
 describe("get_ctr", () => {
@@ -260,5 +261,368 @@ describe("ensure_correct_scalar", () => {
 
 	test("int64 fill_value converts to BigInt", () => {
 		expect(ensure_correct_scalar(make_metadata("int64", 42))).toBe(42n);
+	});
+});
+
+describe("v2_to_v3_array_metadata", () => {
+	let v2meta = {
+		zarr_format: 2 as const,
+		shape: [100, 200],
+		chunks: [10, 20],
+		dtype: "<f4",
+		compressor: null,
+		fill_value: 0,
+		order: "C" as const,
+		filters: null,
+	};
+
+	test("basic conversion", () => {
+		let result = v2_to_v3_array_metadata(v2meta);
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("maps _ARRAY_DIMENSIONS to dimension_names", () => {
+		let result = v2_to_v3_array_metadata(v2meta, {
+			_ARRAY_DIMENSIONS: ["x", "y"],
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {
+			    "_ARRAY_DIMENSIONS": [
+			      "x",
+			      "y",
+			    ],
+			  },
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": [
+			    "x",
+			    "y",
+			  ],
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("Fortran order adds transpose codec", () => {
+		let result = v2_to_v3_array_metadata({ ...v2meta, order: "F" });
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "order": "F",
+			      },
+			      "name": "transpose",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("big-endian dtype adds bytes codec", () => {
+		let result = v2_to_v3_array_metadata({ ...v2meta, dtype: ">f4" });
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "endian": "big",
+			      },
+			      "name": "bytes",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("compressor is converted to codec", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			compressor: { id: "zlib", level: 5 },
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "level": 5,
+			      },
+			      "name": "zlib",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("filters are converted to codecs", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			filters: [{ id: "delta", dtype: "<f4" }],
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "dtype": "<f4",
+			      },
+			      "name": "delta",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("dimension_separator is preserved", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			dimension_separator: "/",
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": "/",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("codec order: transpose, bytes, filters, compressor", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			dtype: ">f4",
+			order: "F",
+			filters: [{ id: "delta", dtype: ">f4" }],
+			compressor: { id: "zlib", level: 1 },
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "order": "F",
+			      },
+			      "name": "transpose",
+			    },
+			    {
+			      "configuration": {
+			        "endian": "big",
+			      },
+			      "name": "bytes",
+			    },
+			    {
+			      "configuration": {
+			        "dtype": ">f4",
+			      },
+			      "name": "delta",
+			    },
+			    {
+			      "configuration": {
+			        "level": 1,
+			      },
+			      "name": "zlib",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
 	});
 });
