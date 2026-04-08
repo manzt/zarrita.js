@@ -1,3 +1,4 @@
+import { JsonDecodeError } from "./errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -45,7 +46,11 @@ export function createBuffer(
 
 export function json_decode_object(bytes: Uint8Array) {
 	const str = new TextDecoder().decode(bytes);
-	return JSON.parse(str);
+	try {
+		return JSON.parse(str);
+	} catch (cause) {
+		throw new JsonDecodeError(cause);
+	}
 }
 
 export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
