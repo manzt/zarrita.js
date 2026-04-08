@@ -16,7 +16,8 @@
 	},
 	"publish": {
 		"exclude": [
-			"package.json"
+			"package.json",
+			"__tests__"
 		]
 	}
 }

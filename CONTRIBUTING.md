@@ -80,3 +80,22 @@ Commit that file with your PR.
 
 When a release PR is merged, changesets automatically publishes to npm and
 updates changelogs.
+
+## Dual publishing (npm + JSR)
+
+Every package is published to both npm and [JSR](https://jsr.io/).
+The npm side is handled by changesets. The JSR side is handled by a separate
+GitHub Actions workflow (`.github/workflows/jsr.yml`) that runs `deno publish`
+on every push to `main`.
+
+Each package has a `jsr.json` alongside its `package.json`. These are
+**generated** — don't edit them directly. The sync script derives each `jsr.json` from its corresponding
+`package.json`, translating npm dependencies to `npm:` specifiers and
+workspace dependencies to `jsr:` specifiers:
+
+```bash
+node scripts/sync-jsr.mjs
+```
+
+This runs automatically as part of `pnpm version`, so jsr.json files stay
+in sync with package.json after every version bump.
