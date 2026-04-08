@@ -15,7 +15,7 @@ class FileSystemStore implements AsyncMutable {
 
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
 		let fp = path.join(this.root, strip_prefix(key));
-		return fs.promises.readFile(fp).catch((err) => {
+		return fs.promises.readFile(fp).catch((err: NodeJS.ErrnoException) => {
 			if (err.code === "ENOENT") return undefined;
 			throw err;
 		});

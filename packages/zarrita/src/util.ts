@@ -375,18 +375,21 @@ export function assert(
 }
 
 /**
- * @param {ArrayBuffer |ArrayBufferView | Response} data
- * @param {Object} options
- * @param {CompressionFormat} options.format
- * @param {AbortSignal} [options.signal]
- *
- * @returns {Promise<ArrayBuffer>}
+ * Decompress data using the given format via the Web Streams API.
+ * Views backed by a SharedArrayBuffer are copied into a regular ArrayBuffer
+ * since the Response constructor does not accept shared memory.
  */
 export async function decompress(
-	data: ArrayBuffer | ArrayBufferView | Response,
+	data: ArrayBuffer | ArrayBufferView,
 	{ format, signal }: { format: CompressionFormat; signal?: AbortSignal },
 ): Promise<ArrayBuffer> {
-	const response = data instanceof Response ? data : new Response(data);
+	let response: Response;
+	if (data instanceof ArrayBuffer) {
+		response = new Response(data);
+	} else {
+		let bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+		response = new Response(bytes.slice().buffer);
+	}
 	assert(response.body, "Response does not contain body.");
 	try {
 		const decompressedResponse = new Response(

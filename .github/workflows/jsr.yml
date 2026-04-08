@@ -21,12 +21,10 @@ jobs:
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/@zarrita-storage
 
-      # --no-check: Deno v2 (TS 5.9) changes ArrayBufferView to use ArrayBufferLike,
-      # which breaks `new Response(data)` in util.ts. Also hits a Deno bug in
-      # slow-type validation of overloaded `create` function.
-      # Remove --no-check when TS is upgraded to 5.9+ in the project.
+      # --allow-slow-types: Deno hits a bug in slow-type validation of the
+      # overloaded `create` function.
       - name: Publish @zarrita/zarrita
-        run: deno publish --unstable-sloppy-imports --no-check --allow-slow-types
+        run: deno publish --unstable-sloppy-imports --allow-slow-types
         working-directory: packages/zarrita
 
       # --no-check: Deno v2 (TS 5.9) adds Float16Array to the default lib, which
