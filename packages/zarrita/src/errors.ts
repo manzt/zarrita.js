@@ -5,6 +5,13 @@ export class NodeNotFoundError extends Error {
 	}
 }
 
+export class JsonDecodeError extends Error {
+	constructor(cause: unknown) {
+		super("Failed to decode JSON", { cause });
+		this.name = "JsonDecodeError";
+	}
+}
+
 export class KeyError extends Error {
 	constructor(path: string) {
 		super(`Missing key: ${path}`);

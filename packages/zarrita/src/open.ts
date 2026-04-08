@@ -1,5 +1,5 @@
 import type { Readable } from "@zarrita/storage";
-import { KeyError, NodeNotFoundError } from "./errors.js";
+import { JsonDecodeError, KeyError, NodeNotFoundError } from "./errors.js";
 import { Array, Group, Location } from "./hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -65,7 +65,7 @@ async function open_v2<Store extends Readable>(
 	if (options.kind === "array") return open_array_v2(loc, attrs);
 	if (options.kind === "group") return open_group_v2(loc, attrs);
 	return open_array_v2(loc, attrs).catch((err) => {
-		rethrow_unless(err, NodeNotFoundError);
+		rethrow_unless(err, NodeNotFoundError, JsonDecodeError);
 		return open_group_v2(loc, attrs);
 	});
 }
@@ -193,7 +193,7 @@ export async function open<Store extends Readable>(
 	let open_primary = version_max === "v2" ? open.v2 : open.v3;
 	let open_secondary = version_max === "v2" ? open.v3 : open.v2;
 	return open_primary(location, options).catch((err) => {
-		rethrow_unless(err, NodeNotFoundError);
+		rethrow_unless(err, NodeNotFoundError, JsonDecodeError);
 		return open_secondary(location, options);
 	});
 }

@@ -127,6 +127,25 @@ describe("open (v2 vs v3 priority)", () => {
 		expect(v3_spy).toHaveBeenCalledTimes(3);
 	});
 
+	it("falls back to v3 when v2 metadata is not valid JSON", async () => {
+		let enc = new TextEncoder();
+		let store = new Map();
+		// Simulate a server that returns non-JSON (e.g., HTML error page) for v2 keys
+		store.set("/.zattrs", enc.encode("<html>Not Found</html>"));
+		store.set(
+			"/zarr.json",
+			enc.encode(
+				JSON.stringify({
+					zarr_format: 3,
+					node_type: "group",
+					attributes: {},
+				}),
+			),
+		);
+		let node = await open(root(store));
+		expect(node.attrs).toStrictEqual({});
+	});
+
 	it("switches back to prioritizing v2 after opening v2 more times", async () => {
 		let store = store_root();
 		let v2_spy = vi.spyOn(open, "v2");
