@@ -40,6 +40,7 @@ test("create array", async () => {
 	expect(a.dtype).toBe("int32");
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
+	expect(a.fillValue).toBeNull();
 	expect(
 		json_decode(h.store.get("/arthur/dent/zarr.json")),
 	).toMatchInlineSnapshot(`
@@ -97,7 +98,7 @@ describe("create array with IEEE 754 special fill values", () => {
 		["-Infinity", -Infinity, "-Infinity"],
 	])("%s", async (_label, fill_value, expected_json) => {
 		let h = zarr.root();
-		await zarr.create(h.resolve("/test"), {
+		let a = await zarr.create(h.resolve("/test"), {
 			shape: [2],
 			chunk_shape: [2],
 			data_type: "float32",
@@ -106,6 +107,7 @@ describe("create array with IEEE 754 special fill values", () => {
 		});
 		let meta = json_decode(h.store.get("/test/zarr.json"));
 		expect(meta.fill_value).toBe(expected_json);
+		expect(a.fillValue).toBe(fill_value);
 	});
 });
 
@@ -121,6 +123,17 @@ test("create array with dimension_names", async () => {
 	expect(json_decode(h.store.get("/temp/zarr.json"))).toMatchObject({
 		dimension_names: ["x", "y"],
 	});
+});
+
+test("create array with fill_value", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [10],
+		chunk_shape: [5],
+		data_type: "float32",
+		fill_value: -9999,
+	});
+	expect(a.fillValue).toBe(-9999);
 });
 
 test("create array without dimension_names", async () => {
