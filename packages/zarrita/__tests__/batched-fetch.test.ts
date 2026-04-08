@@ -306,6 +306,73 @@ describe("withRangeBatching", () => {
 		});
 	});
 
+	describe("mergeOptions", () => {
+		it("uses first caller's options by default", async () => {
+			let inner = fakeStore();
+			let store = withRangeBatching(inner);
+
+			await Promise.all([
+				store.getRange(
+					"/data/chunk",
+					{ offset: 0, length: 100 },
+					{ headers: { "x-req": "first" } },
+				),
+				store.getRange(
+					"/data/chunk",
+					{ offset: 100, length: 100 },
+					{ headers: { "x-req": "second" } },
+				),
+			]);
+
+			expect(inner.getRange.mock.calls[0][2]?.headers).toEqual({
+				"x-req": "first",
+			});
+		});
+
+		it("applies mergeOptions reducer across batched callers", async () => {
+			interface TaggedOptions {
+				tags: string[];
+			}
+			let inner = {
+				get: vi.fn((_key: AbsolutePath, _opts?: TaggedOptions) =>
+					Promise.resolve<Uint8Array | undefined>(new Uint8Array(0)),
+				),
+				getRange: vi.fn(
+					(
+						_key: AbsolutePath,
+						range: RangeQuery,
+						_options?: TaggedOptions,
+					): Promise<Uint8Array | undefined> => {
+						if ("suffixLength" in range) {
+							return Promise.resolve(new Uint8Array(range.suffixLength));
+						}
+						return Promise.resolve(new Uint8Array(range.length));
+					},
+				),
+			};
+			let store = withRangeBatching(inner, {
+				mergeOptions: (batch) => ({
+					tags: batch.flatMap((o) => o?.tags ?? []),
+				}),
+			});
+
+			await Promise.all([
+				store.getRange(
+					"/data/chunk",
+					{ offset: 0, length: 100 },
+					{ tags: ["a"] },
+				),
+				store.getRange(
+					"/data/chunk",
+					{ offset: 100, length: 100 },
+					{ tags: ["b"] },
+				),
+			]);
+
+			expect(inner.getRange.mock.calls[0][2]?.tags).toEqual(["a", "b"]);
+		});
+	});
+
 	describe("undefined data", () => {
 		it("resolves with undefined when inner returns undefined", async () => {
 			let inner = fakeStore();
