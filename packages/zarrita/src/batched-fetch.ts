@@ -245,10 +245,19 @@ export class BatchedRangeStore<Options = unknown>
 	async #flush(): Promise<void> {
 		let batch = this.#batchOptions;
 		this.#batchOptions = [];
-		let options = this.#mergeOptions ? this.#mergeOptions(batch) : batch[0];
 		let work = new Map(this.#pending);
 		this.#pending.clear();
 		this.#scheduled = false;
+
+		let options: Options | undefined;
+		try {
+			options = this.#mergeOptions ? this.#mergeOptions(batch) : batch[0];
+		} catch (err) {
+			for (let requests of work.values()) {
+				for (let req of requests) req.reject(err);
+			}
+			return;
+		}
 
 		let pathPromises: Promise<void>[] = [];
 		for (let [path, requests] of work) {
