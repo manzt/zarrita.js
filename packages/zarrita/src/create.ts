@@ -18,7 +18,7 @@ interface CreateGroupOptions {
 interface CreateArrayOptions<Dtype extends DataType> {
 	shape: number[];
 	chunkShape: number[];
-	dataType: Dtype;
+	dtype: Dtype;
 	codecs?: CodecMetadata[];
 	fillValue?: Scalar<Dtype>;
 	chunkSeparator?: "." | "/";
@@ -80,7 +80,7 @@ async function createArray<Store extends Mutable, Dtype extends DataType>(
 		zarr_format: 3,
 		node_type: "array",
 		shape: options.shape,
-		data_type: options.dataType,
+		data_type: options.dtype,
 		chunk_grid: {
 			name: "regular",
 			configuration: {

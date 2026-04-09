@@ -9,7 +9,7 @@ test("Read and write array data - builtin", async () => {
 	let h = zarr.root(new Map());
 	let a = await zarr.create(h.resolve("/arthur/dent"), {
 		shape: [5, 10],
-		dataType: "int32",
+		dtype: "int32",
 		chunkShape: [2, 5],
 	});
 
@@ -108,7 +108,7 @@ test("Read and write array data - builtin", async () => {
 
 	let b = await zarr.create(h.resolve("/deep/thought"), {
 		shape: [7500000],
-		dataType: "float64",
+		dtype: "float64",
 		chunkShape: [42],
 	});
 

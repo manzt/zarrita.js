@@ -14,7 +14,7 @@ const DATA = {
 describe("slice", async () => {
 	let arr = await zarr.create(new Map(), {
 		shape: [2, 3, 4],
-		dataType: "int32",
+		dtype: "int32",
 		chunkShape: [1, 2, 2],
 	});
 	await set(arr, null, DATA);

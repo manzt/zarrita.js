@@ -20,7 +20,7 @@ import {
 	ensureCorrectScalar,
 	getCtr,
 	getStrides,
-	isDtype,
+	isDataType,
 	isShardingCodec,
 	type NarrowDataType,
 } from "./util.js";
@@ -258,6 +258,6 @@ export class Array<
 	is<Query extends DataTypeQuery>(
 		query: Query,
 	): this is Array<NarrowDataType<Dtype, Query>, Store> {
-		return isDtype(this.dtype, query);
+		return isDataType(this.dtype, query);
 	}
 }

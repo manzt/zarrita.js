@@ -7,7 +7,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
 			chunkShape: [2, 2],
-			dataType: "int32",
+			dtype: "int32",
 			fillValue: 42,
 		});
 
@@ -23,7 +23,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
 			chunkShape: [2, 2],
-			dataType: "int32",
+			dtype: "int32",
 			fillValue: 42,
 		});
 
@@ -37,7 +37,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
 			chunkShape: [2, 2],
-			dataType: "float32",
+			dtype: "float32",
 			fillValue: 3.14,
 		});
 
@@ -58,7 +58,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
 			chunkShape: [2, 2],
-			dataType: "float32",
+			dtype: "float32",
 			fillValue: 3.14,
 		});
 
@@ -69,22 +69,22 @@ describe("SharedArrayBuffer support", () => {
 
 	test("useSharedArrayBuffer works with various numeric data types", async () => {
 		const testCases = [
-			{ dataType: "int8" as const, fillValue: -1 },
-			{ dataType: "int16" as const, fillValue: -100 },
-			{ dataType: "int32" as const, fillValue: -1000 },
-			{ dataType: "uint8" as const, fillValue: 255 },
-			{ dataType: "uint16" as const, fillValue: 1000 },
-			{ dataType: "uint32" as const, fillValue: 100000 },
-			{ dataType: "float32" as const, fillValue: 1.5 },
-			{ dataType: "float64" as const, fillValue: 2.5 },
+			{ dtype: "int8" as const, fillValue: -1 },
+			{ dtype: "int16" as const, fillValue: -100 },
+			{ dtype: "int32" as const, fillValue: -1000 },
+			{ dtype: "uint8" as const, fillValue: 255 },
+			{ dtype: "uint16" as const, fillValue: 1000 },
+			{ dtype: "uint32" as const, fillValue: 100000 },
+			{ dtype: "float32" as const, fillValue: 1.5 },
+			{ dtype: "float64" as const, fillValue: 2.5 },
 		];
 
-		for (const { dataType, fillValue } of testCases) {
+		for (const { dtype, fillValue } of testCases) {
 			let h = zarr.root();
 			let arr = await zarr.create(h.resolve("/test"), {
 				shape: [2],
 				chunkShape: [2],
-				dataType,
+				dtype,
 				fillValue,
 			});
 
@@ -99,7 +99,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4],
 			chunkShape: [2],
-			dataType: "bool",
+			dtype: "bool",
 			fillValue: true,
 		});
 
@@ -114,7 +114,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [2],
 			chunkShape: [2],
-			dataType: "string",
+			dtype: "string",
 			fillValue: "hello",
 		});
 
@@ -130,7 +130,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4],
 			chunkShape: [2],
-			dataType: "int32",
+			dtype: "int32",
 			fillValue: 0,
 		});
 
@@ -152,7 +152,7 @@ describe("SharedArrayBuffer support", () => {
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
 			chunkShape: [2, 2],
-			dataType: "int32",
+			dtype: "int32",
 			fillValue: 0,
 		});
 

@@ -12,7 +12,7 @@ import {
 	ensureCorrectScalar,
 	getCtr,
 	getStrides,
-	isDtype,
+	isDataType,
 	v2ToV3ArrayMetadata,
 } from "../src/util.js";
 
@@ -45,7 +45,7 @@ describe("getCtr", () => {
 		});
 
 		test.each(["float16"])("%s -> throws", (dtype) => {
-			expect(() => getCtr(dtype as DataType)).toThrowError();
+			expect(() => getCtr(dtype as DataType)).toThrow();
 		});
 	});
 
@@ -111,7 +111,7 @@ describe("getStrides", () => {
 	});
 });
 
-describe("isDtype", () => {
+describe("isDataType", () => {
 	test.each<[DataType, boolean]>([
 		["int8", true],
 		["int16", true],
@@ -129,8 +129,8 @@ describe("isDtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("isDtype(%s, 'number') -> %s", (dtype, expected) => {
-		expect(isDtype(dtype, "number")).toBe(expected);
+	])("isDataType(%s, 'number') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "number")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -150,8 +150,8 @@ describe("isDtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("isDtype(%s, 'boolean') -> %s", (dtype, expected) => {
-		expect(isDtype(dtype, "boolean")).toBe(expected);
+	])("isDataType(%s, 'boolean') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "boolean")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -171,8 +171,8 @@ describe("isDtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("isDtype(%s, 'bigint') -> %s", (dtype, expected) => {
-		expect(isDtype(dtype, "bigint")).toBe(expected);
+	])("isDataType(%s, 'bigint') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "bigint")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -192,8 +192,8 @@ describe("isDtype", () => {
 		["v2:S6", true],
 		["v2:object", false],
 		["string", true],
-	])("isDtype(%s, 'string') -> %s", (dtype, expected) => {
-		expect(isDtype(dtype, "string")).toBe(expected);
+	])("isDataType(%s, 'string') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "string")).toBe(expected);
 	});
 
 	test.each<DataType>([
@@ -213,8 +213,8 @@ describe("isDtype", () => {
 		"v2:S6",
 		"v2:object",
 		"string",
-	])("isDtype(%s, %s) -> true", (dtype) => {
-		expect(isDtype(dtype, dtype)).toBe(true);
+	])("isDataType(%s, %s) -> true", (dtype) => {
+		expect(isDataType(dtype, dtype)).toBe(true);
 	});
 });
 
@@ -272,7 +272,7 @@ describe("sel", () => {
 		return zarr.create(h.resolve("/test"), {
 			shape: [100, 200, 300],
 			chunkShape: [10, 20, 30],
-			dataType: "float32",
+			dtype: "float32",
 			dimensionNames,
 		});
 	}
@@ -293,14 +293,12 @@ describe("sel", () => {
 
 	test("throws for unknown dimension name", async () => {
 		let arr = await make_array(["time", "lat", "lon"]);
-		expect(() => sel(arr, { bad: 0 })).toThrowError(
-			/Unknown dimension name: "bad"/,
-		);
+		expect(() => sel(arr, { bad: 0 })).toThrow(/Unknown dimension name: "bad"/);
 	});
 
 	test("throws when array has no dimension_names", async () => {
 		let arr = await make_array();
-		expect(() => sel(arr, { time: 0 })).toThrowError(
+		expect(() => sel(arr, { time: 0 })).toThrow(
 			/does not have dimension_names/,
 		);
 	});

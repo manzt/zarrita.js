@@ -280,7 +280,7 @@ export type NarrowDataType<
 					? ObjectType
 					: Extract<Query, Dtype>;
 
-export function isDtype<Query extends DataTypeQuery>(
+export function isDataType<Query extends DataTypeQuery>(
 	dtype: DataType,
 	query: Query,
 ): dtype is NarrowDataType<DataType, Query> {

@@ -31,7 +31,7 @@ test("create array", async () => {
 	let a = await zarr.create(h.resolve("/arthur/dent"), {
 		shape: [5, 10],
 		chunkShape: [2, 5],
-		dataType: "int32",
+		dtype: "int32",
 		attributes,
 	});
 	expect(a).toBeInstanceOf(zarr.Array);
@@ -101,7 +101,7 @@ describe("create array with IEEE 754 special fill values", () => {
 		let a = await zarr.create(h.resolve("/test"), {
 			shape: [2],
 			chunkShape: [2],
-			dataType: "float32",
+			dtype: "float32",
 			fillValue: fill_value,
 			codecs: [],
 		});
@@ -116,7 +116,7 @@ test("create array with dimension_names", async () => {
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [100, 200],
 		chunkShape: [10, 20],
-		dataType: "float32",
+		dtype: "float32",
 		dimensionNames: ["x", "y"],
 	});
 	expect(a.dimensionNames).toStrictEqual(["x", "y"]);
@@ -130,7 +130,7 @@ test("create array with fill_value", async () => {
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [10],
 		chunkShape: [5],
-		dataType: "float32",
+		dtype: "float32",
 		fillValue: -9999,
 	});
 	expect(a.fillValue).toBe(-9999);
@@ -141,7 +141,7 @@ test("create array without dimension_names", async () => {
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [10],
 		chunkShape: [5],
-		dataType: "int32",
+		dtype: "int32",
 	});
 	expect(a.dimensionNames).toBeUndefined();
 });
@@ -151,7 +151,7 @@ test("get scalar array returns fill value before set", async () => {
 	let arr = await zarr.create(h.resolve("/scalar"), {
 		shape: [],
 		chunkShape: [],
-		dataType: "float64",
+		dtype: "float64",
 		fillValue: -9999,
 	});
 	let value = await zarr.get(arr);
@@ -163,7 +163,7 @@ test("set and get scalar array (shape=[])", async () => {
 	let arr = await zarr.create(h.resolve("/scalar"), {
 		shape: [],
 		chunkShape: [],
-		dataType: "float64",
+		dtype: "float64",
 		fillValue: 0,
 	});
 	expect(arr.shape).toStrictEqual([]);
@@ -180,7 +180,7 @@ test("create nodes via groups", async () => {
 	let paranoid = await zarr.create(marvin.resolve("paranoid"));
 	let android = await zarr.create(marvin.resolve("android"), {
 		shape: [42, 42],
-		dataType: "uint8",
+		dtype: "uint8",
 		chunkShape: [2, 2],
 	});
 	expect(marvin).toBeInstanceOf(zarr.Group);
