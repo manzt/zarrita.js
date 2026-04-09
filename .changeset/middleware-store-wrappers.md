@@ -2,13 +2,13 @@
 "zarrita": minor
 ---
 
-Introduce composable store middleware via `wrapStore`
+Introduce composable store middleware via `defineStoreMiddleware`
 
 **New APIs:**
 
-- `wrapStore(factory)` — define a store middleware with dual API (direct + curried) and automatic Proxy delegation. Supports sync and async factories.
-- `wrapStore.generic<OptsLambda>()(factory)` — for middleware whose options depend on the store's request options type (e.g., `mergeOptions`). Uses `GenericOptions` interface for higher-kinded type encoding.
-- `createStore(store, ...middleware)` — compose middleware in a pipeline. Returns `Promise` to support async middleware like `withConsolidation`.
+- `zarr.defineStoreMiddleware(factory)` — define a store middleware with automatic Proxy delegation. The factory receives an `AsyncReadable` store and options, returning overrides and extensions. Supports sync and async factories.
+- `zarr.defineStoreMiddleware.generic<OptsLambda>()(factory)` — for middleware whose options depend on the store's request options type (e.g., `mergeOptions`). Uses `GenericOptions` interface for higher-kinded type encoding.
+- `zarr.storeFrom(store, ...middleware)` — compose middleware in a pipeline. Each middleware is `(store) => newStore`. Returns `Promise` to support async middleware like `withConsolidation`.
 
 **Renamed:**
 
@@ -23,26 +23,22 @@ Introduce composable store middleware via `wrapStore`
 The previous exports are still available but deprecated. Update your imports:
 
 ```ts
-// Before
-import { withConsolidated, tryWithConsolidated, withRangeBatching } from "zarrita";
+import * as zarr from "zarrita";
 
-// After
-import { withConsolidation, withMaybeConsolidation, withRangeBatching } from "zarrita";
-
-// Pipeline composition
-let store = await createStore(
-  new FetchStore("https://..."),
-  withConsolidation({ format: "v3" }),
-  withRangeBatching(),
+// Pipeline composition (use arrow functions for full type inference)
+let store = await zarr.storeFrom(
+  new zarr.FetchStore("https://..."),
+  zarr.withConsolidation,
+  (s) => zarr.withRangeBatching(s, { mergeOptions: (batch) => batch[0] }),
 );
 ```
 
 **Defining custom middleware:**
 
 ```ts
-import { wrapStore } from "zarrita";
+import * as zarr from "zarrita";
 
-const withCaching = wrapStore(
+const withCaching = zarr.defineStoreMiddleware(
   (store, opts: { maxSize?: number }) => {
     let cache = new Map();
     return {
@@ -59,4 +55,4 @@ const withCaching = wrapStore(
 );
 ```
 
-`BatchedRangeStore` class has been removed in favor of `withRangeBatching` built on `wrapStore`.
+`BatchedRangeStore` class has been removed in favor of `withRangeBatching` built on `zarr.defineStoreMiddleware`.

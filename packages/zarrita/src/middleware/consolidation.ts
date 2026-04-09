@@ -1,4 +1,4 @@
-import type { AbsolutePath, Readable } from "@zarrita/storage";
+import type { AbsolutePath, AsyncReadable, Readable } from "@zarrita/storage";
 import { InvalidMetadataError, NotFoundError } from "../errors.js";
 import type {
 	ArrayMetadata,
@@ -15,7 +15,7 @@ import {
 	jsonEncodeObject,
 	rethrowUnless,
 } from "../util.js";
-import { wrapStore } from "./define.js";
+import { defineStoreMiddleware } from "./define.js";
 
 type ConsolidatedMetadataV2 = {
 	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;
@@ -198,16 +198,16 @@ export type Listable<Store extends Readable> = Store & {
  * let store = await zarr.withConsolidation(rawStore, { format: "v3" });
  *
  * // In a pipeline
- * let store = await zarr.createStore(
+ * let store = await zarr.storeFrom(
  *   new zarr.FetchStore("https://..."),
- *   zarr.withConsolidation({ format: "v3" }),
+ *   (s) => zarr.withConsolidation(s, { format: "v3" }),
  * );
  *
  * store.contents(); // [{ path: "/", kind: "group" }, ...]
  * ```
  */
-export const withConsolidation = wrapStore(
-	async (store: Readable, opts: ConsolidationOptions = {}) => {
+export const withConsolidation = defineStoreMiddleware(
+	async (store, opts: ConsolidationOptions = {}) => {
 		let formats = resolveFormats(store, opts.format);
 		let lastError: unknown;
 		for (let format of formats) {
@@ -263,7 +263,7 @@ export const withConsolidation = wrapStore(
  * Like {@linkcode withConsolidation}, but falls back to the original store if
  * no consolidated metadata is found (instead of throwing).
  */
-export async function withMaybeConsolidation<Store extends Readable>(
+export async function withMaybeConsolidation<Store extends AsyncReadable>(
 	store: Store,
 	opts: ConsolidationOptions = {},
 ): Promise<Listable<Store> | Store> {

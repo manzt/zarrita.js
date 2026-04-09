@@ -2,18 +2,53 @@ import type { AbsolutePath, AsyncReadable } from "@zarrita/storage";
 import { expectType } from "tintype";
 import { describe, test } from "vitest";
 import * as zarr from "../src/index.js";
-import { wrapStore } from "../src/middleware/define.js";
+import { defineStoreMiddleware } from "../src/middleware/define.js";
 
-describe("createStore", () => {
+describe("storeFrom", () => {
 	test("no middleware returns store as-is", () => {
-		let store = zarr.createStore(new zarr.FetchStore(""));
+		let store = zarr.storeFrom(new zarr.FetchStore(""));
 		expectType(store).toMatchInlineSnapshot(`Promise<zarr.FetchStore>`);
+	});
+
+	test("direct form in pipeline infers store options", () => {
+		let store = zarr.storeFrom(new zarr.FetchStore(""), (s) =>
+			zarr.withRangeBatching(s, {
+				mergeOptions: (batch) => {
+					expectType(batch).toMatchInlineSnapshot(
+						`ReadonlyArray<RequestInit | undefined>`,
+					);
+					return batch[0];
+				},
+			}),
+		);
+		expectType(store).toMatchInlineSnapshot(`
+			Promise<
+				zarr.FetchStore & { stats: Readonly<zarr.RangeBatchingStats> }
+			>
+		`);
+	});
+
+	test("no-config middleware can be passed uncalled", () => {
+		function check() {
+			return zarr.storeFrom(
+				new zarr.FetchStore(""),
+				zarr.withConsolidation,
+				(s) => zarr.withRangeBatching(s, { mergeOptions: (batch) => batch[0] }),
+			);
+		}
+		expectType(check).toMatchInlineSnapshot(`
+			() => Promise<
+				zarr.FetchStore & {
+					contents: () => { path: AbsolutePath; kind: "array" | "group" }[];
+				} & { stats: Readonly<zarr.RangeBatchingStats> }
+			>
+		`);
 	});
 });
 
-describe("wrapStore", () => {
+describe("defineStoreMiddleware", () => {
 	test("simple: extensions appear, store methods preserved", () => {
-		let withCustom = wrapStore(
+		let withCustom = defineStoreMiddleware(
 			(store: AsyncReadable, _opts: { flag: boolean }) => {
 				return {
 					async get(key: AbsolutePath) {
@@ -37,7 +72,7 @@ describe("wrapStore", () => {
 			retries?: number;
 		}
 
-		let withThing = wrapStore(
+		let withThing = defineStoreMiddleware(
 			<O>(store: AsyncReadable<O>, opts: ThingOptions<O>) => {
 				return {
 					async get(key: AbsolutePath, options?: O) {
@@ -58,26 +93,30 @@ describe("wrapStore", () => {
 	});
 
 	test("chaining preserves Options through wrappers", () => {
-		let withA = wrapStore((store: AsyncReadable, _opts: { a: number }) => {
-			return {
-				async get(key: AbsolutePath) {
-					return store.get(key);
-				},
-				methodA(): number {
-					return 1;
-				},
-			};
-		});
-		let withB = wrapStore((store: AsyncReadable, _opts: { b: string }) => {
-			return {
-				async get(key: AbsolutePath) {
-					return store.get(key);
-				},
-				methodB(): string {
-					return "hello";
-				},
-			};
-		});
+		let withA = defineStoreMiddleware(
+			(store: AsyncReadable, _opts: { a: number }) => {
+				return {
+					async get(key: AbsolutePath) {
+						return store.get(key);
+					},
+					methodA(): number {
+						return 1;
+					},
+				};
+			},
+		);
+		let withB = defineStoreMiddleware(
+			(store: AsyncReadable, _opts: { b: string }) => {
+				return {
+					async get(key: AbsolutePath) {
+						return store.get(key);
+					},
+					methodB(): string {
+						return "hello";
+					},
+				};
+			},
+		);
 		let store = withB(withA(new zarr.FetchStore(""), { a: 1 }), { b: "x" });
 		expectType(store).toMatchInlineSnapshot(`
 			zarr.FetchStore & { methodA: () => number } & {

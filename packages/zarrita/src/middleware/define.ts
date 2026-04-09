@@ -1,4 +1,4 @@
-import type { Readable } from "@zarrita/storage";
+import type { AsyncReadable } from "@zarrita/storage";
 
 /** Store keys stripped from Extensions to avoid poisoning Options. */
 type StoreKeys = "get" | "getRange";
@@ -7,19 +7,6 @@ type StoreKeys = "get" | "getRange";
 type Extensions<T> = {
 	[K in Extract<Exclude<keyof T, StoreKeys>, string>]: T[K];
 } & {};
-
-/**
- * If the factory defines `getRange`, make it required on S (preserving S's
- * type signature). This ensures middleware that provides `getRange` (like
- * `withRangeBatching`) marks it as non-optional without polluting Options.
- */
-type RequireOverrides<Ext, S> = "getRange" extends keyof Ext
-	? "getRange" extends keyof S
-		? Required<Pick<S, "getRange">>
-		: // biome-ignore lint/complexity/noBannedTypes: intentional empty intersection
-			{}
-	: // biome-ignore lint/complexity/noBannedTypes: intentional empty intersection
-		{};
 
 /**
  * Base interface for defining middleware options that depend on the store's
@@ -48,11 +35,8 @@ type InferStoreOpts<S> = S extends { get(key: any, opts?: infer O): any }
 /** If factory returns a Promise, wrap the result in Promise; otherwise keep it sync. */
 type WrapperResult<Ext, S> =
 	Ext extends Promise<infer Inner>
-		? Promise<S & Extensions<Inner> & RequireOverrides<Inner, S>>
-		: S & Extensions<Ext> & RequireOverrides<Ext, S>;
-
-// biome-ignore lint/suspicious/noExplicitAny: needed for overload disambiguation
-type HasGet = { get: (...args: any[]) => any };
+		? Promise<S & Extensions<Inner>>
+		: S & Extensions<Ext>;
 
 function createProxy(
 	store: object,
@@ -89,8 +73,8 @@ function createProxy(
 }
 
 function _apply(
-	factory: (store: Readable, opts: unknown) => unknown,
-	store: Readable,
+	factory: (store: AsyncReadable, opts: unknown) => unknown,
+	store: AsyncReadable,
 	opts: unknown,
 ) {
 	let result = factory(store, opts);
@@ -102,26 +86,8 @@ function _apply(
 	return createProxy(store, result as Record<string | symbol, unknown>);
 }
 
-function isReadable(value: unknown): value is Readable {
-	return (
-		value !== null &&
-		typeof value === "object" &&
-		"get" in value &&
-		typeof value.get === "function"
-	);
-}
-
-function _dual(factory: (store: Readable, opts: unknown) => unknown) {
-	return (...args: [unknown, ...unknown[]]) => {
-		if (isReadable(args[0])) {
-			return _apply(factory, args[0], args[1]);
-		}
-		return (store: Readable) => _apply(factory, store, args[0]);
-	};
-}
-
 /**
- * Define a composable store wrapper ("middleware").
+ * Define a composable store middleware.
  *
  * The factory function receives the inner store and options, and returns an
  * object of overrides and extensions. Methods not returned are automatically
@@ -129,22 +95,20 @@ function _dual(factory: (store: Readable, opts: unknown) => unknown) {
  *
  * Overrides of `get`/`getRange` work at runtime via the Proxy, but their types
  * are stripped from the return type so that the original store's Options generic
- * is preserved through chains of wrappers.
+ * is preserved through chains of middleware.
  *
  * Supports both sync and async factories — if the factory returns a Promise,
- * the wrapper returns a Promise too.
- *
- * Returns a dual-callable function:
- * - Direct: `withX(store, opts)`
- * - Curried: `withX(opts)(store)` (for `createStore` pipelines)
+ * the middleware returns a Promise too.
  *
  * ## Simple case
  *
  * When your options don't depend on the store's request options type:
  *
  * ```ts
- * const withCaching = wrapStore(
- *   (store: AsyncReadable, opts: { maxSize: number }) => {
+ * import * as zarr from "zarrita";
+ *
+ * const withCaching = zarr.defineStoreMiddleware(
+ *   (store, opts: { maxSize: number }) => {
  *     return {
  *       async get(key, options) { ... },
  *       clear() { ... },
@@ -159,11 +123,13 @@ function _dual(factory: (store: Readable, opts: unknown) => unknown) {
  * `storeOptions` or `mergeOptions`), use {@linkcode GenericOptions}:
  *
  * ```ts
- * interface MyOptsFor extends GenericOptions {
- *   readonly options: { storeOptions?: this["_O"]; retries?: number };
+ * import * as zarr from "zarrita";
+ *
+ * interface MyOptsFor extends zarr.GenericOptions {
+ *   readonly options: MyOptions<this["_O"]>;
  * }
  *
- * const withMyThing = wrapStore.generic<MyOptsFor>()(
+ * const withMyThing = zarr.defineStoreMiddleware.generic<MyOptsFor>()(
  *   (store, opts) => { ... },
  * );
  *
@@ -172,40 +138,41 @@ function _dual(factory: (store: Readable, opts: unknown) => unknown) {
  * //                                       ^? RequestInit
  * ```
  */
-// biome-ignore lint/suspicious/noExplicitAny: generic constraint needs any for proper inference
-export function wrapStore<F extends (store: any, opts?: any) => any>(
+export function defineStoreMiddleware<
+	// to correctly infer F's parameter types from the factory function.
+	F extends (
+		store: AsyncReadable,
+		// biome-ignore lint/suspicious/noExplicitAny: `any` for opts is required for TypeScript
+		opts?: any,
+		// biome-ignore lint/suspicious/noExplicitAny: `any` for opts is required for TypeScript
+	) => Partial<AsyncReadable> & Record<string, any>,
+>(
 	factory: F,
-): {
-	<S extends Readable & HasGet>(
-		store: S,
-		opts?: Parameters<F>[1],
-	): WrapperResult<ReturnType<F>, S>;
-	(
-		opts?: Parameters<F>[1],
-	): <S extends Readable>(store: S) => WrapperResult<ReturnType<F>, S>;
-} {
-	// @ts-expect-error: factory is typed via F, runtime uses unknown
-	return _dual(factory);
+): <S extends AsyncReadable>(
+	store: S,
+	opts?: Parameters<F>[1],
+) => WrapperResult<ReturnType<F>, S> {
+	// @ts-expect-error - TypeScript can't infer this
+	return (store: AsyncReadable, opts: unknown) => _apply(factory, store, opts);
 }
 
 /**
- * Define a store wrapper whose options depend on the store's request options type.
+ * Define a store middleware whose options depend on the store's request options type.
  *
- * @see {@linkcode wrapStore} for full documentation and examples.
+ * @see {@linkcode defineStoreMiddleware} for full documentation and examples.
  */
-wrapStore.generic = function generic<OptsLambda extends GenericOptions>() {
-	return <Ext>(
-		factory: (store: Readable, opts: Apply<OptsLambda, unknown>) => Ext,
-	): {
-		<S extends Readable & HasGet>(
-			store: S,
-			opts?: Apply<OptsLambda, InferStoreOpts<S>>,
-		): WrapperResult<Ext, S>;
-		(
-			opts?: Apply<OptsLambda, unknown>,
-		): <S extends Readable>(store: S) => WrapperResult<Ext, S>;
-	} => {
-		// @ts-expect-error: factory is typed via Ext, runtime uses unknown
-		return _dual(factory);
+defineStoreMiddleware.generic = function generic<
+	OptsLambda extends GenericOptions,
+>() {
+	// biome-ignore lint/suspicious/noExplicitAny: `any` allows extra extension properties
+	return <Ext extends Partial<AsyncReadable> & Record<string, any>>(
+		factory: (store: AsyncReadable, opts: Apply<OptsLambda, unknown>) => Ext,
+	): (<S extends AsyncReadable>(
+		store: S,
+		opts?: NoInfer<Apply<OptsLambda, InferStoreOpts<S>>>,
+	) => WrapperResult<Ext, S>) => {
+		return ((store: AsyncReadable, opts: unknown) =>
+			// biome-ignore lint/suspicious/noExplicitAny: TS can't figure it out
+			_apply(factory, store, opts)) as any;
 	};
 };

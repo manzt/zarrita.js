@@ -48,9 +48,9 @@ export {
 	withMaybeConsolidation,
 	withMaybeConsolidation as tryWithConsolidated,
 } from "./middleware/consolidation.js";
-export { createStore } from "./middleware/create-store.js";
+export { createStore as storeFrom } from "./middleware/create-store.js";
 export type { GenericOptions } from "./middleware/define.js";
-export { wrapStore } from "./middleware/define.js";
+export { defineStoreMiddleware } from "./middleware/define.js";
 export type {
 	RangeBatchingOptions,
 	RangeBatchingStats,
