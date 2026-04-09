@@ -4,44 +4,30 @@ import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
 import { assert, fetch_range, strip_prefix } from "./util.js";
 
 /**
- * Internal type for accessing unzipit internals that are not exposed in TypeScript types.
- * These properties exist at runtime on ZipEntry objects.
+ * Shape of the private `_rawEntry` field on `ZipEntry` instances.
+ * We access this at runtime for efficient range reads on uncompressed entries.
  */
-interface ZipEntryInternal extends ZipEntry {
-	/** The underlying Reader used to read the zip file */
-	_reader: Reader;
-	/** Raw entry data from the zip central directory */
-	_rawEntry: {
-		/** Offset of the local file header in the zip file */
-		relativeOffsetOfLocalHeader: number;
-		/** 0 = stored (no compression), 8 = deflate */
-		compressionMethod: number;
-		/** Size of compressed data */
-		compressedSize: number;
-		/** Size of uncompressed data */
-		uncompressedSize: number;
-	};
-	/** Compression method (0 = stored, 8 = deflate) */
-	compressionMethod: number;
+interface ZipRawEntry {
+	relativeOffsetOfLocalHeader: number;
 }
 
-/**
- * Type guard to verify a ZipEntry has the internal properties we rely on.
- * This protects against changes in unzipit internals.
- */
-function isZipEntryInternal(entry: ZipEntry): entry is ZipEntryInternal {
-	if (!("compressionMethod" in entry) || !("_rawEntry" in entry)) {
-		return false;
+function getRawEntry(entry: ZipEntry): ZipRawEntry | undefined {
+	if (!("_rawEntry" in entry)) {
+		return undefined;
 	}
-
-	const rawEntry = (entry as ZipEntryInternal)._rawEntry;
-	return (
-		typeof (entry as ZipEntryInternal).compressionMethod === "number" &&
+	// @ts-expect-error - accessing private field for range read support
+	const rawEntry: unknown = entry._rawEntry;
+	if (
 		typeof rawEntry === "object" &&
 		rawEntry !== null &&
 		"relativeOffsetOfLocalHeader" in rawEntry &&
 		typeof rawEntry.relativeOffsetOfLocalHeader === "number"
-	);
+	) {
+		return {
+			relativeOffsetOfLocalHeader: rawEntry.relativeOffsetOfLocalHeader,
+		};
+	}
+	return undefined;
 }
 
 export class BlobReader implements Reader {
@@ -49,7 +35,7 @@ export class BlobReader implements Reader {
 	async getLength(): Promise<number> {
 		return this.blob.size;
 	}
-	async read(offset: number, length: number): Promise<Uint8Array> {
+	async read(offset: number, length: number): Promise<Uint8Array<ArrayBuffer>> {
 		const blob = this.blob.slice(offset, offset + length);
 		return new Uint8Array(await blob.arrayBuffer());
 	}
@@ -93,7 +79,7 @@ export class HTTPRangeReader implements Reader {
 		return this.length;
 	}
 
-	async read(offset: number, size: number): Promise<Uint8Array> {
+	async read(offset: number, size: number): Promise<Uint8Array<ArrayBuffer>> {
 		if (size === 0) {
 			return new Uint8Array(0);
 		}
@@ -125,8 +111,8 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	 * Compute the byte offset where entry data begins in the zip file.
 	 * This requires reading the local file header to get filename and extra field lengths.
 	 */
-	private async getEntryDataOffset(entry: ZipEntryInternal): Promise<number> {
-		const localHeaderOffset = entry._rawEntry.relativeOffsetOfLocalHeader;
+	private async getEntryDataOffset(rawEntry: ZipRawEntry): Promise<number> {
+		const localHeaderOffset = rawEntry.relativeOffsetOfLocalHeader;
 		// Read local file header (30 bytes minimum)
 		const header = await this.reader.read(localHeaderOffset, 30);
 		// File name length at offset 26 (2 bytes, little-endian)
@@ -150,7 +136,8 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		const entry = (await this.info).entries[strip_prefix(key)];
 		if (!entry) return undefined;
 
-		if (!isZipEntryInternal(entry)) {
+		const rawEntry = getRawEntry(entry);
+		if (!rawEntry) {
 			throw new Error(
 				"ZipFileStore.getRange requires internal unzipit properties that are not available. " +
 					"This may indicate an incompatible version of unzipit.",
@@ -168,7 +155,7 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		}
 
 		// For uncompressed (stored) entries, read directly from underlying reader
-		const dataOffset = await this.getEntryDataOffset(entry);
+		const dataOffset = await this.getEntryDataOffset(rawEntry);
 
 		if ("suffixLength" in range) {
 			const start = dataOffset + entry.size - range.suffixLength;
