@@ -1,72 +1,70 @@
 import type { Readable } from "@zarrita/storage";
-import { create_codec_pipeline } from "../codecs.js";
+import { createCodecPipeline } from "../codecs.js";
 import type { Location } from "../hierarchy.js";
 import type { Chunk } from "../metadata.js";
 import { assert, type ShardingCodecMetadata } from "../util.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
 
-export function create_sharded_chunk_getter<Store extends Readable>(
+export function createShardedChunkGetter<Store extends Readable>(
 	location: Location<Store>,
-	shard_shape: number[],
-	encode_shard_key: (coord: number[]) => string,
-	sharding_config: ShardingCodecMetadata["configuration"],
+	shardShape: number[],
+	encodeShardKey: (coord: number[]) => string,
+	shardingConfig: ShardingCodecMetadata["configuration"],
 ) {
 	assert(location.store.getRange, "Store does not support range requests");
-	let get_range = location.store.getRange.bind(location.store);
-	let index_shape = shard_shape.map(
-		(d, i) => d / sharding_config.chunk_shape[i],
-	);
-	let index_codec = create_codec_pipeline({
-		data_type: "uint64",
-		shape: [...index_shape, 2],
-		codecs: sharding_config.index_codecs,
+	let getRange = location.store.getRange.bind(location.store);
+	let indexShape = shardShape.map((d, i) => d / shardingConfig.chunk_shape[i]);
+	let indexCodec = createCodecPipeline({
+		dataType: "uint64",
+		shape: [...indexShape, 2],
+		codecs: shardingConfig.index_codecs,
 	});
 
-	let checksum_size = 4;
-	let index_size = 16 * index_shape.reduce((a, b) => a * b, 1);
+	let checksumSize = 4;
+	let indexSize = 16 * indexShape.reduce((a, b) => a * b, 1);
 	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
 	return async (
-		chunk_coord: number[],
+		chunkCoord: number[],
 		options?: Parameters<Store["get"]>[1],
 	) => {
-		let shard_coord = chunk_coord.map((d, i) => Math.floor(d / index_shape[i]));
-		let shard_path = location.resolve(encode_shard_key(shard_coord)).path;
+		let shardCoord = chunkCoord.map((d, i) => Math.floor(d / indexShape[i]));
+		let shardPath = location.resolve(encodeShardKey(shardCoord)).path;
 
-		if (!(shard_path in cache)) {
-			cache[shard_path] = (async () => {
-				let bytes = await get_range(
-					shard_path,
+		if (!(shardPath in cache)) {
+			cache[shardPath] = (async () => {
+				let bytes = await getRange(
+					shardPath,
 					{
-						suffixLength: index_size + checksum_size,
+						suffixLength: indexSize + checksumSize,
 					},
 					options,
 				);
-				return bytes ? await index_codec.decode(bytes) : null;
+				return bytes ? await indexCodec.decode(bytes) : null;
 			})().catch((err) => {
-				delete cache[shard_path];
+				delete cache[shardPath];
 				throw err;
 			});
 		}
-		let index = await cache[shard_path];
+		let index = await cache[shardPath];
 
 		if (index === null) {
 			return undefined;
 		}
 
 		let { data, shape, stride } = index;
-		let linear_offset = chunk_coord
+		let linearOffset = chunkCoord
 			.map((d, i) => d % shape[i])
 			.reduce((acc, sel, idx) => acc + sel * stride[idx], 0);
 
-		let offset = data[linear_offset];
-		let length = data[linear_offset + 1];
+		let offset = data[linearOffset];
+		let length = data[linearOffset + 1];
 		// write null chunk when 2^64-1 indicates fill value
 		if (offset === MAX_BIG_UINT && length === MAX_BIG_UINT) {
 			return undefined;
 		}
-		return get_range(
-			shard_path,
+		return getRange(
+			shardPath,
 			{
 				offset: Number(offset),
 				length: Number(length),

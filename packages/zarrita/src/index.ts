@@ -32,7 +32,7 @@ export type {
 export {
 	sel,
 	slice,
-	slice_indices as _zarrita_internal_slice_indices,
+	sliceIndices as _zarrita_internal_sliceIndices,
 } from "./indexing/util.js";
 export type * from "./metadata.js";
 export { open } from "./open.js";
@@ -41,4 +41,4 @@ export {
 	ByteStringArray,
 	UnicodeStringArray,
 } from "./typedarray.js";
-export { get_strides as _zarrita_internal_get_strides } from "./util.js";
+export { getStrides as _zarrita_internal_getStrides } from "./util.js";

@@ -1,6 +1,6 @@
 import type { AbsolutePath } from "./types.js";
 
-export function strip_prefix<Path extends AbsolutePath>(
+export function stripPrefix<Path extends AbsolutePath>(
 	path: Path,
 ): Path extends AbsolutePath<infer Rest> ? Rest : never {
 	// @ts-expect-error - TS can't infer this type correctly
@@ -23,7 +23,7 @@ export function uri2href(url: string | URL) {
 	throw Error(`Protocol not supported, got: ${JSON.stringify(protocol)}`);
 }
 
-export function fetch_range(
+export function fetchRange(
 	url: string | URL,
 	offset?: number,
 	length?: number,
@@ -42,7 +42,7 @@ export function fetch_range(
 	return fetch(url, opts);
 }
 
-export function merge_init(
+export function mergeInit(
 	storeOverrides: RequestInit,
 	requestOverrides: RequestInit,
 ) {

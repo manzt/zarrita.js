@@ -14,8 +14,8 @@ const DATA = {
 describe("builtin slice", async () => {
 	let arr = await create(new Map(), {
 		shape: [2, 3, 4],
-		data_type: "int32",
-		chunk_shape: [1, 2, 2],
+		dataType: "int32",
+		chunkShape: [1, 2, 2],
 	});
 	await set(arr, null, ndarray(DATA.data, DATA.shape, DATA.stride));
 

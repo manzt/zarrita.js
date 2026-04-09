@@ -1,5 +1,5 @@
 import type { DataType } from "../metadata.js";
-import { assert, get_ctr } from "../util.js";
+import { assert, getCtr } from "../util.js";
 
 /**
  * Shuffle filter codec (numcodecs compat).
@@ -11,15 +11,12 @@ export class ShuffleCodec<D extends DataType> {
 	kind = "bytes_to_bytes";
 	#BYTES_PER_ELEMENT: number;
 
-	constructor(
-		configuration: { elementsize?: number },
-		meta?: { data_type: D },
-	) {
+	constructor(configuration: { elementsize?: number }, meta?: { dataType: D }) {
 		if (meta) {
-			let sample = new (get_ctr(meta.data_type))(0);
+			let sample = new (getCtr(meta.dataType))(0);
 			assert(
 				"BYTES_PER_ELEMENT" in sample,
-				`Shuffle codec requires a fixed-size dtype, got "${meta.data_type}"`,
+				`Shuffle codec requires a fixed-size dtype, got "${meta.dataType}"`,
 			);
 			this.#BYTES_PER_ELEMENT = sample.BYTES_PER_ELEMENT as number;
 		} else {
@@ -29,7 +26,7 @@ export class ShuffleCodec<D extends DataType> {
 
 	static fromConfig<D extends DataType>(
 		configuration: { elementsize?: number },
-		meta?: { data_type: D },
+		meta?: { dataType: D },
 	): ShuffleCodec<D> {
 		return new ShuffleCodec(configuration, meta);
 	}

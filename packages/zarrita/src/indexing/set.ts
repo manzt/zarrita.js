@@ -1,6 +1,6 @@
 import type { Mutable } from "@zarrita/storage";
 
-import { type Array, get_context } from "../hierarchy.js";
+import { type Array, getContext } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import { isAbortable } from "../util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
@@ -12,9 +12,9 @@ import type {
 	SetScalar,
 	Slice,
 } from "./types.js";
-import { create_queue } from "./util.js";
+import { createQueue } from "./util.js";
 
-function flip_indexer_projection(m: IndexerProjection) {
+function flipIndexerProjection(m: IndexerProjection) {
 	if (m.to == null) return { from: m.to, to: m.from };
 	return { from: m.to, to: m.from };
 }
@@ -26,34 +26,34 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	opts: SetOptions,
 	setter: {
 		prepare: Prepare<Dtype, Arr>;
-		set_scalar: SetScalar<Dtype, Arr>;
-		set_from_chunk: SetFromChunk<Dtype, Arr>;
+		setScalar: SetScalar<Dtype, Arr>;
+		setFromChunk: SetFromChunk<Dtype, Arr>;
 	},
 ) {
-	const context = get_context(arr);
+	const context = getContext(arr);
 	if (context.kind === "sharded") {
 		throw new Error("Set not supported for sharded arrays.");
 	}
 	const indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
-		chunk_shape: arr.chunks,
+		chunkShape: arr.chunks,
 	});
 
 	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
 	// for zero-dimensional arrays.
 	if (arr.shape.length === 0) {
-		const chunk_data = new context.TypedArray(1);
+		const chunkData = new context.TypedArray(1);
 		if (typeof value === "object") {
 			throw new Error("Cannot set a scalar array with a non-scalar value.");
 		}
 		// @ts-expect-error - Value is a scalar
-		chunk_data.fill(value);
-		const chunk_path = arr.resolve(context.encode_chunk_key([])).path;
+		chunkData.fill(value);
+		const chunkPath = arr.resolve(context.encodeChunkKey([])).path;
 		await arr.store.set(
-			chunk_path,
+			chunkPath,
 			await context.codec.encode({
-				data: chunk_data,
+				data: chunkData,
 				shape: [],
 				stride: [],
 			}),
@@ -65,70 +65,68 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	// that needs to be replaced. Each chunk is processed in turn, extracting the
 	// necessary data from the value array and storing into the chunk array.
 
-	const chunk_size = arr.chunks.reduce((a, b) => a * b, 1);
-	const queue = opts.create_queue ? opts.create_queue() : create_queue();
+	const chunkSize = arr.chunks.reduce((a, b) => a * b, 1);
+	const queue = opts.createQueue ? opts.createQueue() : createQueue();
 
 	// N.B., it is an important optimisation that we only visit chunks which overlap
 	// the selection. This minimises the number of iterations in the main for loop.
-	for (const { chunk_coords, mapping } of indexer) {
-		const chunk_selection = mapping.map((i) => i.from);
-		const flipped = mapping.map(flip_indexer_projection);
+	for (const { chunkCoords, mapping } of indexer) {
+		const chunkSelection = mapping.map((i) => i.from);
+		const flipped = mapping.map(flipIndexerProjection);
 		queue.add(async () => {
 			if (isAbortable(opts.opts)) {
 				opts.opts.signal.throwIfAborted();
 			}
 
 			// obtain key for chunk storage
-			const chunk_path = arr.resolve(
-				context.encode_chunk_key(chunk_coords),
-			).path;
+			const chunkPath = arr.resolve(context.encodeChunkKey(chunkCoords)).path;
 
-			let chunk_data: TypedArray<Dtype>;
-			const chunk_shape = arr.chunks.slice();
-			const chunk_stride = context.get_strides(chunk_shape);
+			let chunkData: TypedArray<Dtype>;
+			const chunkShape = arr.chunks.slice();
+			const chunkStride = context.getStrides(chunkShape);
 
-			if (is_total_slice(chunk_selection, chunk_shape)) {
+			if (isTotalSlice(chunkSelection, chunkShape)) {
 				// totally replace
-				chunk_data = new context.TypedArray(chunk_size);
+				chunkData = new context.TypedArray(chunkSize);
 				// optimization: we are completely replacing the chunk, so no need
 				// to access the exisiting chunk data
 				if (typeof value === "object") {
 					// Otherwise data just contiguous TypedArray
 					const chunk = setter.prepare(
-						chunk_data,
-						chunk_shape.slice(),
-						chunk_stride.slice(),
+						chunkData,
+						chunkShape.slice(),
+						chunkStride.slice(),
 					);
 					// @ts-expect-error - Value is not a scalar
-					setter.set_from_chunk(chunk, value, flipped);
+					setter.setFromChunk(chunk, value, flipped);
 				} else {
 					// @ts-expect-error - Value is a scalar
-					chunk_data.fill(value);
+					chunkData.fill(value);
 				}
 			} else {
 				// partially replace the contents of this chunk
-				chunk_data = await arr.getChunk(chunk_coords).then(({ data }) => data);
+				chunkData = await arr.getChunk(chunkCoords).then(({ data }) => data);
 
 				const chunk = setter.prepare(
-					chunk_data,
-					chunk_shape.slice(),
-					chunk_stride.slice(),
+					chunkData,
+					chunkShape.slice(),
+					chunkStride.slice(),
 				);
 
 				// Modify chunk data
 				if (typeof value === "object") {
 					// @ts-expect-error - Value is not a scalar
-					setter.set_from_chunk(chunk, value, flipped);
+					setter.setFromChunk(chunk, value, flipped);
 				} else {
-					setter.set_scalar(chunk, chunk_selection, value);
+					setter.setScalar(chunk, chunkSelection, value);
 				}
 			}
 			await arr.store.set(
-				chunk_path,
+				chunkPath,
 				await context.codec.encode({
-					data: chunk_data,
-					shape: chunk_shape,
-					stride: chunk_stride,
+					data: chunkData,
+					shape: chunkShape,
+					stride: chunkStride,
 				}),
 			);
 		});
@@ -136,7 +134,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	await queue.onIdle();
 }
 
-function is_total_slice(
+function isTotalSlice(
 	selection: (number | Indices)[],
 	shape: readonly number[],
 ): selection is Indices[] {

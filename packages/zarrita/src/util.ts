@@ -19,7 +19,7 @@ import {
 	UnicodeStringArray,
 } from "./typedarray.js";
 
-export function json_encode_object(o: Record<string, unknown>): Uint8Array {
+export function jsonEncodeObject(o: Record<string, unknown>): Uint8Array {
 	const str = JSON.stringify(
 		o,
 		(_key, value) => {
@@ -57,7 +57,7 @@ export function createBuffer(
 	return new ArrayBuffer(byteLength);
 }
 
-export function json_decode_object(bytes: Uint8Array) {
+export function jsonDecodeObject(bytes: Uint8Array) {
 	const str = new TextDecoder().decode(bytes);
 	try {
 		return JSON.parse(str);
@@ -66,11 +66,11 @@ export function json_decode_object(bytes: Uint8Array) {
 	}
 }
 
-export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
-	const numFlips = bytes_per_element / 2;
-	const endByteIndex = bytes_per_element - 1;
+export function byteswapInplace(view: Uint8Array, bytesPerElement: number) {
+	const numFlips = bytesPerElement / 2;
+	const endByteIndex = bytesPerElement - 1;
 	let t = 0;
-	for (let i = 0; i < view.length; i += bytes_per_element) {
+	for (let i = 0; i < view.length; i += bytesPerElement) {
 		for (let j = 0; j < numFlips; j += 1) {
 			t = view[i + j];
 			view[i + j] = view[i + endByteIndex - j];
@@ -79,13 +79,13 @@ export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
 	}
 }
 
-export function get_ctr<D extends DataType>(
-	data_type: D,
+export function getCtr<D extends DataType>(
+	dataType: D,
 ): TypedArrayConstructor<D> {
-	if (data_type === "v2:object") {
+	if (dataType === "v2:object") {
 		return globalThis.Array as unknown as TypedArrayConstructor<D>;
 	}
-	let match = data_type.match(/v2:([US])(\d+)/);
+	let match = dataType.match(/v2:([US])(\d+)/);
 	if (match) {
 		let [, kind, chars] = match;
 		// @ts-expect-error
@@ -95,7 +95,7 @@ export function get_ctr<D extends DataType>(
 		);
 	}
 	// Handle v3 variable-length string type
-	if (data_type === "string") {
+	if (dataType === "string") {
 		return globalThis.Array as unknown as TypedArrayConstructor<D>;
 	}
 	// @ts-expect-error - We've checked that the key exists
@@ -114,13 +114,13 @@ export function get_ctr<D extends DataType>(
 			float64: Float64Array,
 			bool: BoolArray,
 		} as const
-	)[data_type];
-	assert(ctr, `Unknown or unsupported data_type: ${data_type}`);
+	)[dataType];
+	assert(ctr, `Unknown or unsupported dataType: ${dataType}`);
 	return ctr;
 }
 
 /** Compute strides for 'C' or 'F' ordered array from shape */
-export function get_strides(
+export function getStrides(
 	shape: readonly number[],
 	order: "C" | "F" | Array<number>,
 ): Array<number> {
@@ -147,33 +147,33 @@ export function get_strides(
 }
 
 // https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#chunk-key-encoding
-export function create_chunk_key_encoder({
+export function createChunkKeyEncoder({
 	name,
 	configuration,
-}: ArrayMetadata["chunk_key_encoding"]): (chunk_coords: number[]) => string {
+}: ArrayMetadata["chunk_key_encoding"]): (chunkCoords: number[]) => string {
 	if (name === "default") {
 		const separator = configuration?.separator ?? "/";
-		return (chunk_coords) => ["c", ...chunk_coords].join(separator);
+		return (chunkCoords) => ["c", ...chunkCoords].join(separator);
 	}
 	if (name === "v2") {
 		const separator = configuration?.separator ?? ".";
-		return (chunk_coords) => chunk_coords.join(separator) || "0";
+		return (chunkCoords) => chunkCoords.join(separator) || "0";
 	}
 	throw new Error(`Unknown chunk key encoding: ${name}`);
 }
 
-function coerce_dtype(
+function coerceDtype(
 	dtype: string,
-): { data_type: DataType } | { data_type: DataType; endian: "little" | "big" } {
+): { dataType: DataType } | { dataType: DataType; endian: "little" | "big" } {
 	if (dtype === "|O") {
-		return { data_type: "v2:object" };
+		return { dataType: "v2:object" };
 	}
 
 	let match = dtype.match(/^([<|>])(.*)$/);
 	assert(match, `Invalid dtype: ${dtype}`);
 
 	let [, endian, rest] = match;
-	let data_type =
+	let dataType =
 		{
 			b1: "bool",
 			i1: "int8",
@@ -189,22 +189,22 @@ function coerce_dtype(
 			f8: "float64",
 		}[rest] ??
 		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
-	assert(data_type, `Unsupported or unknown dtype: ${dtype}`);
+	assert(dataType, `Unsupported or unknown dtype: ${dtype}`);
 	if (endian === "|") {
-		return { data_type } as { data_type: DataType };
+		return { dataType } as { dataType: DataType };
 	}
-	return { data_type, endian: endian === "<" ? "little" : "big" } as {
-		data_type: DataType;
+	return { dataType, endian: endian === "<" ? "little" : "big" } as {
+		dataType: DataType;
 		endian: "little" | "big";
 	};
 }
 
-export function v2_to_v3_array_metadata(
+export function v2ToV3ArrayMetadata(
 	meta: ArrayMetadataV2,
 	attributes: Record<string, unknown> = {},
 ): ArrayMetadata<DataType> {
 	let codecs: CodecMetadata[] = [];
-	let dtype = coerce_dtype(meta.dtype);
+	let dtype = coerceDtype(meta.dtype);
 	if (meta.order === "F") {
 		codecs.push({ name: "transpose", configuration: { order: "F" } });
 	}
@@ -218,15 +218,15 @@ export function v2_to_v3_array_metadata(
 		let { id, ...configuration } = meta.compressor;
 		codecs.push({ name: `numcodecs.${id}`, configuration });
 	}
-	let dimension_names: string[] | undefined;
+	let dimensionNames: string[] | undefined;
 	if (globalThis.Array.isArray(attributes._ARRAY_DIMENSIONS)) {
-		dimension_names = attributes._ARRAY_DIMENSIONS;
+		dimensionNames = attributes._ARRAY_DIMENSIONS;
 	}
 	return {
 		zarr_format: 3,
 		node_type: "array",
 		shape: meta.shape,
-		data_type: dtype.data_type,
+		data_type: dtype.dataType,
 		chunk_grid: {
 			name: "regular",
 			configuration: {
@@ -241,12 +241,12 @@ export function v2_to_v3_array_metadata(
 		},
 		codecs,
 		fill_value: meta.fill_value,
-		dimension_names,
+		dimension_names: dimensionNames,
 		attributes,
 	};
 }
 
-export function v2_to_v3_group_metadata(
+export function v2ToV3GroupMetadata(
 	_meta: unknown,
 	attributes: Record<string, unknown> = {},
 ): GroupMetadata {
@@ -280,7 +280,7 @@ export type NarrowDataType<
 					? ObjectType
 					: Extract<Query, Dtype>;
 
-export function is_dtype<Query extends DataTypeQuery>(
+export function isDtype<Query extends DataTypeQuery>(
 	dtype: DataType,
 	query: Query,
 ): dtype is NarrowDataType<DataType, Query> {
@@ -293,16 +293,16 @@ export function is_dtype<Query extends DataTypeQuery>(
 	) {
 		return dtype === query;
 	}
-	let is_boolean = dtype === "bool";
-	if (query === "boolean") return is_boolean;
-	let is_string =
+	let isBoolean = dtype === "bool";
+	if (query === "boolean") return isBoolean;
+	let isString =
 		dtype.startsWith("v2:U") || dtype.startsWith("v2:S") || dtype === "string";
-	if (query === "string") return is_string;
-	let is_bigint = dtype === "int64" || dtype === "uint64";
-	if (query === "bigint") return is_bigint;
-	let is_object = dtype === "v2:object";
-	if (query === "object") return is_object;
-	return !is_string && !is_bigint && !is_boolean && !is_object;
+	if (query === "string") return isString;
+	let isBigint = dtype === "int64" || dtype === "uint64";
+	if (query === "bigint") return isBigint;
+	let isObject = dtype === "v2:object";
+	if (query === "object") return isObject;
+	return !isString && !isBigint && !isBoolean && !isObject;
 }
 
 export type ShardingCodecMetadata = {
@@ -314,13 +314,13 @@ export type ShardingCodecMetadata = {
 	};
 };
 
-export function is_sharding_codec(
+export function isShardingCodec(
 	codec: CodecMetadata,
 ): codec is ShardingCodecMetadata {
 	return codec?.name === "sharding_indexed";
 }
 
-export function ensure_correct_scalar<D extends DataType>(
+export function ensureCorrectScalar<D extends DataType>(
 	metadata: ArrayMetadata<D>,
 ): Scalar<D> | null {
 	if (
@@ -332,11 +332,11 @@ export function ensure_correct_scalar<D extends DataType>(
 	}
 	// Zarr v3 represents IEEE 754 special float values as strings in JSON.
 	// Only applies to floating-point types.
-	let is_float =
+	let isFloat =
 		metadata.data_type === "float16" ||
 		metadata.data_type === "float32" ||
 		metadata.data_type === "float64";
-	if (typeof metadata.fill_value === "string" && is_float) {
+	if (typeof metadata.fill_value === "string" && isFloat) {
 		let mapping: Record<string, number> = {
 			NaN: NaN,
 			Infinity: Infinity,
@@ -371,7 +371,7 @@ type ErrorConstructor = new (...args: any[]) => Error;
  * try {
  *   await db.query();
  * } catch (err) {
- *   rethrow_unless(err, DatabaseError, NetworkError);
+ *   rethrowUnless(err, DatabaseError, NetworkError);
  *   err // DatabaseError | NetworkError
  * }
  * ```
@@ -389,7 +389,7 @@ export function isAbortable(opts: unknown): opts is { signal: AbortSignal } {
 	);
 }
 
-export function rethrow_unless<E extends ReadonlyArray<ErrorConstructor>>(
+export function rethrowUnless<E extends ReadonlyArray<ErrorConstructor>>(
 	error: unknown,
 	...errors: E
 ): asserts error is InstanceType<E[number]> {

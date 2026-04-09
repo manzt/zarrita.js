@@ -1,6 +1,6 @@
 import { parse } from "reference-spec-reader";
 import type { AbsolutePath, AsyncReadable } from "./types.js";
-import { fetch_range, merge_init, strip_prefix, uri2href } from "./util.js";
+import { fetchRange, mergeInit, stripPrefix, uri2href } from "./util.js";
 
 /**
  * This is for the "binary" loader (custom code is ~2x faster than "atob") from esbuild.
@@ -10,7 +10,7 @@ let table = new Uint8Array(128);
 for (let i = 0; i < 64; i++) {
 	table[i < 26 ? i + 65 : i < 52 ? i + 71 : i < 62 ? i - 4 : i * 4 - 205] = i;
 }
-export function to_binary(base64: string): Uint8Array {
+export function toBinary(base64: string): Uint8Array {
 	const n = base64.length;
 	const bytes = new Uint8Array(
 		// @ts-expect-error
@@ -57,13 +57,13 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 		key: AbsolutePath,
 		opts: RequestInit = {},
 	): Promise<Uint8Array | undefined> {
-		let ref = (await this.#refs).get(strip_prefix(key));
+		let ref = (await this.#refs).get(stripPrefix(key));
 
 		if (!ref) return;
 
 		if (typeof ref === "string") {
 			if (ref.startsWith("base64:")) {
-				return to_binary(ref.slice("base64:".length));
+				return toBinary(ref.slice("base64:".length));
 			}
 			return new TextEncoder().encode(ref);
 		}
@@ -74,11 +74,11 @@ class ReferenceStore implements AsyncReadable<RequestInit> {
 			throw Error(`No url for key ${key}, and no target url provided.`);
 		}
 
-		let res = await fetch_range(
+		let res = await fetchRange(
 			uri2href(url),
 			offset,
 			size,
-			merge_init(this.#overrides, opts),
+			mergeInit(this.#overrides, opts),
 		);
 
 		if (res.status === 200 || res.status === 206) {

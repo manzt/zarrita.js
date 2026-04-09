@@ -6,9 +6,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
-			chunk_shape: [2, 2],
-			data_type: "int32",
-			fill_value: 42,
+			chunkShape: [2, 2],
+			dataType: "int32",
+			fillValue: 42,
 		});
 
 		let chunk = await zarr.get(arr, null, { useSharedArrayBuffer: true });
@@ -22,9 +22,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
-			chunk_shape: [2, 2],
-			data_type: "int32",
-			fill_value: 42,
+			chunkShape: [2, 2],
+			dataType: "int32",
+			fillValue: 42,
 		});
 
 		let chunk = await zarr.get(arr);
@@ -36,9 +36,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
-			chunk_shape: [2, 2],
-			data_type: "float32",
-			fill_value: 3.14,
+			chunkShape: [2, 2],
+			dataType: "float32",
+			fillValue: 3.14,
 		});
 
 		// No data written, so getChunk returns fill-value chunk
@@ -57,9 +57,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
-			chunk_shape: [2, 2],
-			data_type: "float32",
-			fill_value: 3.14,
+			chunkShape: [2, 2],
+			dataType: "float32",
+			fillValue: 3.14,
 		});
 
 		let chunk = await arr.getChunk([0, 0]);
@@ -69,23 +69,23 @@ describe("SharedArrayBuffer support", () => {
 
 	test("useSharedArrayBuffer works with various numeric data types", async () => {
 		const testCases = [
-			{ data_type: "int8" as const, fill_value: -1 },
-			{ data_type: "int16" as const, fill_value: -100 },
-			{ data_type: "int32" as const, fill_value: -1000 },
-			{ data_type: "uint8" as const, fill_value: 255 },
-			{ data_type: "uint16" as const, fill_value: 1000 },
-			{ data_type: "uint32" as const, fill_value: 100000 },
-			{ data_type: "float32" as const, fill_value: 1.5 },
-			{ data_type: "float64" as const, fill_value: 2.5 },
+			{ dataType: "int8" as const, fillValue: -1 },
+			{ dataType: "int16" as const, fillValue: -100 },
+			{ dataType: "int32" as const, fillValue: -1000 },
+			{ dataType: "uint8" as const, fillValue: 255 },
+			{ dataType: "uint16" as const, fillValue: 1000 },
+			{ dataType: "uint32" as const, fillValue: 100000 },
+			{ dataType: "float32" as const, fillValue: 1.5 },
+			{ dataType: "float64" as const, fillValue: 2.5 },
 		];
 
-		for (const { data_type, fill_value } of testCases) {
+		for (const { dataType, fillValue } of testCases) {
 			let h = zarr.root();
 			let arr = await zarr.create(h.resolve("/test"), {
 				shape: [2],
-				chunk_shape: [2],
-				data_type,
-				fill_value,
+				chunkShape: [2],
+				dataType,
+				fillValue,
 			});
 
 			let chunk = await zarr.get(arr, null, { useSharedArrayBuffer: true });
@@ -98,9 +98,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4],
-			chunk_shape: [2],
-			data_type: "bool",
-			fill_value: true,
+			chunkShape: [2],
+			dataType: "bool",
+			fillValue: true,
 		});
 
 		let chunk = await zarr.get(arr, null, { useSharedArrayBuffer: true });
@@ -113,9 +113,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [2],
-			chunk_shape: [2],
-			data_type: "string",
-			fill_value: "hello",
+			chunkShape: [2],
+			dataType: "string",
+			fillValue: "hello",
 		});
 
 		// Should warn but not throw, falling back to regular array
@@ -129,9 +129,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4],
-			chunk_shape: [2],
-			data_type: "int32",
-			fill_value: 0,
+			chunkShape: [2],
+			dataType: "int32",
+			fillValue: 0,
 		});
 
 		// Write some data
@@ -151,9 +151,9 @@ describe("SharedArrayBuffer support", () => {
 		let h = zarr.root();
 		let arr = await zarr.create(h.resolve("/test"), {
 			shape: [4, 4],
-			chunk_shape: [2, 2],
-			data_type: "int32",
-			fill_value: 0,
+			chunkShape: [2, 2],
+			dataType: "int32",
+			fillValue: 0,
 		});
 
 		// Write some data

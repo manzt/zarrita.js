@@ -1,6 +1,6 @@
 import type { Readable } from "@zarrita/storage";
 
-import { type Array, get_context } from "../hierarchy.js";
+import { type Array, getContext } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import {
 	assertSharedArrayBufferAvailable,
@@ -15,7 +15,7 @@ import type {
 	SetScalar,
 	Slice,
 } from "./types.js";
-import { create_queue } from "./util.js";
+import { createQueue } from "./util.js";
 
 function unwrap<D extends DataType>(
 	arr: TypedArray<D>,
@@ -35,8 +35,8 @@ export async function get<
 	opts: GetOptions<Parameters<Store["get"]>[1]>,
 	setter: {
 		prepare: Prepare<D, Arr>;
-		set_scalar: SetScalar<D, Arr>;
-		set_from_chunk: SetFromChunk<D, Arr>;
+		setScalar: SetScalar<D, Arr>;
+		setFromChunk: SetFromChunk<D, Arr>;
 	},
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
@@ -45,11 +45,11 @@ export async function get<
 		assertSharedArrayBufferAvailable();
 	}
 
-	let context = get_context(arr);
+	let context = getContext(arr);
 	let indexer = new BasicIndexer({
 		selection,
 		shape: arr.shape,
-		chunk_shape: arr.chunks,
+		chunkShape: arr.chunks,
 	});
 
 	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
@@ -81,22 +81,20 @@ export async function get<
 	let out = setter.prepare(
 		data,
 		indexer.shape,
-		context.get_strides(indexer.shape),
+		context.getStrides(indexer.shape),
 	);
 
-	let queue = opts.create_queue?.() ?? create_queue();
-	for (const { chunk_coords, mapping } of indexer) {
+	let queue = opts.createQueue?.() ?? createQueue();
+	for (const { chunkCoords, mapping } of indexer) {
 		queue.add(async () => {
 			if (isAbortable(opts.opts)) {
 				opts.opts.signal.throwIfAborted();
 			}
-			let { data, shape, stride } = await arr.getChunk(
-				chunk_coords,
-				opts.opts,
-				{ useSharedArrayBuffer: opts.useSharedArrayBuffer },
-			);
+			let { data, shape, stride } = await arr.getChunk(chunkCoords, opts.opts, {
+				useSharedArrayBuffer: opts.useSharedArrayBuffer,
+			});
 			let chunk = setter.prepare(data, shape, stride);
-			setter.set_from_chunk(out, chunk, mapping);
+			setter.setFromChunk(out, chunk, mapping);
 		});
 	}
 
