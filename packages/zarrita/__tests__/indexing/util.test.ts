@@ -52,6 +52,19 @@ describe("slice", () => {
 	test("slice_indices(slice(40), 41)", () => {
 		expect(slice_indices(slice(40), 41)).toStrictEqual([0, 40, 1]);
 	});
+
+	test("slice(10n, 15n) coerces bigint to number", () => {
+		expect(slice(10n, 15n)).toStrictEqual({ start: 10, stop: 15, step: null });
+	});
+
+	test("slice(10n, 15n, 2n) coerces bigint to number", () => {
+		expect(slice(10n, 15n, 2n)).toStrictEqual({ start: 10, stop: 15, step: 2 });
+	});
+
+	test("slice throws on bigint exceeding MAX_SAFE_INTEGER", () => {
+		let big = BigInt(Number.MAX_SAFE_INTEGER) + 1n;
+		expect(() => slice(big)).toThrowError(RangeError);
+	});
 });
 
 describe("slice indices", () => {
@@ -70,23 +83,19 @@ describe("slice indices", () => {
 		[2, 10, -1, 4, [2, 3, -1]],
 		[null, null, -3, 14, [13, -1, -3]],
 		[null, null, -3, 2, [1, -1, -3]],
-	])(
-		"slice_indices(slice(%o, %o, %o), %i) -> %o",
-		(start, stop, step, indices, expected) => {
-			expect(slice_indices(slice(start, stop, step), indices)).toStrictEqual(
-				expected,
-			);
-		},
-	);
+	])("slice_indices(slice(%o, %o, %o), %i) -> %o", (start, stop, step, indices, expected) => {
+		expect(slice_indices(slice(start, stop, step), indices)).toStrictEqual(
+			expected,
+		);
+	});
 
-	test.each([[null, null, 0, 1]])(
-		"slice_indices(slice(%o, %o, %o), %i) -> throws",
-		(start, stop, step, indices) => {
-			expect(() =>
-				slice_indices(slice(start, stop, step), indices),
-			).toThrowError();
-		},
-	);
+	test.each([
+		[null, null, 0, 1],
+	])("slice_indices(slice(%o, %o, %o), %i) -> throws", (start, stop, step, indices) => {
+		expect(() =>
+			slice_indices(slice(start, stop, step), indices),
+		).toThrowError();
+	});
 });
 
 describe("range", () => {

@@ -1,7 +1,9 @@
+import { JsonDecodeError } from "./errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
 	BigintDataType,
+	Bool,
 	CodecMetadata,
 	DataType,
 	GroupMetadata,
@@ -18,13 +20,50 @@ import {
 } from "./typedarray.js";
 
 export function json_encode_object(o: Record<string, unknown>): Uint8Array {
-	const str = JSON.stringify(o, null, 2);
+	const str = JSON.stringify(
+		o,
+		(_key, value) => {
+			// JSON.stringify converts NaN/Infinity/-Infinity to null.
+			// Zarr v3 spec requires these as string representations.
+			if (typeof value === "number") {
+				if (Number.isNaN(value)) return "NaN";
+				if (value === Infinity) return "Infinity";
+				if (value === -Infinity) return "-Infinity";
+			}
+			return value;
+		},
+		2,
+	);
 	return new TextEncoder().encode(str);
+}
+
+export function assertSharedArrayBufferAvailable(): void {
+	if (typeof SharedArrayBuffer === "undefined") {
+		throw new Error(
+			"SharedArrayBuffer is not available. " +
+				"In browsers, this requires Cross-Origin-Opener-Policy and " +
+				"Cross-Origin-Embedder-Policy headers to be set.",
+		);
+	}
+}
+
+export function createBuffer(
+	byteLength: number,
+	useShared?: boolean,
+): ArrayBufferLike {
+	if (useShared) {
+		return new SharedArrayBuffer(byteLength);
+	}
+	return new ArrayBuffer(byteLength);
 }
 
 export function json_decode_object(bytes: Uint8Array) {
 	const str = new TextDecoder().decode(bytes);
-	return JSON.parse(str);
+	try {
+		return JSON.parse(str);
+	} catch (cause) {
+		throw new JsonDecodeError(cause);
+	}
 }
 
 export function byteswap_inplace(view: Uint8Array, bytes_per_element: number) {
@@ -173,11 +212,15 @@ export function v2_to_v3_array_metadata(
 		codecs.push({ name: "bytes", configuration: { endian: "big" } });
 	}
 	for (let { id, ...configuration } of meta.filters ?? []) {
-		codecs.push({ name: id, configuration });
+		codecs.push({ name: `numcodecs.${id}`, configuration });
 	}
 	if (meta.compressor) {
 		let { id, ...configuration } = meta.compressor;
-		codecs.push({ name: id, configuration });
+		codecs.push({ name: `numcodecs.${id}`, configuration });
+	}
+	let dimension_names: string[] | undefined;
+	if (globalThis.Array.isArray(attributes._ARRAY_DIMENSIONS)) {
+		dimension_names = attributes._ARRAY_DIMENSIONS;
 	}
 	return {
 		zarr_format: 3,
@@ -198,6 +241,7 @@ export function v2_to_v3_array_metadata(
 		},
 		codecs,
 		fill_value: meta.fill_value,
+		dimension_names,
 		attributes,
 	};
 }
@@ -228,11 +272,13 @@ export type NarrowDataType<
 	? NumberDataType
 	: Query extends "bigint"
 		? BigintDataType
-		: Query extends "string"
-			? StringDataType
-			: Query extends "object"
-				? ObjectType
-				: Extract<Query, Dtype>;
+		: Query extends "boolean"
+			? Bool
+			: Query extends "string"
+				? StringDataType
+				: Query extends "object"
+					? ObjectType
+					: Extract<Query, Dtype>;
 
 export function is_dtype<Query extends DataTypeQuery>(
 	dtype: DataType,
@@ -284,6 +330,22 @@ export function ensure_correct_scalar<D extends DataType>(
 		// @ts-expect-error - We've narrowed the type of fill_value correctly
 		return BigInt(metadata.fill_value) as Scalar<D>;
 	}
+	// Zarr v3 represents IEEE 754 special float values as strings in JSON.
+	// Only applies to floating-point types.
+	let is_float =
+		metadata.data_type === "float16" ||
+		metadata.data_type === "float32" ||
+		metadata.data_type === "float64";
+	if (typeof metadata.fill_value === "string" && is_float) {
+		let mapping: Record<string, number> = {
+			NaN: NaN,
+			Infinity: Infinity,
+			"-Infinity": -Infinity,
+		};
+		if (metadata.fill_value in mapping) {
+			return mapping[metadata.fill_value] as Scalar<D>;
+		}
+	}
 	return metadata.fill_value;
 }
 
@@ -318,6 +380,15 @@ type ErrorConstructor = new (...args: any[]) => Error;
  * @param errors - Expected error type(s)
  * @throws The original error if it doesn't match expected type(s)
  */
+export function isAbortable(opts: unknown): opts is { signal: AbortSignal } {
+	return (
+		opts != null &&
+		typeof opts === "object" &&
+		"signal" in opts &&
+		opts.signal instanceof AbortSignal
+	);
+}
+
 export function rethrow_unless<E extends ReadonlyArray<ErrorConstructor>>(
 	error: unknown,
 	...errors: E
@@ -352,18 +423,21 @@ export function assert(
 }
 
 /**
- * @param {ArrayBuffer |ArrayBufferView | Response} data
- * @param {Object} options
- * @param {CompressionFormat} options.format
- * @param {AbortSignal} [options.signal]
- *
- * @returns {Promise<ArrayBuffer>}
+ * Decompress data using the given format via the Web Streams API.
+ * Views backed by a SharedArrayBuffer are copied into a regular ArrayBuffer
+ * since the Response constructor does not accept shared memory.
  */
 export async function decompress(
-	data: ArrayBuffer | ArrayBufferView | Response,
+	data: ArrayBuffer | ArrayBufferView,
 	{ format, signal }: { format: CompressionFormat; signal?: AbortSignal },
 ): Promise<ArrayBuffer> {
-	const response = data instanceof Response ? data : new Response(data);
+	let response: Response;
+	if (data instanceof ArrayBuffer) {
+		response = new Response(data);
+	} else {
+		let bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+		response = new Response(bytes.slice().buffer);
+	}
 	assert(response.body, "Response does not contain body.");
 	try {
 		const decompressedResponse = new Response(

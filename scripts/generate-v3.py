@@ -579,3 +579,45 @@ a = zarr.create_array(
     chunks=(3,),
 )
 a[:] = data
+
+# Consolidated group — a subgroup with its own consolidated metadata
+consolidated = zarr.create_group(store, path="consolidated")
+consolidated.attrs["answer"] = 42
+
+a = zarr.create_array(
+    store,
+    name="consolidated/1d.chunked.i2",
+    dtype="int16",
+    chunks=(2,),
+    shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = [1, 2, 3, 4]
+
+a = zarr.create_array(
+    store,
+    name="consolidated/2d.contiguous.i2",
+    dtype="int16",
+    chunks=(2, 2),
+    shape=(2, 2),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = [[1, 2], [3, 4]]
+
+nested = zarr.create_group(store, path="consolidated/nested")
+nested.attrs["description"] = "A nested group"
+
+a = zarr.create_array(
+    store,
+    name="consolidated/nested/1d.i2",
+    dtype="int16",
+    chunks=(4,),
+    shape=(4,),
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = [10, 20, 30, 40]
+
+zarr.consolidate_metadata(store, path="consolidated")

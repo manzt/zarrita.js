@@ -10,11 +10,13 @@
 		"isolatedModules": true,
 		"declaration": true,
 		"sourceMap": true,
+		"declarationMap": true,
 		/* Linting */
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
+		"types": ["node"]
 	},
 	"files": [],
 	"references": [

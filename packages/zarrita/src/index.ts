@@ -2,8 +2,17 @@
 export type * from "@zarrita/storage";
 // re-export fetch store from storage
 export { default as FetchStore } from "@zarrita/storage/fetch";
+export type {
+	BatchedRangeStoreOptions,
+	Stats as RangeBatchingStats,
+} from "./batched-fetch.js";
+export { BatchedRangeStore, withRangeBatching } from "./batched-fetch.js";
 export { registry } from "./codecs.js";
-export type { Listable } from "./consolidated.js";
+export type {
+	ConsolidatedFormat,
+	Listable,
+	WithConsolidatedOptions,
+} from "./consolidated.js";
 export { tryWithConsolidated, withConsolidated } from "./consolidated.js";
 export { create } from "./create.js";
 export { KeyError, NodeNotFoundError } from "./errors.js";
@@ -21,6 +30,7 @@ export type {
 	Slice,
 } from "./indexing/types.js";
 export {
+	sel,
 	slice,
 	slice_indices as _zarrita_internal_slice_indices,
 } from "./indexing/util.js";

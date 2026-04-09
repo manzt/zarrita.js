@@ -23,7 +23,9 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		codecs: sharding_config.index_codecs,
 	});
 
-	let cache: Record<string, Chunk<"uint64"> | null> = {};
+	let checksum_size = 4;
+	let index_size = 16 * index_shape.reduce((a, b) => a * b, 1);
+	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
 	return async (
 		chunk_coord: number[],
 		options?: Parameters<Store["get"]>[1],
@@ -31,23 +33,22 @@ export function create_sharded_chunk_getter<Store extends Readable>(
 		let shard_coord = chunk_coord.map((d, i) => Math.floor(d / index_shape[i]));
 		let shard_path = location.resolve(encode_shard_key(shard_coord)).path;
 
-		let index: Chunk<"uint64"> | null;
-		if (shard_path in cache) {
-			index = cache[shard_path];
-		} else {
-			let checksum_size = 4;
-			let index_size = 16 * index_shape.reduce((a, b) => a * b, 1);
-			let bytes = await get_range(
-				shard_path,
-				{
-					suffixLength: index_size + checksum_size,
-				},
-				options,
-			);
-			index = cache[shard_path] = bytes
-				? await index_codec.decode(bytes)
-				: null;
+		if (!(shard_path in cache)) {
+			cache[shard_path] = (async () => {
+				let bytes = await get_range(
+					shard_path,
+					{
+						suffixLength: index_size + checksum_size,
+					},
+					options,
+				);
+				return bytes ? await index_codec.decode(bytes) : null;
+			})().catch((err) => {
+				delete cache[shard_path];
+				throw err;
+			});
 		}
+		let index = await cache[shard_path];
 
 		if (index === null) {
 			return undefined;

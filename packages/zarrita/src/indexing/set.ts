@@ -2,6 +2,7 @@ import type { Mutable } from "@zarrita/storage";
 
 import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
+import { isAbortable } from "../util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
 	Indices,
@@ -39,6 +40,27 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		chunk_shape: arr.chunks,
 	});
 
+	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
+	// for zero-dimensional arrays.
+	if (arr.shape.length === 0) {
+		const chunk_data = new context.TypedArray(1);
+		if (typeof value === "object") {
+			throw new Error("Cannot set a scalar array with a non-scalar value.");
+		}
+		// @ts-expect-error - Value is a scalar
+		chunk_data.fill(value);
+		const chunk_path = arr.resolve(context.encode_chunk_key([])).path;
+		await arr.store.set(
+			chunk_path,
+			await context.codec.encode({
+				data: chunk_data,
+				shape: [],
+				stride: [],
+			}),
+		);
+		return;
+	}
+
 	// We iterate over all chunks which overlap the selection and thus contain data
 	// that needs to be replaced. Each chunk is processed in turn, extracting the
 	// necessary data from the value array and storing into the chunk array.
@@ -52,6 +74,10 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const chunk_selection = mapping.map((i) => i.from);
 		const flipped = mapping.map(flip_indexer_projection);
 		queue.add(async () => {
+			if (isAbortable(opts.opts)) {
+				opts.opts.signal.throwIfAborted();
+			}
+
 			// obtain key for chunk storage
 			const chunk_path = arr.resolve(
 				context.encode_chunk_key(chunk_coords),

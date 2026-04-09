@@ -2,6 +2,7 @@
 	"name": "@zarrita/storage",
 	"version": "0.1.4",
 	"license": "MIT",
+	"nodeModulesDir": "auto",
 	"imports": {
 		"reference-spec-reader": "npm:reference-spec-reader@^0.2.0",
 		"unzipit": "npm:unzipit@1.4.3"
@@ -15,7 +16,8 @@
 	},
 	"publish": {
 		"exclude": [
-			"package.json"
+			"package.json",
+			"__tests__"
 		]
 	}
 }

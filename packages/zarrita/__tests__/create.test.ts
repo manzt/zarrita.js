@@ -1,7 +1,12 @@
-import { expect, test } from "vitest";
+import { assert, describe, expect, test } from "vitest";
 
 import * as zarr from "../src/index.js";
 import { json_decode_object } from "../src/util.js";
+
+function json_decode(x: Uint8Array | undefined) {
+	assert(x);
+	return json_decode_object(x);
+}
 
 test("create root group", async () => {
 	let attributes = { hello: "world" };
@@ -9,10 +14,7 @@ test("create root group", async () => {
 	expect(grp.path).toBe("/");
 	expect(grp.attrs).toStrictEqual(attributes);
 	expect(grp.store.has("/zarr.json")).true;
-	expect(
-		// biome-ignore lint/style/noNonNullAssertion: we know it's there
-		json_decode_object(grp.store.get("/zarr.json")!),
-	).toMatchInlineSnapshot(`
+	expect(json_decode(grp.store.get("/zarr.json"))).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
 		    "hello": "world",
@@ -38,9 +40,9 @@ test("create array", async () => {
 	expect(a.dtype).toBe("int32");
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
+	expect(a.fillValue).toBeNull();
 	expect(
-		// biome-ignore lint/style/noNonNullAssertion: we know it's there
-		json_decode_object(h.store.get("/arthur/dent/zarr.json")!),
+		json_decode(h.store.get("/arthur/dent/zarr.json")),
 	).toMatchInlineSnapshot(`
 		{
 		  "attributes": {
@@ -87,6 +89,89 @@ test("create group from another group", async () => {
 		  "/absolute/zarr.json",
 		}
 	`);
+});
+
+describe("create array with IEEE 754 special fill values", () => {
+	test.each([
+		["NaN", NaN, "NaN"],
+		["Infinity", Infinity, "Infinity"],
+		["-Infinity", -Infinity, "-Infinity"],
+	])("%s", async (_label, fill_value, expected_json) => {
+		let h = zarr.root();
+		let a = await zarr.create(h.resolve("/test"), {
+			shape: [2],
+			chunk_shape: [2],
+			data_type: "float32",
+			fill_value,
+			codecs: [],
+		});
+		let meta = json_decode(h.store.get("/test/zarr.json"));
+		expect(meta.fill_value).toBe(expected_json);
+		expect(a.fillValue).toBe(fill_value);
+	});
+});
+
+test("create array with dimension_names", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [100, 200],
+		chunk_shape: [10, 20],
+		data_type: "float32",
+		dimension_names: ["x", "y"],
+	});
+	expect(a.dimensionNames).toStrictEqual(["x", "y"]);
+	expect(json_decode(h.store.get("/temp/zarr.json"))).toMatchObject({
+		dimension_names: ["x", "y"],
+	});
+});
+
+test("create array with fill_value", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [10],
+		chunk_shape: [5],
+		data_type: "float32",
+		fill_value: -9999,
+	});
+	expect(a.fillValue).toBe(-9999);
+});
+
+test("create array without dimension_names", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/temp"), {
+		shape: [10],
+		chunk_shape: [5],
+		data_type: "int32",
+	});
+	expect(a.dimensionNames).toBeUndefined();
+});
+
+test("get scalar array returns fill value before set", async () => {
+	let h = zarr.root();
+	let arr = await zarr.create(h.resolve("/scalar"), {
+		shape: [],
+		chunk_shape: [],
+		data_type: "float64",
+		fill_value: -9999,
+	});
+	let value = await zarr.get(arr);
+	expect(value).toBe(-9999);
+});
+
+test("set and get scalar array (shape=[])", async () => {
+	let h = zarr.root();
+	let arr = await zarr.create(h.resolve("/scalar"), {
+		shape: [],
+		chunk_shape: [],
+		data_type: "float64",
+		fill_value: 0,
+	});
+	expect(arr.shape).toStrictEqual([]);
+	expect(arr.chunks).toStrictEqual([]);
+
+	await zarr.set(arr, null, 42);
+	let value = await zarr.get(arr);
+	expect(value).toBe(42);
 });
 
 test("create nodes via groups", async () => {

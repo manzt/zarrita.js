@@ -2,6 +2,11 @@ import type { Readable } from "@zarrita/storage";
 
 import { type Array, get_context } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
+import {
+	assertSharedArrayBufferAvailable,
+	createBuffer,
+	isAbortable,
+} from "../util.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
 	GetOptions,
@@ -36,6 +41,10 @@ export async function get<
 ): Promise<
 	null extends Sel[number] ? Arr : Slice extends Sel[number] ? Arr : Scalar<D>
 > {
+	if (opts.useSharedArrayBuffer) {
+		assertSharedArrayBufferAvailable();
+	}
+
 	let context = get_context(arr);
 	let indexer = new BasicIndexer({
 		selection,
@@ -43,8 +52,34 @@ export async function get<
 		chunk_shape: arr.chunks,
 	});
 
+	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
+	// for zero-dimensional arrays.
+	if (arr.shape.length === 0) {
+		let { data } = await arr.getChunk([], opts.opts, {
+			useSharedArrayBuffer: opts.useSharedArrayBuffer,
+		});
+		// @ts-expect-error - TS can't narrow this conditional type
+		return unwrap(data, 0);
+	}
+
+	let size = indexer.shape.reduce((a, b) => a * b, 1);
+	let data: TypedArray<D>;
+	if (opts.useSharedArrayBuffer) {
+		let sample = new context.TypedArray(0);
+		if (!("BYTES_PER_ELEMENT" in sample)) {
+			console.warn(
+				"zarrita: useSharedArrayBuffer is not supported for non-buffer-backed data types.",
+			);
+			data = new context.TypedArray(size);
+		} else {
+			let buffer = createBuffer(size * sample.BYTES_PER_ELEMENT, true);
+			data = new context.TypedArray(buffer, 0, size);
+		}
+	} else {
+		data = new context.TypedArray(size);
+	}
 	let out = setter.prepare(
-		new context.TypedArray(indexer.shape.reduce((a, b) => a * b, 1)),
+		data,
 		indexer.shape,
 		context.get_strides(indexer.shape),
 	);
@@ -52,7 +87,14 @@ export async function get<
 	let queue = opts.create_queue?.() ?? create_queue();
 	for (const { chunk_coords, mapping } of indexer) {
 		queue.add(async () => {
-			let { data, shape, stride } = await arr.getChunk(chunk_coords, opts.opts);
+			if (isAbortable(opts.opts)) {
+				opts.opts.signal.throwIfAborted();
+			}
+			let { data, shape, stride } = await arr.getChunk(
+				chunk_coords,
+				opts.opts,
+				{ useSharedArrayBuffer: opts.useSharedArrayBuffer },
+			);
 			let chunk = setter.prepare(data, shape, stride);
 			setter.set_from_chunk(out, chunk, mapping);
 		});
@@ -60,7 +102,7 @@ export async function get<
 
 	await queue.onIdle();
 
-	// If the final out shape is empty, we just return a scalar.
+	// If the final out shape is empty (point selection), return a scalar.
 	// @ts-expect-error - TS can't narrow this conditional type
 	return indexer.shape.length === 0 ? unwrap(out.data, 0) : out;
 }

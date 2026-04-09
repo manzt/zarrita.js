@@ -1,7 +1,8 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.6.1",
+	"version": "0.6.2",
 	"license": "MIT",
+	"nodeModulesDir": "auto",
 	"imports": {
 		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.4",
 		"numcodecs": "npm:numcodecs@^0.3.2"
@@ -11,7 +12,8 @@
 	},
 	"publish": {
 		"exclude": [
-			"package.json"
+			"package.json",
+			"__tests__"
 		]
 	}
 }

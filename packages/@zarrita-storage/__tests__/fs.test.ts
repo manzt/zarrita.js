@@ -42,7 +42,7 @@ describe("FileSystemStore", () => {
 		expect(
 			await fs
 				.readFile(path.join(store_path, "foo-delete"), "utf-8")
-				.catch((err) => err.code),
+				.catch((err: NodeJS.ErrnoException) => err.code),
 		).toBe("ENOENT");
 	});
 	it("checks if a file exists", async () => {

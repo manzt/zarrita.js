@@ -42,11 +42,12 @@ export type Setter<D extends DataType, Arr extends Chunk<D>> = {
 
 export type Options = {
 	create_queue?: () => ChunkQueue;
+	useSharedArrayBuffer?: boolean;
 };
 
 export type GetOptions<O> = Options & { opts?: O };
 
-export type SetOptions = Options;
+export type SetOptions<O = unknown> = Options & { opts?: O };
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

@@ -28,7 +28,7 @@ export const _internal_setter: {
 		selection: (number | zarr.Indices)[],
 		value: zarr.Scalar<D>,
 	) {
-		// @ts-ignore - ndarray-ops types are incorrect
+		// @ts-expect-error - ndarray-ops types are incorrect
 		ops.assigns(view(dest, selection), value);
 	},
 	set_from_chunk<D extends zarr.DataType>(

@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
-import type { DataType } from "../src/metadata.js";
+import * as zarr from "../src/index.js";
+import { sel, slice } from "../src/indexing/util.js";
+import type { ArrayMetadata, DataType } from "../src/metadata.js";
 import {
 	BoolArray,
 	ByteStringArray,
@@ -7,9 +9,11 @@ import {
 } from "../src/typedarray.js";
 import {
 	byteswap_inplace,
+	ensure_correct_scalar,
 	get_ctr,
 	get_strides,
 	is_dtype,
+	v2_to_v3_array_metadata,
 } from "../src/util.js";
 
 describe("get_ctr", () => {
@@ -211,5 +215,456 @@ describe("is_dtype", () => {
 		"string",
 	])("is_dtype(%s, %s) -> true", (dtype) => {
 		expect(is_dtype(dtype, dtype)).toBe(true);
+	});
+});
+
+describe("ensure_correct_scalar", () => {
+	function make_metadata(
+		data_type: DataType,
+		fill_value: unknown,
+	): ArrayMetadata {
+		return {
+			zarr_format: 3,
+			node_type: "array",
+			shape: [1],
+			data_type,
+			chunk_grid: { name: "regular", configuration: { chunk_shape: [1] } },
+			chunk_key_encoding: { name: "default" },
+			codecs: [],
+			fill_value,
+			attributes: {},
+		} as ArrayMetadata;
+	}
+
+	test.each([
+		["NaN", NaN],
+		["Infinity", Infinity],
+		["-Infinity", -Infinity],
+	])("float32 fill_value %s -> %s", (str, expected) => {
+		let result = ensure_correct_scalar(make_metadata("float32", str));
+		if (Number.isNaN(expected)) {
+			expect(result).toBeNaN();
+		} else {
+			expect(result).toBe(expected);
+		}
+	});
+
+	test.each([
+		"float16",
+		"float32",
+		"float64",
+	] as const)("%s preserves numeric fill_value", (dtype) => {
+		expect(ensure_correct_scalar(make_metadata(dtype, 1.5))).toBe(1.5);
+	});
+
+	test("string dtype fill_value 'NaN' stays as string", () => {
+		expect(ensure_correct_scalar(make_metadata("string", "NaN"))).toBe("NaN");
+	});
+
+	test("int64 fill_value converts to BigInt", () => {
+		expect(ensure_correct_scalar(make_metadata("int64", 42))).toBe(42n);
+	});
+});
+
+describe("sel", () => {
+	async function make_array(dimension_names?: string[]) {
+		let h = zarr.root();
+		return zarr.create(h.resolve("/test"), {
+			shape: [100, 200, 300],
+			chunk_shape: [10, 20, 30],
+			data_type: "float32",
+			dimension_names,
+		});
+	}
+
+	test("maps named dimensions to positional selection", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(sel(arr, { lat: slice(10, 20), time: 0 })).toStrictEqual([
+			0,
+			{ start: 10, stop: 20, step: null },
+			null,
+		]);
+	});
+
+	test("unspecified dimensions default to null", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(sel(arr, { lon: 5 })).toStrictEqual([null, null, 5]);
+	});
+
+	test("throws for unknown dimension name", async () => {
+		let arr = await make_array(["time", "lat", "lon"]);
+		expect(() => sel(arr, { bad: 0 })).toThrowError(
+			/Unknown dimension name: "bad"/,
+		);
+	});
+
+	test("throws when array has no dimension_names", async () => {
+		let arr = await make_array();
+		expect(() => sel(arr, { time: 0 })).toThrowError(
+			/does not have dimension_names/,
+		);
+	});
+});
+
+describe("v2_to_v3_array_metadata", () => {
+	let v2meta = {
+		zarr_format: 2 as const,
+		shape: [100, 200],
+		chunks: [10, 20],
+		dtype: "<f4",
+		compressor: null,
+		fill_value: 0,
+		order: "C" as const,
+		filters: null,
+	};
+
+	test("basic conversion", () => {
+		let result = v2_to_v3_array_metadata(v2meta);
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("maps _ARRAY_DIMENSIONS to dimension_names", () => {
+		let result = v2_to_v3_array_metadata(v2meta, {
+			_ARRAY_DIMENSIONS: ["x", "y"],
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {
+			    "_ARRAY_DIMENSIONS": [
+			      "x",
+			      "y",
+			    ],
+			  },
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": [
+			    "x",
+			    "y",
+			  ],
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("Fortran order adds transpose codec", () => {
+		let result = v2_to_v3_array_metadata({ ...v2meta, order: "F" });
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "order": "F",
+			      },
+			      "name": "transpose",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("big-endian dtype adds bytes codec", () => {
+		let result = v2_to_v3_array_metadata({ ...v2meta, dtype: ">f4" });
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "endian": "big",
+			      },
+			      "name": "bytes",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("compressor is converted to codec", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			compressor: { id: "zlib", level: 5 },
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "level": 5,
+			      },
+			      "name": "numcodecs.zlib",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("filters are converted to codecs", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			filters: [{ id: "delta", dtype: "<f4" }],
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "dtype": "<f4",
+			      },
+			      "name": "numcodecs.delta",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("dimension_separator is preserved", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			dimension_separator: "/",
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": "/",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
+	});
+
+	test("codec order: transpose, bytes, filters, compressor", () => {
+		let result = v2_to_v3_array_metadata({
+			...v2meta,
+			dtype: ">f4",
+			order: "F",
+			filters: [{ id: "delta", dtype: ">f4" }],
+			compressor: { id: "zlib", level: 1 },
+		});
+		expect(result).toMatchInlineSnapshot(`
+			{
+			  "attributes": {},
+			  "chunk_grid": {
+			    "configuration": {
+			      "chunk_shape": [
+			        10,
+			        20,
+			      ],
+			    },
+			    "name": "regular",
+			  },
+			  "chunk_key_encoding": {
+			    "configuration": {
+			      "separator": ".",
+			    },
+			    "name": "v2",
+			  },
+			  "codecs": [
+			    {
+			      "configuration": {
+			        "order": "F",
+			      },
+			      "name": "transpose",
+			    },
+			    {
+			      "configuration": {
+			        "endian": "big",
+			      },
+			      "name": "bytes",
+			    },
+			    {
+			      "configuration": {
+			        "dtype": ">f4",
+			      },
+			      "name": "numcodecs.delta",
+			    },
+			    {
+			      "configuration": {
+			        "level": 1,
+			      },
+			      "name": "numcodecs.zlib",
+			    },
+			  ],
+			  "data_type": "float32",
+			  "dimension_names": undefined,
+			  "fill_value": 0,
+			  "node_type": "array",
+			  "shape": [
+			    100,
+			    200,
+			  ],
+			  "zarr_format": 3,
+			}
+		`);
 	});
 });

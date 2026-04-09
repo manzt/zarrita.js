@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.13"
+# requires-python = "==3.13"
 # dependencies = [
 #     "zarr==2.18.1",
 # ]
@@ -12,7 +12,7 @@ import shutil
 
 import zarr
 import numpy as np
-from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8
+from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle, Delta
 
 SELF_DIR = pathlib.Path(__file__).parent
 
@@ -185,6 +185,36 @@ root.create_dataset(
     object_codec=VLenUTF8(),
     dtype="O",
     chunks=(1, 1, 2),
+)
+
+# 1d.contiguous.shuffle.i2
+root.create_dataset(
+    "1d.contiguous.shuffle.i2",
+    data=[1, 2, 3, 4],
+    dtype="i2",
+    chunks=(4,),
+    compressor=Zlib(),
+    filters=[Shuffle(elementsize=2)],
+)
+
+# 1d.contiguous.delta.i2
+root.create_dataset(
+    "1d.contiguous.delta.i2",
+    data=[1, 2, 3, 4],
+    dtype="i2",
+    chunks=(4,),
+    compressor=Zlib(),
+    filters=[Delta(dtype="i2")],
+)
+
+# 1d.contiguous.delta.shuffle.i2
+root.create_dataset(
+    "1d.contiguous.delta.shuffle.i2",
+    data=[10, 20, 30, 40],
+    dtype="i2",
+    chunks=(4,),
+    compressor=Zlib(),
+    filters=[Delta(dtype="i2"), Shuffle(elementsize=2)],
 )
 
 # Group with spaces in the name

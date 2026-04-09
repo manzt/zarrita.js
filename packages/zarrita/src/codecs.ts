@@ -5,6 +5,7 @@ import { Crc32cCodec } from "./codecs/crc32c.js";
 import { DeltaCodec } from "./codecs/delta.js";
 import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
+import { ShuffleCodec } from "./codecs/shuffle.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
 import { ZlibCodec } from "./codecs/zlib.js";
@@ -25,19 +26,35 @@ type CodecEntry = {
 type Codec = _Codec & { kind: CodecEntry["kind"] };
 
 function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
-	return new Map()
-		.set("blosc", () => import("numcodecs/blosc").then((m) => m.default))
-		.set("lz4", () => import("numcodecs/lz4").then((m) => m.default))
-		.set("zstd", () => import("numcodecs/zstd").then((m) => m.default))
-		.set("gzip", () => GzipCodec)
-		.set("zlib", () => ZlibCodec)
-		.set("transpose", () => TransposeCodec)
-		.set("bytes", () => BytesCodec)
-		.set("crc32c", () => Crc32cCodec)
-		.set("vlen-utf8", () => VLenUTF8)
-		.set("json2", () => JsonCodec)
-		.set("bitround", () => BitroundCodec)
-		.set("numcodecs.delta", () => DeltaCodec);
+	let blosc = () => import("numcodecs/blosc").then((m) => m.default);
+	let lz4 = () => import("numcodecs/lz4").then((m) => m.default);
+	let zstd = () => import("numcodecs/zstd").then((m) => m.default);
+	let gzip = () => GzipCodec;
+	let zlib = () => ZlibCodec;
+	return (
+		new Map()
+			// v3 codecs
+			.set("blosc", blosc)
+			.set("lz4", lz4)
+			.set("zstd", zstd)
+			.set("gzip", gzip)
+			.set("zlib", zlib)
+			.set("transpose", () => TransposeCodec)
+			.set("bytes", () => BytesCodec)
+			.set("crc32c", () => Crc32cCodec)
+			.set("vlen-utf8", () => VLenUTF8)
+			.set("json2", () => JsonCodec)
+			.set("bitround", () => BitroundCodec)
+			// numcodecs (v2 compat)
+			.set("numcodecs.blosc", blosc)
+			.set("numcodecs.lz4", lz4)
+			.set("numcodecs.zstd", zstd)
+			.set("numcodecs.gzip", gzip)
+			.set("numcodecs.zlib", zlib)
+			.set("numcodecs.vlen-utf8", () => VLenUTF8)
+			.set("numcodecs.shuffle", () => ShuffleCodec)
+			.set("numcodecs.delta", () => DeltaCodec)
+	);
 }
 
 export const registry: Map<string, () => Promise<CodecEntry>> =

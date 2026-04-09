@@ -20,8 +20,8 @@ describe("ReferenceStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "zarr_format": 2,
-            }
+			  "zarr_format": 2,
+			}
 		`);
 	});
 	it("store creation can still accept a non-promise", async () => {
@@ -37,8 +37,8 @@ describe("ReferenceStore", () => {
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchInlineSnapshot(`
 			{
-              "zarr_format": 2,
-            }
+			  "zarr_format": 2,
+			}
 		`);
 	});
 });

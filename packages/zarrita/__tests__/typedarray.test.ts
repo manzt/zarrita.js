@@ -131,7 +131,9 @@ describe("BoolArray.constructor", () => {
 
 	test("set(idx, value) -> void", () => {
 		let arr = new BoolArray(5);
-		[true, true, false, false, true].forEach((v, idx) => arr.set(idx, v));
+		[true, true, false, false, true].forEach((v, idx) => {
+			arr.set(idx, v);
+		});
 		expect(new Uint8Array(arr.buffer)).toMatchInlineSnapshot(`
 			Uint8Array [
 			  1,
@@ -188,7 +190,6 @@ describe("ByteStringArray", () => {
 		let data = new TextEncoder().encode(
 			"Hello\x00world!\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
 		);
-		// @ts-expect-error - we know this is an ArrayBuffer, TS just isn't smart enough to know it's not a SharedArrayBuffer
 		let buffer: ArrayBuffer = data.buffer;
 		let arr = new ByteStringArray(2, buffer, 3, 4);
 		expect({
@@ -219,7 +220,7 @@ describe("ByteStringArray", () => {
 		expect({
 			length: arr.length,
 			data: Array.from(arr),
-			text: new TextDecoder().decode(arr.buffer),
+			text: new TextDecoder().decode(arr.buffer as ArrayBuffer),
 		}).toStrictEqual({
 			length: 5,
 			data,
@@ -242,7 +243,9 @@ describe("ByteStringArray", () => {
 	test("set(idx: number, value: string) -> void", () => {
 		let expected = ["what", "is", "the", "meaning", "of", "life?"];
 		let arr = new ByteStringArray(7, expected.length);
-		expected.forEach((v, idx) => arr.set(idx, v));
+		expected.forEach((v, idx) => {
+			arr.set(idx, v);
+		});
 		expect(Array.from(arr)).toStrictEqual(expected);
 	});
 
@@ -342,7 +345,9 @@ describe("UnicodeStringArray", () => {
 	test("set(idx, value) -> void", () => {
 		let expected = ["what", "is", "the", "meaning", "of", "life?"];
 		let arr = new UnicodeStringArray(7, expected.length);
-		expected.forEach((v, idx) => arr.set(idx, v));
+		expected.forEach((v, idx) => {
+			arr.set(idx, v);
+		});
 		expect(Array.from(arr)).toStrictEqual(expected);
 	});
 

@@ -15,16 +15,22 @@ jobs:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.x
+          deno-version: v2.x
 
       - name: Publish @zarrita/storage
         run: deno publish --unstable-sloppy-imports
         working-directory: packages/@zarrita-storage
 
+      # --allow-slow-types: Deno hits a bug in slow-type validation of the
+      # overloaded `create` function.
       - name: Publish @zarrita/zarrita
-        run: deno publish --unstable-sloppy-imports
+        run: deno publish --unstable-sloppy-imports --allow-slow-types
         working-directory: packages/zarrita
 
+      # --no-check: Deno v2 (TS 5.9) adds Float16Array to the default lib, which
+      # causes zarrita's TypedArray<D> union to include it. @types/ndarray doesn't
+      # accept Float16Array yet, so type checking fails. Remove when @types/ndarray
+      # is updated (https://github.com/DefinitelyTyped/DefinitelyTyped).
       - name: Publish @zarrita/ndarray
-        run: deno publish --unstable-sloppy-imports
+        run: deno publish --unstable-sloppy-imports --no-check
         working-directory: packages/@zarrita-ndarray
