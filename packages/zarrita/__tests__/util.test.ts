@@ -506,7 +506,7 @@ describe("v2_to_v3_array_metadata", () => {
 			      "configuration": {
 			        "level": 5,
 			      },
-			      "name": "zlib",
+			      "name": "numcodecs.zlib",
 			    },
 			  ],
 			  "data_type": "float32",
@@ -550,7 +550,7 @@ describe("v2_to_v3_array_metadata", () => {
 			      "configuration": {
 			        "dtype": "<f4",
 			      },
-			      "name": "delta",
+			      "name": "numcodecs.delta",
 			    },
 			  ],
 			  "data_type": "float32",
@@ -646,13 +646,13 @@ describe("v2_to_v3_array_metadata", () => {
 			      "configuration": {
 			        "dtype": ">f4",
 			      },
-			      "name": "delta",
+			      "name": "numcodecs.delta",
 			    },
 			    {
 			      "configuration": {
 			        "level": 1,
 			      },
-			      "name": "zlib",
+			      "name": "numcodecs.zlib",
 			    },
 			  ],
 			  "data_type": "float32",

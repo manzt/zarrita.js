@@ -212,11 +212,11 @@ export function v2_to_v3_array_metadata(
 		codecs.push({ name: "bytes", configuration: { endian: "big" } });
 	}
 	for (let { id, ...configuration } of meta.filters ?? []) {
-		codecs.push({ name: id, configuration });
+		codecs.push({ name: `numcodecs.${id}`, configuration });
 	}
 	if (meta.compressor) {
 		let { id, ...configuration } = meta.compressor;
-		codecs.push({ name: id, configuration });
+		codecs.push({ name: `numcodecs.${id}`, configuration });
 	}
 	let dimension_names: string[] | undefined;
 	if (globalThis.Array.isArray(attributes._ARRAY_DIMENSIONS)) {
