@@ -12,7 +12,7 @@ import shutil
 
 import zarr
 import numpy as np
-from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle, Delta
+from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle
 
 SELF_DIR = pathlib.Path(__file__).parent
 
@@ -195,26 +195,6 @@ root.create_dataset(
     chunks=(4,),
     compressor=Zlib(),
     filters=[Shuffle(elementsize=2)],
-)
-
-# 1d.contiguous.delta.i2
-root.create_dataset(
-    "1d.contiguous.delta.i2",
-    data=[1, 2, 3, 4],
-    dtype="i2",
-    chunks=(4,),
-    compressor=Zlib(),
-    filters=[Delta(dtype="i2")],
-)
-
-# 1d.contiguous.delta.shuffle.i2
-root.create_dataset(
-    "1d.contiguous.delta.shuffle.i2",
-    data=[10, 20, 30, 40],
-    dtype="i2",
-    chunks=(4,),
-    compressor=Zlib(),
-    filters=[Delta(dtype="i2"), Shuffle(elementsize=2)],
 )
 
 # Group with spaces in the name
