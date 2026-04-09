@@ -1,73 +1,84 @@
-import type {
-	BigintDataType,
-	NumberDataType,
-	TypedArrayConstructor,
-} from "../metadata.js";
-import { assert, get_ctr } from "../util.js";
+import type { BigintDataType, Chunk, NumberDataType } from "../metadata.js";
+import { get_ctr } from "../util.js";
 
-/**
- * Delta filter codec (numcodecs compat).
- *
- * Stores differences between consecutive elements rather than the elements
- * themselves.
- */
-export class DeltaCodec<D extends NumberDataType | BigintDataType> {
-	kind = "bytes_to_bytes";
-	#TypedArray: TypedArrayConstructor<D>;
-	#BYTES_PER_ELEMENT: number;
+type DeltaCompatibleType = NumberDataType | BigintDataType;
 
-	constructor(_configuration: { dtype?: string }, meta: { data_type: D }) {
-		this.#TypedArray = get_ctr(meta.data_type);
-		let sample = new this.#TypedArray(0);
-		assert(
-			"BYTES_PER_ELEMENT" in sample,
-			`Delta codec requires a fixed-size dtype, got "${meta.data_type}"`,
-		);
-		this.#BYTES_PER_ELEMENT = sample.BYTES_PER_ELEMENT;
+const SUPPORTED: ReadonlySet<string> = new Set<DeltaCompatibleType>([
+	"int8",
+	"uint8",
+	"int16",
+	"uint16",
+	"int32",
+	"uint32",
+	"int64",
+	"uint64",
+	"float16",
+	"float32",
+	"float64",
+]);
+
+// The python codecs flatten with arr.reshape(-1, order='A').
+// The zarrita codec uses the byte order of the data.
+// These two are only equivalent if the array strides are C style or Fortran style.
+function assert_c_or_f_contiguous(shape: number[], stride: number[]): void {
+	const n = shape.length;
+	let c = n === 0 || stride[n - 1] === 1;
+	for (let i = n - 2; i >= 0 && c; i--) {
+		c = stride[i] === stride[i + 1] * shape[i + 1];
+	}
+	if (c) return;
+	let f = n === 0 || stride[0] === 1;
+	for (let i = 1; i < n && f; i++) {
+		f = stride[i] === stride[i - 1] * shape[i - 1];
+	}
+	if (f) return;
+	throw new Error(
+		`DeltaCodec requires C- or Fortran-contiguous strides, got shape=${JSON.stringify(
+			shape,
+		)} stride=${JSON.stringify(stride)}`,
+	);
+}
+
+export class DeltaCodec<D extends DeltaCompatibleType> {
+	kind = "array_to_array" as const;
+	#ctr: ReturnType<typeof get_ctr<D>>;
+
+	constructor(ctr: ReturnType<typeof get_ctr<D>>) {
+		this.#ctr = ctr;
 	}
 
-	static fromConfig<D extends NumberDataType | BigintDataType>(
-		configuration: { dtype?: string },
+	static fromConfig<D extends DeltaCompatibleType>(
+		_config: unknown,
 		meta: { data_type: D },
 	): DeltaCodec<D> {
-		return new DeltaCodec(configuration, meta);
-	}
-
-	encode(data: Uint8Array): Uint8Array {
-		return this.#apply(data, "encode");
-	}
-
-	decode(data: Uint8Array): Uint8Array {
-		return this.#apply(data, "decode");
-	}
-
-	#apply(data: Uint8Array, mode: "encode" | "decode"): Uint8Array {
-		let bpe = this.#BYTES_PER_ELEMENT;
-		if (data.length % bpe !== 0) {
+		if (!SUPPORTED.has(meta.data_type))
 			throw new Error(
-				`Data length (${data.length}) is not a multiple of element size (${bpe})`,
+				`Delta codec does not support data type: ${meta.data_type}`,
 			);
+		return new DeltaCodec(get_ctr(meta.data_type));
+	}
+
+	encode(chunk: Chunk<D>): Chunk<D> {
+		assert_c_or_f_contiguous(chunk.shape, chunk.stride);
+		const src = chunk.data;
+		const out = new this.#ctr(src.length) as Chunk<D>["data"];
+		out[0] = src[0];
+		for (let i = 1; i < src.length; i++) {
+			// @ts-expect-error - mix of bigint and number always safe to subtract
+			out[i] = src[i] - src[i - 1];
 		}
-		let n = data.length / bpe;
-		if (n === 0) return new Uint8Array(0);
+		return { data: out, shape: chunk.shape, stride: chunk.stride };
+	}
 
-		let input = new this.#TypedArray(data.buffer, data.byteOffset, n);
-		let result = new Uint8Array(data.length);
-		let output = new this.#TypedArray(result.buffer, 0, n);
-
-		output[0] = input[0];
-		if (mode === "encode") {
-			for (let i = 1; i < n; i++) {
-				// @ts-expect-error - we know the types are the same
-				output[i] = input[i] - input[i - 1];
-			}
-		} else {
-			for (let i = 1; i < n; i++) {
-				// @ts-expect-error - we know the types are the same
-				output[i] = output[i - 1] + input[i];
-			}
+	decode(chunk: Chunk<D>): Chunk<D> {
+		assert_c_or_f_contiguous(chunk.shape, chunk.stride);
+		const src = chunk.data;
+		const out = new this.#ctr(src.length) as Chunk<D>["data"];
+		out[0] = src[0];
+		for (let i = 1; i < src.length; i++) {
+			// @ts-expect-error - mix of bigint and number always safe to add
+			out[i] = out[i - 1] + src[i];
 		}
-
-		return result;
+		return { data: out, shape: chunk.shape, stride: chunk.stride };
 	}
 }
