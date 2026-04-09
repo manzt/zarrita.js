@@ -544,6 +544,28 @@ describe("v2", () => {
 		});
 	});
 
+	it("1d.contiguous.delta.i2", async () => {
+		let arr = await open.v2(store.resolve("/1d.contiguous.delta.i2"), {
+			kind: "array",
+		});
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int16Array([1, 2, 3, 4]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.delta.shuffle.i2", async () => {
+		let arr = await open.v2(store.resolve("/1d.contiguous.delta.shuffle.i2"), {
+			kind: "array",
+		});
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int16Array([10, 20, 30, 40]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
 	it("opens group from root", async () => {
 		let grp = await open(store, { kind: "group" });
 		expect(grp.path).toBe("/");
