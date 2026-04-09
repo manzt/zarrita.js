@@ -73,8 +73,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       unzipit:
-        specifier: 1.4.3
-        version: 1.4.3
+        specifier: 2.0.0
+        version: 2.0.0
 
   packages/zarrita:
     dependencies:
@@ -1743,12 +1743,9 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
 
-  unzipit@1.4.3:
-    resolution: {integrity: sha512-gsq2PdJIWWGhx5kcdWStvNWit9FVdTewm4SEG7gFskWs+XCVaULt9+BwuoBtJiRE8eo3L1IPAOrbByNLtLtIlg==}
-    engines: {node: '>=12'}
-
-  uzip-module@1.0.3:
-    resolution: {integrity: sha512-AMqwWZaknLM77G+VPYNZLEruMGWGzyigPK3/Whg99B3S6vGHuqsyl5ZrOv1UUF3paGK1U6PM0cnayioaryg/fA==}
+  unzipit@2.0.0:
+    resolution: {integrity: sha512-DVeVIWUZCAQPNzm5sB0hpsG1GygTTdBnzNtYYEpInkttx5evkyqRgZi6rTczoySqp8hO5jHVKzrH0f23X8FZLg==}
+    engines: {node: '>=18'}
 
   vfile-message@4.0.2:
     resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
@@ -3495,11 +3492,7 @@ snapshots:
 
   universalify@0.1.2: {}
 
-  unzipit@1.4.3:
-    dependencies:
-      uzip-module: 1.0.3
-
-  uzip-module@1.0.3: {}
+  unzipit@2.0.0: {}
 
   vfile-message@4.0.2:
     dependencies:
