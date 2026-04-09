@@ -1,5 +1,5 @@
 import type { Chunk, String } from "../metadata.js";
-import { get_strides } from "../util.js";
+import { getStrides } from "../util.js";
 
 export class VLenUTF8 {
 	readonly kind = "array_to_bytes";
@@ -8,7 +8,7 @@ export class VLenUTF8 {
 
 	constructor(shape: number[]) {
 		this.#shape = shape;
-		this.#strides = get_strides(shape, "C");
+		this.#strides = getStrides(shape, "C");
 	}
 	static fromConfig(_: unknown, meta: { shape: number[] }) {
 		return new VLenUTF8(meta.shape);
@@ -24,12 +24,12 @@ export class VLenUTF8 {
 		let data: Array<string> = Array(view.getUint32(0, true));
 		let pos = 4;
 		for (let i = 0; i < data.length; i++) {
-			let item_length = view.getUint32(pos, true);
+			let itemLength = view.getUint32(pos, true);
 			pos += 4;
 			data[i] = decoder.decode(
-				(bytes.buffer as ArrayBuffer).slice(pos, pos + item_length),
+				(bytes.buffer as ArrayBuffer).slice(pos, pos + itemLength),
 			);
-			pos += item_length;
+			pos += itemLength;
 		}
 		return { data, shape: this.#shape, stride: this.#strides };
 	}

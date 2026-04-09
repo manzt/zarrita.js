@@ -1,6 +1,6 @@
 import type { AbsolutePath, Readable } from "@zarrita/storage";
-import { create_sharded_chunk_getter } from "./codecs/sharding.js";
-import { create_codec_pipeline } from "./codecs.js";
+import { createShardedChunkGetter } from "./codecs/sharding.js";
+import { createCodecPipeline } from "./codecs.js";
 import type {
 	ArrayMetadata,
 	Attributes,
@@ -14,14 +14,14 @@ import type {
 } from "./metadata.js";
 import {
 	assertSharedArrayBufferAvailable,
-	create_chunk_key_encoder,
 	createBuffer,
+	createChunkKeyEncoder,
 	type DataTypeQuery,
-	ensure_correct_scalar,
-	get_ctr,
-	get_strides,
-	is_dtype,
-	is_sharding_codec,
+	ensureCorrectScalar,
+	getCtr,
+	getStrides,
+	isDataType,
+	isShardingCodec,
 	type NarrowDataType,
 } from "./util.js";
 
@@ -64,71 +64,71 @@ export class Group<Store extends Readable> extends Location<Store> {
 	}
 }
 
-function get_array_order(
+function getArrayOrder(
 	codecs: CodecMetadata[],
 ): "C" | "F" | globalThis.Array<number> {
-	const maybe_transpose_codec = codecs.find((c) => c.name === "transpose");
+	const maybeTransposeCodec = codecs.find((c) => c.name === "transpose");
 	// @ts-expect-error - TODO: Should validate?
-	return maybe_transpose_codec?.configuration?.order ?? "C";
+	return maybeTransposeCodec?.configuration?.order ?? "C";
 }
 
 const CONTEXT_MARKER = Symbol("zarrita.context");
 
-export function get_context<T>(obj: { [CONTEXT_MARKER]: T }): T {
+export function getContext<T>(obj: { [CONTEXT_MARKER]: T }): T {
 	return obj[CONTEXT_MARKER];
 }
 
-function create_context<Store extends Readable, D extends DataType>(
+function createContext<Store extends Readable, D extends DataType>(
 	location: Location<Readable>,
 	metadata: ArrayMetadata<D>,
 ): ArrayContext<Store, D> {
-	let { configuration } = metadata.codecs.find(is_sharding_codec) ?? {};
-	let shared_context = {
-		encode_chunk_key: create_chunk_key_encoder(metadata.chunk_key_encoding),
-		TypedArray: get_ctr(metadata.data_type),
-		fill_value: metadata.fill_value,
+	let { configuration } = metadata.codecs.find(isShardingCodec) ?? {};
+	let sharedContext = {
+		encodeChunkKey: createChunkKeyEncoder(metadata.chunk_key_encoding),
+		TypedArray: getCtr(metadata.data_type),
+		fillValue: metadata.fill_value,
 	};
 
 	if (configuration) {
-		let native_order = get_array_order(configuration.codecs);
+		let nativeOrder = getArrayOrder(configuration.codecs);
 		return {
-			...shared_context,
+			...sharedContext,
 			kind: "sharded",
-			chunk_shape: configuration.chunk_shape,
-			codec: create_codec_pipeline({
-				data_type: metadata.data_type,
+			chunkShape: configuration.chunk_shape,
+			codec: createCodecPipeline({
+				dataType: metadata.data_type,
 				shape: configuration.chunk_shape,
 				codecs: configuration.codecs,
 			}),
-			get_strides(shape: number[]) {
-				return get_strides(shape, native_order);
+			getStrides(shape: number[]) {
+				return getStrides(shape, nativeOrder);
 			},
-			get_chunk_bytes: create_sharded_chunk_getter(
+			getChunkBytes: createShardedChunkGetter(
 				location,
 				metadata.chunk_grid.configuration.chunk_shape,
-				shared_context.encode_chunk_key,
+				sharedContext.encodeChunkKey,
 				configuration,
 			),
 		};
 	}
 
-	let native_order = get_array_order(metadata.codecs);
+	let nativeOrder = getArrayOrder(metadata.codecs);
 	return {
-		...shared_context,
+		...sharedContext,
 		kind: "regular",
-		chunk_shape: metadata.chunk_grid.configuration.chunk_shape,
-		codec: create_codec_pipeline({
-			data_type: metadata.data_type,
+		chunkShape: metadata.chunk_grid.configuration.chunk_shape,
+		codec: createCodecPipeline({
+			dataType: metadata.data_type,
 			shape: metadata.chunk_grid.configuration.chunk_shape,
 			codecs: metadata.codecs,
 		}),
-		get_strides(shape: number[]) {
-			return get_strides(shape, native_order);
+		getStrides(shape: number[]) {
+			return getStrides(shape, nativeOrder);
 		},
-		async get_chunk_bytes(chunk_coords, options) {
-			let chunk_key = shared_context.encode_chunk_key(chunk_coords);
-			let chunk_path = location.resolve(chunk_key).path;
-			return location.store.get(chunk_path, options);
+		async getChunkBytes(chunkCoords, options) {
+			let chunkKey = sharedContext.encodeChunkKey(chunkCoords);
+			let chunkPath = location.resolve(chunkKey).path;
+			return location.store.get(chunkPath, options);
 		},
 	};
 }
@@ -137,22 +137,22 @@ function create_context<Store extends Readable, D extends DataType>(
 interface ArrayContext<Store extends Readable, D extends DataType> {
 	kind: "sharded" | "regular";
 	/** The codec pipeline for this array. */
-	codec: ReturnType<typeof create_codec_pipeline<D>>;
+	codec: ReturnType<typeof createCodecPipeline<D>>;
 	/** Encode a chunk key from chunk coordinates. */
-	encode_chunk_key(chunk_coords: number[]): string;
+	encodeChunkKey(chunkCoords: number[]): string;
 	/** The TypedArray constructor for this array chunks. */
 	TypedArray: TypedArrayConstructor<D>;
 	/** A function to get the strides for a given shape, using the array order */
-	get_strides(shape: number[]): number[];
+	getStrides(shape: number[]): number[];
 	/** The fill value for this array. */
-	fill_value: Scalar<D> | null;
+	fillValue: Scalar<D> | null;
 	/** A function to get the bytes for a given chunk. */
-	get_chunk_bytes(
-		chunk_coords: number[],
+	getChunkBytes(
+		chunkCoords: number[],
 		options?: Parameters<Store["get"]>[1],
 	): Promise<Uint8Array | undefined>;
 	/** The chunk shape for this array. */
-	chunk_shape: number[];
+	chunkShape: number[];
 }
 
 export class Array<
@@ -171,9 +171,9 @@ export class Array<
 		super(store, path);
 		this.#metadata = {
 			...metadata,
-			fill_value: ensure_correct_scalar(metadata),
+			fill_value: ensureCorrectScalar(metadata),
 		};
-		this[CONTEXT_MARKER] = create_context(this, this.#metadata);
+		this[CONTEXT_MARKER] = createContext(this, this.#metadata);
 	}
 
 	get attrs(): Attributes {
@@ -193,7 +193,7 @@ export class Array<
 	}
 
 	get chunks(): number[] {
-		return this[CONTEXT_MARKER].chunk_shape;
+		return this[CONTEXT_MARKER].chunkShape;
 	}
 
 	get dtype(): Dtype {
@@ -201,7 +201,7 @@ export class Array<
 	}
 
 	async getChunk(
-		chunk_coords: number[],
+		chunkCoords: number[],
 		options?: Parameters<Store["get"]>[1],
 		opts?: { useSharedArrayBuffer?: boolean },
 	): Promise<Chunk<Dtype>> {
@@ -209,9 +209,9 @@ export class Array<
 			assertSharedArrayBufferAvailable();
 		}
 		let context = this[CONTEXT_MARKER];
-		let maybe_bytes = await context.get_chunk_bytes(chunk_coords, options);
-		if (!maybe_bytes) {
-			let size = context.chunk_shape.reduce((a, b) => a * b, 1);
+		let maybeBytes = await context.getChunkBytes(chunkCoords, options);
+		if (!maybeBytes) {
+			let size = context.chunkShape.reduce((a, b) => a * b, 1);
 			let data: TypedArray<Dtype>;
 			if (opts?.useSharedArrayBuffer) {
 				let sample = new context.TypedArray(0);
@@ -227,15 +227,15 @@ export class Array<
 			} else {
 				data = new context.TypedArray(size);
 			}
-			// @ts-expect-error: TS can't infer that `fill_value` is union (assumes never) but this is ok
-			data.fill(context.fill_value);
+			// @ts-expect-error: TS can't infer that `fillValue` is union (assumes never) but this is ok
+			data.fill(context.fillValue);
 			return {
 				data,
-				shape: context.chunk_shape,
-				stride: context.get_strides(context.chunk_shape),
+				shape: context.chunkShape,
+				stride: context.getStrides(context.chunkShape),
 			};
 		}
-		return context.codec.decode(maybe_bytes);
+		return context.codec.decode(maybeBytes);
 	}
 
 	/**
@@ -258,6 +258,6 @@ export class Array<
 	is<Query extends DataTypeQuery>(
 		query: Query,
 	): this is Array<NarrowDataType<Dtype, Query>, Store> {
-		return is_dtype(this.dtype, query);
+		return isDataType(this.dtype, query);
 	}
 }

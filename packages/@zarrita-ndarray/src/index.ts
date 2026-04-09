@@ -11,19 +11,19 @@ export const _internal_setter: {
 		shape: number[],
 		stride: number[],
 	) => ndarray.NdArray<zarr.TypedArray<D>>;
-	set_scalar: <D extends zarr.DataType>(
+	setScalar: <D extends zarr.DataType>(
 		target: ndarray.NdArray<zarr.TypedArray<D>>,
 		selection: (zarr.Indices | number)[],
 		value: zarr.Scalar<D>,
 	) => void;
-	set_from_chunk: <D extends zarr.DataType>(
+	setFromChunk: <D extends zarr.DataType>(
 		a: ndarray.NdArray<zarr.TypedArray<D>>,
 		b: ndarray.NdArray<zarr.TypedArray<D>>,
 		proj: zarr.Projection[],
 	) => void;
 } = {
 	prepare: ndarray,
-	set_scalar<D extends zarr.DataType>(
+	setScalar<D extends zarr.DataType>(
 		dest: ndarray.NdArray<zarr.TypedArray<D>>,
 		selection: (number | zarr.Indices)[],
 		value: zarr.Scalar<D>,
@@ -31,12 +31,12 @@ export const _internal_setter: {
 		// @ts-expect-error - ndarray-ops types are incorrect
 		ops.assigns(view(dest, selection), value);
 	},
-	set_from_chunk<D extends zarr.DataType>(
+	setFromChunk<D extends zarr.DataType>(
 		dest: ndarray.NdArray<zarr.TypedArray<D>>,
 		src: ndarray.NdArray<zarr.TypedArray<D>>,
 		mapping: zarr.Projection[],
 	) {
-		const s = unzip_selections(mapping);
+		const s = unzipSelections(mapping);
 		ops.assign(view(dest, s.to), view(src, s.from));
 	},
 };
@@ -81,7 +81,7 @@ export async function set<D extends zarr.DataType>(
 	);
 }
 
-function unzip_selections(mapping: zarr.Projection[]): {
+function unzipSelections(mapping: zarr.Projection[]): {
 	to: (number | zarr.Indices)[];
 	from: (number | zarr.Indices)[];
 } {

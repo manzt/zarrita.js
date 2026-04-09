@@ -2,13 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import {
 	BasicIndexer,
-	normalize_integer_selection,
-	normalize_selection,
+	normalizeIntegerSelection,
+	normalizeSelection,
 } from "../../src/indexing/indexer.js";
 import type { Slice } from "../../src/indexing/types.js";
 import { slice } from "../../src/indexing/util.js";
 
-describe("normalize_selection", () => {
+describe("normalizeSelection", () => {
 	// null !== null, so need custom compare
 	let eq = (a: (Slice | number)[], b: (Slice | number)[]) => {
 		expect(a.map((s) => s.toString())).toStrictEqual(
@@ -16,14 +16,14 @@ describe("normalize_selection", () => {
 		);
 	};
 	test("handles complete selection", () => {
-		eq(normalize_selection(null, [2, 3, 4]), [
+		eq(normalizeSelection(null, [2, 3, 4]), [
 			slice(null),
 			slice(null),
 			slice(null),
 		]);
 	});
 	test("handles partial complete selection", () => {
-		eq(normalize_selection([slice(2), null, 3], [2, 3, 4]), [
+		eq(normalizeSelection([slice(2), null, 3], [2, 3, 4]), [
 			slice(2),
 			slice(null),
 			3,
@@ -31,30 +31,28 @@ describe("normalize_selection", () => {
 	});
 	test("throws when dimensions don't match", () => {
 		expect(() =>
-			normalize_selection([slice(2), null, 3, 4], [2, 3, 4]),
+			normalizeSelection([slice(2), null, 3, 4], [2, 3, 4]),
 		).toThrowError();
 	});
 });
 
-describe("normalize_integer_selection", () => {
+describe("normalizeIntegerSelection", () => {
 	test.each([
 		[2, 5, 2],
 		[-1, 5, 4],
 		[-2, 5, 3],
 		[-2.2, 5, 3],
 		[4.3, 5, 4],
-	])("normalize_integer_selection(%i, %i) -> %i", (dim_selection, dim_length, expected) => {
-		expect(normalize_integer_selection(dim_selection, dim_length)).toBe(
-			expected,
-		);
+	])("normalizeIntegerSelection(%i, %i) -> %i", (dim_selection, dim_length, expected) => {
+		expect(normalizeIntegerSelection(dim_selection, dim_length)).toBe(expected);
 	});
 	test.each([
 		[5, 5],
 		[6, 5],
 		[-6, 5],
-	])("normalize_integer_selection(%i, %i) -> throws", (dim_selection, dim_length) => {
+	])("normalizeIntegerSelection(%i, %i) -> throws", (dim_selection, dim_length) => {
 		expect(() =>
-			normalize_integer_selection(dim_selection, dim_length),
+			normalizeIntegerSelection(dim_selection, dim_length),
 		).toThrowError();
 	});
 });
@@ -64,7 +62,7 @@ describe("BasicIndexer", () => {
 		let indexer = new BasicIndexer({
 			selection: null,
 			shape: [3, 4, 5],
-			chunk_shape: [3, 4, 5],
+			chunkShape: [3, 4, 5],
 		});
 		expect(indexer.shape).toStrictEqual([3, 4, 5]);
 		expect(Array.from(indexer).map((i) => i.mapping)).toMatchInlineSnapshot(`
@@ -115,12 +113,12 @@ describe("BasicIndexer", () => {
 		let indexer = new BasicIndexer({
 			selection: null,
 			shape: [3, 4, 5],
-			chunk_shape: [1, 2, 5],
+			chunkShape: [1, 2, 5],
 		});
 		expect(Array.from(indexer)).toMatchInlineSnapshot(`
 			[
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      0,
 			      0,
 			      0,
@@ -165,7 +163,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      1,
 			      0,
 			      0,
@@ -210,7 +208,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      2,
 			      0,
 			      0,
@@ -255,7 +253,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      0,
 			      1,
 			      0,
@@ -300,7 +298,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      1,
 			      1,
 			      0,
@@ -345,7 +343,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      2,
 			      1,
 			      0,
@@ -397,13 +395,13 @@ describe("BasicIndexer", () => {
 		let indexer = new BasicIndexer({
 			selection: [null, 0],
 			shape: [3, 4],
-			chunk_shape: [1, 4],
+			chunkShape: [1, 4],
 		});
 		expect(indexer.shape).toStrictEqual([3]);
 		expect(Array.from(indexer)).toMatchInlineSnapshot(`
 			[
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      0,
 			      0,
 			    ],
@@ -427,7 +425,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      1,
 			      0,
 			    ],
@@ -451,7 +449,7 @@ describe("BasicIndexer", () => {
 			    ],
 			  },
 			  {
-			    "chunk_coords": [
+			    "chunkCoords": [
 			      2,
 			      0,
 			    ],

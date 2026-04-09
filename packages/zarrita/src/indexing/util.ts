@@ -55,7 +55,7 @@ export function* product<T extends Array<Iterable<unknown>>>(
 }
 
 // https://github.com/python/cpython/blob/263c0dd16017613c5ea2fbfc270be4de2b41b5ad/Objects/sliceobject.c#L376-L519
-export function slice_indices(
+export function sliceIndices(
 	{ start, stop, step }: Slice,
 	length: number,
 ): Indices {
@@ -63,14 +63,14 @@ export function slice_indices(
 		throw new Error("slice step cannot be zero");
 	}
 	step = step ?? 1;
-	const step_is_negative = step < 0;
+	const stepIsNegative = step < 0;
 
 	/* Find lower and upper bounds for start and stop. */
-	const [lower, upper] = step_is_negative ? [-1, length - 1] : [0, length];
+	const [lower, upper] = stepIsNegative ? [-1, length - 1] : [0, length];
 
 	/* Compute start. */
 	if (start === null) {
-		start = step_is_negative ? upper : lower;
+		start = stepIsNegative ? upper : lower;
 	} else {
 		if (start < 0) {
 			start += length;
@@ -84,7 +84,7 @@ export function slice_indices(
 
 	/* Compute stop. */
 	if (stop === null) {
-		stop = step_is_negative ? lower : upper;
+		stop = stepIsNegative ? lower : upper;
 	} else {
 		if (stop < 0) {
 			stop += length;
@@ -99,7 +99,7 @@ export function slice_indices(
 	return [start, stop, step];
 }
 
-function to_int(value: bigint | number | null): number | null {
+function toInt(value: bigint | number | null): number | null {
 	if (value == null) return null;
 	if (typeof value === "bigint") {
 		if (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER) {
@@ -129,9 +129,9 @@ export function slice(
 		start = null;
 	}
 	return {
-		start: to_int(start),
-		stop: to_int(stop),
-		step: to_int(step),
+		start: toInt(start),
+		stop: toInt(stop),
+		step: toInt(step),
 	};
 }
 
@@ -155,7 +155,7 @@ export function sel<D extends DataType, Store extends Readable>(
 }
 
 /** Built-in "queue" for awaiting promises. */
-export function create_queue(): ChunkQueue {
+export function createQueue(): ChunkQueue {
 	const promises: Promise<void>[] = [];
 	return {
 		add: (fn) => promises.push(fn()),

@@ -9,7 +9,7 @@ import type {
 	GroupMetadata,
 	Scalar,
 } from "./metadata.js";
-import { json_encode_object } from "./util.js";
+import { jsonEncodeObject } from "./util.js";
 
 interface CreateGroupOptions {
 	attributes?: Record<string, unknown>;
@@ -17,12 +17,12 @@ interface CreateGroupOptions {
 
 interface CreateArrayOptions<Dtype extends DataType> {
 	shape: number[];
-	chunk_shape: number[];
-	data_type: Dtype;
+	chunkShape: number[];
+	dtype: Dtype;
 	codecs?: CodecMetadata[];
-	fill_value?: Scalar<Dtype>;
-	chunk_separator?: "." | "/";
-	dimension_names?: string[];
+	fillValue?: Scalar<Dtype>;
+	chunkSeparator?: "." | "/";
+	dimensionNames?: string[];
 	attributes?: Attributes;
 }
 
@@ -50,13 +50,13 @@ export async function create<Store extends Mutable, Dtype extends DataType>(
 ): Promise<Array<Dtype, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
 	if ("shape" in options) {
-		let arr = await create_array(loc, options);
+		let arr = await createArray(loc, options);
 		return arr as Array<Dtype, Store>;
 	}
-	return create_group(loc, options);
+	return createGroup(loc, options);
 }
 
-async function create_group<Store extends Mutable>(
+async function createGroup<Store extends Mutable>(
 	location: Location<Store>,
 	options: CreateGroupOptions = {},
 ): Promise<Group<Store>> {
@@ -67,12 +67,12 @@ async function create_group<Store extends Mutable>(
 	} satisfies GroupMetadata;
 	await location.store.set(
 		location.resolve("zarr.json").path,
-		json_encode_object(metadata),
+		jsonEncodeObject(metadata),
 	);
 	return new Group(location.store, location.path, metadata);
 }
 
-async function create_array<Store extends Mutable, Dtype extends DataType>(
+async function createArray<Store extends Mutable, Dtype extends DataType>(
 	location: Location<Store>,
 	options: CreateArrayOptions<Dtype>,
 ): Promise<Array<DataType, Store>> {
@@ -80,27 +80,27 @@ async function create_array<Store extends Mutable, Dtype extends DataType>(
 		zarr_format: 3,
 		node_type: "array",
 		shape: options.shape,
-		data_type: options.data_type,
+		data_type: options.dtype,
 		chunk_grid: {
 			name: "regular",
 			configuration: {
-				chunk_shape: options.chunk_shape,
+				chunk_shape: options.chunkShape,
 			},
 		},
 		chunk_key_encoding: {
 			name: "default",
 			configuration: {
-				separator: options.chunk_separator ?? "/",
+				separator: options.chunkSeparator ?? "/",
 			},
 		},
 		codecs: options.codecs ?? [],
-		fill_value: options.fill_value ?? null,
-		dimension_names: options.dimension_names,
+		fill_value: options.fillValue ?? null,
+		dimension_names: options.dimensionNames,
 		attributes: options.attributes ?? {},
 	} satisfies ArrayMetadata<Dtype>;
 	await location.store.set(
 		location.resolve("zarr.json").path,
-		json_encode_object(metadata),
+		jsonEncodeObject(metadata),
 	);
 	return new Array(location.store, location.path, metadata);
 }

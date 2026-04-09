@@ -3,18 +3,18 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import type { AbsolutePath, AsyncMutable, RangeQuery } from "./types.js";
-import { strip_prefix } from "./util.js";
+import { stripPrefix } from "./util.js";
 
-function is_error_no_entry(err: unknown): err is { code: "ENOENT" } {
-	const is_object = typeof err === "object" && err !== null;
-	return is_object && "code" in err && err.code === "ENOENT";
+function isErrorNoEntry(err: unknown): err is { code: "ENOENT" } {
+	const isObject = typeof err === "object" && err !== null;
+	return isObject && "code" in err && err.code === "ENOENT";
 }
 
 class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
-		let fp = path.join(this.root, strip_prefix(key));
+		let fp = path.join(this.root, stripPrefix(key));
 		return fs.promises.readFile(fp).catch((err: NodeJS.ErrnoException) => {
 			if (err.code === "ENOENT") return undefined;
 			throw err;
@@ -25,7 +25,7 @@ class FileSystemStore implements AsyncMutable {
 		key: AbsolutePath,
 		range: RangeQuery,
 	): Promise<Uint8Array | undefined> {
-		let fp = path.join(this.root, strip_prefix(key));
+		let fp = path.join(this.root, stripPrefix(key));
 		let filehandle: fs.promises.FileHandle | undefined;
 		try {
 			filehandle = await fs.promises.open(fp, "r");
@@ -45,7 +45,7 @@ class FileSystemStore implements AsyncMutable {
 			return data;
 		} catch (err: unknown) {
 			// return undefined is no file or directory
-			if (is_error_no_entry(err)) {
+			if (isErrorNoEntry(err)) {
 				return undefined;
 			}
 			throw err;
@@ -55,7 +55,7 @@ class FileSystemStore implements AsyncMutable {
 	}
 
 	async has(key: AbsolutePath): Promise<boolean> {
-		const fp = path.join(this.root, strip_prefix(key));
+		const fp = path.join(this.root, stripPrefix(key));
 		return fs.promises
 			.access(fp)
 			.then(() => true)
@@ -63,13 +63,13 @@ class FileSystemStore implements AsyncMutable {
 	}
 
 	async set(key: AbsolutePath, value: Uint8Array): Promise<void> {
-		const fp = path.join(this.root, strip_prefix(key));
+		const fp = path.join(this.root, stripPrefix(key));
 		await fs.promises.mkdir(path.dirname(fp), { recursive: true });
 		await fs.promises.writeFile(fp, value, null);
 	}
 
 	async delete(key: AbsolutePath): Promise<boolean> {
-		const fp = path.join(this.root, strip_prefix(key));
+		const fp = path.join(this.root, stripPrefix(key));
 		await fs.promises.unlink(fp);
 		return true;
 	}

@@ -1,5 +1,5 @@
 import type { BigintDataType, Chunk, NumberDataType } from "../metadata.js";
-import { get_ctr } from "../util.js";
+import { getCtr } from "../util.js";
 
 type DeltaCompatibleType = NumberDataType | BigintDataType;
 
@@ -20,7 +20,7 @@ const SUPPORTED: ReadonlySet<string> = new Set<DeltaCompatibleType>([
 // The python codecs flatten with arr.reshape(-1, order='A').
 // The zarrita codec uses the byte order of the data.
 // These two are only equivalent if the array strides are C style or Fortran style.
-function assert_c_or_f_contiguous(shape: number[], stride: number[]): void {
+function assertCOrFContiguous(shape: number[], stride: number[]): void {
 	const n = shape.length;
 	let c = n === 0 || stride[n - 1] === 1;
 	for (let i = n - 2; i >= 0 && c; i--) {
@@ -41,25 +41,25 @@ function assert_c_or_f_contiguous(shape: number[], stride: number[]): void {
 
 export class DeltaCodec<D extends DeltaCompatibleType> {
 	kind = "array_to_array" as const;
-	#ctr: ReturnType<typeof get_ctr<D>>;
+	#ctr: ReturnType<typeof getCtr<D>>;
 
-	constructor(ctr: ReturnType<typeof get_ctr<D>>) {
+	constructor(ctr: ReturnType<typeof getCtr<D>>) {
 		this.#ctr = ctr;
 	}
 
 	static fromConfig<D extends DeltaCompatibleType>(
 		_config: unknown,
-		meta: { data_type: D },
+		meta: { dataType: D },
 	): DeltaCodec<D> {
-		if (!SUPPORTED.has(meta.data_type))
+		if (!SUPPORTED.has(meta.dataType))
 			throw new Error(
-				`Delta codec does not support data type: ${meta.data_type}`,
+				`Delta codec does not support data type: ${meta.dataType}`,
 			);
-		return new DeltaCodec(get_ctr(meta.data_type));
+		return new DeltaCodec(getCtr(meta.dataType));
 	}
 
 	encode(chunk: Chunk<D>): Chunk<D> {
-		assert_c_or_f_contiguous(chunk.shape, chunk.stride);
+		assertCOrFContiguous(chunk.shape, chunk.stride);
 		const src = chunk.data;
 		const out = new this.#ctr(src.length) as Chunk<D>["data"];
 		out[0] = src[0];
@@ -71,7 +71,7 @@ export class DeltaCodec<D extends DeltaCompatibleType> {
 	}
 
 	decode(chunk: Chunk<D>): Chunk<D> {
-		assert_c_or_f_contiguous(chunk.shape, chunk.stride);
+		assertCOrFContiguous(chunk.shape, chunk.stride);
 		const src = chunk.data;
 		const out = new this.#ctr(src.length) as Chunk<D>["data"];
 		out[0] = src[0];

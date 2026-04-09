@@ -20,13 +20,13 @@ import { assert } from "../util.js";
 export class BitroundCodec<D extends Float64 | Float32> {
 	kind = "array_to_array";
 
-	constructor(configuration: { keepbits: number }, _meta: { data_type: D }) {
+	constructor(configuration: { keepbits: number }, _meta: { dataType: D }) {
 		assert(configuration.keepbits >= 0, "keepbits must be zero or positive");
 	}
 
 	static fromConfig<D extends Float32 | Float64>(
 		configuration: { keepbits: number },
-		meta: { data_type: D },
+		meta: { dataType: D },
 	): BitroundCodec<D> {
 		return new BitroundCodec(configuration, meta);
 	}

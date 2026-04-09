@@ -1,5 +1,5 @@
 import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
-import { fetch_range, merge_init } from "./util.js";
+import { fetchRange, mergeInit } from "./util.js";
 
 function resolve(root: string | URL, path: AbsolutePath): URL {
 	const base = typeof root === "string" ? new URL(root) : root;
@@ -13,7 +13,7 @@ function resolve(root: string | URL, path: AbsolutePath): URL {
 	return resolved;
 }
 
-async function handle_response(
+async function handleResponse(
 	response: Response,
 ): Promise<Uint8Array | undefined> {
 	if (response.status === 404) {
@@ -27,26 +27,26 @@ async function handle_response(
 	);
 }
 
-async function fetch_suffix(
+async function fetchSuffix(
 	url: URL,
-	suffix_length: number,
+	suffixLength: number,
 	init: RequestInit,
-	use_suffix_request: boolean,
+	useSuffixRequest: boolean,
 ): Promise<Response> {
-	if (use_suffix_request) {
+	if (useSuffixRequest) {
 		return fetch(url, {
 			...init,
-			headers: { ...init.headers, Range: `bytes=-${suffix_length}` },
+			headers: { ...init.headers, Range: `bytes=-${suffixLength}` },
 		});
 	}
 	let response = await fetch(url, { ...init, method: "HEAD" });
 	if (!response.ok) {
-		// will be picked up by handle_response
+		// will be picked up by handleResponse
 		return response;
 	}
-	let content_length = response.headers.get("Content-Length");
-	let length = Number(content_length);
-	return fetch_range(url, length - suffix_length, length, init);
+	let contentLength = response.headers.get("Content-Length");
+	let length = Number(contentLength);
+	return fetchRange(url, length - suffixLength, length, init);
 }
 
 /**
@@ -61,18 +61,18 @@ async function fetch_suffix(
  */
 class FetchStore implements AsyncReadable<RequestInit> {
 	#overrides: RequestInit;
-	#use_suffix_request: boolean;
+	#useSuffixRequest: boolean;
 
 	constructor(
 		public url: string | URL,
 		options: { overrides?: RequestInit; useSuffixRequest?: boolean } = {},
 	) {
 		this.#overrides = options.overrides ?? {};
-		this.#use_suffix_request = options.useSuffixRequest ?? false;
+		this.#useSuffixRequest = options.useSuffixRequest ?? false;
 	}
 
-	#merge_init(overrides: RequestInit) {
-		return merge_init(this.#overrides, overrides);
+	#mergeInit(overrides: RequestInit) {
+		return mergeInit(this.#overrides, overrides);
 	}
 
 	async get(
@@ -80,8 +80,8 @@ class FetchStore implements AsyncReadable<RequestInit> {
 		options: RequestInit = {},
 	): Promise<Uint8Array | undefined> {
 		let href = resolve(this.url, key).href;
-		let response = await fetch(href, this.#merge_init(options));
-		return handle_response(response);
+		let response = await fetch(href, this.#mergeInit(options));
+		return handleResponse(response);
 	}
 
 	async getRange(
@@ -90,19 +90,19 @@ class FetchStore implements AsyncReadable<RequestInit> {
 		options: RequestInit = {},
 	): Promise<Uint8Array | undefined> {
 		let url = resolve(this.url, key);
-		let init = this.#merge_init(options);
+		let init = this.#mergeInit(options);
 		let response: Response;
 		if ("suffixLength" in range) {
-			response = await fetch_suffix(
+			response = await fetchSuffix(
 				url,
 				range.suffixLength,
 				init,
-				this.#use_suffix_request,
+				this.#useSuffixRequest,
 			);
 		} else {
-			response = await fetch_range(url, range.offset, range.length, init);
+			response = await fetchRange(url, range.offset, range.length, init);
 		}
-		return handle_response(response);
+		return handleResponse(response);
 	}
 }
 

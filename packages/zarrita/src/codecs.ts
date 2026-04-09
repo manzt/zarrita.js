@@ -13,7 +13,7 @@ import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
 import { assert } from "./util.js";
 
 type ChunkMetadata<D extends DataType> = {
-	data_type: D;
+	dataType: D;
 	shape: number[];
 	codecs: CodecMetadata[];
 };
@@ -25,7 +25,7 @@ type CodecEntry = {
 
 type Codec = _Codec & { kind: CodecEntry["kind"] };
 
-function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
+function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 	let blosc = () => import("numcodecs/blosc").then((m) => m.default);
 	let lz4 = () => import("numcodecs/lz4").then((m) => m.default);
 	let zstd = () => import("numcodecs/zstd").then((m) => m.default);
@@ -58,35 +58,35 @@ function create_default_registry(): Map<string, () => Promise<CodecEntry>> {
 }
 
 export const registry: Map<string, () => Promise<CodecEntry>> =
-	create_default_registry();
+	createDefaultRegistry();
 
-export function create_codec_pipeline<Dtype extends DataType>(
-	chunk_metadata: ChunkMetadata<Dtype>,
+export function createCodecPipeline<Dtype extends DataType>(
+	chunkMetadata: ChunkMetadata<Dtype>,
 ): {
 	encode(chunk: Chunk<Dtype>): Promise<Uint8Array>;
 	decode(bytes: Uint8Array): Promise<Chunk<Dtype>>;
 } {
-	let codecs: Awaited<ReturnType<typeof load_codecs>>;
+	let codecs: Awaited<ReturnType<typeof loadCodecs>>;
 	return {
 		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
-			if (!codecs) codecs = await load_codecs(chunk_metadata);
-			for (const codec of codecs.array_to_array) {
+			if (!codecs) codecs = await loadCodecs(chunkMetadata);
+			for (const codec of codecs.arrayToArray) {
 				chunk = await codec.encode(chunk);
 			}
-			let bytes = await codecs.array_to_bytes.encode(chunk);
-			for (const codec of codecs.bytes_to_bytes) {
+			let bytes = await codecs.arrayToBytes.encode(chunk);
+			for (const codec of codecs.bytesToBytes) {
 				bytes = await codec.encode(bytes);
 			}
 			return bytes;
 		},
 		async decode(bytes: Uint8Array): Promise<Chunk<Dtype>> {
-			if (!codecs) codecs = await load_codecs(chunk_metadata);
-			for (let i = codecs.bytes_to_bytes.length - 1; i >= 0; i--) {
-				bytes = await codecs.bytes_to_bytes[i].decode(bytes);
+			if (!codecs) codecs = await loadCodecs(chunkMetadata);
+			for (let i = codecs.bytesToBytes.length - 1; i >= 0; i--) {
+				bytes = await codecs.bytesToBytes[i].decode(bytes);
 			}
-			let chunk = await codecs.array_to_bytes.decode(bytes);
-			for (let i = codecs.array_to_array.length - 1; i >= 0; i--) {
-				chunk = await codecs.array_to_array[i].decode(chunk);
+			let chunk = await codecs.arrayToBytes.decode(bytes);
+			for (let i = codecs.arrayToArray.length - 1; i >= 0; i--) {
+				chunk = await codecs.arrayToArray[i].decode(chunk);
 			}
 			return chunk;
 		},
@@ -108,40 +108,40 @@ type BytesToBytesCodec = {
 	decode: (data: Uint8Array) => Promise<Uint8Array>;
 };
 
-async function load_codecs<D extends DataType>(chunk_meta: ChunkMetadata<D>) {
-	let promises = chunk_meta.codecs.map(async (meta) => {
+async function loadCodecs<D extends DataType>(chunkMeta: ChunkMetadata<D>) {
+	let promises = chunkMeta.codecs.map(async (meta) => {
 		let Codec = await registry.get(meta.name)?.();
 		assert(Codec, `Unknown codec: ${meta.name}`);
 		return { Codec, meta };
 	});
-	let array_to_array: ArrayToArrayCodec<D>[] = [];
-	let array_to_bytes: ArrayToBytesCodec<D> | undefined;
-	let bytes_to_bytes: BytesToBytesCodec[] = [];
+	let arrayToArray: ArrayToArrayCodec<D>[] = [];
+	let arrayToBytes: ArrayToBytesCodec<D> | undefined;
+	let bytesToBytes: BytesToBytesCodec[] = [];
 	for await (let { Codec, meta } of promises) {
-		let codec = Codec.fromConfig(meta.configuration, chunk_meta);
+		let codec = Codec.fromConfig(meta.configuration, chunkMeta);
 		switch (codec.kind) {
 			case "array_to_array":
-				array_to_array.push(codec as unknown as ArrayToArrayCodec<D>);
+				arrayToArray.push(codec as unknown as ArrayToArrayCodec<D>);
 				break;
 			case "array_to_bytes":
-				array_to_bytes = codec as unknown as ArrayToBytesCodec<D>;
+				arrayToBytes = codec as unknown as ArrayToBytesCodec<D>;
 				break;
 			default:
-				bytes_to_bytes.push(codec as unknown as BytesToBytesCodec);
+				bytesToBytes.push(codec as unknown as BytesToBytesCodec);
 		}
 	}
-	if (!array_to_bytes) {
+	if (!arrayToBytes) {
 		assert(
-			is_typed_array_like_meta(chunk_meta),
-			`Cannot encode ${chunk_meta.data_type} to bytes without a codec`,
+			isTypedArrayLikeMeta(chunkMeta),
+			`Cannot encode ${chunkMeta.dataType} to bytes without a codec`,
 		);
-		array_to_bytes = BytesCodec.fromConfig({ endian: "little" }, chunk_meta);
+		arrayToBytes = BytesCodec.fromConfig({ endian: "little" }, chunkMeta);
 	}
-	return { array_to_array, array_to_bytes, bytes_to_bytes };
+	return { arrayToArray, arrayToBytes, bytesToBytes };
 }
 
-function is_typed_array_like_meta<D extends DataType>(
+function isTypedArrayLikeMeta<D extends DataType>(
 	meta: ChunkMetadata<D>,
 ): meta is ChunkMetadata<Exclude<D, "v2:object" | "string">> {
-	return meta.data_type !== "v2:object" && meta.data_type !== "string";
+	return meta.dataType !== "v2:object" && meta.dataType !== "string";
 }

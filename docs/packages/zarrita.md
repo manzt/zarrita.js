@@ -145,9 +145,9 @@ import * as zarr from "zarrita";
 let root = zarr.root(new Map());
 let grp = await zarr.create(root);
 let arr = await zarr.create(root.resolve("foo"), {
-	data_type: "int32",
+	dtype: "int32",
 	shape: [4, 4],
-	chunk_shape: [2, 2],
+	chunkShape: [2, 2],
 });
 console.log(root.store);
 // Map(2) {
@@ -236,9 +236,10 @@ system correctly infers that the value of chunk `data` is a `BigInt64Array`:
 
 ```javascript
 let arr = await zarr.create(root.resolve("foo"), {
-	data_type: "int64",
+	dtype: "int64",
 	shape: [4, 4],
-	chunk_shape: [2, 2],
+	chunkShape: [2, 2],
+	dimensionNames: ["x", "y"],
 });
 let chunk = await arr.getChunk([0, 0]);
 // ^ Chunk<"int64">

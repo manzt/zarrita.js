@@ -1,7 +1,7 @@
 import type { Reader, ZipEntry, ZipInfo } from "unzipit";
 import { unzip } from "unzipit";
 import type { AbsolutePath, AsyncReadable, RangeQuery } from "./types.js";
-import { assert, fetch_range, strip_prefix } from "./util.js";
+import { assert, fetchRange, stripPrefix } from "./util.js";
 
 /**
  * Shape of the private `_rawEntry` field on `ZipEntry` instances.
@@ -83,7 +83,7 @@ export class HTTPRangeReader implements Reader {
 		if (size === 0) {
 			return new Uint8Array(0);
 		}
-		const req = await fetch_range(this.url, offset, size, this.#overrides);
+		const req = await fetchRange(this.url, offset, size, this.#overrides);
 		assert(
 			req.ok,
 			`failed http request ${this.url}, status: ${req.status} offset: ${offset} size: ${size}: ${req.statusText}`,
@@ -124,7 +124,7 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	}
 
 	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
-		let entry = (await this.info).entries[strip_prefix(key)];
+		let entry = (await this.info).entries[stripPrefix(key)];
 		if (!entry) return;
 		return new Uint8Array(await entry.arrayBuffer());
 	}
@@ -133,7 +133,7 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 		key: AbsolutePath,
 		range: RangeQuery,
 	): Promise<Uint8Array | undefined> {
-		const entry = (await this.info).entries[strip_prefix(key)];
+		const entry = (await this.info).entries[stripPrefix(key)];
 		if (!entry) return undefined;
 
 		const rawEntry = getRawEntry(entry);
@@ -165,7 +165,7 @@ class ZipFileStore<R extends Reader = Reader> implements AsyncReadable {
 	}
 
 	async has(key: AbsolutePath): Promise<boolean> {
-		return strip_prefix(key) in (await this.info).entries;
+		return stripPrefix(key) in (await this.info).entries;
 	}
 
 	static fromUrl(

@@ -4,17 +4,17 @@ import type {
 	DataType,
 	TypedArrayConstructor,
 } from "../metadata.js";
-import { byteswap_inplace, get_ctr, get_strides } from "../util.js";
+import { byteswapInplace, getCtr, getStrides } from "../util.js";
 
-const LITTLE_ENDIAN_OS = system_is_little_endian();
+const LITTLE_ENDIAN_OS = systemIsLittleEndian();
 
-function system_is_little_endian(): boolean {
+function systemIsLittleEndian(): boolean {
 	const a = new Uint32Array([0x12345678]);
 	const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
 	return !(b[0] === 0x12);
 }
 
-function bytes_per_element<D extends DataType>(
+function bytesPerElement<D extends DataType>(
 	TypedArray: TypedArrayConstructor<D>,
 ): number {
 	if ("BYTES_PER_ELEMENT" in TypedArray) {
@@ -34,12 +34,12 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 
 	constructor(
 		configuration: { endian?: "little" | "big" } | undefined,
-		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
+		meta: { dataType: D; shape: number[]; codecs: CodecMetadata[] },
 	) {
 		this.#endian = configuration?.endian;
-		this.#TypedArray = get_ctr(meta.data_type);
+		this.#TypedArray = getCtr(meta.dataType);
 		this.#shape = meta.shape;
-		this.#stride = get_strides(meta.shape, "C");
+		this.#stride = getStrides(meta.shape, "C");
 		// TODO: fix me.
 		// hack to get bytes per element since it's dynamic for string types.
 		const sample = new this.#TypedArray(0);
@@ -48,7 +48,7 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 
 	static fromConfig<D extends Exclude<DataType, "v2:object" | "string">>(
 		configuration: { endian: "little" | "big" },
-		meta: { data_type: D; shape: number[]; codecs: CodecMetadata[] },
+		meta: { dataType: D; shape: number[]; codecs: CodecMetadata[] },
 	): BytesCodec<D> {
 		return new BytesCodec(configuration, meta);
 	}
@@ -56,14 +56,14 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
+			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
 		}
 		return bytes;
 	}
 
 	decode(bytes: Uint8Array): Chunk<D> {
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
-			byteswap_inplace(bytes, bytes_per_element(this.#TypedArray));
+			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
 		}
 		return {
 			data: new this.#TypedArray(

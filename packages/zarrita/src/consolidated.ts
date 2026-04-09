@@ -10,10 +10,10 @@ import type {
 } from "./metadata.js";
 import { VERSION_COUNTER } from "./open.js";
 import {
-	ensure_correct_scalar,
-	json_decode_object,
-	json_encode_object,
-	rethrow_unless,
+	ensureCorrectScalar,
+	jsonDecodeObject,
+	jsonEncodeObject,
+	rethrowUnless,
 } from "./util.js";
 
 type ConsolidatedMetadataV2 = {
@@ -27,7 +27,7 @@ type ConsolidatedMetadataV3 = {
 	metadata: Record<string, ArrayMetadata | GroupMetadata>;
 };
 
-function is_consolidated_v2(meta: unknown): meta is ConsolidatedMetadataV2 {
+function isConsolidatedV2(meta: unknown): meta is ConsolidatedMetadataV2 {
 	return (
 		typeof meta === "object" &&
 		meta !== null &&
@@ -39,7 +39,7 @@ function is_consolidated_v2(meta: unknown): meta is ConsolidatedMetadataV2 {
 	);
 }
 
-function is_consolidated_v3(meta: unknown): meta is GroupMetadata & {
+function isConsolidatedV3(meta: unknown): meta is GroupMetadata & {
 	consolidated_metadata: ConsolidatedMetadataV3;
 } {
 	return (
@@ -102,7 +102,7 @@ type Metadata =
 	| GroupMetadata
 	| Attributes;
 
-function is_meta_key(key: string): boolean {
+function isMetaKey(key: string): boolean {
 	return (
 		key.endsWith(".zarray") ||
 		key.endsWith(".zgroup") ||
@@ -111,11 +111,11 @@ function is_meta_key(key: string): boolean {
 	);
 }
 
-function is_v3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
+function isV3(meta: Metadata): meta is ArrayMetadata | GroupMetadata {
 	return "zarr_format" in meta && meta.zarr_format === 3;
 }
 
-async function load_consolidated_v2(
+async function loadConsolidatedV2(
 	store: Readable,
 	metadataKey: string | undefined,
 ): Promise<Record<AbsolutePath, Metadata>> {
@@ -126,20 +126,20 @@ async function load_consolidated_v2(
 			cause: new KeyError(`/${key}`),
 		});
 	}
-	let meta: unknown = json_decode_object(bytes);
-	if (!is_consolidated_v2(meta)) {
+	let meta: unknown = jsonDecodeObject(bytes);
+	if (!isConsolidatedV2(meta)) {
 		throw new NodeNotFoundError("v2 consolidated metadata", {
 			cause: new Error("Invalid or unsupported v2 consolidated format."),
 		});
 	}
-	let known_meta: Record<AbsolutePath, Metadata> = {};
+	let knownMeta: Record<AbsolutePath, Metadata> = {};
 	for (let [k, value] of Object.entries(meta.metadata)) {
-		known_meta[`/${k}`] = value;
+		knownMeta[`/${k}`] = value;
 	}
-	return known_meta;
+	return knownMeta;
 }
 
-async function load_consolidated_v3(
+async function loadConsolidatedV3(
 	store: Readable,
 ): Promise<Record<AbsolutePath, Metadata>> {
 	let bytes = await store.get("/zarr.json");
@@ -148,38 +148,38 @@ async function load_consolidated_v3(
 			cause: new KeyError("/zarr.json"),
 		});
 	}
-	let root_meta: unknown = json_decode_object(bytes);
-	if (!is_consolidated_v3(root_meta)) {
+	let rootMeta: unknown = jsonDecodeObject(bytes);
+	if (!isConsolidatedV3(rootMeta)) {
 		throw new NodeNotFoundError("v3 consolidated metadata", {
 			cause: new Error(
 				"Root zarr.json does not contain consolidated_metadata.",
 			),
 		});
 	}
-	let known_meta: Record<AbsolutePath, Metadata> = {};
+	let knownMeta: Record<AbsolutePath, Metadata> = {};
 	// Add root group metadata
-	known_meta["/zarr.json"] = {
+	knownMeta["/zarr.json"] = {
 		zarr_format: 3,
 		node_type: "group",
-		attributes: root_meta.attributes ?? {},
+		attributes: rootMeta.attributes ?? {},
 	} satisfies GroupMetadata;
 	for (let [path, meta] of Object.entries(
-		root_meta.consolidated_metadata.metadata,
+		rootMeta.consolidated_metadata.metadata,
 	)) {
 		// Normalize path: ensure it starts with /
 		let normalized = path.startsWith("/") ? path : `/${path}`;
 		let key = `${normalized}/zarr.json` as AbsolutePath;
 		if (meta.node_type === "array") {
-			(meta as ArrayMetadata<DataType>).fill_value = ensure_correct_scalar(
+			(meta as ArrayMetadata<DataType>).fill_value = ensureCorrectScalar(
 				meta as ArrayMetadata<DataType>,
 			);
 		}
-		known_meta[key] = meta;
+		knownMeta[key] = meta;
 	}
-	return known_meta;
+	return knownMeta;
 }
 
-function resolve_formats(
+function resolveFormats(
 	store: Readable,
 	format: ConsolidatedFormat | ConsolidatedFormat[] | undefined,
 ): ConsolidatedFormat[] {
@@ -187,39 +187,39 @@ function resolve_formats(
 		return globalThis.Array.isArray(format) ? format : [format];
 	}
 	// Auto-detect: use version counter to decide priority
-	let version_max = VERSION_COUNTER.version_max(store);
-	return version_max === "v3" ? ["v3", "v2"] : ["v2", "v3"];
+	let versionMax = VERSION_COUNTER.versionMax(store);
+	return versionMax === "v3" ? ["v3", "v2"] : ["v2", "v3"];
 }
 
-function create_listable<Store extends Readable>(
+function createListable<Store extends Readable>(
 	store: Store,
-	known_meta: Record<AbsolutePath, Metadata>,
+	knownMeta: Record<AbsolutePath, Metadata>,
 ): Listable<Store> {
 	return {
 		async get(
 			...args: Parameters<Store["get"]>
 		): Promise<Uint8Array | undefined> {
 			let [key, opts] = args;
-			if (known_meta[key]) {
-				return json_encode_object(known_meta[key]);
+			if (knownMeta[key]) {
+				return jsonEncodeObject(knownMeta[key]);
 			}
-			let maybe_bytes = await store.get(key, opts);
-			if (is_meta_key(key) && maybe_bytes) {
-				let meta = json_decode_object(maybe_bytes);
-				known_meta[key] = meta;
+			let maybeBytes = await store.get(key, opts);
+			if (isMetaKey(key) && maybeBytes) {
+				let meta = jsonDecodeObject(maybeBytes);
+				knownMeta[key] = meta;
 			}
-			return maybe_bytes;
+			return maybeBytes;
 		},
 		getRange: store.getRange?.bind(store),
 		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
 			let contents: { path: AbsolutePath; kind: "array" | "group" }[] = [];
-			for (let [key, value] of Object.entries(known_meta)) {
+			for (let [key, value] of Object.entries(knownMeta)) {
 				let parts = key.split("/");
 				let filename = parts.pop();
 				let path = (parts.join("/") || "/") as AbsolutePath;
 				if (filename === ".zarray") contents.push({ path, kind: "array" });
 				if (filename === ".zgroup") contents.push({ path, kind: "group" });
-				if (is_v3(value)) {
+				if (isV3(value)) {
 					contents.push({ path, kind: value.node_type });
 				}
 			}
@@ -261,21 +261,21 @@ export async function withConsolidated<Store extends Readable>(
 	store: Store,
 	opts: WithConsolidatedOptions = {},
 ): Promise<Listable<Store>> {
-	let formats = resolve_formats(store, opts.format);
-	let last_error: unknown;
+	let formats = resolveFormats(store, opts.format);
+	let lastError: unknown;
 	for (let format of formats) {
 		try {
-			let known_meta =
+			let knownMeta =
 				format === "v2"
-					? await load_consolidated_v2(store, opts.metadataKey)
-					: await load_consolidated_v3(store);
-			return create_listable(store, known_meta);
+					? await loadConsolidatedV2(store, opts.metadataKey)
+					: await loadConsolidatedV3(store);
+			return createListable(store, knownMeta);
 		} catch (err) {
-			rethrow_unless(err, NodeNotFoundError);
-			last_error = err;
+			rethrowUnless(err, NodeNotFoundError);
+			lastError = err;
 		}
 	}
-	throw last_error;
+	throw lastError;
 }
 
 /**
@@ -296,7 +296,7 @@ export async function tryWithConsolidated<Store extends Readable>(
 	opts: WithConsolidatedOptions = {},
 ): Promise<Listable<Store> | Store> {
 	return withConsolidated(store, opts).catch((error: unknown) => {
-		rethrow_unless(error, NodeNotFoundError);
+		rethrowUnless(error, NodeNotFoundError);
 		return store;
 	});
 }

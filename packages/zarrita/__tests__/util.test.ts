@@ -8,15 +8,15 @@ import {
 	UnicodeStringArray,
 } from "../src/typedarray.js";
 import {
-	byteswap_inplace,
-	ensure_correct_scalar,
-	get_ctr,
-	get_strides,
-	is_dtype,
-	v2_to_v3_array_metadata,
+	byteswapInplace,
+	ensureCorrectScalar,
+	getCtr,
+	getStrides,
+	isDataType,
+	v2ToV3ArrayMetadata,
 } from "../src/util.js";
 
-describe("get_ctr", () => {
+describe("getCtr", () => {
 	describe("without Float16Array", () => {
 		beforeAll(() => {
 			vi.stubGlobal("Float16Array", undefined);
@@ -40,12 +40,12 @@ describe("get_ctr", () => {
 			["v2:S6", ByteStringArray],
 			["string", Array],
 		])("%s -> %o", (dtype, ctr) => {
-			const T = get_ctr(dtype);
+			const T = getCtr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
 		});
 
 		test.each(["float16"])("%s -> throws", (dtype) => {
-			expect(() => get_ctr(dtype as DataType)).toThrowError();
+			expect(() => getCtr(dtype as DataType)).toThrow();
 		});
 	});
 
@@ -74,13 +74,13 @@ describe("get_ctr", () => {
 			["v2:S6", ByteStringArray],
 			["string", Array],
 		])("%s -> %o", (dtype, ctr) => {
-			const T = get_ctr(dtype);
+			const T = getCtr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
 		});
 	});
 });
 
-describe("byteswap_inplace", () => {
+describe("byteswapInplace", () => {
 	test.each([
 		new Uint32Array([1, 2, 3, 4, 5]),
 		new Float64Array([20, 3333, 444.4, 222, 3123]),
@@ -90,13 +90,13 @@ describe("byteswap_inplace", () => {
 	])("%o", (arr) => {
 		// make a copy and then byteswap original twice
 		const expected = arr.slice();
-		byteswap_inplace(new Uint8Array(arr.buffer), arr.BYTES_PER_ELEMENT);
-		byteswap_inplace(new Uint8Array(arr.buffer), arr.BYTES_PER_ELEMENT);
+		byteswapInplace(new Uint8Array(arr.buffer), arr.BYTES_PER_ELEMENT);
+		byteswapInplace(new Uint8Array(arr.buffer), arr.BYTES_PER_ELEMENT);
 		expect(arr).toStrictEqual(expected);
 	});
 });
 
-describe("get_strides", () => {
+describe("getStrides", () => {
 	test.each<[number[], "C" | "F", number[]]>([
 		[[3], "C", [1]],
 		[[3], "F", [1]],
@@ -106,12 +106,12 @@ describe("get_strides", () => {
 		[[3, 4, 10], "F", [1, 3, 12]],
 		[[3, 4, 10, 2], "C", [80, 20, 2, 1]],
 		[[3, 4, 10, 2], "F", [1, 3, 12, 120]],
-	])("get_strides(%o, %s) -> %o", (shape, order, expected) => {
-		expect(get_strides(shape, order)).toStrictEqual(expected);
+	])("getStrides(%o, %s) -> %o", (shape, order, expected) => {
+		expect(getStrides(shape, order)).toStrictEqual(expected);
 	});
 });
 
-describe("is_dtype", () => {
+describe("isDataType", () => {
 	test.each<[DataType, boolean]>([
 		["int8", true],
 		["int16", true],
@@ -129,8 +129,8 @@ describe("is_dtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("is_dtype(%s, 'number') -> %s", (dtype, expected) => {
-		expect(is_dtype(dtype, "number")).toBe(expected);
+	])("isDataType(%s, 'number') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "number")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -150,8 +150,8 @@ describe("is_dtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("is_dtype(%s, 'boolean') -> %s", (dtype, expected) => {
-		expect(is_dtype(dtype, "boolean")).toBe(expected);
+	])("isDataType(%s, 'boolean') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "boolean")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -171,8 +171,8 @@ describe("is_dtype", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
-	])("is_dtype(%s, 'bigint') -> %s", (dtype, expected) => {
-		expect(is_dtype(dtype, "bigint")).toBe(expected);
+	])("isDataType(%s, 'bigint') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "bigint")).toBe(expected);
 	});
 
 	test.each<[DataType, boolean]>([
@@ -192,8 +192,8 @@ describe("is_dtype", () => {
 		["v2:S6", true],
 		["v2:object", false],
 		["string", true],
-	])("is_dtype(%s, 'string') -> %s", (dtype, expected) => {
-		expect(is_dtype(dtype, "string")).toBe(expected);
+	])("isDataType(%s, 'string') -> %s", (dtype, expected) => {
+		expect(isDataType(dtype, "string")).toBe(expected);
 	});
 
 	test.each<DataType>([
@@ -213,12 +213,12 @@ describe("is_dtype", () => {
 		"v2:S6",
 		"v2:object",
 		"string",
-	])("is_dtype(%s, %s) -> true", (dtype) => {
-		expect(is_dtype(dtype, dtype)).toBe(true);
+	])("isDataType(%s, %s) -> true", (dtype) => {
+		expect(isDataType(dtype, dtype)).toBe(true);
 	});
 });
 
-describe("ensure_correct_scalar", () => {
+describe("ensureCorrectScalar", () => {
 	function make_metadata(
 		data_type: DataType,
 		fill_value: unknown,
@@ -241,7 +241,7 @@ describe("ensure_correct_scalar", () => {
 		["Infinity", Infinity],
 		["-Infinity", -Infinity],
 	])("float32 fill_value %s -> %s", (str, expected) => {
-		let result = ensure_correct_scalar(make_metadata("float32", str));
+		let result = ensureCorrectScalar(make_metadata("float32", str));
 		if (Number.isNaN(expected)) {
 			expect(result).toBeNaN();
 		} else {
@@ -254,26 +254,26 @@ describe("ensure_correct_scalar", () => {
 		"float32",
 		"float64",
 	] as const)("%s preserves numeric fill_value", (dtype) => {
-		expect(ensure_correct_scalar(make_metadata(dtype, 1.5))).toBe(1.5);
+		expect(ensureCorrectScalar(make_metadata(dtype, 1.5))).toBe(1.5);
 	});
 
 	test("string dtype fill_value 'NaN' stays as string", () => {
-		expect(ensure_correct_scalar(make_metadata("string", "NaN"))).toBe("NaN");
+		expect(ensureCorrectScalar(make_metadata("string", "NaN"))).toBe("NaN");
 	});
 
 	test("int64 fill_value converts to BigInt", () => {
-		expect(ensure_correct_scalar(make_metadata("int64", 42))).toBe(42n);
+		expect(ensureCorrectScalar(make_metadata("int64", 42))).toBe(42n);
 	});
 });
 
 describe("sel", () => {
-	async function make_array(dimension_names?: string[]) {
+	async function make_array(dimensionNames?: string[]) {
 		let h = zarr.root();
 		return zarr.create(h.resolve("/test"), {
 			shape: [100, 200, 300],
-			chunk_shape: [10, 20, 30],
-			data_type: "float32",
-			dimension_names,
+			chunkShape: [10, 20, 30],
+			dtype: "float32",
+			dimensionNames,
 		});
 	}
 
@@ -293,20 +293,18 @@ describe("sel", () => {
 
 	test("throws for unknown dimension name", async () => {
 		let arr = await make_array(["time", "lat", "lon"]);
-		expect(() => sel(arr, { bad: 0 })).toThrowError(
-			/Unknown dimension name: "bad"/,
-		);
+		expect(() => sel(arr, { bad: 0 })).toThrow(/Unknown dimension name: "bad"/);
 	});
 
 	test("throws when array has no dimension_names", async () => {
 		let arr = await make_array();
-		expect(() => sel(arr, { time: 0 })).toThrowError(
+		expect(() => sel(arr, { time: 0 })).toThrow(
 			/does not have dimension_names/,
 		);
 	});
 });
 
-describe("v2_to_v3_array_metadata", () => {
+describe("v2ToV3ArrayMetadata", () => {
 	let v2meta = {
 		zarr_format: 2 as const,
 		shape: [100, 200],
@@ -319,7 +317,7 @@ describe("v2_to_v3_array_metadata", () => {
 	};
 
 	test("basic conversion", () => {
-		let result = v2_to_v3_array_metadata(v2meta);
+		let result = v2ToV3ArrayMetadata(v2meta);
 		expect(result).toMatchInlineSnapshot(`
 			{
 			  "attributes": {},
@@ -353,7 +351,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("maps _ARRAY_DIMENSIONS to dimension_names", () => {
-		let result = v2_to_v3_array_metadata(v2meta, {
+		let result = v2ToV3ArrayMetadata(v2meta, {
 			_ARRAY_DIMENSIONS: ["x", "y"],
 		});
 		expect(result).toMatchInlineSnapshot(`
@@ -397,7 +395,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("Fortran order adds transpose codec", () => {
-		let result = v2_to_v3_array_metadata({ ...v2meta, order: "F" });
+		let result = v2ToV3ArrayMetadata({ ...v2meta, order: "F" });
 		expect(result).toMatchInlineSnapshot(`
 			{
 			  "attributes": {},
@@ -438,7 +436,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("big-endian dtype adds bytes codec", () => {
-		let result = v2_to_v3_array_metadata({ ...v2meta, dtype: ">f4" });
+		let result = v2ToV3ArrayMetadata({ ...v2meta, dtype: ">f4" });
 		expect(result).toMatchInlineSnapshot(`
 			{
 			  "attributes": {},
@@ -479,7 +477,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("compressor is converted to codec", () => {
-		let result = v2_to_v3_array_metadata({
+		let result = v2ToV3ArrayMetadata({
 			...v2meta,
 			compressor: { id: "zlib", level: 5 },
 		});
@@ -523,7 +521,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("filters are converted to codecs", () => {
-		let result = v2_to_v3_array_metadata({
+		let result = v2ToV3ArrayMetadata({
 			...v2meta,
 			filters: [{ id: "delta", dtype: "<f4" }],
 		});
@@ -567,7 +565,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("dimension_separator is preserved", () => {
-		let result = v2_to_v3_array_metadata({
+		let result = v2ToV3ArrayMetadata({
 			...v2meta,
 			dimension_separator: "/",
 		});
@@ -604,7 +602,7 @@ describe("v2_to_v3_array_metadata", () => {
 	});
 
 	test("codec order: transpose, bytes, filters, compressor", () => {
-		let result = v2_to_v3_array_metadata({
+		let result = v2ToV3ArrayMetadata({
 			...v2meta,
 			dtype: ">f4",
 			order: "F",

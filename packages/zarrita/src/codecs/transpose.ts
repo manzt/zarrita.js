@@ -10,7 +10,7 @@ import {
 	ByteStringArray,
 	UnicodeStringArray,
 } from "../typedarray.js";
-import { assert, get_strides } from "../util.js";
+import { assert, getStrides } from "../util.js";
 
 type TypedArrayProxy<D extends DataType> = {
 	[x: number]: Scalar<D>;
@@ -39,7 +39,7 @@ function proxy<D extends DataType>(arr: TypedArray<D>): TypedArrayProxy<D> {
 	return arr;
 }
 
-function empty_like<D extends DataType>(
+function emptyLike<D extends DataType>(
 	chunk: Chunk<D>,
 	order: Order,
 ): Chunk<D> {
@@ -61,33 +61,33 @@ function empty_like<D extends DataType>(
 	return {
 		data,
 		shape: chunk.shape,
-		stride: get_strides(chunk.shape, order),
+		stride: getStrides(chunk.shape, order),
 	};
 }
 
-function convert_array_order<D extends DataType>(
+function convertArrayOrder<D extends DataType>(
 	src: Chunk<D>,
 	target: Order,
 ): Chunk<D> {
-	let out = empty_like(src, target);
-	let n_dims = src.shape.length;
+	let out = emptyLike(src, target);
+	let nDims = src.shape.length;
 	let size = src.data.length;
-	let index = Array(n_dims).fill(0);
+	let index = Array(nDims).fill(0);
 
-	let src_data = proxy(src.data);
-	let out_data = proxy(out.data);
+	let srcData = proxy(src.data);
+	let outData = proxy(out.data);
 
-	for (let src_idx = 0; src_idx < size; src_idx++) {
-		let out_idx = 0;
-		for (let dim = 0; dim < n_dims; dim++) {
-			out_idx += index[dim] * out.stride[dim];
+	for (let srcIdx = 0; srcIdx < size; srcIdx++) {
+		let outIdx = 0;
+		for (let dim = 0; dim < nDims; dim++) {
+			outIdx += index[dim] * out.stride[dim];
 		}
-		out_data[out_idx] = src_data[src_idx];
+		outData[outIdx] = srcData[srcIdx];
 
 		index[0] += 1;
-		for (let dim = 0; dim < n_dims; dim++) {
+		for (let dim = 0; dim < nDims; dim++) {
 			if (index[dim] === src.shape[dim]) {
-				if (dim + 1 === n_dims) {
+				if (dim + 1 === nDims) {
 					break;
 				}
 				index[dim] = 0;
@@ -100,7 +100,7 @@ function convert_array_order<D extends DataType>(
 }
 
 /** Determine the memory order (axis permutation) for a chunk */
-function get_order(chunk: Chunk<DataType>): number[] {
+function getOrder(chunk: Chunk<DataType>): number[] {
 	let rank = chunk.shape.length;
 	assert(
 		rank === chunk.stride.length,
@@ -112,8 +112,8 @@ function get_order(chunk: Chunk<DataType>): number[] {
 		.map((entry) => entry.index);
 }
 
-function matches_order(chunk: Chunk<DataType>, target: Order) {
-	let source = get_order(chunk);
+function matchesOrder(chunk: Chunk<DataType>, target: Order) {
+	let source = getOrder(chunk);
 	assert(source.length === target.length, "Orders must match");
 	return source.every((dim, i) => dim === target[i]);
 }
@@ -164,18 +164,18 @@ export class TransposeCodec {
 	}
 
 	encode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
-		if (matches_order(arr, this.#inverseOrder)) {
+		if (matchesOrder(arr, this.#inverseOrder)) {
 			// can skip making a copy
 			return arr;
 		}
-		return convert_array_order(arr, this.#inverseOrder);
+		return convertArrayOrder(arr, this.#inverseOrder);
 	}
 
 	decode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
 		return {
 			data: arr.data,
 			shape: arr.shape,
-			stride: get_strides(arr.shape, this.#order),
+			stride: getStrides(arr.shape, this.#order),
 		};
 	}
 }

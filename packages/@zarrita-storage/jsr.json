@@ -5,7 +5,7 @@
 	"nodeModulesDir": "auto",
 	"imports": {
 		"reference-spec-reader": "npm:reference-spec-reader@^0.2.0",
-		"unzipit": "npm:unzipit@1.4.3"
+		"unzipit": "npm:unzipit@2.0.0"
 	},
 	"exports": {
 		".": "./src/index.ts",

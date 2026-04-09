@@ -1,5 +1,5 @@
 import type { Indices, Slice } from "./types.js";
-import { product, range, slice, slice_indices } from "./util.js";
+import { product, range, slice, sliceIndices } from "./util.js";
 
 export class IndexError extends Error {
 	constructor(msg: string) {
@@ -8,7 +8,7 @@ export class IndexError extends Error {
 	}
 }
 
-function err_too_many_indices(
+function errTooManyIndices(
 	selection: (number | Slice)[],
 	shape: readonly number[],
 ) {
@@ -17,84 +17,84 @@ function err_too_many_indices(
 	);
 }
 
-function err_boundscheck(dim_len: number) {
+function errBoundscheck(dimLen: number) {
 	throw new IndexError(
-		`index out of bounds for dimension with length ${dim_len}`,
+		`index out of bounds for dimension with length ${dimLen}`,
 	);
 }
 
-function err_negative_step() {
+function errNegativeStep() {
 	throw new IndexError("only slices with step >= 1 are supported");
 }
 
-function check_selection_length(
+function checkSelectionLength(
 	selection: (number | Slice)[],
 	shape: readonly number[],
 ) {
 	if (selection.length > shape.length) {
-		err_too_many_indices(selection, shape);
+		errTooManyIndices(selection, shape);
 	}
 }
 
-export function normalize_integer_selection(dim_sel: number, dim_len: number) {
+export function normalizeIntegerSelection(dimSel: number, dimLen: number) {
 	// normalize type to int
-	dim_sel = Math.trunc(dim_sel);
+	dimSel = Math.trunc(dimSel);
 	// handle wraparound
-	if (dim_sel < 0) {
-		dim_sel = dim_len + dim_sel;
+	if (dimSel < 0) {
+		dimSel = dimLen + dimSel;
 	}
 	// handle out of bounds
-	if (dim_sel >= dim_len || dim_sel < 0) {
-		err_boundscheck(dim_len);
+	if (dimSel >= dimLen || dimSel < 0) {
+		errBoundscheck(dimLen);
 	}
-	return dim_sel;
+	return dimSel;
 }
 
 interface IntChunkDimProjection {
-	dim_chunk_ix: number;
-	dim_chunk_sel: number;
+	dimChunkIx: number;
+	dimChunkSel: number;
 }
 
 interface IntDimIndexerProps {
-	dim_sel: number;
-	dim_len: number;
-	dim_chunk_len: number;
+	dimSel: number;
+	dimLen: number;
+	dimChunkLen: number;
 }
 
 class IntDimIndexer {
-	dim_sel: number;
-	dim_len: number;
-	dim_chunk_len: number;
+	dimSel: number;
+	dimLen: number;
+	dimChunkLen: number;
 	nitems: 1;
 
-	constructor({ dim_sel, dim_len, dim_chunk_len }: IntDimIndexerProps) {
+	constructor({ dimSel, dimLen, dimChunkLen }: IntDimIndexerProps) {
 		// normalize
-		dim_sel = normalize_integer_selection(dim_sel, dim_len);
+		dimSel = normalizeIntegerSelection(dimSel, dimLen);
 		// store properties
-		this.dim_sel = dim_sel;
-		this.dim_len = dim_len;
-		this.dim_chunk_len = dim_chunk_len;
+		this.dimSel = dimSel;
+		this.dimLen = dimLen;
+		this.dimChunkLen = dimChunkLen;
 		this.nitems = 1;
 	}
 
 	*[Symbol.iterator](): IterableIterator<IntChunkDimProjection> {
-		const dim_chunk_ix = Math.floor(this.dim_sel / this.dim_chunk_len);
-		const dim_offset = dim_chunk_ix * this.dim_chunk_len;
-		const dim_chunk_sel = this.dim_sel - dim_offset;
-		yield { dim_chunk_ix, dim_chunk_sel };
+		const dimChunkIx = Math.floor(this.dimSel / this.dimChunkLen);
+		const dimOffset = dimChunkIx * this.dimChunkLen;
+		const dimChunkSel = this.dimSel - dimOffset;
+		yield { dimChunkIx, dimChunkSel };
 	}
 }
 
 interface SliceChunkDimProjection {
-	dim_chunk_ix: number;
-	dim_chunk_sel: Indices;
-	dim_out_sel: Indices;
+	dimChunkIx: number;
+	dimChunkSel: Indices;
+	dimOutSel: Indices;
 }
 
 interface SliceDimIndexerProps {
-	dim_sel: Slice;
-	dim_len: number;
-	dim_chunk_len: number;
+	dimSel: Slice;
+	dimLen: number;
+	dimChunkLen: number;
 }
 
 class SliceDimIndexer {
@@ -102,76 +102,76 @@ class SliceDimIndexer {
 	stop: number;
 	step: number;
 
-	dim_len: number;
-	dim_chunk_len: number;
+	dimLen: number;
+	dimChunkLen: number;
 	nitems: number;
 	nchunks: number;
 
-	constructor({ dim_sel, dim_len, dim_chunk_len }: SliceDimIndexerProps) {
+	constructor({ dimSel, dimLen, dimChunkLen }: SliceDimIndexerProps) {
 		// normalize
-		const [start, stop, step] = slice_indices(dim_sel, dim_len);
+		const [start, stop, step] = sliceIndices(dimSel, dimLen);
 		this.start = start;
 		this.stop = stop;
 		this.step = step;
-		if (this.step < 1) err_negative_step();
+		if (this.step < 1) errNegativeStep();
 		// store properties
-		this.dim_len = dim_len;
-		this.dim_chunk_len = dim_chunk_len;
+		this.dimLen = dimLen;
+		this.dimChunkLen = dimChunkLen;
 		this.nitems = Math.max(0, Math.ceil((this.stop - this.start) / this.step));
-		this.nchunks = Math.ceil(this.dim_len / this.dim_chunk_len);
+		this.nchunks = Math.ceil(this.dimLen / this.dimChunkLen);
 	}
 
 	*[Symbol.iterator](): IterableIterator<SliceChunkDimProjection> {
 		// figure out the range of chunks we need to visit
-		const dim_chunk_ix_from = Math.floor(this.start / this.dim_chunk_len);
-		const dim_chunk_ix_to = Math.ceil(this.stop / this.dim_chunk_len);
-		for (const dim_chunk_ix of range(dim_chunk_ix_from, dim_chunk_ix_to)) {
+		const dimChunkIx_from = Math.floor(this.start / this.dimChunkLen);
+		const dimChunkIx_to = Math.ceil(this.stop / this.dimChunkLen);
+		for (const dimChunkIx of range(dimChunkIx_from, dimChunkIx_to)) {
 			// compute offsets for chunk within overall array
-			const dim_offset = dim_chunk_ix * this.dim_chunk_len;
-			const dim_limit = Math.min(
-				this.dim_len,
-				(dim_chunk_ix + 1) * this.dim_chunk_len,
+			const dimOffset = dimChunkIx * this.dimChunkLen;
+			const dimLimit = Math.min(
+				this.dimLen,
+				(dimChunkIx + 1) * this.dimChunkLen,
 			);
 			// determine chunk length, accounting for trailing chunk
-			const dim_chunk_len = dim_limit - dim_offset;
+			const dimChunkLen = dimLimit - dimOffset;
 
-			let dim_out_offset = 0;
-			let dim_chunk_sel_start = 0;
-			if (this.start < dim_offset) {
+			let dimOutOffset = 0;
+			let dimChunkSelStart = 0;
+			if (this.start < dimOffset) {
 				// selection start before current chunk
-				const remainder = (dim_offset - this.start) % this.step;
-				if (remainder) dim_chunk_sel_start += this.step - remainder;
+				const remainder = (dimOffset - this.start) % this.step;
+				if (remainder) dimChunkSelStart += this.step - remainder;
 				// compute number of previous items, provides offset into output array
-				dim_out_offset = Math.ceil((dim_offset - this.start) / this.step);
+				dimOutOffset = Math.ceil((dimOffset - this.start) / this.step);
 			} else {
 				// selection starts within current chunk
-				dim_chunk_sel_start = this.start - dim_offset;
+				dimChunkSelStart = this.start - dimOffset;
 			}
 			// selection starts within current chunk if true,
 			// otherwise selection ends after current chunk.
-			const dim_chunk_sel_stop =
-				this.stop > dim_limit ? dim_chunk_len : this.stop - dim_offset;
+			const dimChunkSelStop =
+				this.stop > dimLimit ? dimChunkLen : this.stop - dimOffset;
 
-			const dim_chunk_sel: Indices = [
-				dim_chunk_sel_start,
-				dim_chunk_sel_stop,
+			const dimChunkSel: Indices = [
+				dimChunkSelStart,
+				dimChunkSelStop,
 				this.step,
 			];
-			const dim_chunk_nitems = Math.ceil(
-				(dim_chunk_sel_stop - dim_chunk_sel_start) / this.step,
+			const dimChunkNitems = Math.ceil(
+				(dimChunkSelStop - dimChunkSelStart) / this.step,
 			);
 
-			const dim_out_sel: Indices = [
-				dim_out_offset,
-				dim_out_offset + dim_chunk_nitems,
+			const dimOutSel: Indices = [
+				dimOutOffset,
+				dimOutOffset + dimChunkNitems,
 				1,
 			];
-			yield { dim_chunk_ix, dim_chunk_sel, dim_out_sel };
+			yield { dimChunkIx, dimChunkSel, dimOutSel };
 		}
 	}
 }
 
-export function normalize_selection(
+export function normalizeSelection(
 	selection: null | (Slice | null | number)[],
 	shape: readonly number[],
 ): (number | Slice)[] {
@@ -181,14 +181,14 @@ export function normalize_selection(
 	} else if (Array.isArray(selection)) {
 		normalized = selection.map((s) => s ?? slice(null));
 	}
-	check_selection_length(normalized, shape);
+	checkSelectionLength(normalized, shape);
 	return normalized;
 }
 
 interface BasicIndexerProps {
 	selection: null | (null | number | Slice)[];
 	shape: readonly number[];
-	chunk_shape: readonly number[];
+	chunkShape: readonly number[];
 }
 
 export type IndexerProjection =
@@ -199,43 +199,41 @@ export type IndexerProjection =
 	  };
 
 interface ChunkProjection {
-	chunk_coords: number[];
+	chunkCoords: number[];
 	mapping: IndexerProjection[];
 }
 
 export class BasicIndexer {
-	dim_indexers: (SliceDimIndexer | IntDimIndexer)[];
+	dimIndexers: (SliceDimIndexer | IntDimIndexer)[];
 	shape: number[];
 
-	constructor({ selection, shape, chunk_shape }: BasicIndexerProps) {
+	constructor({ selection, shape, chunkShape }: BasicIndexerProps) {
 		// setup per-dimension indexers
-		this.dim_indexers = normalize_selection(selection, shape).map(
-			(dim_sel, i) => {
-				return new (
-					typeof dim_sel === "number" ? IntDimIndexer : SliceDimIndexer
-				)({
+		this.dimIndexers = normalizeSelection(selection, shape).map((dimSel, i) => {
+			return new (typeof dimSel === "number" ? IntDimIndexer : SliceDimIndexer)(
+				{
 					// @ts-expect-error ts inference not strong enough to know correct chunk
-					dim_sel: dim_sel,
-					dim_len: shape[i],
-					dim_chunk_len: chunk_shape[i],
-				});
-			},
-		);
-		this.shape = this.dim_indexers
+					dimSel: dimSel,
+					dimLen: shape[i],
+					dimChunkLen: chunkShape[i],
+				},
+			);
+		});
+		this.shape = this.dimIndexers
 			.filter((ixr) => ixr instanceof SliceDimIndexer)
 			.map((sixr) => sixr.nitems);
 	}
 
 	*[Symbol.iterator](): IterableIterator<ChunkProjection> {
-		for (const dim_projections of product(...this.dim_indexers)) {
-			const chunk_coords = dim_projections.map((p) => p.dim_chunk_ix);
-			const mapping: IndexerProjection[] = dim_projections.map((p) => {
-				if ("dim_out_sel" in p) {
-					return { from: p.dim_chunk_sel, to: p.dim_out_sel };
+		for (const dimProjections of product(...this.dimIndexers)) {
+			const chunkCoords = dimProjections.map((p) => p.dimChunkIx);
+			const mapping: IndexerProjection[] = dimProjections.map((p) => {
+				if ("dimOutSel" in p) {
+					return { from: p.dimChunkSel, to: p.dimOutSel };
 				}
-				return { from: p.dim_chunk_sel, to: null };
+				return { from: p.dimChunkSel, to: null };
 			});
-			yield { chunk_coords, mapping };
+			yield { chunkCoords, mapping };
 		}
 	}
 }

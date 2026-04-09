@@ -1,11 +1,11 @@
 import { assert, describe, expect, test } from "vitest";
 
 import * as zarr from "../src/index.js";
-import { json_decode_object } from "../src/util.js";
+import { jsonDecodeObject } from "../src/util.js";
 
 function json_decode(x: Uint8Array | undefined) {
 	assert(x);
-	return json_decode_object(x);
+	return jsonDecodeObject(x);
 }
 
 test("create root group", async () => {
@@ -30,8 +30,8 @@ test("create array", async () => {
 	let attributes = { question: "life", answer: 42 };
 	let a = await zarr.create(h.resolve("/arthur/dent"), {
 		shape: [5, 10],
-		chunk_shape: [2, 5],
-		data_type: "int32",
+		chunkShape: [2, 5],
+		dtype: "int32",
 		attributes,
 	});
 	expect(a).toBeInstanceOf(zarr.Array);
@@ -100,9 +100,9 @@ describe("create array with IEEE 754 special fill values", () => {
 		let h = zarr.root();
 		let a = await zarr.create(h.resolve("/test"), {
 			shape: [2],
-			chunk_shape: [2],
-			data_type: "float32",
-			fill_value,
+			chunkShape: [2],
+			dtype: "float32",
+			fillValue: fill_value,
 			codecs: [],
 		});
 		let meta = json_decode(h.store.get("/test/zarr.json"));
@@ -115,9 +115,9 @@ test("create array with dimension_names", async () => {
 	let h = zarr.root();
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [100, 200],
-		chunk_shape: [10, 20],
-		data_type: "float32",
-		dimension_names: ["x", "y"],
+		chunkShape: [10, 20],
+		dtype: "float32",
+		dimensionNames: ["x", "y"],
 	});
 	expect(a.dimensionNames).toStrictEqual(["x", "y"]);
 	expect(json_decode(h.store.get("/temp/zarr.json"))).toMatchObject({
@@ -129,9 +129,9 @@ test("create array with fill_value", async () => {
 	let h = zarr.root();
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [10],
-		chunk_shape: [5],
-		data_type: "float32",
-		fill_value: -9999,
+		chunkShape: [5],
+		dtype: "float32",
+		fillValue: -9999,
 	});
 	expect(a.fillValue).toBe(-9999);
 });
@@ -140,8 +140,8 @@ test("create array without dimension_names", async () => {
 	let h = zarr.root();
 	let a = await zarr.create(h.resolve("/temp"), {
 		shape: [10],
-		chunk_shape: [5],
-		data_type: "int32",
+		chunkShape: [5],
+		dtype: "int32",
 	});
 	expect(a.dimensionNames).toBeUndefined();
 });
@@ -150,9 +150,9 @@ test("get scalar array returns fill value before set", async () => {
 	let h = zarr.root();
 	let arr = await zarr.create(h.resolve("/scalar"), {
 		shape: [],
-		chunk_shape: [],
-		data_type: "float64",
-		fill_value: -9999,
+		chunkShape: [],
+		dtype: "float64",
+		fillValue: -9999,
 	});
 	let value = await zarr.get(arr);
 	expect(value).toBe(-9999);
@@ -162,9 +162,9 @@ test("set and get scalar array (shape=[])", async () => {
 	let h = zarr.root();
 	let arr = await zarr.create(h.resolve("/scalar"), {
 		shape: [],
-		chunk_shape: [],
-		data_type: "float64",
-		fill_value: 0,
+		chunkShape: [],
+		dtype: "float64",
+		fillValue: 0,
 	});
 	expect(arr.shape).toStrictEqual([]);
 	expect(arr.chunks).toStrictEqual([]);
@@ -180,8 +180,8 @@ test("create nodes via groups", async () => {
 	let paranoid = await zarr.create(marvin.resolve("paranoid"));
 	let android = await zarr.create(marvin.resolve("android"), {
 		shape: [42, 42],
-		data_type: "uint8",
-		chunk_shape: [2, 2],
+		dtype: "uint8",
+		chunkShape: [2, 2],
 	});
 	expect(marvin).toBeInstanceOf(zarr.Group);
 	expect(marvin.path).toBe("/marvin");

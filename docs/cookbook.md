@@ -66,9 +66,9 @@ import { FileSystemStore } from "@zarrita/storage";
 
 const store = new FileSystemStore("tempstore");
 const arr = await zarr.create(store, {
-	shape: [10, 10],
-	chunks: [5, 5],
 	dtype: "int32",
+	shape: [10, 10],
+	chunkShape: [5, 5],
 });
 arr; // zarr.Array<"int32", FileSystemStore>
 ```
