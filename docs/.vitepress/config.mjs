@@ -34,6 +34,7 @@ export default defineConfig({
 					{ text: "Slicing and Indexing", link: "/slicing" },
 					{ text: "Supported Types", link: "/supported-types" },
 					{ text: "Cookbook", link: "/cookbook" },
+					{ text: "Store Middleware", link: "/store-middleware" },
 				],
 			},
 			{

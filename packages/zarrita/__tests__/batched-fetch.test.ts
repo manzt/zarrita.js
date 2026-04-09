@@ -1,6 +1,6 @@
 import type { AbsolutePath, RangeQuery } from "@zarrita/storage";
 import { describe, expect, it, vi } from "vitest";
-import { withRangeBatching } from "../src/batched-fetch.js";
+import { withRangeBatching } from "../src/middleware/range-batching.js";
 
 /**
  * Create a fake store with controllable getRange.
