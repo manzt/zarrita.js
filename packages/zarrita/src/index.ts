@@ -1,7 +1,7 @@
 // re-export all the storage interface types
 export type * from "@zarrita/storage";
 // re-export fetch store from storage
-export { default as FetchStore } from "@zarrita/storage/fetch";
+export { FetchStore, FileSystemStore } from "@zarrita/storage";
 // core
 export { registry } from "./codecs.js";
 export { create } from "./create.js";

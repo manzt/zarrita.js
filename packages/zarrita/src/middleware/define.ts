@@ -33,10 +33,22 @@ type InferStoreOpts<S> = S extends { get(key: any, opts?: infer O): any }
 	: unknown;
 
 /** If factory returns a Promise, wrap the result in Promise; otherwise keep it sync. */
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+/** Collapse get/getRange into AsyncReadable<O>, show extras separately. */
+type CollapseStore<T> =
+	T extends AsyncReadable<infer O>
+		? // biome-ignore lint/suspicious/noExplicitAny: needed for getRange optionality check
+			(T extends { getRange: (...args: any[]) => any }
+				? Required<AsyncReadable<O>>
+				: AsyncReadable<O>) &
+				Prettify<Omit<T, keyof AsyncReadable>>
+		: T;
+
 type WrapperResult<Ext, S> =
 	Ext extends Promise<infer Inner>
-		? Promise<S & Extensions<Inner>>
-		: S & Extensions<Ext>;
+		? Promise<CollapseStore<S & Extensions<Inner>>>
+		: CollapseStore<S & Extensions<Ext>>;
 
 function createProxy(
 	store: object,

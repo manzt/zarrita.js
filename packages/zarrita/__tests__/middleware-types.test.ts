@@ -23,7 +23,10 @@ describe("storeFrom", () => {
 		);
 		expectType(store).toMatchInlineSnapshot(`
 			Promise<
-				zarr.FetchStore & { stats: Readonly<zarr.RangeBatchingStats> }
+				Required<AsyncReadable<RequestInit>> & {
+					stats: Readonly<zarr.RangeBatchingStats>;
+					url: string | URL;
+				}
 			>
 		`);
 	});
@@ -38,9 +41,11 @@ describe("storeFrom", () => {
 		}
 		expectType(check).toMatchInlineSnapshot(`
 			() => Promise<
-				zarr.FetchStore & {
+				Required<AsyncReadable<RequestInit>> & {
+					stats: Readonly<zarr.RangeBatchingStats>;
+					url: string | URL;
 					contents: () => { path: AbsolutePath; kind: "array" | "group" }[];
-				} & { stats: Readonly<zarr.RangeBatchingStats> }
+				}
 			>
 		`);
 	});
@@ -62,7 +67,12 @@ describe("defineStoreMiddleware", () => {
 		);
 		let store = withCustom(new zarr.FetchStore(""), { flag: true });
 		expectType(store).toMatchInlineSnapshot(
-			`zarr.FetchStore & { hello: () => string }`,
+			`
+			Required<AsyncReadable<RequestInit>> & {
+				url: string | URL;
+				hello: () => string;
+			}
+		`,
 		);
 	});
 
@@ -88,7 +98,12 @@ describe("defineStoreMiddleware", () => {
 			retries: 5,
 		});
 		expectType(store).toMatchInlineSnapshot(
-			`zarr.FetchStore & { retries: number }`,
+			`
+			Required<AsyncReadable<RequestInit>> & {
+				url: string | URL;
+				retries: number;
+			}
+		`,
 		);
 	});
 
@@ -119,8 +134,10 @@ describe("defineStoreMiddleware", () => {
 		);
 		let store = withB(withA(new zarr.FetchStore(""), { a: 1 }), { b: "x" });
 		expectType(store).toMatchInlineSnapshot(`
-			zarr.FetchStore & { methodA: () => number } & {
+			Required<AsyncReadable<RequestInit>> & {
+				url: string | URL;
 				methodB: () => string;
+				methodA: () => number;
 			}
 		`);
 	});
