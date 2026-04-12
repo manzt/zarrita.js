@@ -148,7 +148,7 @@ export async function get<
 >(
 	arr: Array<D, Store>,
 	selection: Sel | null = null,
-	opts: GetOptions<Parameters<Store["get"]>[1]> = {},
+	opts: GetOptions = {},
 ): Promise<
 	null extends Sel[number]
 		? Chunk<D>

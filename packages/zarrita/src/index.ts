@@ -48,7 +48,6 @@ export {
 	withMaybeConsolidation,
 	withMaybeConsolidation as tryWithConsolidated,
 } from "./middleware/consolidation.js";
-export type { GenericOptions } from "./middleware/define.js";
 export { defineStoreMiddleware } from "./middleware/define.js";
 export { extendStore } from "./middleware/extend-store.js";
 export type {

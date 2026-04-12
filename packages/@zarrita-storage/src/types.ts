@@ -9,23 +9,25 @@ export type RangeQuery =
 			suffixLength: number;
 	  };
 
-export type Readable<GetOptions = unknown> =
-	| AsyncReadable<GetOptions>
-	| SyncReadable<GetOptions>;
-export interface AsyncReadable<Options = unknown> {
-	get(key: AbsolutePath, opts?: Options): Promise<Uint8Array | undefined>;
+export interface GetOptions {
+	signal?: AbortSignal;
+}
+
+export type Readable = AsyncReadable | SyncReadable;
+export interface AsyncReadable {
+	get(key: AbsolutePath, opts?: GetOptions): Promise<Uint8Array | undefined>;
 	getRange?(
 		key: AbsolutePath,
 		range: RangeQuery,
-		opts?: Options,
+		opts?: GetOptions,
 	): Promise<Uint8Array | undefined>;
 }
-export interface SyncReadable<Options = unknown> {
-	get(key: AbsolutePath, opts?: Options): Uint8Array | undefined;
+export interface SyncReadable {
+	get(key: AbsolutePath, opts?: GetOptions): Uint8Array | undefined;
 	getRange?(
 		key: AbsolutePath,
 		range: RangeQuery,
-		opts?: Options,
+		opts?: GetOptions,
 	): Uint8Array | undefined;
 }
 
@@ -37,10 +39,6 @@ export interface SyncWritable {
 	set(key: AbsolutePath, value: Uint8Array): void;
 }
 
-export type AsyncMutable<GetOptions = unknown> = AsyncReadable<GetOptions> &
-	AsyncWritable;
-export type SyncMutable<GetOptions = unknown> = SyncReadable<GetOptions> &
-	SyncWritable;
-export type Mutable<GetOptions = unknown> =
-	| AsyncMutable<GetOptions>
-	| SyncMutable<GetOptions>;
+export type AsyncMutable = AsyncReadable & AsyncWritable;
+export type SyncMutable = SyncReadable & SyncWritable;
+export type Mutable = AsyncMutable | SyncMutable;

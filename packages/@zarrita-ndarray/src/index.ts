@@ -49,7 +49,7 @@ export async function get<
 >(
 	arr: zarr.Array<D, Store>,
 	selection: Sel | null = null,
-	opts: zarr.GetOptions<Parameters<Store["get"]>[1]> = {},
+	opts: zarr.GetOptions = {},
 ): Promise<
 	null extends Sel[number]
 		? ndarray.NdArray<zarr.TypedArray<D>>

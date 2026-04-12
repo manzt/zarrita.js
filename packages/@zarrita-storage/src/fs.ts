@@ -2,7 +2,12 @@ import { Buffer } from "node:buffer";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import type { AbsolutePath, AsyncMutable, RangeQuery } from "./types.js";
+import type {
+	AbsolutePath,
+	AsyncMutable,
+	GetOptions,
+	RangeQuery,
+} from "./types.js";
 import { stripPrefix } from "./util.js";
 
 function isErrorNoEntry(err: unknown): err is { code: "ENOENT" } {
@@ -13,18 +18,26 @@ function isErrorNoEntry(err: unknown): err is { code: "ENOENT" } {
 class FileSystemStore implements AsyncMutable {
 	constructor(public root: string) {}
 
-	async get(key: AbsolutePath): Promise<Uint8Array | undefined> {
+	async get(
+		key: AbsolutePath,
+		opts: GetOptions = {},
+	): Promise<Uint8Array | undefined> {
+		opts.signal?.throwIfAborted();
 		let fp = path.join(this.root, stripPrefix(key));
-		return fs.promises.readFile(fp).catch((err: NodeJS.ErrnoException) => {
-			if (err.code === "ENOENT") return undefined;
-			throw err;
-		});
+		return fs.promises
+			.readFile(fp, { signal: opts.signal })
+			.catch((err: NodeJS.ErrnoException) => {
+				if (err.code === "ENOENT") return undefined;
+				throw err;
+			});
 	}
 
 	async getRange(
 		key: AbsolutePath,
 		range: RangeQuery,
+		opts: GetOptions = {},
 	): Promise<Uint8Array | undefined> {
+		opts.signal?.throwIfAborted();
 		let fp = path.join(this.root, stripPrefix(key));
 		let filehandle: fs.promises.FileHandle | undefined;
 		try {
@@ -38,10 +51,12 @@ class FileSystemStore implements AsyncMutable {
 					range.suffixLength,
 					stats.size - range.suffixLength,
 				);
+				opts.signal?.throwIfAborted();
 				return data;
 			}
 			let data = Buffer.alloc(range.length);
 			await filehandle.read(data, 0, range.length, range.offset);
+			opts.signal?.throwIfAborted();
 			return data;
 		} catch (err: unknown) {
 			// return undefined is no file or directory
