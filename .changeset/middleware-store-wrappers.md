@@ -8,7 +8,7 @@ Introduce composable store middleware via `defineStoreMiddleware`
 
 - `zarr.defineStoreMiddleware(factory)` — define a store middleware with automatic Proxy delegation. The factory receives an `AsyncReadable` store and options, returning overrides and extensions. Supports sync and async factories.
 - `zarr.defineStoreMiddleware.generic<OptsLambda>()(factory)` — for middleware whose options depend on the store's request options type (e.g., `mergeOptions`). Uses `GenericOptions` interface for higher-kinded type encoding.
-- `zarr.storeFrom(store, ...middleware)` — compose middleware in a pipeline. Each middleware is `(store) => newStore`. Returns `Promise` to support async middleware like `withConsolidation`.
+- `zarr.extendStore(store, ...middleware)` — compose middleware in a pipeline. Each middleware is `(store) => newStore`. Returns `Promise` to support async middleware like `withConsolidation`.
 
 **Renamed:**
 
@@ -26,7 +26,7 @@ The previous exports are still available but deprecated. Update your imports:
 import * as zarr from "zarrita";
 
 // Pipeline composition (use arrow functions for full type inference)
-let store = await zarr.storeFrom(
+let store = await zarr.extendStore(
   new zarr.FetchStore("https://..."),
   zarr.withConsolidation,
   (s) => zarr.withRangeBatching(s, { mergeOptions: (batch) => batch[0] }),

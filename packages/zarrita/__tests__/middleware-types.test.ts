@@ -4,14 +4,14 @@ import { describe, test } from "vitest";
 import * as zarr from "../src/index.js";
 import { defineStoreMiddleware } from "../src/middleware/define.js";
 
-describe("storeFrom", () => {
+describe("extendStore", () => {
 	test("no middleware returns store as-is", () => {
-		let store = zarr.storeFrom(new zarr.FetchStore(""));
+		let store = zarr.extendStore(new zarr.FetchStore(""));
 		expectType(store).toMatchInlineSnapshot(`Promise<zarr.FetchStore>`);
 	});
 
 	test("direct form in pipeline infers store options", () => {
-		let store = zarr.storeFrom(new zarr.FetchStore(""), (s) =>
+		let store = zarr.extendStore(new zarr.FetchStore(""), (s) =>
 			zarr.withRangeBatching(s, {
 				mergeOptions: (batch) => {
 					expectType(batch).toMatchInlineSnapshot(
@@ -33,7 +33,7 @@ describe("storeFrom", () => {
 
 	test("no-config middleware can be passed uncalled", () => {
 		function check() {
-			return zarr.storeFrom(
+			return zarr.extendStore(
 				new zarr.FetchStore(""),
 				zarr.withConsolidation,
 				(s) => zarr.withRangeBatching(s, { mergeOptions: (batch) => batch[0] }),

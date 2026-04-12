@@ -198,7 +198,7 @@ export type Listable<Store extends Readable> = Store & {
  * let store = await zarr.withConsolidation(rawStore, { format: "v3" });
  *
  * // In a pipeline
- * let store = await zarr.storeFrom(
+ * let store = await zarr.extendStore(
  *   new zarr.FetchStore("https://..."),
  *   (s) => zarr.withConsolidation(s, { format: "v3" }),
  * );

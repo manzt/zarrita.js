@@ -9,8 +9,8 @@ A common pattern is to _wrap_ a store in another store that adds behavior
 (e.g., caching responses, batching range requests, or serving pre-loaded
 metadata) while delegating everything else to the inner store.
 
-`zarr.wrapStore` lets you define this kind of "middleware" that you can
-_compose_ with base stores using `zarr.createStore`.
+`zarr.defineStoreMiddleware` lets you define this kind of "middleware" that you can
+_compose_ with base stores using `zarr.extendStore`.
 
 ## Built-in middleware
 
@@ -19,7 +19,7 @@ _compose_ with base stores using `zarr.createStore`.
 ```ts
 import * as zarr from "zarrita";
 
-let store = await zarr.createStore(
+let store = await zarr.extendStore(
   new zarr.FetchStore("https://example.com/data.zarr"),
   zarr.withConsolidation({ format: "v3" }),
   zarr.withRangeBatching(),
@@ -29,11 +29,11 @@ store.contents(); // from zarr.withConsolidation
 store.stats;      // from zarr.withRangeBatching
 ```
 
-Each middleware in the pipeline wraps the previous result. `zarr.createStore`
+Each middleware in the pipeline wraps the previous result. `zarr.extendStore`
 handles async middleware (like `zarr.withConsolidation`, which loads metadata)
 automatically. It always returns a `Promise`.
 
-You can also use middleware directly without `zarr.createStore`:
+You can also use middleware directly without `zarr.extendStore`:
 
 ```ts
 let consolidated = await zarr.withConsolidation(
@@ -44,7 +44,7 @@ let consolidated = await zarr.withConsolidation(
 
 ## Defining your own middleware
 
-Use `zarr.wrapStore` to define custom middleware. The factory function receives
+Use `zarr.defineStoreMiddleware` to define custom middleware. The factory function receives
 the inner store and custom options, and returns an object with method overrides
 and/or new methods. Anything not returned is automatically delegated to the
 inner store via `Proxy`.
@@ -52,7 +52,7 @@ inner store via `Proxy`.
 ```ts
 import * as zarr from "zarrita";
 
-const withCaching = zarr.wrapStore(
+const withCaching = zarr.defineStoreMiddleware(
   (store: zarr.AsyncReadable, opts: { maxSize?: number } = {}) => {
     let cache = new Map<string, Uint8Array>();
     return {
@@ -75,14 +75,14 @@ store.clear(); // new method from the middleware
 ```
 
 The returned middleware supports a **dual API**: call it directly with `(store,
-opts)` or curry it with `(opts)` for use in `zarr.createStore` pipelines:
+opts)` or curry it with `(opts)` for use in `zarr.extendStore` pipelines:
 
 ```ts
 // Direct
 let store = withCaching(new zarr.FetchStore("https://..."), { maxSize: 256 });
 
-// Curried (for zarr.createStore)
-let store = await zarr.createStore(
+// Curried (for zarr.extendStore)
+let store = await zarr.extendStore(
   new zarr.FetchStore("https://..."),
   withCaching({ maxSize: 256 }),
 );
@@ -92,7 +92,7 @@ Middleware can be **sync or async**. If the factory returns a `Promise`, the
 wrapper returns a `Promise` too:
 
 ```ts
-const withMetadata = zarr.wrapStore(
+const withMetadata = zarr.defineStoreMiddleware(
   async (store: zarr.AsyncReadable, opts: { key: string }) => {
     let meta = JSON.parse(new TextDecoder().decode(await store.get(opts.key)));
     return {
@@ -110,7 +110,7 @@ store.metadata(); // loaded during initialization
 Stores are generic over their request options type. For example,
 [`zarr.FetchStore`](/packages/storage#fetchstore) uses `RequestInit` so you can
 pass headers or an `AbortSignal` to individual requests. Most middleware
-doesn't need to know about this type, and `zarr.wrapStore` preserves it
+doesn't need to know about this type, and `zarr.defineStoreMiddleware` preserves it
 automatically through the chain.
 
 Sometimes, though, middleware options _depend_ on the store's request options.
@@ -120,7 +120,7 @@ should match the store's options.
 
 This is an advanced typing feature purely for caller convenience. It ensures
 users get proper type inference and autocomplete on options that reference
-the store's request type. Use `zarr.wrapStore.generic` with a
+the store's request type. Use `zarr.defineStoreMiddleware.generic` with a
 `zarr.GenericOptions` interface that maps the store's options type into your
 middleware options:
 
@@ -139,7 +139,7 @@ interface LoggingOptsFor extends zarr.GenericOptions {
 }
 
 // 3. Define the middleware
-const withLogging = zarr.wrapStore.generic<LoggingOptsFor>()(
+const withLogging = zarr.defineStoreMiddleware.generic<LoggingOptsFor>()(
   (store, opts: LoggingOptions<unknown> = {}) => {
     let label = opts.label ?? "store";
     let format = opts.formatOptions ?? String;
@@ -168,7 +168,7 @@ let store = withLogging(new zarr.FetchStore("https://..."), {
 This is an advanced pattern. Most middleware won't need it. It exists so
 that _users_ of your middleware get proper type inference and autocomplete
 when their options reference the store's request type. If your options don't
-depend on the store type, use the simpler `zarr.wrapStore` and skip the
+depend on the store type, use the simpler `zarr.defineStoreMiddleware` and skip the
 `zarr.GenericOptions` boilerplate entirely.
 
 Under the hood, `zarr.GenericOptions` uses TypeScript's `this` types to encode
