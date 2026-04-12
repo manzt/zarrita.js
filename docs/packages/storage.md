@@ -61,16 +61,80 @@ import { FetchStore } from "@zarrita/storage";
 const store = new FetchStore("http://localhost:8080/data.zarr");
 ```
 
-#### Default Fetch Options
+#### Response handling
 
-You can specify default fetch options using the `overrides` parameter when
-initializing the `FetchStore`. These act as base configurations for every fetch
-request:
+The store interprets HTTP responses as follows:
+
+| Status        | Meaning                                    |
+| ------------- | ------------------------------------------ |
+| **404**       | Missing key — returns `undefined`          |
+| **200 / 206** | Success — body is read as `Uint8Array`     |
+| **Any other** | Throws an error                            |
+
+If your backend returns different status codes for missing keys (e.g., S3
+returns **403** for missing keys on private buckets), you can remap them with a
+custom `fetch` (see below).
+
+#### Custom `fetch`
+
+You can provide a custom `fetch` function to intercept every request made by the
+store. It receives a standard
+[WinterTC fetch handler](https://github.com/nicolo-ribaudo/tc55-proposal-functions-api),
+similar to Cloudflare Workers, Deno.serve, and Bun.serve — a
+[`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) in, a
+[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) out.
+
+This is the recommended way to add authentication, presign URLs, or transform
+requests.
+
+::: warning Important
+Sharding and partial reads rely on `Range` headers in the request. When
+transforming a request (e.g., changing the URL), always use
+`new Request(newUrl, originalRequest)` to preserve headers, abort signals, and
+other options passed via `store.get(key, init)`.
+:::
 
 ```javascript
-const fetchOptions = { headers: { Authorization: "XXXXX" } };
-const store = new FetchStore("http://localhost:8080/data.zarr", {
-	overrides: fetchOptions,
+const store = new FetchStore("https://my-bucket.s3.amazonaws.com/data.zarr", {
+	async fetch(request) {
+		const newUrl = await presign(request.url);
+		// Preserves headers, abort signal, and other options from store.get(key, init)
+		return fetch(new Request(newUrl, request));
+	},
+});
+```
+
+##### Adding authentication headers
+
+You can set headers on the request directly, which replaces the need for the
+deprecated `overrides` option. Since the handler runs on every request, you can
+also dynamically refresh credentials:
+
+```javascript
+const store = new FetchStore("https://example.com/data.zarr", {
+	async fetch(request) {
+		const token = await getAccessToken();
+		request.headers.set("Authorization", `Bearer ${token}`);
+		return fetch(request);
+	},
+});
+```
+
+##### Handling S3 403 responses
+
+S3 returns **403** (not 404) for missing keys on private buckets, which causes
+the store to throw. If you know that 403 means "not found" in your setup, remap
+it:
+
+```javascript
+const store = new FetchStore("https://my-bucket.s3.amazonaws.com/data.zarr", {
+	async fetch(request) {
+		const response = await fetch(request);
+		if (response.status === 403) {
+			return new Response(null, { status: 404 });
+		}
+		return response;
+	},
 });
 ```
 
@@ -88,8 +152,10 @@ const bytes = await store.get("/zarr.json", {
 });
 ```
 
-These options override the defaults for the store, except headers are merged
-(with the latter taking precedent).
+These per-request options are merged into the `Request` passed to your custom
+`fetch` (or the global `fetch` if none is provided). Headers are merged, with
+per-request headers taking precedence.
+
 
 ### FileSystemStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writable" />
 

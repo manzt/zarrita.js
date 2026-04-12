@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, assert, describe, expect, it, vi } from "vitest";
 
 import FetchStore from "../src/fetch.js";
 
@@ -117,7 +117,10 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href);
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json", { headers });
-		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, { headers });
+		let request = spy.mock.calls[0][0];
+		assert(request instanceof Request);
+		expect(request.url).toBe(`${href}/zarr.json`);
+		expect(request.headers.get("x-test")).toBe("test");
 	});
 
 	it("forwards request options to fetch when configured globally", async () => {
@@ -125,7 +128,10 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href, { overrides: { headers } });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json");
-		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, { headers });
+		let request = spy.mock.calls[0][0];
+		assert(request instanceof Request);
+		expect(request.url).toBe(`${href}/zarr.json`);
+		expect(request.headers.get("x-test")).toBe("test");
 	});
 
 	it("merges request options", async () => {
@@ -136,10 +142,12 @@ describe("FetchStore", () => {
 		let store = new FetchStore(href, { overrides });
 		let spy = vi.spyOn(globalThis, "fetch");
 		await store.get("/zarr.json", { headers: { "x-test": "override" } });
-		expect(spy).toHaveBeenCalledWith(`${href}/zarr.json`, {
-			headers: { "x-test": "override", "x-test2": "root" },
-			cache: "no-cache",
-		});
+		let request = spy.mock.calls[0][0];
+		assert(request instanceof Request);
+		expect(request.url).toBe(`${href}/zarr.json`);
+		expect(request.headers.get("x-test")).toBe("override");
+		expect(request.headers.get("x-test2")).toBe("root");
+		expect(request.cache).toBe("no-cache");
 	});
 
 	it("reads partial - suffixLength", async () => {
@@ -164,5 +172,109 @@ describe("FetchStore", () => {
 			  "consolida"
 		`,
 		);
+	});
+
+	describe("custom fetch", () => {
+		it("uses custom fetch for get requests", async () => {
+			let customFetch = vi.fn((request: Request) => fetch(request));
+			let store = new FetchStore(href, { fetch: customFetch });
+			let bytes = await store.get("/zarr.json");
+			expect(bytes).toBeInstanceOf(Uint8Array);
+			expect(customFetch).toHaveBeenCalledOnce();
+			let request = customFetch.mock.calls[0][0];
+			expect(request).toBeInstanceOf(Request);
+			expect(request.url).toBe(`${href}/zarr.json`);
+		});
+
+		it("uses custom fetch for getRange requests", async () => {
+			let customFetch = vi.fn((request: Request) => fetch(request));
+			let store = new FetchStore(href, { fetch: customFetch });
+			let bytes = await store.getRange("/zarr.json", {
+				offset: 4,
+				length: 50,
+			});
+			expect(bytes).toBeInstanceOf(Uint8Array);
+			expect(customFetch).toHaveBeenCalledOnce();
+			let request = customFetch.mock.calls[0][0];
+			expect(request.headers.get("Range")).toBe("bytes=4-53");
+		});
+
+		it("allows intercepting and modifying the request", async () => {
+			let store = new FetchStore(href, {
+				async fetch(request) {
+					// Add a custom header before sending
+					let modified = new Request(request, {
+						headers: {
+							...Object.fromEntries(request.headers),
+							"x-custom": "test",
+						},
+					});
+					return fetch(modified);
+				},
+			});
+			let bytes = await store.get("/zarr.json");
+			expect(bytes).toBeInstanceOf(Uint8Array);
+		});
+
+		it("allows remapping status codes", async () => {
+			let store = new FetchStore("http://localhost:51204/does-not-exist", {
+				async fetch(request) {
+					let response = await fetch(request);
+					// Remap any error to 404 (simulates S3 403 → 404 pattern)
+					if (!response.ok && response.status !== 404) {
+						return new Response(null, { status: 404 });
+					}
+					return response;
+				},
+			});
+			let bytes = await store.get("/zarr.json");
+			expect(bytes).toBeUndefined();
+		});
+
+		it("receives merged overrides in the request", async () => {
+			let customFetch = vi.fn((request: Request) => fetch(request));
+			let store = new FetchStore(href, {
+				fetch: customFetch,
+				overrides: { headers: { "x-base": "base" } },
+			});
+			await store.get("/zarr.json", {
+				headers: { "x-request": "request" },
+			});
+			let request = customFetch.mock.calls[0][0];
+			expect(request.headers.get("x-base")).toBe("base");
+			expect(request.headers.get("x-request")).toBe("request");
+		});
+
+		it("allows setting headers on the request directly", async () => {
+			let spy = vi.spyOn(globalThis, "fetch");
+			let store = new FetchStore(href, {
+				async fetch(request) {
+					request.headers.set("Authorization", "Bearer test-token");
+					return fetch(request);
+				},
+			});
+			await store.get("/zarr.json");
+			let request = spy.mock.calls[0][0];
+			assert(request instanceof Request);
+			expect(request.headers.get("Authorization")).toBe("Bearer test-token");
+		});
+
+		it("abort signal survives request transformation", async () => {
+			let controller = new AbortController();
+			let store = new FetchStore(href, {
+				async fetch(request) {
+					// Simulate presigning: clone request with a new URL
+					let transformed = new Request(request.url, request);
+					expect(transformed.signal).toBe(request.signal);
+					expect(transformed.signal.aborted).toBe(false);
+					controller.abort();
+					expect(transformed.signal.aborted).toBe(true);
+					throw transformed.signal.reason;
+				},
+			});
+			await expect(
+				store.get("/zarr.json", { signal: controller.signal }),
+			).rejects.toThrow();
+		});
 	});
 });
