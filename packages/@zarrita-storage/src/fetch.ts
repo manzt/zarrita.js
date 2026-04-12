@@ -131,7 +131,7 @@ interface FetchStoreOptions {
  * });
  * ```
  */
-class FetchStore implements AsyncReadable<RequestInit> {
+class FetchStore implements AsyncReadable {
 	#fetch: (request: Request) => Promise<Response>;
 	#overrides: RequestInit;
 	#useSuffixRequest: boolean;

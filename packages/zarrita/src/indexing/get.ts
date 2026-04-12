@@ -5,7 +5,7 @@ import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import {
 	assertSharedArrayBufferAvailable,
 	createBuffer,
-	isAbortable,
+	resolveSignal,
 } from "../util.js";
 import { BasicIndexer } from "./indexer.js";
 import type {
@@ -32,7 +32,7 @@ export async function get<
 >(
 	arr: Array<D, Store>,
 	selection: null | Sel,
-	opts: GetOptions<Parameters<Store["get"]>[1]>,
+	opts: GetOptions,
 	setter: {
 		prepare: Prepare<D, Arr>;
 		setScalar: SetScalar<D, Arr>;
@@ -45,6 +45,7 @@ export async function get<
 		assertSharedArrayBufferAvailable();
 	}
 
+	let signal = resolveSignal(opts);
 	let context = getContext(arr);
 	let indexer = new BasicIndexer({
 		selection,
@@ -55,9 +56,11 @@ export async function get<
 	// Handle scalar arrays (shape=[]) directly, since the indexer yields nothing
 	// for zero-dimensional arrays.
 	if (arr.shape.length === 0) {
-		let { data } = await arr.getChunk([], opts.opts, {
-			useSharedArrayBuffer: opts.useSharedArrayBuffer,
-		});
+		let { data } = await arr.getChunk(
+			[],
+			{ signal },
+			{ useSharedArrayBuffer: opts.useSharedArrayBuffer },
+		);
 		// @ts-expect-error - TS can't narrow this conditional type
 		return unwrap(data, 0);
 	}
@@ -87,12 +90,12 @@ export async function get<
 	let queue = opts.createQueue?.() ?? createQueue();
 	for (const { chunkCoords, mapping } of indexer) {
 		queue.add(async () => {
-			if (isAbortable(opts.opts)) {
-				opts.opts.signal.throwIfAborted();
-			}
-			let { data, shape, stride } = await arr.getChunk(chunkCoords, opts.opts, {
-				useSharedArrayBuffer: opts.useSharedArrayBuffer,
-			});
+			signal?.throwIfAborted();
+			let { data, shape, stride } = await arr.getChunk(
+				chunkCoords,
+				{ signal },
+				{ useSharedArrayBuffer: opts.useSharedArrayBuffer },
+			);
 			let chunk = setter.prepare(data, shape, stride);
 			setter.setFromChunk(out, chunk, mapping);
 		});

@@ -1,4 +1,4 @@
-import type { AbsolutePath, Readable } from "@zarrita/storage";
+import type { AbsolutePath, GetOptions, Readable } from "@zarrita/storage";
 import { createShardedChunkGetter } from "./codecs/sharding.js";
 import { createCodecPipeline } from "./codecs.js";
 import type {
@@ -78,10 +78,10 @@ export function getContext<T>(obj: { [CONTEXT_MARKER]: T }): T {
 	return obj[CONTEXT_MARKER];
 }
 
-function createContext<Store extends Readable, D extends DataType>(
+function createContext<D extends DataType>(
 	location: Location<Readable>,
 	metadata: ArrayMetadata<D>,
-): ArrayContext<Store, D> {
+): ArrayContext<D> {
 	let { configuration } = metadata.codecs.find(isShardingCodec) ?? {};
 	let sharedContext = {
 		encodeChunkKey: createChunkKeyEncoder(metadata.chunk_key_encoding),
@@ -136,7 +136,7 @@ function createContext<Store extends Readable, D extends DataType>(
 }
 
 /** For internal use only, and is subject to change. */
-interface ArrayContext<Store extends Readable, D extends DataType> {
+interface ArrayContext<D extends DataType> {
 	kind: "sharded" | "regular";
 	/** The codec pipeline for this array. */
 	codec: ReturnType<typeof createCodecPipeline<D>>;
@@ -151,7 +151,7 @@ interface ArrayContext<Store extends Readable, D extends DataType> {
 	/** A function to get the bytes for a given chunk. */
 	getChunkBytes(
 		chunkCoords: number[],
-		options?: Parameters<Store["get"]>[1],
+		options?: GetOptions,
 	): Promise<Uint8Array | undefined>;
 	/** The chunk shape for this array. */
 	chunkShape: number[];
@@ -163,7 +163,7 @@ export class Array<
 > extends Location<Store> {
 	readonly kind = "array";
 	#metadata: ArrayMetadata<Dtype>;
-	[CONTEXT_MARKER]: ArrayContext<Store, Dtype>;
+	[CONTEXT_MARKER]: ArrayContext<Dtype>;
 
 	constructor(
 		store: Store,
@@ -204,7 +204,7 @@ export class Array<
 
 	async getChunk(
 		chunkCoords: number[],
-		options?: Parameters<Store["get"]>[1],
+		options?: GetOptions,
 		opts?: { useSharedArrayBuffer?: boolean },
 	): Promise<Chunk<Dtype>> {
 		if (opts?.useSharedArrayBuffer) {

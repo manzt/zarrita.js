@@ -1,4 +1,9 @@
-import type { AbsolutePath, AsyncReadable, Readable } from "@zarrita/storage";
+import type {
+	AbsolutePath,
+	AsyncReadable,
+	GetOptions,
+	Readable,
+} from "@zarrita/storage";
 import { InvalidMetadataError, NotFoundError } from "../errors.js";
 import type {
 	ArrayMetadata,
@@ -219,7 +224,7 @@ export const withConsolidation = defineStoreMiddleware(
 				return {
 					async get(
 						key: AbsolutePath,
-						options?: unknown,
+						options?: GetOptions,
 					): Promise<Uint8Array | undefined> {
 						if (knownMeta[key]) {
 							return jsonEncodeObject(knownMeta[key]);
