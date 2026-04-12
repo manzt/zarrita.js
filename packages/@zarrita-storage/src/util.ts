@@ -7,20 +7,27 @@ export function stripPrefix<Path extends AbsolutePath>(
 	return path.slice(1);
 }
 
-export function uri2href(url: string | URL) {
-	let [protocol, rest] = (typeof url === "string" ? url : url.href).split(
-		"://",
-	);
-	if (protocol === "https" || protocol === "http") {
-		return url;
+/** Maps cloud-storage URI protocols to their HTTPS hosts. */
+const PROTOCOL_HOSTS: Record<string, string> = {
+	"gs:": "storage.googleapis.com",
+	"gcs:": "storage.googleapis.com",
+	"s3:": "s3.amazonaws.com",
+};
+
+/**
+ * Translate cloud-storage URIs (`s3://`, `gs://`, `gcs://`) to HTTPS URLs.
+ * HTTP(S) URLs are returned as-is.
+ */
+export function resolveUri(url: string | URL): string {
+	const href = typeof url === "string" ? url : url.href;
+	const colon = href.indexOf("://");
+	if (colon === -1) return href;
+	const protocol = href.slice(0, colon + 1);
+	const host = PROTOCOL_HOSTS[protocol];
+	if (host) {
+		return `https://${host}/${href.slice(colon + 3)}`;
 	}
-	if (protocol === "gc") {
-		return `https://storage.googleapis.com/${rest}`;
-	}
-	if (protocol === "s3") {
-		return `https://s3.amazonaws.com/${rest}`;
-	}
-	throw Error(`Protocol not supported, got: ${JSON.stringify(protocol)}`);
+	return href;
 }
 
 export function fetchRange(
