@@ -8,25 +8,19 @@ of the array.
 The specification for this codec can be found at https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/scale_offset
 */
 
-import type {
-	BigintDataType,
-	Chunk,
-	NumberDataType,
-	Scalar,
-} from "../metadata.js";
-
-type ScaleOffsetCompatibleType = NumberDataType | BigintDataType;
-
-type SpecialFloat = "NaN" | "Infinity" | "-Infinity";
-type HexString = `0x${string}`;
-type JsonScalar = number | SpecialFloat | HexString;
+import type { Chunk, Scalar } from "../metadata.js";
+import {
+	type JsonScalar,
+	type NumericDataType,
+	parseJsonScalar,
+} from "./json-scalar.js";
 
 interface ScaleOffsetConfig {
 	scale: JsonScalar;
 	offset: JsonScalar;
 }
 
-const SCALE_OFFSET_SUPPORTED_DATA_TYPE: ReadonlySet<string> = new Set<ScaleOffsetCompatibleType>([
+const SUPPORTED: ReadonlySet<string> = new Set<NumericDataType>([
 	"int8",
 	"uint8",
 	"int16",
@@ -40,78 +34,7 @@ const SCALE_OFFSET_SUPPORTED_DATA_TYPE: ReadonlySet<string> = new Set<ScaleOffse
 	"float64",
 ]);
 
-// Overlaps with ensureCorrectScalar in metadata.ts
-const SPECIAL_FLOATS: Record<string, number> = {
-	NaN: NaN,
-	Infinity: Infinity,
-	"-Infinity": -Infinity,
-};
-
-const FLOAT_BYTES: Record<string, number> = {
-	float16: 2,
-	float32: 4,
-	float64: 8,
-};
-
-/*
-Reinterpret a hex-encoded integer as a float of the given byte width. 
-This is necessary because the Zarr V3 spec allows floats to declare their fill value as a hex 
-string representing the raw bytes of the float.
- */
-function hexToFloat(hex: string, byteWidth: number): number {
-	const int = BigInt(hex);
-	const buf = new ArrayBuffer(byteWidth);
-	const view = new DataView(buf);
-	if (byteWidth === 2) {
-		view.setUint16(0, Number(int));
-		return view.getFloat16(0);
-	}
-	if (byteWidth === 4) {
-		view.setUint32(0, Number(int));
-		return view.getFloat32(0);
-	}
-	view.setBigUint64(0, int);
-	return view.getFloat64(0);
-}
-
-function isFloatType(dataType: string): boolean {
-	return dataType in FLOAT_BYTES;
-}
-
-// Overlaps with ensureCorrectScalar in metadata.ts
-function toScalar<D extends ScaleOffsetCompatibleType>(
-	dataType: D,
-	value: JsonScalar,
-): Scalar<D> {
-	if (dataType === "int64" || dataType === "uint64") {
-		if (typeof value !== "number" || !Number.isInteger(value)) {
-			throw new Error(
-				`Expected an integer value for data type "${dataType}", got ${JSON.stringify(value)}`,
-			);
-		}
-		return BigInt(value) as Scalar<D>;
-	}
-	if (typeof value === "number") {
-		if (!isFloatType(dataType) && !Number.isInteger(value)) {
-			throw new Error(
-				`Expected an integer value for data type "${dataType}", got ${value}`,
-			);
-		}
-		return value as Scalar<D>;
-	}
-	// value is SpecialFloat | HexString — only valid for float types
-	if (!isFloatType(dataType)) {
-		throw new Error(
-			`String-encoded scalar "${value}" is not valid for non-float data type "${dataType}"`,
-		);
-	}
-	if (value in SPECIAL_FLOATS) {
-		return SPECIAL_FLOATS[value] as Scalar<D>;
-	}
-	return hexToFloat(value, FLOAT_BYTES[dataType]) as Scalar<D>;
-}
-
-export class ScaleOffsetCodec<D extends ScaleOffsetCompatibleType> {
+export class ScaleOffsetCodec<D extends NumericDataType> {
 	kind = "array_to_array" as const;
 	#scale: Scalar<D>;
 	#offset: Scalar<D>;
@@ -121,25 +44,23 @@ export class ScaleOffsetCodec<D extends ScaleOffsetCompatibleType> {
 		this.#offset = offset;
 	}
 
-	static fromConfig<D extends ScaleOffsetCompatibleType>(
+	static fromConfig<D extends NumericDataType>(
 		config: ScaleOffsetConfig,
 		meta: { dataType: D },
 	): ScaleOffsetCodec<D> {
-		if (!SCALE_OFFSET_SUPPORTED_DATA_TYPE.has(meta.dataType)) {
+		if (!SUPPORTED.has(meta.dataType)) {
 			throw new Error(
 				`ScaleOffset codec does not support data type: ${meta.dataType}`,
 			);
 		}
 		return new ScaleOffsetCodec(
-			toScalar(meta.dataType, config.scale),
-			toScalar(meta.dataType, config.offset),
+			parseJsonScalar(meta.dataType, config.scale),
+			parseJsonScalar(meta.dataType, config.offset),
 		);
 	}
 
 	encode(_chunk: Chunk<D>): never {
-		throw new Error(
-			"ScaleOffset encoding is not supported.",
-		);
+		throw new Error("ScaleOffset encoding is not supported.");
 	}
 
 	decode(chunk: Chunk<D>): Chunk<D> {
