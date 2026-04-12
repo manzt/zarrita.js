@@ -5,6 +5,7 @@ import { Crc32cCodec } from "./codecs/crc32c.js";
 import { DeltaCodec } from "./codecs/delta.js";
 import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
+import { ScaleOffsetCodec } from "./codecs/scale_offset.js";
 import { ShuffleCodec } from "./codecs/shuffle.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
@@ -54,6 +55,7 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("numcodecs.vlen-utf8", () => VLenUTF8)
 			.set("numcodecs.shuffle", () => ShuffleCodec)
 			.set("numcodecs.delta", () => DeltaCodec)
+			.set("numcodecs.scale_offset", () => ScaleOffsetCodec)
 	);
 }
 
