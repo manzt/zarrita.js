@@ -1,3 +1,4 @@
+export type { FetchStoreOptions } from "./fetch.js";
 export { default as FetchStore } from "./fetch.js";
 export { default as FileSystemStore } from "./fs.js";
 export { default as ReferenceStore } from "./ref.js";
