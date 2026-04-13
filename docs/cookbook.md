@@ -188,20 +188,9 @@ let store = zarr.withRangeBatching(
 );
 ```
 
-By default the first caller's options (headers, signal, etc.) are forwarded to
-the inner store. If you need to combine options from all callers in a batch,
-pass a `mergeOptions` reducer:
-
-```js
-let store = zarr.withRangeBatching(
-  new zarr.FetchStore("https://localhost:8080/data.zarr"),
-  {
-    mergeOptions: (batch) => ({
-      signal: AbortSignal.any(batch.map((o) => o?.signal).filter(Boolean)),
-    }),
-  },
-);
-```
+When multiple callers each pass their own `AbortSignal` and their requests
+land in the same batch, the signals are merged via `AbortSignal.any`: the
+shared request aborts as soon as any one caller aborts.
 
 You can inspect batching statistics via `store.stats`:
 

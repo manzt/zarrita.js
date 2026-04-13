@@ -110,3 +110,39 @@ describe("signal propagation through zarr.get", () => {
 		).rejects.toThrow(/abort/i);
 	});
 });
+
+describe("zarr.set cancels on signal", () => {
+	it("aborting signal rejects a pending zarr.set", async () => {
+		let store = new Map<string, Uint8Array>();
+		let arr = await zarr.create(store, {
+			dtype: "int16",
+			shape: [4],
+			chunkShape: [2],
+		});
+		let ctl = new AbortController();
+		ctl.abort(new Error("aborted"));
+		await expect(
+			zarr.set(arr, null, 42, { signal: ctl.signal }),
+		).rejects.toThrow(/abort/i);
+	});
+});
+
+describe("signal propagation through extendStore pipeline", () => {
+	it("reaches the inner store through multiple middlewares", async () => {
+		let fsStore = new zarr.FileSystemStore(fixturesRoot);
+		let { store: recorder, calls } = recordingStore(fsStore);
+		let composed = await zarr.extendStore(recorder, (s) =>
+			zarr.withRangeBatching(s),
+		);
+		let arr = await zarr.open.v3(
+			zarr.root(composed).resolve("1d.chunked.compressed.sharded.i2"),
+			{ kind: "array" },
+		);
+		let ctl = new AbortController();
+		await zarr.get(arr, null, { signal: ctl.signal });
+		// At least one of the inner-store calls carried our signal through
+		// the batching middleware.
+		let seen = calls.some((c) => c?.signal === ctl.signal);
+		expect(seen).toBe(true);
+	});
+});
