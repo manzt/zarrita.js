@@ -19,6 +19,7 @@ export function createShardedChunkGetter<Store extends Readable>(
 		dataType: "uint64",
 		shape: [...indexShape, 2],
 		codecs: shardingConfig.index_codecs,
+		fillValue: null,
 	});
 
 	let checksumSize = 4;
