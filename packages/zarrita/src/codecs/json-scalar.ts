@@ -47,6 +47,11 @@ function hexToFloat(hex: string, byteWidth: number): number {
 	const buf = new ArrayBuffer(byteWidth);
 	const view = new DataView(buf);
 	if (byteWidth === 2) {
+		if (typeof view.getFloat16 !== "function") {
+			throw new Error(
+				"Decoding a float16 hex-encoded scalar requires DataView.prototype.getFloat16, which is not available in this runtime.",
+			);
+		}
 		view.setUint16(0, Number(int));
 		return view.getFloat16(0);
 	}
