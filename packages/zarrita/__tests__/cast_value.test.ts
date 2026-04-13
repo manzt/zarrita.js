@@ -360,7 +360,9 @@ describe("CastValueCodec", () => {
 			const i64Max = 2n ** 63n - 1n;
 			const chunk = makeChunk(new BigUint64Array([0n, i64Max, i64Max + 1n]));
 			const decoded = codec.decode(chunk);
-			expect(decoded.data).toStrictEqual(new BigInt64Array([0n, i64Max, i64Max]));
+			expect(decoded.data).toStrictEqual(
+				new BigInt64Array([0n, i64Max, i64Max]),
+			);
 		});
 
 		test("uint64 -> int64 with wrap", () => {
@@ -577,7 +579,12 @@ describe("CastValueCodec", () => {
 			const codec = CastValueCodec.fromConfig(
 				{
 					data_type: "int32",
-					scalar_map: { decode: [[1, 100], [1, 200]] },
+					scalar_map: {
+						decode: [
+							[1, 100],
+							[1, 200],
+						],
+					},
 				},
 				{ dataType: "int32" },
 			);
@@ -713,9 +720,7 @@ describe("CastValueCodec", () => {
 			const pipeline = createCodecPipeline({
 				dataType: "int32",
 				shape: [4],
-				codecs: [
-					{ name: "bytes", configuration: { endian: "little" } },
-				],
+				codecs: [{ name: "bytes", configuration: { endian: "little" } }],
 				fillValue: 42,
 			});
 			const resolved = await pipeline.resolvedFillValue();

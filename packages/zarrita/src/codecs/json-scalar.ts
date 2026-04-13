@@ -9,11 +9,7 @@ The Zarr V3 spec encodes numeric scalars in JSON as either:
 See https://github.com/zarr-developers/zarr-specs/blob/main/docs/v3/data-types/index.rst#permitted-fill-values
 */
 
-import type {
-	BigintDataType,
-	NumberDataType,
-	Scalar,
-} from "../metadata.js";
+import type { BigintDataType, NumberDataType, Scalar } from "../metadata.js";
 
 export type NumericDataType = NumberDataType | BigintDataType;
 

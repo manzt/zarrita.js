@@ -154,9 +154,7 @@ function makeIntRangeCheck(
 			return (v) => (v < lo ? lo : v > hi ? hi : v);
 		case "wrap":
 			return (v) =>
-				v >= lo && v <= hi
-					? v
-					: ((((v - lo) % range) + range) % range) + lo;
+				v >= lo && v <= hi ? v : ((((v - lo) % range) + range) % range) + lo;
 		default:
 			return (v) => {
 				if (v >= lo && v <= hi) return v;
@@ -179,9 +177,7 @@ function makeBigintRangeCheck(
 			return (v) => (v < lo ? lo : v > hi ? hi : v);
 		case "wrap":
 			return (v) =>
-				v >= lo && v <= hi
-					? v
-					: ((((v - lo) % range) + range) % range) + lo;
+				v >= lo && v <= hi ? v : ((((v - lo) % range) + range) % range) + lo;
 		default:
 			return (v) => {
 				if (v >= lo && v <= hi) return v;
@@ -246,9 +242,17 @@ export class CastValueCodec<
 	}
 
 	/** Return updated metadata reflecting the type and fill value after encoding. */
-	getEncodedMeta(
-		meta: { dataType: string; shape: number[]; codecs: unknown[]; fillValue: unknown },
-	): { dataType: string; shape: number[]; codecs: unknown[]; fillValue: unknown } {
+	getEncodedMeta(meta: {
+		dataType: string;
+		shape: number[];
+		codecs: unknown[];
+		fillValue: unknown;
+	}): {
+		dataType: string;
+		shape: number[];
+		codecs: unknown[];
+		fillValue: unknown;
+	} {
 		let fillValue = meta.fillValue;
 		if (fillValue != null) {
 			fillValue = this.#encodeFillValue(fillValue as Scalar<ArrayDtype>);
@@ -301,7 +305,9 @@ export class CastValueCodec<
 
 	decode(chunk: Chunk<EncodedDtype>): Chunk<ArrayDtype> {
 		const input = chunk.data;
-		const out = new this.#arrayTypeCtr(input.length) as Chunk<ArrayDtype>["data"];
+		const out = new this.#arrayTypeCtr(
+			input.length,
+		) as Chunk<ArrayDtype>["data"];
 		for (let i = 0; i < input.length; i++) {
 			out[i] = this.#decodeValue(input[i] as Scalar<EncodedDtype>);
 		}
@@ -346,15 +352,10 @@ function buildConverter<
 	} else if (srcIsFloat && !dstIsFloat && !dstIsBigint) {
 		// float -> int (number)
 		const round = getRoundingFn(rounding);
-		const check = makeIntRangeCheck(
-			...INT_BOUNDS[targetType],
-			outOfRange,
-		);
+		const check = makeIntRangeCheck(...INT_BOUNDS[targetType], outOfRange);
 		baseFn = (v: number) => {
 			if (!Number.isFinite(v)) {
-				throw new Error(
-					`Cannot cast ${v} to integer type without scalar_map`,
-				);
+				throw new Error(`Cannot cast ${v} to integer type without scalar_map`);
 			}
 			return check(round(v));
 		};
@@ -367,9 +368,7 @@ function buildConverter<
 		);
 		baseFn = (v: number) => {
 			if (!Number.isFinite(v)) {
-				throw new Error(
-					`Cannot cast ${v} to integer type without scalar_map`,
-				);
+				throw new Error(`Cannot cast ${v} to integer type without scalar_map`);
 			}
 			return check(BigInt(round(v)));
 		};
@@ -381,10 +380,7 @@ function buildConverter<
 		baseFn = (v: bigint) => Number(v);
 	} else if (!srcIsFloat && !srcIsBigint && !dstIsFloat && !dstIsBigint) {
 		// int (number) -> int (number)
-		baseFn = makeIntRangeCheck(
-			...INT_BOUNDS[targetType],
-			outOfRange,
-		);
+		baseFn = makeIntRangeCheck(...INT_BOUNDS[targetType], outOfRange);
 	} else if (!srcIsFloat && !srcIsBigint && dstIsBigint) {
 		// int (number) -> bigint
 		const check = makeBigintRangeCheck(
@@ -394,17 +390,11 @@ function buildConverter<
 		baseFn = (v: number) => check(BigInt(v));
 	} else if (srcIsBigint && !dstIsFloat && !dstIsBigint) {
 		// bigint -> int (number)
-		const check = makeIntRangeCheck(
-			...INT_BOUNDS[targetType],
-			outOfRange,
-		);
+		const check = makeIntRangeCheck(...INT_BOUNDS[targetType], outOfRange);
 		baseFn = (v: bigint) => check(Number(v));
 	} else if (srcIsBigint && dstIsBigint) {
 		// bigint -> bigint
-		baseFn = makeBigintRangeCheck(
-			...BIGINT_BOUNDS[targetType],
-			outOfRange,
-		);
+		baseFn = makeBigintRangeCheck(...BIGINT_BOUNDS[targetType], outOfRange);
 	} else {
 		throw new Error(
 			`Unhandled type combination: ${sourceType} -> ${targetType}`,
