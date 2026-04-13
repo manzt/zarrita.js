@@ -1,4 +1,5 @@
 import type { AbsolutePath, AsyncReadable, RangeQuery } from "@zarrita/storage";
+import { UnsupportedError } from "./errors.js";
 
 /**
  * Simple LRU cache using Map insertion order.
@@ -168,7 +169,9 @@ export class BatchedRangeStore<Options = unknown>
 		options?: BatchedRangeStoreOptions<Options>,
 	) {
 		if (!inner.getRange) {
-			throw new Error("BatchedRangeStore requires a store with getRange");
+			throw new UnsupportedError(
+				"BatchedRangeStore requires a store with getRange",
+			);
 		}
 		this.#inner = inner;
 		this.#innerGetRange = inner.getRange.bind(inner);

@@ -5,8 +5,10 @@ casting procedure to each element.
 The specification for this codec can be found at https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/cast_value
 */
 
+import { InvalidMetadataError } from "../errors.js";
 import type { Chunk, Scalar } from "../metadata.js";
 import { getCtr } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 import {
 	isBigintType,
 	isFloatType,
@@ -267,13 +269,13 @@ export class CastValueCodec<
 		const arrayType = meta.dataType;
 		const encodedType = config.data_type;
 		if (!SUPPORTED.has(arrayType)) {
-			throw new Error(
-				`CastValue codec does not support array data type: ${arrayType}`,
+			throw new InvalidMetadataError(
+				`cast_value codec does not support array data type: ${arrayType}`,
 			);
 		}
 		if (!SUPPORTED.has(encodedType)) {
-			throw new Error(
-				`CastValue codec does not support encoded data type: ${encodedType}`,
+			throw new InvalidMetadataError(
+				`cast_value codec does not support encoded data type: ${encodedType}`,
 			);
 		}
 		const rounding = config.rounding ?? "nearest-even";
@@ -299,9 +301,7 @@ export class CastValueCodec<
 		);
 	}
 
-	encode(_chunk: Chunk<ArrayDtype>): never {
-		throw new Error("CastValue encoding is not supported.");
-	}
+	encode = unimplementedEncode("cast_value");
 
 	decode(chunk: Chunk<EncodedDtype>): Chunk<ArrayDtype> {
 		const input = chunk.data;
@@ -343,8 +343,8 @@ function buildConverter<
 
 	if (srcIsFloat && dstIsFloat) {
 		if (rounding !== "nearest-even") {
-			throw new Error(
-				`CastValue float -> float only supports "nearest-even" rounding, got "${rounding}"`,
+			throw new InvalidMetadataError(
+				`cast_value float -> float only supports "nearest-even" rounding, got "${rounding}"`,
 			);
 		}
 		// TypedArray assignment handles nearest-even natively.

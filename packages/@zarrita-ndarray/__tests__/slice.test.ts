@@ -1,6 +1,6 @@
 import ndarray from "ndarray";
 import { describe, expect, it } from "vitest";
-import { create, IndexError, slice } from "zarrita";
+import { create, InvalidSelectionError, slice } from "zarrita";
 
 import { get, set } from "../src/index.js";
 
@@ -125,6 +125,6 @@ describe("builtin slice", async () => {
 
 	it("Does not support negative indices", async () => {
 		let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-		await expect(get(arr, sel)).rejects.toThrowError(IndexError);
+		await expect(get(arr, sel)).rejects.toThrowError(InvalidSelectionError);
 	});
 });

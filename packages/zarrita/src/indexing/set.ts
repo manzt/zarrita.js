@@ -1,5 +1,6 @@
 import type { Mutable } from "@zarrita/storage";
 
+import { InvalidSelectionError, UnsupportedError } from "../errors.js";
 import { type Array, getContext } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
 import { isAbortable } from "../util.js";
@@ -32,7 +33,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 ) {
 	const context = getContext(arr);
 	if (context.kind === "sharded") {
-		throw new Error("Set not supported for sharded arrays.");
+		throw new UnsupportedError("set on sharded arrays");
 	}
 	const indexer = new BasicIndexer({
 		selection,
@@ -45,7 +46,9 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 	if (arr.shape.length === 0) {
 		const chunkData = new context.TypedArray(1);
 		if (typeof value === "object") {
-			throw new Error("Cannot set a scalar array with a non-scalar value.");
+			throw new InvalidSelectionError(
+				"Cannot set a scalar array with a non-scalar value.",
+			);
 		}
 		// @ts-expect-error - Value is a scalar
 		chunkData.fill(value);

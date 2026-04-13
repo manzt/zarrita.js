@@ -1,5 +1,5 @@
 import type { Readable } from "@zarrita/storage";
-import { JsonDecodeError, KeyError, NodeNotFoundError } from "./errors.js";
+import { InvalidMetadataError, NotFoundError } from "./errors.js";
 import { Array, Group, Location } from "./hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -74,7 +74,7 @@ async function openV2<Store extends Readable>(
 	if (options.kind === "array") return openArrayV2(loc, attrs, opts);
 	if (options.kind === "group") return openGroupV2(loc, attrs, opts);
 	return openArrayV2(loc, attrs, opts).catch((err) => {
-		rethrowUnless(err, NodeNotFoundError, JsonDecodeError);
+		rethrowUnless(err, NotFoundError, InvalidMetadataError);
 		return openGroupV2(loc, attrs, opts);
 	});
 }
@@ -87,9 +87,7 @@ async function openArrayV2<Store extends Readable>(
 	let { path } = location.resolve(".zarray");
 	let meta = await location.store.get(path, opts);
 	if (!meta) {
-		throw new NodeNotFoundError("v2 array", {
-			cause: new KeyError(path),
-		});
+		throw new NotFoundError("v2 array", { path });
 	}
 	VERSION_COUNTER.increment(location.store, "v2");
 	return new Array(
@@ -107,9 +105,7 @@ async function openGroupV2<Store extends Readable>(
 	let { path } = location.resolve(".zgroup");
 	let meta = await location.store.get(path, opts);
 	if (!meta) {
-		throw new NodeNotFoundError("v2 group", {
-			cause: new KeyError(path),
-		});
+		throw new NotFoundError("v2 group", { path });
 	}
 	VERSION_COUNTER.increment(location.store, "v2");
 	return new Group(
@@ -126,9 +122,7 @@ async function _openV3<Store extends Readable>(
 	let { store, path } = location.resolve("zarr.json");
 	let meta = await location.store.get(path, opts);
 	if (!meta) {
-		throw new NodeNotFoundError("v3 array or group", {
-			cause: new KeyError(path),
-		});
+		throw new NotFoundError("v3 array or group", { path });
 	}
 	let metaDoc: ArrayMetadata<DataType> | GroupMetadata = jsonDecodeObject(meta);
 	if (metaDoc.node_type === "array") {
@@ -169,8 +163,11 @@ async function openV3<Store extends Readable>(
 	if (options.kind === undefined) return node;
 	if (options.kind === "array" && node instanceof Array) return node;
 	if (options.kind === "group" && node instanceof Group) return node;
-	let kind = node instanceof Array ? "array" : "group";
-	throw new Error(`Expected node of kind ${options.kind}, found ${kind}.`);
+	let kind: "array" | "group" = node instanceof Array ? "array" : "group";
+	throw new NotFoundError(`${options.kind} at ${loc.path}`, {
+		path: loc.path,
+		found: kind,
+	});
 }
 
 export function open<Store extends Readable>(
@@ -208,7 +205,7 @@ export async function open<Store extends Readable>(
 	let openPrimary = versionMax === "v2" ? open.v2 : open.v3;
 	let openSecondary = versionMax === "v2" ? open.v3 : open.v2;
 	return openPrimary(location, options).catch((err) => {
-		rethrowUnless(err, NodeNotFoundError, JsonDecodeError);
+		rethrowUnless(err, NotFoundError, InvalidMetadataError);
 		return openSecondary(location, options);
 	});
 }

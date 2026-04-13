@@ -1,4 +1,5 @@
 import type { Readable } from "@zarrita/storage";
+import { InvalidSelectionError } from "../errors.js";
 import type { Array as ZarrArray } from "../hierarchy.js";
 import type { DataType } from "../metadata.js";
 import type { ChunkQueue, Indices, Slice } from "./types.js";
@@ -60,7 +61,7 @@ export function sliceIndices(
 	length: number,
 ): Indices {
 	if (step === 0) {
-		throw new Error("slice step cannot be zero");
+		throw new InvalidSelectionError("slice step cannot be zero");
 	}
 	step = step ?? 1;
 	const stepIsNegative = step < 0;
@@ -103,7 +104,7 @@ function toInt(value: bigint | number | null): number | null {
 	if (value == null) return null;
 	if (typeof value === "bigint") {
 		if (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER) {
-			throw new RangeError(
+			throw new InvalidSelectionError(
 				`Cannot safely convert ${value} to a number. Value exceeds Number.MAX_SAFE_INTEGER.`,
 			);
 		}
@@ -142,11 +143,13 @@ export function sel<D extends DataType, Store extends Readable>(
 ): (Slice | number | null)[] {
 	let names = arr.dimensionNames;
 	if (!names) {
-		throw new Error("Array does not have dimension_names in its metadata.");
+		throw new InvalidSelectionError(
+			"Array does not have dimension_names in its metadata.",
+		);
 	}
 	for (let key of Object.keys(selection)) {
 		if (!names.includes(key)) {
-			throw new Error(
+			throw new InvalidSelectionError(
 				`Unknown dimension name: "${key}". Available dimensions: ${names.map((n) => `"${n}"`).join(", ")}`,
 			);
 		}

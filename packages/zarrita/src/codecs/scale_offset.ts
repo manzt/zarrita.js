@@ -8,8 +8,10 @@ of the array.
 The specification for this codec can be found at https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/scale_offset
 */
 
+import { InvalidMetadataError } from "../errors.js";
 import type { Chunk, Scalar } from "../metadata.js";
 import { getCtr } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 import {
 	type JsonScalar,
 	type NumericDataType,
@@ -41,7 +43,11 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 	#scale: Scalar<D>;
 	#offset: Scalar<D>;
 
-	constructor(scale: Scalar<D>, offset: Scalar<D>, ctr: ReturnType<typeof getCtr<D>>) {
+	constructor(
+		scale: Scalar<D>,
+		offset: Scalar<D>,
+		ctr: ReturnType<typeof getCtr<D>>,
+	) {
 		this.#scale = scale;
 		this.#offset = offset;
 		this.#ctr = ctr;
@@ -52,20 +58,18 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 		meta: { dataType: D },
 	): ScaleOffsetCodec<D> {
 		if (!SUPPORTED.has(meta.dataType)) {
-			throw new Error(
-				`ScaleOffset codec does not support data type: ${meta.dataType}`,
+			throw new InvalidMetadataError(
+				`scale_offset codec does not support data type: ${meta.dataType}`,
 			);
 		}
 		return new ScaleOffsetCodec(
 			parseJsonScalar(meta.dataType, config.scale ?? 1),
 			parseJsonScalar(meta.dataType, config.offset ?? 0),
-			getCtr(meta.dataType)
+			getCtr(meta.dataType),
 		);
 	}
 
-	encode(_chunk: Chunk<D>): never {
-		throw new Error("ScaleOffset encoding is not supported.");
-	}
+	encode = unimplementedEncode("scale_offset");
 
 	decode(chunk: Chunk<D>): Chunk<D> {
 		const src = chunk.data;

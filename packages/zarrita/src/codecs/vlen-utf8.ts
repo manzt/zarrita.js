@@ -1,5 +1,6 @@
 import type { Chunk, String } from "../metadata.js";
 import { getStrides } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 
 export class VLenUTF8 {
 	readonly kind = "array_to_bytes";
@@ -14,9 +15,7 @@ export class VLenUTF8 {
 		return new VLenUTF8(meta.shape);
 	}
 
-	encode(_chunk: Chunk<String>): Uint8Array {
-		throw new Error("Method not implemented.");
-	}
+	encode = unimplementedEncode("vlen-utf8");
 
 	decode(bytes: Uint8Array): Chunk<String> {
 		let decoder = new TextDecoder();

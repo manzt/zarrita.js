@@ -17,7 +17,7 @@ import {
 	vi,
 } from "vitest";
 
-import { NodeNotFoundError } from "../src/errors.js";
+import { NotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -574,9 +574,9 @@ describe("v2", () => {
 	it("throws when group is not found", async () => {
 		let try_open = () =>
 			open.v2(store.resolve("/not/a/group"), { kind: "group" });
-		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowError(NotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			"[NodeNotFoundError: Node not found: v2 group]",
+			"[NotFoundError: Not found: v2 group]",
 		);
 	});
 
@@ -995,9 +995,9 @@ describe("v3", async () => {
 	it("throws when group not found", async () => {
 		const try_open = () =>
 			open.v3(store.resolve("/not/a/group"), { kind: "group" });
-		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowError(NotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			"[NodeNotFoundError: Node not found: v3 array or group]",
+			"[NotFoundError: Not found: v3 array or group]",
 		);
 	});
 
