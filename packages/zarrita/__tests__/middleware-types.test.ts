@@ -1,6 +1,6 @@
 import type { AbsolutePath, AsyncReadable } from "@zarrita/storage";
 import { expectType } from "tintype";
-import { describe, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import * as zarr from "../src/index.js";
 import { defineStoreMiddleware } from "../src/middleware/define.js";
 
@@ -140,5 +140,34 @@ describe("defineStoreMiddleware", () => {
 				methodA: () => number;
 			}
 		`);
+	});
+	test("function called in middleware definition is only called once", async () => {
+		const someInitializerFunction = vi.fn();
+		let withCustom = defineStoreMiddleware(
+			async (store: AsyncReadable, _opts: { flag: boolean }) => {
+				await someInitializerFunction();
+				return {
+					async get(key: AbsolutePath) {
+						return store.get(key);
+					},
+					hello(): string {
+						return "world";
+					},
+				};
+			},
+		);
+		let fetchSpy = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response(null, { status: 404 }));
+		try {
+			let store = await withCustom(
+				new zarr.FetchStore("http://example.invalid/"),
+				{ flag: true },
+			);
+			await store.get("/path");
+			expect(someInitializerFunction).toHaveBeenCalledTimes(1);
+		} finally {
+			fetchSpy.mockRestore();
+		}
 	});
 });
