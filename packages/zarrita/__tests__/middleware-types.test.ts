@@ -8,7 +8,7 @@ import { defineArrayMiddleware } from "../src/middleware/define-array.js";
 describe("extendStore", () => {
 	test("no middleware returns store as-is", () => {
 		let store = zarr.extendStore(new zarr.FetchStore(""));
-		expectType(store).toMatchInlineSnapshot(`Promise<zarr.FetchStore>`);
+		expectType(store).toMatchInlineSnapshot(`zarr.FetchStore`);
 	});
 
 	test("direct form in pipeline", () => {
@@ -16,12 +16,10 @@ describe("extendStore", () => {
 			zarr.withRangeBatching(s),
 		);
 		expectType(store).toMatchInlineSnapshot(`
-			Promise<
-				Required<AsyncReadable> & {
-					stats: Readonly<zarr.RangeBatchingStats>;
-					url: string | URL;
-				}
-			>
+			Required<AsyncReadable> & {
+				stats: Readonly<zarr.RangeBatchingStats>;
+				url: string | URL;
+			}
 		`);
 	});
 
