@@ -2,13 +2,14 @@
 "zarrita": minor
 ---
 
-Introduce composable store middleware via `defineStoreMiddleware`
+Introduce composable store and array extensions via `defineStoreExtension` and `defineArrayExtension`
 
 **New APIs:**
 
-- `zarr.defineStoreMiddleware(factory)` — define a store middleware with automatic Proxy delegation. The factory receives an `AsyncReadable` store and options, returning overrides and extensions. Supports sync and async factories.
-- `zarr.defineStoreMiddleware.generic<OptsLambda>()(factory)` — for middleware whose options depend on the store's request options type (e.g., `mergeOptions`). Uses `GenericOptions` interface for higher-kinded type encoding.
-- `zarr.extendStore(store, ...middleware)` — compose middleware in a pipeline. Each middleware is `(store) => newStore`. Returns `Promise` to support async middleware like `withConsolidation`.
+- `zarr.defineStoreExtension(factory)` — define a store extension with automatic Proxy delegation. The factory receives an `AsyncReadable` store and options, returning overrides and extensions. Supports sync and async factories.
+- `zarr.defineArrayExtension(factory)` — define an array extension that intercepts `getChunk` on a `zarr.Array`. Same Proxy-delegation model.
+- `zarr.extendStore(store, ...extensions)` — compose store extensions in a pipeline. Each extension is `(store) => newStore`. Returns `Promise` to support async extensions like `withConsolidation`.
+- `zarr.extendArray(array, ...extensions)` — compose array extensions in a pipeline.
 
 **Renamed:**
 
@@ -33,12 +34,12 @@ let store = await zarr.extendStore(
 );
 ```
 
-**Defining custom middleware:**
+**Defining custom extensions:**
 
 ```ts
 import * as zarr from "zarrita";
 
-const withCaching = zarr.defineStoreMiddleware(
+const withCaching = zarr.defineStoreExtension(
   (store, opts: { maxSize?: number }) => {
     let cache = new Map();
     return {
@@ -55,4 +56,4 @@ const withCaching = zarr.defineStoreMiddleware(
 );
 ```
 
-`BatchedRangeStore` class has been removed in favor of `withRangeBatching` built on `zarr.defineStoreMiddleware`.
+`BatchedRangeStore` class has been removed in favor of `withRangeBatching` built on `zarr.defineStoreExtension`.

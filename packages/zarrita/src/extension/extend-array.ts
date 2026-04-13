@@ -1,7 +1,7 @@
 import type { Readable } from "@zarrita/storage";
 import type { Array } from "../hierarchy.js";
 import type { DataType } from "../metadata.js";
-import { applyMiddlewares, type MaybeAsync } from "./extend.js";
+import { applyExtensions, type MaybeAsync } from "./extend.js";
 
 type AnyArray = Array<DataType, Readable>;
 
@@ -38,7 +38,7 @@ export function extendArray<A extends AnyArray, R1, R2, R3, R4, R5>(
 ): MaybeAsync<R5, [R1, R2, R3, R4, R5]>;
 export function extendArray(
 	array: AnyArray,
-	...middlewares: ((array: unknown) => unknown)[]
+	...extensions: ((array: unknown) => unknown)[]
 ): unknown {
-	return applyMiddlewares(array, middlewares);
+	return applyExtensions(array, extensions);
 }

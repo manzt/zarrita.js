@@ -1,8 +1,8 @@
 import * as path from "node:path";
 import * as url from "node:url";
 import { describe, expect, it } from "vitest";
+import { defineArrayExtension } from "../src/extension/define-array.js";
 import * as zarr from "../src/index.js";
-import { defineArrayMiddleware } from "../src/middleware/define-array.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 let fixturesRoot = path.resolve(__dirname, "../../../fixtures/v3/data.zarr");
@@ -12,10 +12,10 @@ async function openFixture(name: string) {
 	return zarr.open.v3(zarr.root(store).resolve(name), { kind: "array" });
 }
 
-describe("defineArrayMiddleware", () => {
+describe("defineArrayExtension", () => {
 	it("intercepts getChunk", async () => {
 		let calls: number[][] = [];
-		let withTrace = defineArrayMiddleware((array) => ({
+		let withTrace = defineArrayExtension((array) => ({
 			async getChunk(coords, options) {
 				calls.push(coords);
 				return array.getChunk(coords, options);
@@ -29,7 +29,7 @@ describe("defineArrayMiddleware", () => {
 	});
 
 	it("pass-through getters still work (private field access)", async () => {
-		let withNoop = defineArrayMiddleware((_array) => ({}));
+		let withNoop = defineArrayExtension((_array) => ({}));
 		let arr = await openFixture("1d.chunked.i2");
 		let wrapped = withNoop(arr);
 		// These all read from `this.#metadata` via getters on Array.
@@ -40,7 +40,7 @@ describe("defineArrayMiddleware", () => {
 	});
 
 	it("extensions appear on the wrapped array", async () => {
-		let withCounter = defineArrayMiddleware((_array) => {
+		let withCounter = defineArrayExtension((_array) => {
 			let n = 0;
 			return {
 				bump() {
@@ -60,7 +60,7 @@ describe("defineArrayMiddleware", () => {
 
 	it("works with zarr.get through the interception chain", async () => {
 		let cache = new Map<string, zarr.Chunk<zarr.DataType>>();
-		let withCache = defineArrayMiddleware((array) => ({
+		let withCache = defineArrayExtension((array) => ({
 			async getChunk(coords, options) {
 				let key = coords.join(",");
 				let hit = cache.get(key);
@@ -81,22 +81,22 @@ describe("defineArrayMiddleware", () => {
 });
 
 describe("extendArray", () => {
-	it("no middleware returns the array as-is", async () => {
+	it("no extension returns the array as-is", async () => {
 		let arr = await openFixture("1d.chunked.i2");
 		let result = await zarr.extendArray(arr);
 		expect(result).toBe(arr);
 	});
 
-	it("composes multiple middlewares in order", async () => {
+	it("composes multiple extensions in order", async () => {
 		let order: string[] = [];
-		let withA = defineArrayMiddleware((_array) => ({
+		let withA = defineArrayExtension((_array) => ({
 			tagA: "a",
 			async getChunk(coords, options) {
 				order.push("a");
 				return _array.getChunk(coords, options);
 			},
 		}));
-		let withB = defineArrayMiddleware((_array) => ({
+		let withB = defineArrayExtension((_array) => ({
 			tagB: "b",
 			async getChunk(coords, options) {
 				order.push("b");

@@ -76,24 +76,24 @@ export function assertFactoryResult(
 	value: unknown,
 ): asserts value is Record<string | symbol, unknown> {
 	if (value == null || typeof value !== "object") {
-		throw new Error("Middleware factory must return an object of overrides");
+		throw new Error("Extension factory must return an object of overrides");
 	}
 }
 
 /**
- * Define a composable store middleware.
+ * Define a composable store extension.
  *
  * The factory function receives the inner store and options, and returns an
  * object of overrides and extensions. Methods not returned are automatically
  * delegated to the inner store via Proxy.
  *
  * Supports both sync and async factories — if the factory returns a Promise,
- * the middleware returns a Promise too.
+ * the extension returns a Promise too.
  *
  * ```ts
  * import * as zarr from "zarrita";
  *
- * const withCaching = zarr.defineStoreMiddleware(
+ * const withCaching = zarr.defineStoreExtension(
  *   (store, opts: { maxSize: number }) => {
  *     return {
  *       async get(key, options) { ... },
@@ -103,13 +103,13 @@ export function assertFactoryResult(
  * );
  * ```
  */
-export function defineStoreMiddleware<
+export function defineStoreExtension<
 	R extends FactoryResult | Promise<FactoryResult>,
 	Opts = void,
 >(
 	factory: (store: AsyncReadable, opts: Opts) => R,
 ): <S extends AsyncReadable>(store: S, opts?: Opts) => WrapperResult<R, S>;
-export function defineStoreMiddleware(
+export function defineStoreExtension(
 	factory: (store: AsyncReadable, opts: never) => unknown,
 ): (store: AsyncReadable, opts?: unknown) => unknown {
 	return (store, opts) => {

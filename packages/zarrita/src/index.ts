@@ -14,6 +14,32 @@ export {
 	UnknownCodecError,
 	UnsupportedError,
 } from "./errors.js";
+/** @deprecated Use {@linkcode ConsolidationOptions} instead. */
+export type {
+	ConsolidatedFormat,
+	ConsolidationOptions,
+	ConsolidationOptions as WithConsolidatedOptions,
+	Listable,
+} from "./extension/consolidation.js";
+// deprecated re-exports
+/** @deprecated Use {@linkcode withConsolidation} instead. */
+/** @deprecated Use {@linkcode withMaybeConsolidation} instead. */
+export {
+	withConsolidation,
+	withConsolidation as withConsolidated,
+	withMaybeConsolidation,
+	withMaybeConsolidation as tryWithConsolidated,
+} from "./extension/consolidation.js";
+export { defineStoreExtension } from "./extension/define.js";
+export { defineArrayExtension } from "./extension/define-array.js";
+export { extendArray } from "./extension/extend-array.js";
+export { extendStore } from "./extension/extend-store.js";
+export type {
+	RangeBatchingOptions,
+	RangeBatchingStats,
+} from "./extension/range-batching.js";
+// extensions
+export { withRangeBatching } from "./extension/range-batching.js";
 export { Array, Group, Location, root } from "./hierarchy.js";
 // internal exports for @zarrita/ndarray
 export { get as _zarrita_internal_get } from "./indexing/get.js";
@@ -32,32 +58,6 @@ export {
 	sliceIndices as _zarrita_internal_sliceIndices,
 } from "./indexing/util.js";
 export type * from "./metadata.js";
-/** @deprecated Use {@linkcode ConsolidationOptions} instead. */
-export type {
-	ConsolidatedFormat,
-	ConsolidationOptions,
-	ConsolidationOptions as WithConsolidatedOptions,
-	Listable,
-} from "./middleware/consolidation.js";
-// deprecated re-exports
-/** @deprecated Use {@linkcode withConsolidation} instead. */
-/** @deprecated Use {@linkcode withMaybeConsolidation} instead. */
-export {
-	withConsolidation,
-	withConsolidation as withConsolidated,
-	withMaybeConsolidation,
-	withMaybeConsolidation as tryWithConsolidated,
-} from "./middleware/consolidation.js";
-export { defineStoreMiddleware } from "./middleware/define.js";
-export { defineArrayMiddleware } from "./middleware/define-array.js";
-export { extendArray } from "./middleware/extend-array.js";
-export { extendStore } from "./middleware/extend-store.js";
-export type {
-	RangeBatchingOptions,
-	RangeBatchingStats,
-} from "./middleware/range-batching.js";
-// middleware
-export { withRangeBatching } from "./middleware/range-batching.js";
 export { open } from "./open.js";
 export {
 	BoolArray,

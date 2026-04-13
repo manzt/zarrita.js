@@ -20,7 +20,7 @@ import {
 	jsonEncodeObject,
 	rethrowUnless,
 } from "../util.js";
-import { defineStoreMiddleware } from "./define.js";
+import { defineStoreExtension } from "./define.js";
 
 type ConsolidatedMetadataV2 = {
 	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;
@@ -211,7 +211,7 @@ export type Listable<Store extends Readable> = Store & {
  * store.contents(); // [{ path: "/", kind: "group" }, ...]
  * ```
  */
-export const withConsolidation = defineStoreMiddleware(
+export const withConsolidation = defineStoreExtension(
 	async (store, opts: ConsolidationOptions = {}) => {
 		let formats = resolveFormats(store, opts.format);
 		let lastError: unknown;

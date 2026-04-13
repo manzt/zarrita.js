@@ -1,24 +1,24 @@
-# Middleware
+# Extensions
 
 **zarrita** has two symmetric extension points for composing behavior on top
-of a base store or array: **store middleware** and **array middleware**.
+of a base store or array: **store extensions** and **array extensions**.
 
 | Layer | Intercepts | Primitive | Composer |
 | --- | --- | --- | --- |
-| Transport | `store.get(key, range)` | `zarr.defineStoreMiddleware` | `zarr.extendStore` |
-| Data | `array.getChunk(coords)` | `zarr.defineArrayMiddleware` | `zarr.extendArray` |
+| Transport | `store.get(key, range)` | `zarr.defineStoreExtension` | `zarr.extendStore` |
+| Data | `array.getChunk(coords)` | `zarr.defineArrayExtension` | `zarr.extendArray` |
 
-Store middleware is for transport concerns (caching bytes, batching range
-requests, short-circuiting metadata, request transformation). Array middleware
-is for data concerns (caching decoded chunks, prefetch priority, observability).
+Store extensions are for transport concerns (caching bytes, batching range
+requests, short-circuiting metadata, request transformation). Array extensions
+are for data concerns (caching decoded chunks, prefetch priority, observability).
 If you're not sure which layer you need: if your code deals in paths and
-bytes, it's a store middleware; if it deals in chunk coordinates, it's an
-array middleware.
+bytes, it's a store extension; if it deals in chunk coordinates, it's an
+array extension.
 
-## Store middleware
+## Store extensions
 
-Wrap a store with `zarr.defineStoreMiddleware`, then compose with
-`zarr.extendStore`. **zarrita** ships with middleware for consolidated metadata
+Wrap a store with `zarr.defineStoreExtension`, then compose with
+`zarr.extendStore`. **zarrita** ships with extensions for consolidated metadata
 and range batching:
 
 ```ts
@@ -34,13 +34,13 @@ store.contents(); // from zarr.withConsolidation
 store.stats;      // from zarr.withRangeBatching
 ```
 
-Each middleware wraps the previous result. `zarr.extendStore` handles async
-middleware (like `zarr.withConsolidation`, which fetches metadata during
-initialization) automatically, and always returns a `Promise`. A middleware
+Each extension wraps the previous result. `zarr.extendStore` handles async
+extensions (like `zarr.withConsolidation`, which fetches metadata during
+initialization) automatically, and always returns a `Promise`. An extension
 with no required options can be passed uncalled; otherwise wrap it in an arrow
 so the options are applied to the argument.
 
-You can also call middleware directly:
+You can also call extensions directly:
 
 ```ts
 let consolidated = await zarr.withConsolidation(
@@ -58,7 +58,7 @@ inner store via `Proxy`.
 ```ts
 import * as zarr from "zarrita";
 
-const withCaching = zarr.defineStoreMiddleware(
+const withCaching = zarr.defineStoreExtension(
   (store, opts: { maxSize?: number } = {}) => {
     let cache = new Map<zarr.AbsolutePath, Uint8Array>();
     return {
@@ -77,17 +77,17 @@ const withCaching = zarr.defineStoreMiddleware(
 );
 
 let store = withCaching(new zarr.FetchStore("https://..."), { maxSize: 256 });
-store.clear(); // new method from the middleware
+store.clear(); // new method from the extension
 ```
 
 Only `get` and `getRange` are interceptable; any other keys on the factory
 result become extensions on the wrapped store.
 
-Middleware can be **sync or async**. If the factory returns a `Promise`, the
+Extensions can be **sync or async**. If the factory returns a `Promise`, the
 wrapper returns a `Promise` too:
 
 ```ts
-const withMetadata = zarr.defineStoreMiddleware(
+const withMetadata = zarr.defineStoreExtension(
   async (store, opts: { key: zarr.AbsolutePath }) => {
     let bytes = await store.get(opts.key);
     let meta = JSON.parse(new TextDecoder().decode(bytes));
@@ -101,16 +101,16 @@ let store = await withMetadata(rawStore, { key: "/meta.json" });
 store.metadata(); // loaded during initialization
 ```
 
-## Array middleware
+## Array extensions
 
-Array middleware is the symmetric extension point for **chunk-layer** concerns:
+Array extensions are the symmetric extension point for **chunk-layer** concerns:
 anything that wants to intercept `getChunk(coords)` without caring about paths
 or bytes. Think chunk caching, prefetch priority, or observability hooks.
 
 ```ts
 import * as zarr from "zarrita";
 
-const withChunkCache = zarr.defineArrayMiddleware(
+const withChunkCache = zarr.defineArrayExtension(
   (array, opts: { cache: Map<string, zarr.Chunk<zarr.DataType>> }) => ({
     async getChunk(coords, options) {
       let key = coords.join(",");
@@ -141,5 +141,5 @@ be written once and applied to any concrete `Array<D, S>`. At the call site
 the outer generics are preserved, so downstream `zarr.get(wrapped)` calls
 return the right specific type.
 
-Like `extendStore`, `extendArray` always returns a `Promise` so middleware can
+Like `extendStore`, `extendArray` always returns a `Promise` so extensions can
 perform async initialization.

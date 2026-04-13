@@ -6,7 +6,7 @@ import type {
 	Readable,
 } from "@zarrita/storage";
 import { UnsupportedError } from "../errors.js";
-import { defineStoreMiddleware } from "./define.js";
+import { defineStoreExtension } from "./define.js";
 
 type RequiredGetRange = NonNullable<AsyncReadable["getRange"]>;
 
@@ -163,7 +163,7 @@ function groupRequests(
  * let store = zarr.withRangeBatching(new zarr.FetchStore("https://example.com/data.zarr"));
  * ```
  */
-export const withRangeBatching = defineStoreMiddleware(
+export const withRangeBatching = defineStoreExtension(
 	(_store, opts: RangeBatchingOptions = {}) => {
 		assertRangeCapable(_store);
 		let store = _store;
