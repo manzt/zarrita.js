@@ -388,13 +388,19 @@ type ErrorConstructor = new (...args: any[]) => Error;
  * @param errors - Expected error type(s)
  * @throws The original error if it doesn't match expected type(s)
  */
-export function isAbortable(opts: unknown): opts is { signal: AbortSignal } {
-	return (
-		opts != null &&
-		typeof opts === "object" &&
-		"signal" in opts &&
-		opts.signal instanceof AbortSignal
-	);
+/**
+ * Merge a first-class `signal` with the deprecated `opts.signal` shim.
+ * If both are set, the signals are combined via `AbortSignal.any` so that
+ * aborting either cancels the request.
+ */
+export function resolveSignal(opts: {
+	signal?: AbortSignal;
+	opts?: { signal?: AbortSignal };
+}): AbortSignal | undefined {
+	let a = opts.signal;
+	let b = opts.opts?.signal;
+	if (a && b) return AbortSignal.any([a, b]);
+	return a ?? b;
 }
 
 export function rethrowUnless<E extends ReadonlyArray<ErrorConstructor>>(

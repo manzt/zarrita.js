@@ -163,7 +163,7 @@ function parseReferencesJson(refsJson: unknown): Map<string, ResolvedEntry> {
  *
  * @experimental
  */
-class ReferenceStore implements AsyncReadable<RequestInit> {
+class ReferenceStore implements AsyncReadable {
 	#inner: FetchStore;
 
 	constructor(

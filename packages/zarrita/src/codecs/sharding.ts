@@ -1,4 +1,4 @@
-import type { Readable } from "@zarrita/storage";
+import type { GetOptions, Readable } from "@zarrita/storage";
 import { createCodecPipeline } from "../codecs.js";
 import { UnsupportedError } from "../errors.js";
 import type { Location } from "../hierarchy.js";
@@ -7,8 +7,8 @@ import type { ShardingCodecMetadata } from "../util.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
 
-export function createShardedChunkGetter<Store extends Readable>(
-	location: Location<Store>,
+export function createShardedChunkGetter(
+	location: Location<Readable>,
 	shardShape: number[],
 	encodeShardKey: (coord: number[]) => string,
 	shardingConfig: ShardingCodecMetadata["configuration"],
@@ -28,10 +28,7 @@ export function createShardedChunkGetter<Store extends Readable>(
 	let checksumSize = 4;
 	let indexSize = 16 * indexShape.reduce((a, b) => a * b, 1);
 	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
-	return async (
-		chunkCoord: number[],
-		options?: Parameters<Store["get"]>[1],
-	) => {
+	return async (chunkCoord: number[], options?: GetOptions) => {
 		let shardCoord = chunkCoord.map((d, i) => Math.floor(d / indexShape[i]));
 		let shardPath = location.resolve(encodeShardKey(shardCoord)).path;
 

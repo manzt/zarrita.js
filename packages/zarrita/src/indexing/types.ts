@@ -43,11 +43,18 @@ export type Setter<D extends DataType, Arr extends Chunk<D>> = {
 export type Options = {
 	createQueue?: () => ChunkQueue;
 	useSharedArrayBuffer?: boolean;
+	signal?: AbortSignal;
+	/**
+	 * @deprecated Pass `signal` directly on the options object.
+	 * Kept for one major version of back-compat; if both are set, the
+	 * signals are merged via `AbortSignal.any`.
+	 */
+	opts?: { signal?: AbortSignal };
 };
 
-export type GetOptions<O> = Options & { opts?: O };
+export type GetOptions = Options;
 
-export type SetOptions<O = unknown> = Options & { opts?: O };
+export type SetOptions = Options;
 
 // Compatible with https://github.com/sindresorhus/p-queue
 export type ChunkQueue = {

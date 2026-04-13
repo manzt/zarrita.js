@@ -1,24 +1,34 @@
 import type {
 	AbsolutePath,
 	AsyncReadable,
+	GetOptions,
 	RangeQuery,
 	Readable,
 } from "@zarrita/storage";
 import { UnsupportedError } from "../errors.js";
-import { defineStoreMiddleware, type GenericOptions } from "./define.js";
+import { defineStoreMiddleware } from "./define.js";
 
-/** Narrow a Readable to AsyncReadable, throwing if getRange is missing. */
-function asAsync(store: Readable): AsyncReadable & {
-	getRange: NonNullable<AsyncReadable["getRange"]>;
-} {
+type RequiredGetRange = NonNullable<AsyncReadable["getRange"]>;
+
+/** Narrow a Readable to an AsyncReadable with a non-optional getRange. */
+function assertRangeCapable(
+	store: Readable,
+): asserts store is AsyncReadable & { getRange: RequiredGetRange } {
 	if (!store.getRange) {
 		throw new UnsupportedError(
 			"`zarr.withRangeBatching` requires a store with getRange",
 		);
 	}
-	return store as AsyncReadable & {
-		getRange: NonNullable<AsyncReadable["getRange"]>;
-	};
+}
+
+function mergeSignals(
+	signals: ReadonlyArray<AbortSignal | undefined>,
+): AbortSignal | undefined {
+	let present: AbortSignal[] = [];
+	for (let s of signals) if (s) present.push(s);
+	if (present.length === 0) return undefined;
+	if (present.length === 1) return present[0];
+	return AbortSignal.any(present);
 }
 
 /**
@@ -68,6 +78,7 @@ class LRUCache<V> {
 interface PendingRequest {
 	offset: number;
 	length: number;
+	signal?: AbortSignal;
 	resolve: (value: Uint8Array | undefined) => void;
 	reject: (reason: unknown) => void;
 }
@@ -85,17 +96,11 @@ export interface RangeBatchingStats {
 	batchedRequests: number;
 }
 
-export interface RangeBatchingOptions<O = unknown> {
+export interface RangeBatchingOptions {
 	/** Maximum number of entries in the LRU cache (default: 256). */
 	cacheSize?: number;
 	/** Byte gap threshold for merging adjacent ranges (default: 32768). */
 	coalesceSize?: number;
-	/**
-	 * Merge options from all callers in a batch into a single value passed to
-	 * the inner store. By default, the first caller's options win. Use this to
-	 * combine `AbortSignal`s, merge headers, etc.
-	 */
-	mergeOptions?: (batch: ReadonlyArray<O | undefined>) => O | undefined;
 }
 
 /**
@@ -158,171 +163,157 @@ function groupRequests(
  * let store = zarr.withRangeBatching(new zarr.FetchStore("https://example.com/data.zarr"));
  * ```
  */
-/** @internal Type lambda for {@linkcode RangeBatchingOptions}. */
-export interface RangeBatchingOptsFor extends GenericOptions {
-	readonly options: RangeBatchingOptions<this["_O"]>;
-}
+export const withRangeBatching = defineStoreMiddleware(
+	(_store, opts: RangeBatchingOptions = {}) => {
+		assertRangeCapable(_store);
+		let store = _store;
+		let boundGetRange = store.getRange.bind(store);
 
-export const withRangeBatching =
-	defineStoreMiddleware.generic<RangeBatchingOptsFor>()(
-		(_store, opts: RangeBatchingOptions<unknown> = {}) => {
-			let store = asAsync(_store);
-			let boundGetRange = store.getRange.bind(store);
+		let coalesceSize = opts.coalesceSize ?? DEFAULT_COALESCE_SIZE;
+		let cache = new LRUCache<Uint8Array | undefined>(opts.cacheSize ?? 256);
+		let inflight = new Map<string, Promise<Uint8Array | undefined>>();
 
-			let coalesceSize = opts.coalesceSize ?? DEFAULT_COALESCE_SIZE;
-			let cache = new LRUCache<Uint8Array | undefined>(opts.cacheSize ?? 256);
-			let inflight = new Map<string, Promise<Uint8Array | undefined>>();
-			let mergeOptionsFn = opts.mergeOptions;
+		let pending = new Map<AbsolutePath, PendingRequest[]>();
+		let scheduled = false;
 
-			let pending = new Map<AbsolutePath, PendingRequest[]>();
-			let scheduled = false;
-			let batchOptions: unknown[] = [];
+		let _stats: RangeBatchingStats = {
+			hits: 0,
+			misses: 0,
+			mergedRequests: 0,
+			batchedRequests: 0,
+		};
 
-			let _stats: RangeBatchingStats = {
-				hits: 0,
-				misses: 0,
-				mergedRequests: 0,
-				batchedRequests: 0,
-			};
+		async function flush(): Promise<void> {
+			let work = new Map(pending);
+			pending.clear();
+			scheduled = false;
 
-			async function flush(): Promise<void> {
-				let batch = batchOptions;
-				batchOptions = [];
-				let work = new Map(pending);
-				pending.clear();
-				scheduled = false;
-
-				let options: unknown;
-				try {
-					options = mergeOptionsFn ? mergeOptionsFn(batch) : batch[0];
-				} catch (err) {
-					for (let requests of work.values()) {
-						for (let req of requests) req.reject(err);
-					}
-					return;
-				}
-
-				let pathPromises: Promise<void>[] = [];
-				for (let [path, requests] of work) {
-					requests.sort((a, b) => a.offset - b.offset);
-					let groups = groupRequests(requests, coalesceSize);
-					_stats.mergedRequests += groups.length;
-					pathPromises.push(fetchGroups(path, groups, options));
-				}
-				await Promise.all(pathPromises);
+			let pathPromises: Promise<void>[] = [];
+			for (let [path, requests] of work) {
+				requests.sort((a, b) => a.offset - b.offset);
+				let groups = groupRequests(requests, coalesceSize);
+				_stats.mergedRequests += groups.length;
+				pathPromises.push(fetchGroups(path, groups));
 			}
+			await Promise.all(pathPromises);
+		}
 
-			async function fetchGroups(
-				path: AbsolutePath,
-				groups: RangeGroup[],
-				options?: unknown,
-			): Promise<void> {
-				await Promise.all(
-					groups.map(async (group) => {
-						try {
-							let data = await boundGetRange(
-								path,
-								{ offset: group.offset, length: group.length },
-								options,
+		async function fetchGroups(
+			path: AbsolutePath,
+			groups: RangeGroup[],
+		): Promise<void> {
+			await Promise.all(
+				groups.map(async (group) => {
+					let signal = mergeSignals(group.requests.map((r) => r.signal));
+					try {
+						let data = await boundGetRange(
+							path,
+							{ offset: group.offset, length: group.length },
+							{ signal },
+						);
+						if (data && data.length < group.length) {
+							throw new Error(
+								`Short read: expected ${group.length} bytes but received ${data.length}`,
 							);
-							if (data && data.length < group.length) {
-								throw new Error(
-									`Short read: expected ${group.length} bytes but received ${data.length}`,
-								);
-							}
-							for (let req of group.requests) {
-								let cacheKey = `${path}\0${req.offset}\0${req.length}`;
-								if (!data) {
-									cache.set(cacheKey, undefined);
-									req.resolve(undefined);
-									continue;
-								}
-								let start = req.offset - group.offset;
-								let slice = data.slice(start, start + req.length);
-								cache.set(cacheKey, slice);
-								req.resolve(slice);
-							}
-						} catch (err) {
-							for (let req of group.requests) {
-								req.reject(err);
-							}
 						}
-					}),
-				);
-			}
-
-			return {
-				get(
-					key: AbsolutePath,
-					options?: unknown,
-				): Promise<Uint8Array | undefined> {
-					return store.get(key, options);
-				},
-
-				getRange(
-					key: AbsolutePath,
-					range: RangeQuery,
-					options?: unknown,
-				): Promise<Uint8Array | undefined> {
-					// Suffix requests (shard index reads) bypass batching - file size
-					// is unknown until the response arrives.
-					if ("suffixLength" in range) {
-						let cacheKey = `${key}\0suffix\0${range.suffixLength}`;
-						if (cache.has(cacheKey)) {
-							_stats.hits++;
-							return Promise.resolve(cache.get(cacheKey));
+						for (let req of group.requests) {
+							let cacheKey = `${path}\0${req.offset}\0${req.length}`;
+							if (!data) {
+								cache.set(cacheKey, undefined);
+								req.resolve(undefined);
+								continue;
+							}
+							let start = req.offset - group.offset;
+							let slice = data.slice(start, start + req.length);
+							cache.set(cacheKey, slice);
+							req.resolve(slice);
 						}
-						// Deduplicate concurrent suffix requests
-						let existing = inflight.get(cacheKey);
-						if (existing) {
-							_stats.hits++;
-							return existing;
+					} catch (err) {
+						for (let req of group.requests) {
+							req.reject(err);
 						}
-						_stats.misses++;
-						let promise = boundGetRange(key, range, options)
-							.then((data) => {
-								cache.set(cacheKey, data);
-								inflight.delete(cacheKey);
-								return data;
-							})
-							.catch((err) => {
-								inflight.delete(cacheKey);
-								throw err;
-							});
-						inflight.set(cacheKey, promise);
-						return promise;
 					}
+				}),
+			);
+		}
 
-					let { offset, length } = range;
-					let cacheKey = `${key}\0${offset}\0${length}`;
+		return {
+			get(
+				key: AbsolutePath,
+				options?: GetOptions,
+			): Promise<Uint8Array | undefined> {
+				return store.get(key, options);
+			},
 
+			getRange(
+				key: AbsolutePath,
+				range: RangeQuery,
+				options?: GetOptions,
+			): Promise<Uint8Array | undefined> {
+				// Suffix requests (shard index reads) bypass batching - file size
+				// is unknown until the response arrives.
+				if ("suffixLength" in range) {
+					let cacheKey = `${key}\0suffix\0${range.suffixLength}`;
 					if (cache.has(cacheKey)) {
 						_stats.hits++;
 						return Promise.resolve(cache.get(cacheKey));
 					}
-
+					// Deduplicate concurrent suffix requests
+					let existing = inflight.get(cacheKey);
+					if (existing) {
+						_stats.hits++;
+						return existing;
+					}
 					_stats.misses++;
-					_stats.batchedRequests++;
+					let promise = boundGetRange(key, range, options)
+						.then((data) => {
+							cache.set(cacheKey, data);
+							inflight.delete(cacheKey);
+							return data;
+						})
+						.catch((err) => {
+							inflight.delete(cacheKey);
+							throw err;
+						});
+					inflight.set(cacheKey, promise);
+					return promise;
+				}
 
-					return new Promise((resolve, reject) => {
-						let reqs = pending.get(key);
-						if (!reqs) {
-							reqs = [];
-							pending.set(key, reqs);
-						}
-						reqs.push({ offset, length, resolve, reject });
+				let { offset, length } = range;
+				let cacheKey = `${key}\0${offset}\0${length}`;
 
-						batchOptions.push(options);
-						if (!scheduled) {
-							scheduled = true;
-							queueMicrotask(() => flush());
-						}
+				if (cache.has(cacheKey)) {
+					_stats.hits++;
+					return Promise.resolve(cache.get(cacheKey));
+				}
+
+				_stats.misses++;
+				_stats.batchedRequests++;
+
+				return new Promise((resolve, reject) => {
+					let reqs = pending.get(key);
+					if (!reqs) {
+						reqs = [];
+						pending.set(key, reqs);
+					}
+					reqs.push({
+						offset,
+						length,
+						signal: options?.signal,
+						resolve,
+						reject,
 					});
-				},
 
-				get stats(): Readonly<RangeBatchingStats> {
-					return { ..._stats };
-				},
-			};
-		},
-	);
+					if (!scheduled) {
+						scheduled = true;
+						queueMicrotask(() => flush());
+					}
+				});
+			},
+
+			get stats(): Readonly<RangeBatchingStats> {
+				return { ..._stats };
+			},
+		};
+	},
+);

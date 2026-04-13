@@ -306,97 +306,44 @@ describe("withRangeBatching", () => {
 		});
 	});
 
-	describe("mergeOptions", () => {
-		it("uses first caller's options by default", async () => {
+	describe("signal merging", () => {
+		it("merges caller signals via AbortSignal.any across a batch", async () => {
 			let inner = fakeStore();
 			let store = withRangeBatching(inner);
 
+			let a = new AbortController();
+			let b = new AbortController();
 			await Promise.all([
 				store.getRange(
 					"/data/chunk",
 					{ offset: 0, length: 100 },
-					{ headers: { "x-req": "first" } },
+					{ signal: a.signal },
 				),
 				store.getRange(
 					"/data/chunk",
 					{ offset: 100, length: 100 },
-					{ headers: { "x-req": "second" } },
+					{ signal: b.signal },
 				),
 			]);
 
-			expect(inner.getRange.mock.calls[0][2]?.headers).toEqual({
-				"x-req": "first",
-			});
+			let passedSignal = inner.getRange.mock.calls[0][2]?.signal;
+			expect(passedSignal).toBeInstanceOf(AbortSignal);
+			// Aborting either upstream signal should propagate to the merged one.
+			a.abort(new Error("a aborted"));
+			expect(passedSignal?.aborted).toBe(true);
 		});
 
-		it("rejects pending requests and recovers when mergeOptions throws", async () => {
+		it("passes a single signal through unchanged", async () => {
 			let inner = fakeStore();
-			let shouldThrow = true;
-			let store = withRangeBatching(inner, {
-				mergeOptions: () => {
-					if (shouldThrow) throw new Error("bad merge");
-					return undefined;
-				},
-			});
+			let store = withRangeBatching(inner);
+			let ctl = new AbortController();
 
-			// First batch: mergeOptions throws, all requests should reject
-			let results = await Promise.allSettled([
-				store.getRange("/data/chunk", { offset: 0, length: 100 }),
-				store.getRange("/data/chunk", { offset: 100, length: 100 }),
-			]);
-			expect(results[0].status).toBe("rejected");
-			expect(results[1].status).toBe("rejected");
-			expect((results[0] as PromiseRejectedResult).reason.message).toBe(
-				"bad merge",
+			await store.getRange(
+				"/data/chunk",
+				{ offset: 0, length: 100 },
+				{ signal: ctl.signal },
 			);
-
-			// Second batch: store should not be deadlocked
-			shouldThrow = false;
-			let r = await store.getRange("/data/chunk", { offset: 0, length: 100 });
-			expect(r?.length).toBe(100);
-		});
-
-		it("applies mergeOptions reducer across batched callers", async () => {
-			interface TaggedOptions {
-				tags: string[];
-			}
-			let inner = {
-				get: vi.fn((_key: AbsolutePath, _opts?: TaggedOptions) =>
-					Promise.resolve<Uint8Array | undefined>(new Uint8Array(0)),
-				),
-				getRange: vi.fn(
-					(
-						_key: AbsolutePath,
-						range: RangeQuery,
-						_options?: TaggedOptions,
-					): Promise<Uint8Array | undefined> => {
-						if ("suffixLength" in range) {
-							return Promise.resolve(new Uint8Array(range.suffixLength));
-						}
-						return Promise.resolve(new Uint8Array(range.length));
-					},
-				),
-			};
-			let store = withRangeBatching(inner, {
-				mergeOptions: (batch) => ({
-					tags: batch.flatMap((o) => o?.tags ?? []),
-				}),
-			});
-
-			await Promise.all([
-				store.getRange(
-					"/data/chunk",
-					{ offset: 0, length: 100 },
-					{ tags: ["a"] },
-				),
-				store.getRange(
-					"/data/chunk",
-					{ offset: 100, length: 100 },
-					{ tags: ["b"] },
-				),
-			]);
-
-			expect(inner.getRange.mock.calls[0][2]?.tags).toEqual(["a", "b"]);
+			expect(inner.getRange.mock.calls[0][2]?.signal).toBe(ctl.signal);
 		});
 	});
 

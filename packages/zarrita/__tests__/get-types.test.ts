@@ -162,7 +162,6 @@ describe("Chunk type per union dtype", () => {
 		expectType(chunk.data).toMatchInlineSnapshot(
 			`
 			| string[]
-				| unknown[]
 				| Int8Array<ArrayBufferLike>
 				| Int16Array<ArrayBufferLike>
 				| Int32Array<ArrayBufferLike>
@@ -177,6 +176,7 @@ describe("Chunk type per union dtype", () => {
 				| zarr.BoolArray<ArrayBufferLike>
 				| zarr.UnicodeStringArray<ArrayBufferLike>
 				| zarr.ByteStringArray<ArrayBufferLike>
+				| unknown[]
 		`,
 		);
 	});

@@ -3,7 +3,7 @@ import type { Mutable } from "@zarrita/storage";
 import { InvalidSelectionError, UnsupportedError } from "../errors.js";
 import { type Array, getContext } from "../hierarchy.js";
 import type { Chunk, DataType, Scalar, TypedArray } from "../metadata.js";
-import { isAbortable } from "../util.js";
+import { resolveSignal } from "../util.js";
 import { BasicIndexer, type IndexerProjection } from "./indexer.js";
 import type {
 	Indices,
@@ -70,6 +70,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 
 	const chunkSize = arr.chunks.reduce((a, b) => a * b, 1);
 	const queue = opts.createQueue ? opts.createQueue() : createQueue();
+	const signal = resolveSignal(opts);
 
 	// N.B., it is an important optimisation that we only visit chunks which overlap
 	// the selection. This minimises the number of iterations in the main for loop.
@@ -77,9 +78,7 @@ export async function set<Dtype extends DataType, Arr extends Chunk<Dtype>>(
 		const chunkSelection = mapping.map((i) => i.from);
 		const flipped = mapping.map(flipIndexerProjection);
 		queue.add(async () => {
-			if (isAbortable(opts.opts)) {
-				opts.opts.signal.throwIfAborted();
-			}
+			signal?.throwIfAborted();
 
 			// obtain key for chunk storage
 			const chunkPath = arr.resolve(context.encodeChunkKey(chunkCoords)).path;
