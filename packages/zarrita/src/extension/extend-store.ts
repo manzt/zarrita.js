@@ -1,5 +1,5 @@
 import type { AsyncReadable } from "@zarrita/storage";
-import { applyMiddlewares, type MaybeAsync } from "./extend.js";
+import { applyExtensions, type MaybeAsync } from "./extend.js";
 
 export function extendStore<S extends AsyncReadable>(store: S): S;
 export function extendStore<S extends AsyncReadable, R1>(
@@ -34,7 +34,7 @@ export function extendStore<S extends AsyncReadable, R1, R2, R3, R4, R5>(
 ): MaybeAsync<R5, [R1, R2, R3, R4, R5]>;
 export function extendStore(
 	store: AsyncReadable,
-	...middlewares: ((store: unknown) => unknown)[]
+	...extensions: ((store: unknown) => unknown)[]
 ): unknown {
-	return applyMiddlewares(store, middlewares);
+	return applyExtensions(store, extensions);
 }

@@ -1,12 +1,12 @@
 import type { AbsolutePath, AsyncReadable } from "@zarrita/storage";
 import { expectType } from "tintype";
 import { describe, expect, test, vi } from "vitest";
+import { defineStoreExtension } from "../src/extension/define.js";
+import { defineArrayExtension } from "../src/extension/define-array.js";
 import * as zarr from "../src/index.js";
-import { defineStoreMiddleware } from "../src/middleware/define.js";
-import { defineArrayMiddleware } from "../src/middleware/define-array.js";
 
 describe("extendStore", () => {
-	test("no middleware returns store as-is", () => {
+	test("no extension returns store as-is", () => {
 		let store = zarr.extendStore(new zarr.FetchStore(""));
 		expectType(store).toMatchInlineSnapshot(`zarr.FetchStore`);
 	});
@@ -23,7 +23,7 @@ describe("extendStore", () => {
 		`);
 	});
 
-	test("no-config middleware can be passed uncalled", () => {
+	test("no-config extension can be passed uncalled", () => {
 		function check() {
 			return zarr.extendStore(
 				new zarr.FetchStore(""),
@@ -43,9 +43,9 @@ describe("extendStore", () => {
 	});
 });
 
-describe("defineStoreMiddleware", () => {
+describe("defineStoreExtension", () => {
 	test("simple: extensions appear, store methods preserved", () => {
-		let withCustom = defineStoreMiddleware(
+		let withCustom = defineStoreExtension(
 			(store: AsyncReadable, _opts: { flag: boolean }) => {
 				return {
 					async get(key: AbsolutePath) {
@@ -69,7 +69,7 @@ describe("defineStoreMiddleware", () => {
 	});
 
 	test("chaining preserves store through wrappers", () => {
-		let withA = defineStoreMiddleware(
+		let withA = defineStoreExtension(
 			(store: AsyncReadable, _opts: { a: number }) => {
 				return {
 					async get(key: AbsolutePath) {
@@ -81,7 +81,7 @@ describe("defineStoreMiddleware", () => {
 				};
 			},
 		);
-		let withB = defineStoreMiddleware(
+		let withB = defineStoreExtension(
 			(store: AsyncReadable, _opts: { b: string }) => {
 				return {
 					async get(key: AbsolutePath) {
@@ -102,9 +102,9 @@ describe("defineStoreMiddleware", () => {
 			}
 		`);
 	});
-	test("function called in middleware definition is only called once", async () => {
+	test("function called in extension definition is only called once", async () => {
 		const someInitializerFunction = vi.fn();
-		let withCustom = defineStoreMiddleware(
+		let withCustom = defineStoreExtension(
 			async (store: AsyncReadable, _opts: { flag: boolean }) => {
 				await someInitializerFunction();
 				return {
@@ -133,9 +133,9 @@ describe("defineStoreMiddleware", () => {
 	});
 });
 
-describe("defineArrayMiddleware", () => {
+describe("defineArrayExtension", () => {
 	test("extensions appear, concrete D/S are preserved", () => {
-		let withCounter = defineArrayMiddleware((_array) => ({
+		let withCounter = defineArrayExtension((_array) => ({
 			bump(): void {},
 			get count(): number {
 				return 0;

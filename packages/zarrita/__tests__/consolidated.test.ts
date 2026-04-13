@@ -3,11 +3,11 @@ import * as url from "node:url";
 import { FileSystemStore } from "@zarrita/storage";
 import { assert, describe, expect, it } from "vitest";
 import { NotFoundError } from "../src/errors.js";
-import { Array as ZarrArray } from "../src/hierarchy.js";
 import {
 	withConsolidation,
 	withMaybeConsolidation,
-} from "../src/middleware/consolidation.js";
+} from "../src/extension/consolidation.js";
+import { Array as ZarrArray } from "../src/hierarchy.js";
 import { open } from "../src/open.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));

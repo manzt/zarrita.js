@@ -3,7 +3,7 @@ import type { Array } from "../hierarchy.js";
 import type { DataType } from "../metadata.js";
 import { assertFactoryResult, createProxy } from "./define.js";
 
-/** Array keys whose overrides are intercepted by the middleware. */
+/** Array keys whose overrides are intercepted by the extension. */
 type ArrayOverrideKeys = "getChunk";
 
 /** Strip array keys from extensions so Array's own surface isn't duplicated. */
@@ -24,7 +24,7 @@ type FactoryResult = Partial<
 	Record<string, unknown>;
 
 /**
- * Define a composable array middleware.
+ * Define a composable array extension.
  *
  * The factory receives the inner `Array` and user options, and returns an
  * object of overrides and extensions. In v1 only `getChunk` is interceptable —
@@ -39,7 +39,7 @@ type FactoryResult = Partial<
  * ```ts
  * import * as zarr from "zarrita";
  *
- * const withChunkCache = zarr.defineArrayMiddleware(
+ * const withChunkCache = zarr.defineArrayExtension(
  *   (array, opts: { cache: Map<string, zarr.Chunk<zarr.DataType>> }) => ({
  *     async getChunk(coords, options) {
  *       let key = coords.join(",");
@@ -53,7 +53,7 @@ type FactoryResult = Partial<
  * );
  * ```
  */
-export function defineArrayMiddleware<
+export function defineArrayExtension<
 	R extends FactoryResult | Promise<FactoryResult>,
 	Opts = void,
 >(
@@ -62,7 +62,7 @@ export function defineArrayMiddleware<
 	array: A,
 	opts?: Opts,
 ) => WrapperResult<R, A>;
-export function defineArrayMiddleware(
+export function defineArrayExtension(
 	factory: (array: Array<DataType, Readable>, opts: never) => unknown,
 ): (array: Array<DataType, Readable>, opts?: unknown) => unknown {
 	return (array, opts) => {

@@ -128,7 +128,7 @@ describe("zarr.set cancels on signal", () => {
 });
 
 describe("signal propagation through extendStore pipeline", () => {
-	it("reaches the inner store through multiple middlewares", async () => {
+	it("reaches the inner store through multiple extensions", async () => {
 		let fsStore = new zarr.FileSystemStore(fixturesRoot);
 		let { store: recorder, calls } = recordingStore(fsStore);
 		let composed = await zarr.extendStore(recorder, (s) =>
@@ -141,7 +141,7 @@ describe("signal propagation through extendStore pipeline", () => {
 		let ctl = new AbortController();
 		await zarr.get(arr, null, { signal: ctl.signal });
 		// At least one of the inner-store calls carried our signal through
-		// the batching middleware.
+		// the batching extension.
 		let seen = calls.some((c) => c?.signal === ctl.signal);
 		expect(seen).toBe(true);
 	});
