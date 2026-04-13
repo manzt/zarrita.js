@@ -9,6 +9,7 @@ The specification for this codec can be found at https://github.com/zarr-develop
 */
 
 import type { Chunk, Scalar } from "../metadata.js";
+import { getCtr } from "../util.js";
 import {
 	type JsonScalar,
 	type NumericDataType,
@@ -36,12 +37,14 @@ const SUPPORTED: ReadonlySet<string> = new Set<NumericDataType>([
 
 export class ScaleOffsetCodec<D extends NumericDataType> {
 	kind = "array_to_array" as const;
+	#ctr: ReturnType<typeof getCtr<D>>;
 	#scale: Scalar<D>;
 	#offset: Scalar<D>;
 
-	constructor(scale: Scalar<D>, offset: Scalar<D>) {
+	constructor(scale: Scalar<D>, offset: Scalar<D>, ctr: ReturnType<typeof getCtr<D>>) {
 		this.#scale = scale;
 		this.#offset = offset;
+		this.#ctr = ctr;
 	}
 
 	static fromConfig<D extends NumericDataType>(
@@ -56,6 +59,7 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 		return new ScaleOffsetCodec(
 			parseJsonScalar(meta.dataType, config.scale),
 			parseJsonScalar(meta.dataType, config.offset),
+			getCtr(meta.dataType)
 		);
 	}
 
@@ -65,9 +69,10 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 
 	decode(chunk: Chunk<D>): Chunk<D> {
 		const src = chunk.data;
+		const out = new this.#ctr(src.length) as Chunk<D>["data"];
 		for (let i = 0; i < src.length; i++) {
 			// @ts-expect-error - mix of bigint and number arithmetic is safe here
-			src[i] = src[i] / this.#scale + this.#offset;
+			out[i] = out[i] / this.#scale + this.#offset;
 		}
 		return chunk;
 	}
