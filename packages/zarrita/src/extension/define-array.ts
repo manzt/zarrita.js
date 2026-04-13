@@ -3,6 +3,15 @@ import type { Array } from "../hierarchy.js";
 import type { DataType } from "../metadata.js";
 import { assertFactoryResult, createProxy } from "./define.js";
 
+/**
+ * A function that wraps a `zarr.Array`, returning a (possibly asynchronous)
+ * extended array. This is the shape of the list declared on a store
+ * extension's `arrayExtensions` field and auto-applied by `zarr.open`.
+ */
+export type ArrayExtension = (
+	array: Array<DataType, Readable>,
+) => Array<DataType, Readable> | Promise<Array<DataType, Readable>>;
+
 /** Array keys whose overrides are intercepted by the extension. */
 type ArrayOverrideKeys = "getChunk";
 

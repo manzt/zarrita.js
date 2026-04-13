@@ -116,3 +116,91 @@ describe("extendArray", () => {
 		expect(order).toEqual(["b", "a"]);
 	});
 });
+
+describe("zarr.open auto-apply of store arrayExtensions", () => {
+	it("applies a single array extension contributed by a store extension", async () => {
+		let calls: number[][] = [];
+		let withTrace = defineArrayExtension((array) => ({
+			async getChunk(coords, options) {
+				calls.push(coords);
+				return array.getChunk(coords, options);
+			},
+		}));
+		let withTracedArray = zarr.defineStoreExtension(() => ({
+			arrayExtensions: [(a) => withTrace(a)],
+		}));
+		let store = withTracedArray(new zarr.FileSystemStore(fixturesRoot));
+		let arr = await zarr.open.v3(zarr.root(store).resolve("1d.chunked.i2"), {
+			kind: "array",
+		});
+		await arr.getChunk([0]);
+		expect(calls).toEqual([[0]]);
+	});
+
+	it("merges inner-first, outer-last across stacked store extensions", async () => {
+		let order: string[] = [];
+		let withA = defineArrayExtension((array) => ({
+			async getChunk(coords, options) {
+				order.push("a");
+				return array.getChunk(coords, options);
+			},
+		}));
+		let withB = defineArrayExtension((array) => ({
+			async getChunk(coords, options) {
+				order.push("b");
+				return array.getChunk(coords, options);
+			},
+		}));
+		let storeExtA = zarr.defineStoreExtension(() => ({
+			arrayExtensions: [(a) => withA(a)],
+		}));
+		let storeExtB = zarr.defineStoreExtension(() => ({
+			arrayExtensions: [(a) => withB(a)],
+		}));
+		let store = await zarr.extendStore(
+			new zarr.FileSystemStore(fixturesRoot),
+			storeExtA,
+			storeExtB,
+		);
+		// Merged list is visible as a plain field on the composed store.
+		expect(
+			(store as { arrayExtensions?: unknown[] }).arrayExtensions,
+		).toHaveLength(2);
+		let arr = await zarr.open.v3(zarr.root(store).resolve("1d.chunked.i2"), {
+			kind: "array",
+		});
+		await arr.getChunk([0]);
+		// Outer store extension (B) becomes the outermost array wrapper, so
+		// its getChunk runs first and calls through to A.
+		expect(order).toEqual(["b", "a"]);
+	});
+
+	it("auto-applies on arrays resolved via a group", async () => {
+		let calls: number[][] = [];
+		let withTrace = defineArrayExtension((array) => ({
+			async getChunk(coords, options) {
+				calls.push(coords);
+				return array.getChunk(coords, options);
+			},
+		}));
+		let withTracedArray = zarr.defineStoreExtension(() => ({
+			arrayExtensions: [(a) => withTrace(a)],
+		}));
+		let store = withTracedArray(new zarr.FileSystemStore(fixturesRoot));
+		let group = await zarr.open.v3(zarr.root(store), { kind: "group" });
+		let arr = await zarr.open.v3(group.resolve("1d.chunked.i2"), {
+			kind: "array",
+		});
+		await arr.getChunk([0]);
+		expect(calls).toEqual([[0]]);
+	});
+
+	it("returns the array as-is when the store has no arrayExtensions", async () => {
+		let store = new zarr.FileSystemStore(fixturesRoot);
+		let arr = await zarr.open.v3(zarr.root(store).resolve("1d.chunked.i2"), {
+			kind: "array",
+		});
+		// No Proxy wrapping — the returned Array is the concrete class instance.
+		expect(arr).toBeInstanceOf(zarr.Array);
+	});
+});

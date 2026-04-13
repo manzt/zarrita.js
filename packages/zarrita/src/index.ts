@@ -31,7 +31,10 @@ export {
 	withMaybeConsolidation as tryWithConsolidated,
 } from "./extension/consolidation.js";
 export { defineStoreExtension } from "./extension/define.js";
-export { defineArrayExtension } from "./extension/define-array.js";
+export {
+	type ArrayExtension,
+	defineArrayExtension,
+} from "./extension/define-array.js";
 export { extendArray } from "./extension/extend-array.js";
 export { extendStore } from "./extension/extend-store.js";
 export type {
