@@ -1,4 +1,4 @@
-import type { GetOptions, Readable } from "@zarrita/storage";
+import type { Readable } from "@zarrita/storage";
 import { InvalidMetadataError, NotFoundError } from "./errors.js";
 import { Array, Group, Location } from "./hierarchy.js";
 import type {
@@ -36,59 +36,60 @@ function createVersionCounter() {
 
 async function loadAttrs(
 	location: Location<Readable>,
-	opts?: GetOptions,
+	signal?: AbortSignal,
 ): Promise<Attributes> {
-	let metaBytes = await location.store.get(
-		location.resolve(".zattrs").path,
-		opts,
-	);
+	let metaBytes = await location.store.get(location.resolve(".zattrs").path, {
+		signal,
+	});
 	if (!metaBytes) return {};
 	return jsonDecodeObject(metaBytes);
 }
 
+type OpenV2Options = {
+	kind?: "array" | "group";
+	attrs?: boolean;
+	signal?: AbortSignal;
+};
+
 function openV2<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "group"; attrs?: boolean; opts?: GetOptions },
+	options: OpenV2Options & { kind: "group" },
 ): Promise<Group<Store>>;
 
 function openV2<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "array"; attrs?: boolean; opts?: GetOptions },
+	options: OpenV2Options & { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
 function openV2<Store extends Readable>(
 	location: Location<Store> | Store,
-	options?: { kind?: "array" | "group"; attrs?: boolean; opts?: GetOptions },
+	options?: OpenV2Options,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 async function openV2<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: {
-		kind?: "array" | "group";
-		attrs?: boolean;
-		opts?: GetOptions;
-	} = {},
+	options: OpenV2Options = {},
 ) {
 	let loc = "store" in location ? location : new Location(location);
-	let { opts } = options;
+	let { signal } = options;
 	let attrs = {};
-	if (options.attrs ?? true) attrs = await loadAttrs(loc, opts);
-	opts?.signal?.throwIfAborted();
-	if (options.kind === "array") return openArrayV2(loc, attrs, opts);
-	if (options.kind === "group") return openGroupV2(loc, attrs, opts);
-	return openArrayV2(loc, attrs, opts).catch((err) => {
+	if (options.attrs ?? true) attrs = await loadAttrs(loc, signal);
+	signal?.throwIfAborted();
+	if (options.kind === "array") return openArrayV2(loc, attrs, signal);
+	if (options.kind === "group") return openGroupV2(loc, attrs, signal);
+	return openArrayV2(loc, attrs, signal).catch((err) => {
 		rethrowUnless(err, NotFoundError, InvalidMetadataError);
-		return openGroupV2(loc, attrs, opts);
+		return openGroupV2(loc, attrs, signal);
 	});
 }
 
 async function openArrayV2<Store extends Readable>(
 	location: Location<Store>,
 	attrs: Attributes,
-	opts?: GetOptions,
+	signal?: AbortSignal,
 ) {
 	let { path } = location.resolve(".zarray");
-	let meta = await location.store.get(path, opts);
+	let meta = await location.store.get(path, { signal });
 	if (!meta) {
 		throw new NotFoundError("v2 array", { path });
 	}
@@ -103,10 +104,10 @@ async function openArrayV2<Store extends Readable>(
 async function openGroupV2<Store extends Readable>(
 	location: Location<Store>,
 	attrs: Attributes,
-	opts?: GetOptions,
+	signal?: AbortSignal,
 ) {
 	let { path } = location.resolve(".zgroup");
-	let meta = await location.store.get(path, opts);
+	let meta = await location.store.get(path, { signal });
 	if (!meta) {
 		throw new NotFoundError("v2 group", { path });
 	}
@@ -120,10 +121,10 @@ async function openGroupV2<Store extends Readable>(
 
 async function _openV3<Store extends Readable>(
 	location: Location<Store>,
-	opts?: GetOptions,
+	signal?: AbortSignal,
 ) {
 	let { store, path } = location.resolve("zarr.json");
-	let meta = await location.store.get(path, opts);
+	let meta = await location.store.get(path, { signal });
 	if (!meta) {
 		throw new NotFoundError("v3 array or group", { path });
 	}
@@ -136,32 +137,32 @@ async function _openV3<Store extends Readable>(
 		: new Group(store, location.path, metaDoc);
 }
 
+type OpenV3Options = {
+	kind?: "array" | "group";
+	signal?: AbortSignal;
+};
+
 function openV3<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "group"; opts?: GetOptions },
+	options: OpenV3Options & { kind: "group" },
 ): Promise<Group<Store>>;
 
 function openV3<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "array"; opts?: GetOptions },
+	options: OpenV3Options & { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
 function openV3<Store extends Readable>(
 	location: Location<Store> | Store,
-	options?: { opts?: GetOptions },
-): Promise<Array<DataType, Store> | Group<Store>>;
-
-function openV3<Store extends Readable>(
-	location: Location<Store> | Store,
-	options?: { opts?: GetOptions },
+	options?: OpenV3Options,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 async function openV3<Store extends Readable>(
 	location: Location<Store>,
-	options: { kind?: "array" | "group"; opts?: GetOptions } = {},
+	options: OpenV3Options = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	let loc = "store" in location ? location : new Location(location);
-	let node = await _openV3(loc, options.opts);
+	let node = await _openV3(loc, options.signal);
 	VERSION_COUNTER.increment(loc.store, "v3");
 	if (options.kind === undefined) return node;
 	if (options.kind === "array" && node instanceof Array) return node;
@@ -173,36 +174,30 @@ async function openV3<Store extends Readable>(
 	});
 }
 
+type OpenOptions = {
+	kind?: "array" | "group";
+	attrs?: boolean;
+	signal?: AbortSignal;
+};
+
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "group"; attrs?: boolean; opts?: GetOptions },
+	options: OpenOptions & { kind: "group" },
 ): Promise<Group<Store>>;
 
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: { kind: "array"; attrs?: boolean; opts?: GetOptions },
+	options: OpenOptions & { kind: "array" },
 ): Promise<Array<DataType, Store>>;
 
-export async function open<Store extends Readable>(
-	location: Location<Store> | Store,
-	options: { kind?: "array" | "group"; attrs?: boolean; opts?: GetOptions },
-): Promise<Array<DataType, Store> | Group<Store>>;
-
 export function open<Store extends Readable>(
 	location: Location<Store> | Store,
-): Promise<Array<DataType, Store> | Group<Store>>;
-
-export function open<Store extends Readable>(
-	location: Location<Store> | Store,
+	options?: OpenOptions,
 ): Promise<Array<DataType, Store> | Group<Store>>;
 
 export async function open<Store extends Readable>(
 	location: Location<Store> | Store,
-	options: {
-		kind?: "array" | "group";
-		attrs?: boolean;
-		opts?: GetOptions;
-	} = {},
+	options: OpenOptions = {},
 ): Promise<Array<DataType, Store> | Group<Store>> {
 	let store = "store" in location ? location.store : location;
 	let versionMax = VERSION_COUNTER.versionMax(store);
