@@ -1,3 +1,5 @@
+import type { CastValueConfig } from "./codecs/cast_value.js";
+import type { ScaleOffsetConfig } from "./codecs/scale_offset.js";
 import { InvalidMetadataError } from "./errors.js";
 import type {
 	ArrayMetadata,
@@ -207,6 +209,29 @@ function coerceDtype(
 	};
 }
 
+type FixedScaleOffsetConfig = {
+	id: "fixedscaleoffset" | "numcodecs.fixedscaleoffset";
+	scale: number;
+	offset: number;
+	// `astype` is technically optional in numcodecs (defaults to `dtype`),
+	// so consumers must fall back before using it as a cast target.
+	astype?: string;
+	dtype?: string;
+};
+
+function isFixedScaleOffsetConfig(
+	filter: { id: string } & Record<string, unknown>,
+): filter is FixedScaleOffsetConfig {
+	return (
+		(filter.id === "fixedscaleoffset" ||
+			filter.id === "numcodecs.fixedscaleoffset") &&
+		typeof filter.scale === "number" &&
+		typeof filter.offset === "number" &&
+		(filter.astype === undefined || typeof filter.astype === "string") &&
+		(filter.dtype === undefined || typeof filter.dtype === "string")
+	);
+}
+
 export function v2ToV3ArrayMetadata(
 	meta: ArrayMetadataV2,
 	attributes: Record<string, unknown> = {},
@@ -216,11 +241,69 @@ export function v2ToV3ArrayMetadata(
 	if (meta.order === "F") {
 		codecs.push({ name: "transpose", configuration: { order: "F" } });
 	}
+	for (let filter of meta.filters ?? []) {
+		// Translate the numcodecs `fixedscaleoffset` filter into the native v3
+		// `scale_offset` + `cast_value` pair from #395. The v2 filter is not
+		// part of the zarr v3 spec (see discussion in
+		// https://github.com/manzt/zarrita.js/pull/312), but together these
+		// two codecs implement the same decode semantics:
+		//   (enc / scale + offset).astype(dtype)
+		// where `dtype` is the logical (decoded) data type the user sees and
+		// `astype` is the quantized on-disk data type.
+		if (
+			filter.id === "fixedscaleoffset" ||
+			filter.id === "numcodecs.fixedscaleoffset"
+		) {
+			if (!isFixedScaleOffsetConfig(filter)) {
+				throw new InvalidMetadataError(
+					`Invalid fixedscaleoffset filter: ${JSON.stringify(filter)}`,
+				);
+			}
+			codecs.push({
+				name: "scale_offset",
+				configuration: {
+					scale: filter.scale,
+					offset: filter.offset,
+				} satisfies ScaleOffsetConfig,
+			});
+			// `astype` defaults to `dtype` in numcodecs, meaning an identity
+			// cast. Skip `cast_value` entirely in that case — and also when
+			// `astype` equals the logical v2 dtype, since there's nothing to
+			// convert.
+			let astype = filter.astype ?? filter.dtype;
+			if (astype !== undefined && astype !== meta.dtype) {
+				let castTarget = coerceDtype(astype).dataType;
+				if (
+					!isDataType(castTarget, "number") &&
+					!isDataType(castTarget, "bigint")
+				) {
+					throw new InvalidMetadataError(
+						`fixedscaleoffset astype must be a numeric data type, got ${astype}`,
+					);
+				}
+				codecs.push({
+					name: "cast_value",
+					configuration: {
+						data_type: castTarget,
+						// `np.around` uses banker's rounding (round-half-to-even).
+						rounding: "nearest-even",
+						// Matches de-facto numpy integer-overflow behavior.
+						out_of_range: "wrap",
+					} satisfies CastValueConfig,
+				});
+			}
+			continue;
+		}
+		let { id, ...configuration } = filter;
+		codecs.push({ name: `numcodecs.${id}`, configuration });
+	}
+	// The `bytes` codec must come *after* any array-to-array codecs that
+	// change the data type (e.g. `cast_value`) so that the pipeline's
+	// currentMeta has been threaded through `getEncodedMeta` by the time
+	// `BytesCodec.fromConfig` sees it. Relative order does not matter for
+	// type-preserving codecs like `delta` or `transpose`.
 	if ("endian" in dtype && dtype.endian === "big") {
 		codecs.push({ name: "bytes", configuration: { endian: "big" } });
-	}
-	for (let { id, ...configuration } of meta.filters ?? []) {
-		codecs.push({ name: `numcodecs.${id}`, configuration });
 	}
 	if (meta.compressor) {
 		let { id, ...configuration } = meta.compressor;

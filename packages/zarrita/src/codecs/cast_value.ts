@@ -31,7 +31,7 @@ interface ScalarMapConfig {
 	decode?: [JsonScalar, JsonScalar][];
 }
 
-interface CastValueConfig {
+export interface CastValueConfig {
 	data_type: NumericDataType;
 	rounding?: RoundingMode;
 	out_of_range?: OutOfRangeMode;
