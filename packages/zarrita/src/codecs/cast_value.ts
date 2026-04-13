@@ -8,10 +8,10 @@ The specification for this codec can be found at https://github.com/zarr-develop
 import type { Chunk, Scalar } from "../metadata.js";
 import { getCtr } from "../util.js";
 import {
-	type JsonScalar,
-	type NumericDataType,
 	isBigintType,
 	isFloatType,
+	type JsonScalar,
+	type NumericDataType,
 	parseJsonScalar,
 } from "./json-scalar.js";
 

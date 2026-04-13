@@ -458,7 +458,7 @@ describe("CastValueCodec", () => {
 				{ data_type: "int32" },
 				{ dataType: "float64" },
 			);
-			const chunk: any = makeChunk(new Int32Array([1]));
+			const chunk = makeChunk(new Int32Array([1]));
 			expect(() => codec.encode(chunk)).toThrow();
 		});
 
@@ -563,7 +563,7 @@ describe("CastValueCodec", () => {
 
 		test("scalar_map with bigint source", () => {
 			// stored=int64 (bigint), logical=int32
-			const codec: any = CastValueCodec.fromConfig(
+			const codec = CastValueCodec.fromConfig(
 				{
 					data_type: "int64",
 					scalar_map: { decode: [[-1, 0]] },
