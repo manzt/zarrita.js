@@ -18,7 +18,7 @@ import {
 	parseJsonScalar,
 } from "./json-scalar.js";
 
-interface ScaleOffsetConfig {
+export interface ScaleOffsetConfig {
 	scale?: JsonScalar;
 	offset?: JsonScalar;
 }

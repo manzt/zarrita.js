@@ -276,6 +276,28 @@
             ],
             "zarr_format": 2
         },
+        "1d.contiguous.fixedscaleoffset.f4/.zarray": {
+            "chunks": [
+                4
+            ],
+            "compressor": null,
+            "dtype": "<f4",
+            "fill_value": 0.0,
+            "filters": [
+                {
+                    "astype": "<i2",
+                    "dtype": "<f4",
+                    "id": "fixedscaleoffset",
+                    "offset": 1000,
+                    "scale": 10
+                }
+            ],
+            "order": "C",
+            "shape": [
+                4
+            ],
+            "zarr_format": 2
+        },
         "1d.contiguous.i4/.zarray": {
             "chunks": [
                 4

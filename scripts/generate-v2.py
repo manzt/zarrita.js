@@ -12,7 +12,7 @@ import shutil
 
 import zarr
 import numpy as np
-from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle, Delta
+from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle, Delta, FixedScaleOffset
 
 SELF_DIR = pathlib.Path(__file__).parent
 
@@ -215,6 +215,21 @@ root.create_dataset(
     chunks=(4,),
     compressor=Zlib(),
     filters=[Delta(dtype="i2"), Shuffle(elementsize=2)],
+)
+
+# 1d.contiguous.fixedscaleoffset.f4 -- quantized floats stored as int16.
+# The array's declared dtype is the logical (decoded) float32; the
+# FixedScaleOffset filter quantizes it to int16 on disk. Decoded values
+# recover (1000.0, 1000.1, 1000.2, 1000.3).
+root.create_dataset(
+    "1d.contiguous.fixedscaleoffset.f4",
+    data=np.array([1000.0, 1000.1, 1000.2, 1000.3], dtype="<f4"),
+    dtype="<f4",
+    chunks=(4,),
+    compressor=None,
+    filters=[
+        FixedScaleOffset(offset=1000, scale=10, dtype="<f4", astype="<i2")
+    ],
 )
 
 # Group with spaces in the name

@@ -33,6 +33,7 @@ describe("withConsolidation", () => {
 			  "/1d.contiguous.f4.be" => "array",
 			  "/1d.contiguous.f4.le" => "array",
 			  "/1d.contiguous.f8" => "array",
+			  "/1d.contiguous.fixedscaleoffset.f4" => "array",
 			  "/1d.contiguous.i4" => "array",
 			  "/1d.contiguous.lz4.i2" => "array",
 			  "/1d.contiguous.raw.i2" => "array",

@@ -601,7 +601,10 @@ describe("v2ToV3ArrayMetadata", () => {
 		`);
 	});
 
-	test("codec order: transpose, bytes, filters, compressor", () => {
+	test("codec order: transpose, filters, bytes, compressor", () => {
+		// The `bytes` codec is emitted after filters so that array-to-array
+		// codecs which change the data type (like `cast_value`) can thread
+		// the stored dtype through before `BytesCodec.fromConfig` sees it.
 		let result = v2ToV3ArrayMetadata({
 			...v2meta,
 			dtype: ">f4",
@@ -636,15 +639,15 @@ describe("v2ToV3ArrayMetadata", () => {
 			    },
 			    {
 			      "configuration": {
-			        "endian": "big",
-			      },
-			      "name": "bytes",
-			    },
-			    {
-			      "configuration": {
 			        "dtype": ">f4",
 			      },
 			      "name": "numcodecs.delta",
+			    },
+			    {
+			      "configuration": {
+			        "endian": "big",
+			      },
+			      "name": "bytes",
 			    },
 			    {
 			      "configuration": {
@@ -663,6 +666,49 @@ describe("v2ToV3ArrayMetadata", () => {
 			  ],
 			  "zarr_format": 3,
 			}
+		`);
+	});
+
+	test("fixedscaleoffset filter is translated to scale_offset + cast_value", () => {
+		// v2 fixedscaleoffset stores data in `astype` (int16) and decodes to
+		// `dtype` (float32) via `(enc / scale + offset).astype(dtype)`. Real
+		// zarr-python writes the array's top-level dtype as the logical
+		// (decoded) dtype; the filter carries `astype` as the stored form.
+		// The translated v3 pipeline decodes cast_value (int16 -> float32)
+		// then scale_offset.
+		let result = v2ToV3ArrayMetadata({
+			...v2meta,
+			dtype: "<f4",
+			fill_value: 0,
+			filters: [
+				{
+					id: "fixedscaleoffset",
+					scale: 10,
+					offset: 1000,
+					dtype: "<f4",
+					astype: "<i2",
+				},
+			],
+		});
+		expect(result.data_type).toBe("float32");
+		expect(result.codecs).toMatchInlineSnapshot(`
+			[
+			  {
+			    "configuration": {
+			      "offset": 1000,
+			      "scale": 10,
+			    },
+			    "name": "scale_offset",
+			  },
+			  {
+			    "configuration": {
+			      "data_type": "int16",
+			      "out_of_range": "wrap",
+			      "rounding": "nearest-even",
+			    },
+			    "name": "cast_value",
+			  },
+			]
 		`);
 	});
 });

@@ -10,6 +10,7 @@ import {
 import {
 	afterAll,
 	afterEach,
+	assert,
 	beforeAll,
 	describe,
 	expect,
@@ -564,6 +565,26 @@ describe("v2", () => {
 			shape: [4],
 			stride: [1],
 		});
+	});
+
+	it("1d.contiguous.fixedscaleoffset.f4", async () => {
+		// numcodecs FixedScaleOffset is translated on read into the v3
+		// `scale_offset` + `cast_value` codec pair. The array is stored as
+		// int16 on disk but exposed to the user as float32. Original values
+		// [1000.0, 1000.1, 1000.2, 1000.3] encode to int16 [0, 1, 2, 3] and
+		// decode back.
+		let arr = await open.v2(
+			store.resolve("/1d.contiguous.fixedscaleoffset.f4"),
+			{ kind: "array" },
+		);
+		assert(arr.is("float32"));
+		let chunk = await arr.getChunk([0]);
+		expect(chunk.shape).toStrictEqual([4]);
+		// float32 precision at 1000.x is ~1e-4; use `toBeCloseTo` digits=3.
+		expect(chunk.data[0]).toBeCloseTo(1000.0, 3);
+		expect(chunk.data[1]).toBeCloseTo(1000.1, 3);
+		expect(chunk.data[2]).toBeCloseTo(1000.2, 3);
+		expect(chunk.data[3]).toBeCloseTo(1000.3, 3);
 	});
 
 	it("opens group from root", async () => {
