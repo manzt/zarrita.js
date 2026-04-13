@@ -49,6 +49,8 @@ export {
 	withMaybeConsolidation as tryWithConsolidated,
 } from "./middleware/consolidation.js";
 export { defineStoreMiddleware } from "./middleware/define.js";
+export { defineArrayMiddleware } from "./middleware/define-array.js";
+export { extendArray } from "./middleware/extend-array.js";
 export { extendStore } from "./middleware/extend-store.js";
 export type {
 	RangeBatchingOptions,
