@@ -1,4 +1,5 @@
 import type { AsyncReadable } from "@zarrita/storage";
+import type { ArrayExtension } from "./define-array.js";
 
 /** Store keys stripped from Extensions to avoid poisoning Options. */
 type StoreKeys = "get" | "getRange";
@@ -70,7 +71,16 @@ export function createProxy<T extends object>(
 	});
 }
 
-type FactoryResult = Partial<AsyncReadable> & Record<string, unknown>;
+type FactoryResult = Partial<AsyncReadable> & {
+	/**
+	 * Array extensions carried on the store, auto-applied by `zarr.open` to
+	 * every `zarr.Array` it returns. When stores are composed via
+	 * `extendStore`, each layer's `arrayExtensions` are merged inner-first
+	 * so that later layers wrap earlier ones — symmetric with how store
+	 * extensions themselves compose.
+	 */
+	arrayExtensions?: ReadonlyArray<ArrayExtension>;
+} & Record<string, unknown>;
 
 export function assertFactoryResult(
 	value: unknown,
@@ -78,6 +88,26 @@ export function assertFactoryResult(
 	if (value == null || typeof value !== "object") {
 		throw new Error("Extension factory must return an object of overrides");
 	}
+}
+
+/**
+ * Merge the inner store's `arrayExtensions` (if any) with the list returned
+ * by the factory. Inner-first, outer-last: if the inner store contributed
+ * `[A]` and the factory adds `[B]`, the merged list is `[A, B]` — so when
+ * `zarr.open` applies them via `extendArray(arr, A, B)`, the outer (B)
+ * wraps the inner (A), mirroring how store extensions themselves compose.
+ */
+function mergeArrayExtensions(
+	inner: AsyncReadable,
+	overrides: Record<string | symbol, unknown>,
+): Record<string | symbol, unknown> {
+	let innerExts = (inner as AsyncReadable & FactoryResult).arrayExtensions;
+	let freshExts = overrides.arrayExtensions as
+		| ReadonlyArray<ArrayExtension>
+		| undefined;
+	if (!innerExts?.length) return overrides;
+	if (!freshExts?.length) return { ...overrides, arrayExtensions: innerExts };
+	return { ...overrides, arrayExtensions: [...innerExts, ...freshExts] };
 }
 
 /**
@@ -118,10 +148,10 @@ export function defineStoreExtension(
 		if (result instanceof Promise) {
 			return result.then((overrides) => {
 				assertFactoryResult(overrides);
-				return createProxy(store, overrides);
+				return createProxy(store, mergeArrayExtensions(store, overrides));
 			});
 		}
 		assertFactoryResult(result);
-		return createProxy(store, result);
+		return createProxy(store, mergeArrayExtensions(store, result));
 	};
 }

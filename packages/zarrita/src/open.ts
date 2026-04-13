@@ -1,5 +1,7 @@
 import type { Readable } from "@zarrita/storage";
 import { InvalidMetadataError, NotFoundError } from "./errors.js";
+import type { ArrayExtension } from "./extension/define-array.js";
+import { extendArray } from "./extension/extend-array.js";
 import { Array, Group, Location } from "./hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -14,6 +16,30 @@ import {
 	v2ToV3ArrayMetadata,
 	v2ToV3GroupMetadata,
 } from "./util.js";
+
+/**
+ * If the backing store carries `arrayExtensions` (typically contributed by
+ * a virtual-format adapter built on `defineStoreExtension`), wrap the array
+ * with them before handing it back. Inner-first, outer-last: the outermost
+ * store extension's array extension becomes the outermost array wrapper.
+ */
+async function maybeExtend<D extends DataType, S extends Readable>(
+	array: Array<D, S>,
+): Promise<Array<D, S>> {
+	let exts = (
+		array.store as Readable & {
+			arrayExtensions?: ReadonlyArray<ArrayExtension>;
+		}
+	).arrayExtensions;
+	if (!exts?.length) return array;
+	// Fixed-arity overloads of `extendArray` don't model variadic spreads,
+	// so thread the rest-parameter implementation directly.
+	let variadic = extendArray as (
+		array: Array<D, S>,
+		...extensions: ArrayExtension[]
+	) => Array<D, S> | Promise<Array<D, S>>;
+	return await variadic(array, ...exts);
+}
 
 export let VERSION_COUNTER = createVersionCounter();
 function createVersionCounter() {
@@ -94,10 +120,12 @@ async function openArrayV2<Store extends Readable>(
 		throw new NotFoundError("v2 array", { path });
 	}
 	VERSION_COUNTER.increment(location.store, "v2");
-	return new Array(
-		location.store,
-		location.path,
-		v2ToV3ArrayMetadata(jsonDecodeObject(meta), attrs),
+	return maybeExtend(
+		new Array(
+			location.store,
+			location.path,
+			v2ToV3ArrayMetadata(jsonDecodeObject(meta), attrs),
+		),
 	);
 }
 
@@ -133,7 +161,7 @@ async function _openV3<Store extends Readable>(
 		metaDoc.fill_value = ensureCorrectScalar(metaDoc);
 	}
 	return metaDoc.node_type === "array"
-		? new Array(store, location.path, metaDoc)
+		? maybeExtend(new Array(store, location.path, metaDoc))
 		: new Group(store, location.path, metaDoc);
 }
 

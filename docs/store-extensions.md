@@ -143,3 +143,62 @@ return the right specific type.
 
 Like `extendStore`, `extendArray` always returns a `Promise` so extensions can
 perform async initialization.
+
+## Auto-applying array extensions from a store
+
+A store extension can declare an `arrayExtensions` field on its factory
+result. `zarr.open` reads that list from the composed store and wraps every
+`zarr.Array` it returns with those extensions — so downstream consumers
+don't need to remember to call `zarr.extendArray` at each call site.
+
+This is the primitive for **virtual-format adapters** (hdf5-as-virtual-zarr,
+tiff-as-virtual-zarr, parquet-as-virtual-zarr): a single factory parses the
+source once, synthesizes metadata at the transport layer, and hands decoded
+chunks at the data layer — sharing closure state between both concerns:
+
+```ts
+import * as zarr from "zarrita";
+
+const hdf5VirtualZarr = zarr.defineStoreExtension(
+  (inner, opts: { root: string }) => {
+    let parsed = parseHdf5(opts.root); // shared closure state
+    return {
+      async get(key, options) {
+        if (isVirtualMetadataKey(key, parsed)) {
+          return synthesizeJson(key, parsed);
+        }
+        return inner.get(key, options);
+      },
+      arrayExtensions: [
+        zarr.defineArrayExtension((_inner) => ({
+          async getChunk(coords) { return parsed.readChunk(coords); },
+        })),
+      ],
+    };
+  },
+);
+
+let store = await zarr.extendStore(raw, (s) =>
+  hdf5VirtualZarr(s, { root: "/my_image" }),
+);
+
+// Downstream code knows nothing about the adapter — just opens and reads.
+let arr = await zarr.open(store, { kind: "array", path: "/my_image" });
+await zarr.get(arr, [null, zarr.slice(0, 10)]);
+```
+
+**Merge semantics.** When store extensions are stacked, each layer's
+`arrayExtensions` are concatenated with the inner store's — inner-first,
+outer-last. So if an inner layer contributes `[A]` and an outer layer
+contributes `[B]`, the composed store exposes `[A, B]`, and `zarr.open`
+applies them so that B wraps A (symmetric with how the store extensions
+themselves compose).
+
+**Raw lambdas.** `extendStore` also accepts any `(store) => newStore` function
+directly, bypassing `defineStoreExtension`. Raw lambdas are responsible for
+spreading `...inner.arrayExtensions` themselves if they want auto-apply to
+reach older contributed extensions.
+
+**Groups.** `zarr.open(store, { kind: "group" })` does not wrap the group
+(there are no chunks to intercept), but the store reference flows through,
+so nested `zarr.open(group.resolve("child"))` calls still auto-apply.
