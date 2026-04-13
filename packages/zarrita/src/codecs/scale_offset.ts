@@ -74,6 +74,6 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 			// @ts-expect-error - mix of bigint and number arithmetic is safe here
 			out[i] = src[i] / this.#scale + this.#offset;
 		}
-		return chunk;
+		return { data: out, shape: chunk.shape, stride: chunk.stride };
 	}
 }
