@@ -41,7 +41,11 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 	#scale: Scalar<D>;
 	#offset: Scalar<D>;
 
-	constructor(scale: Scalar<D>, offset: Scalar<D>, ctr: ReturnType<typeof getCtr<D>>) {
+	constructor(
+		scale: Scalar<D>,
+		offset: Scalar<D>,
+		ctr: ReturnType<typeof getCtr<D>>,
+	) {
 		this.#scale = scale;
 		this.#offset = offset;
 		this.#ctr = ctr;
@@ -59,7 +63,7 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 		return new ScaleOffsetCodec(
 			parseJsonScalar(meta.dataType, config.scale ?? 1),
 			parseJsonScalar(meta.dataType, config.offset ?? 0),
-			getCtr(meta.dataType)
+			getCtr(meta.dataType),
 		);
 	}
 

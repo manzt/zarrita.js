@@ -458,6 +458,7 @@ describe("CastValueCodec", () => {
 				{ dataType: "float64" },
 			);
 			const chunk = makeChunk(new Int32Array([1]));
+			// @ts-expect-error - ok to error from types as well
 			expect(() => codec.encode(chunk)).toThrow();
 		});
 
