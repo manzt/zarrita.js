@@ -46,6 +46,11 @@ export default defineConfig({
 					{ text: "@zarrita/ndarray", link: "/packages/ndarray" },
 				],
 			},
+			{
+				text: "Migration",
+				collapsed: false,
+				items: [{ text: "v0.7 (preview)", link: "/migration/v0.7" }],
+			},
 		],
 		socialLinks: [
 			{ icon: "github", link: "https://github.com/manzt/zarrita.js" },

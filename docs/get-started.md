@@ -1,5 +1,10 @@
 # Getting Started
 
+::: tip Upgrading from v0.6?
+v0.7.0 contains one breaking change and one deprecation. See the
+[v0.7 migration guide](/migration/v0.7) for details.
+:::
+
 **zarrita** supports a variety of environments, including the browser, Node.js,
 and Deno.
 
