@@ -1,19 +1,9 @@
 // re-export all the storage interface types
 export type * from "@zarrita/storage";
 // re-export fetch store from storage
-export { default as FetchStore } from "@zarrita/storage/fetch";
-export type {
-	BatchedRangeStoreOptions,
-	Stats as RangeBatchingStats,
-} from "./batched-fetch.js";
-export { BatchedRangeStore, withRangeBatching } from "./batched-fetch.js";
+export { FetchStore, FileSystemStore } from "@zarrita/storage";
+// core
 export { registry } from "./codecs.js";
-export type {
-	ConsolidatedFormat,
-	Listable,
-	WithConsolidatedOptions,
-} from "./consolidated.js";
-export { tryWithConsolidated, withConsolidated } from "./consolidated.js";
 export { create } from "./create.js";
 export {
 	CodecPipelineError,
@@ -42,6 +32,31 @@ export {
 	sliceIndices as _zarrita_internal_sliceIndices,
 } from "./indexing/util.js";
 export type * from "./metadata.js";
+/** @deprecated Use {@linkcode ConsolidationOptions} instead. */
+export type {
+	ConsolidatedFormat,
+	ConsolidationOptions,
+	ConsolidationOptions as WithConsolidatedOptions,
+	Listable,
+} from "./middleware/consolidation.js";
+// deprecated re-exports
+/** @deprecated Use {@linkcode withConsolidation} instead. */
+/** @deprecated Use {@linkcode withMaybeConsolidation} instead. */
+export {
+	withConsolidation,
+	withConsolidation as withConsolidated,
+	withMaybeConsolidation,
+	withMaybeConsolidation as tryWithConsolidated,
+} from "./middleware/consolidation.js";
+export type { GenericOptions } from "./middleware/define.js";
+export { defineStoreMiddleware } from "./middleware/define.js";
+export { extendStore } from "./middleware/extend-store.js";
+export type {
+	RangeBatchingOptions,
+	RangeBatchingStats,
+} from "./middleware/range-batching.js";
+// middleware
+export { withRangeBatching } from "./middleware/range-batching.js";
 export { open } from "./open.js";
 export {
 	BoolArray,

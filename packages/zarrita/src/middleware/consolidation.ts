@@ -1,5 +1,5 @@
-import type { AbsolutePath, Readable } from "@zarrita/storage";
-import { InvalidMetadataError, NotFoundError } from "./errors.js";
+import type { AbsolutePath, AsyncReadable, Readable } from "@zarrita/storage";
+import { InvalidMetadataError, NotFoundError } from "../errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -7,14 +7,15 @@ import type {
 	DataType,
 	GroupMetadata,
 	GroupMetadataV2,
-} from "./metadata.js";
-import { VERSION_COUNTER } from "./open.js";
+} from "../metadata.js";
+import { VERSION_COUNTER } from "../open.js";
 import {
 	ensureCorrectScalar,
 	jsonDecodeObject,
 	jsonEncodeObject,
 	rethrowUnless,
-} from "./util.js";
+} from "../util.js";
+import { defineStoreMiddleware } from "./define.js";
 
 type ConsolidatedMetadataV2 = {
 	metadata: Record<string, ArrayMetadataV2 | GroupMetadataV2>;
@@ -58,23 +59,11 @@ function isConsolidatedV3(meta: unknown): meta is GroupMetadata & {
 	);
 }
 
-/**
- * Represents a read-only store that can list its contents.
- */
-export interface Listable<Store extends Readable> {
-	/** Get the bytes at a given path. */
-	get: (...args: Parameters<Store["get"]>) => Promise<Uint8Array | undefined>;
-	/** Get a byte range at a given path. */
-	getRange: Store["getRange"];
-	/** List the contents of the store. */
-	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
-}
-
 /** The format of consolidated metadata to use. */
 export type ConsolidatedFormat = "v2" | "v3";
 
-/** Options for {@linkcode withConsolidated} and {@linkcode tryWithConsolidated}. */
-export interface WithConsolidatedOptions {
+/** Options for {@linkcode withConsolidation} and {@linkcode withMaybeConsolidation}. */
+export interface ConsolidationOptions {
 	/**
 	 * The format(s) of consolidated metadata to try.
 	 *
@@ -157,7 +146,6 @@ async function loadConsolidatedV3(
 		);
 	}
 	let knownMeta: Record<AbsolutePath, Metadata> = {};
-	// Add root group metadata
 	knownMeta["/zarr.json"] = {
 		zarr_format: 3,
 		node_type: "group",
@@ -166,7 +154,6 @@ async function loadConsolidatedV3(
 	for (let [path, meta] of Object.entries(
 		rootMeta.consolidated_metadata.metadata,
 	)) {
-		// Normalize path: ensure it starts with /
 		let normalized = path.startsWith("/") ? path : `/${path}`;
 		let key = `${normalized}/zarr.json` as AbsolutePath;
 		if (meta.node_type === "array") {
@@ -186,117 +173,104 @@ function resolveFormats(
 	if (format !== undefined) {
 		return globalThis.Array.isArray(format) ? format : [format];
 	}
-	// Auto-detect: use version counter to decide priority
 	let versionMax = VERSION_COUNTER.versionMax(store);
 	return versionMax === "v3" ? ["v3", "v2"] : ["v2", "v3"];
 }
 
-function createListable<Store extends Readable>(
-	store: Store,
-	knownMeta: Record<AbsolutePath, Metadata>,
-): Listable<Store> {
-	return {
-		async get(
-			...args: Parameters<Store["get"]>
-		): Promise<Uint8Array | undefined> {
-			let [key, opts] = args;
-			if (knownMeta[key]) {
-				return jsonEncodeObject(knownMeta[key]);
-			}
-			let maybeBytes = await store.get(key, opts);
-			if (isMetaKey(key) && maybeBytes) {
-				let meta = jsonDecodeObject(maybeBytes);
-				knownMeta[key] = meta;
-			}
-			return maybeBytes;
-		},
-		getRange: store.getRange?.bind(store),
-		contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
-			let contents: { path: AbsolutePath; kind: "array" | "group" }[] = [];
-			for (let [key, value] of Object.entries(knownMeta)) {
-				let parts = key.split("/");
-				let filename = parts.pop();
-				let path = (parts.join("/") || "/") as AbsolutePath;
-				if (filename === ".zarray") contents.push({ path, kind: "array" });
-				if (filename === ".zgroup") contents.push({ path, kind: "group" });
-				if (isV3(value)) {
-					contents.push({ path, kind: value.node_type });
-				}
-			}
-			return contents;
-		},
-	};
-}
+/** A store augmented with a `contents()` method from consolidated metadata. */
+export type Listable<Store extends Readable> = Store & {
+	contents(): { path: AbsolutePath; kind: "array" | "group" }[];
+};
 
 /**
- * Open a consolidated store.
+ * Wraps a store with consolidated metadata, enabling efficient listing and
+ * metadata access without extra network requests.
  *
- * Supports both Zarr v2 consolidated metadata (`.zmetadata`) and
- * v3 consolidated metadata (`zarr.json` with `consolidated_metadata`).
- *
- * @param store The store to open.
- * @param opts Options object.
- * @returns A listable store.
+ * Supports Zarr v2 (`.zmetadata`) and v3 (`zarr.json` with
+ * `consolidated_metadata`). Throws if no consolidated metadata is found.
  *
  * @example
- * ```js
- * // Auto-detect format (default)
- * let store = await withConsolidated(
- *   new zarr.FetchStore("https://my-bucket.s3.amazonaws.com")
+ * ```ts
+ * // Direct
+ * let store = await zarr.withConsolidation(new zarr.FetchStore("https://..."));
+ *
+ * // With options
+ * let store = await zarr.withConsolidation(rawStore, { format: "v3" });
+ *
+ * // In a pipeline
+ * let store = await zarr.extendStore(
+ *   new zarr.FetchStore("https://..."),
+ *   (s) => zarr.withConsolidation(s, { format: "v3" }),
  * );
  *
- * // Explicit v2
- * let store = await withConsolidated(rawStore, { format: "v2" });
- *
- * // Explicit v3
- * let store = await withConsolidated(rawStore, { format: "v3" });
- *
- * // Try v3 first, then v2
- * let store = await withConsolidated(rawStore, { format: ["v3", "v2"] });
- *
- * store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
+ * store.contents(); // [{ path: "/", kind: "group" }, ...]
  * ```
  */
-export async function withConsolidated<Store extends Readable>(
-	store: Store,
-	opts: WithConsolidatedOptions = {},
-): Promise<Listable<Store>> {
-	let formats = resolveFormats(store, opts.format);
-	let lastError: unknown;
-	for (let format of formats) {
-		try {
-			let knownMeta =
-				format === "v2"
-					? await loadConsolidatedV2(store, opts.metadataKey)
-					: await loadConsolidatedV3(store);
-			return createListable(store, knownMeta);
-		} catch (err) {
-			rethrowUnless(err, NotFoundError, InvalidMetadataError);
-			lastError = err;
+export const withConsolidation = defineStoreMiddleware(
+	async (store, opts: ConsolidationOptions = {}) => {
+		let formats = resolveFormats(store, opts.format);
+		let lastError: unknown;
+		for (let format of formats) {
+			try {
+				let knownMeta =
+					format === "v2"
+						? await loadConsolidatedV2(store, opts.metadataKey)
+						: await loadConsolidatedV3(store);
+				return {
+					async get(
+						key: AbsolutePath,
+						options?: unknown,
+					): Promise<Uint8Array | undefined> {
+						if (knownMeta[key]) {
+							return jsonEncodeObject(knownMeta[key]);
+						}
+						let maybeBytes = await store.get(key, options);
+						if (isMetaKey(key) && maybeBytes) {
+							knownMeta[key] = jsonDecodeObject(maybeBytes);
+						}
+						return maybeBytes;
+					},
+					contents(): { path: AbsolutePath; kind: "array" | "group" }[] {
+						let contents: {
+							path: AbsolutePath;
+							kind: "array" | "group";
+						}[] = [];
+						for (let [key, value] of Object.entries(knownMeta)) {
+							let parts = key.split("/");
+							let filename = parts.pop();
+							let path = (parts.join("/") || "/") as AbsolutePath;
+							if (filename === ".zarray")
+								contents.push({ path, kind: "array" });
+							if (filename === ".zgroup")
+								contents.push({ path, kind: "group" });
+							if (isV3(value)) {
+								contents.push({ path, kind: value.node_type });
+							}
+						}
+						return contents;
+					},
+				};
+			} catch (err) {
+				rethrowUnless(err, NotFoundError, InvalidMetadataError);
+				lastError = err;
+			}
 		}
-	}
-	throw lastError;
-}
+		throw lastError;
+	},
+);
 
 /**
- * Try to open a consolidated store, but fall back to the original store if the
- * consolidated metadata is missing.
- *
- * Provides a convenient way to open a store that may or may not have consolidated,
- * returning a consistent interface for both cases. Ideal for usage senarios with
- * known access paths, since store with consolidated metadata do not incur
- * additional network requests when accessing underlying groups and arrays.
- *
- * @param store The store to open.
- * @param opts Options to pass to withConsolidated.
- * @returns A listable store.
+ * Like {@linkcode withConsolidation}, but falls back to the original store if
+ * no consolidated metadata is found (instead of throwing).
  */
-export async function tryWithConsolidated<Store extends Readable>(
+export async function withMaybeConsolidation<Store extends AsyncReadable>(
 	store: Store,
-	opts: WithConsolidatedOptions = {},
+	opts: ConsolidationOptions = {},
 ): Promise<Listable<Store> | Store> {
-	return withConsolidated(store, opts).catch((error: unknown) => {
-		rethrowUnless(error, NotFoundError, InvalidMetadataError);
-		return store;
-	});
+	return (withConsolidation(store, opts) as Promise<Listable<Store>>).catch(
+		(error: unknown) => {
+			rethrowUnless(error, NotFoundError, InvalidMetadataError);
+			return store;
+		},
+	);
 }
