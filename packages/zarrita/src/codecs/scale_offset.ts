@@ -17,8 +17,8 @@ import {
 } from "./json-scalar.js";
 
 interface ScaleOffsetConfig {
-	scale: JsonScalar;
-	offset: JsonScalar;
+	scale?: JsonScalar;
+	offset?: JsonScalar;
 }
 
 const SUPPORTED: ReadonlySet<string> = new Set<NumericDataType>([
@@ -57,8 +57,8 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 			);
 		}
 		return new ScaleOffsetCodec(
-			parseJsonScalar(meta.dataType, config.scale),
-			parseJsonScalar(meta.dataType, config.offset),
+			parseJsonScalar(meta.dataType, config.scale ?? 1),
+			parseJsonScalar(meta.dataType, config.offset ?? 0),
 			getCtr(meta.dataType)
 		);
 	}
@@ -72,7 +72,7 @@ export class ScaleOffsetCodec<D extends NumericDataType> {
 		const out = new this.#ctr(src.length) as Chunk<D>["data"];
 		for (let i = 0; i < src.length; i++) {
 			// @ts-expect-error - mix of bigint and number arithmetic is safe here
-			out[i] = out[i] / this.#scale + this.#offset;
+			out[i] = src[i] / this.#scale + this.#offset;
 		}
 		return chunk;
 	}
