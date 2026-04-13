@@ -16,12 +16,12 @@ In **zarrita**, a **store** must implement the `Readable` or `AsyncReadable`
 interface,
 
 ```typescript
-interface Readable<Options> {
-	get(key: string, options?: Options): Unit8Array | undefined;
+interface Readable {
+	get(key: string, options?: { signal?: AbortSignal }): Uint8Array | undefined;
 }
 
-interface AsyncReadable<Options> {
-	get(key: string, options?: Options): Promise<Uint8Array | undefined>;
+interface AsyncReadable {
+	get(key: string, options?: { signal?: AbortSignal }): Promise<Uint8Array | undefined>;
 }
 ```
 

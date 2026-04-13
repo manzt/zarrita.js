@@ -3,11 +3,12 @@ import { expectType } from "tintype";
 import { describe, expect, test, vi } from "vitest";
 import * as zarr from "../src/index.js";
 import { defineStoreMiddleware } from "../src/middleware/define.js";
+import { defineArrayMiddleware } from "../src/middleware/define-array.js";
 
 describe("extendStore", () => {
 	test("no middleware returns store as-is", () => {
 		let store = zarr.extendStore(new zarr.FetchStore(""));
-		expectType(store).toMatchInlineSnapshot(`Promise<zarr.FetchStore>`);
+		expectType(store).toMatchInlineSnapshot(`zarr.FetchStore`);
 	});
 
 	test("direct form in pipeline", () => {
@@ -15,12 +16,10 @@ describe("extendStore", () => {
 			zarr.withRangeBatching(s),
 		);
 		expectType(store).toMatchInlineSnapshot(`
-			Promise<
-				Required<AsyncReadable> & {
-					stats: Readonly<zarr.RangeBatchingStats>;
-					url: string | URL;
-				}
-			>
+			Required<AsyncReadable> & {
+				stats: Readonly<zarr.RangeBatchingStats>;
+				url: string | URL;
+			}
 		`);
 	});
 
@@ -131,5 +130,25 @@ describe("defineStoreMiddleware", () => {
 		} finally {
 			fetchSpy.mockRestore();
 		}
+	});
+});
+
+describe("defineArrayMiddleware", () => {
+	test("extensions appear, concrete D/S are preserved", () => {
+		let withCounter = defineArrayMiddleware((_array) => ({
+			bump(): void {},
+			get count(): number {
+				return 0;
+			},
+		}));
+		// Simulate a typed Array; the wrapper should preserve <"int16", FetchStore>.
+		function check(arr: zarr.Array<"int16", zarr.FetchStore>) {
+			return withCounter(arr);
+		}
+		expectType(check).toMatchInlineSnapshot(`
+			(
+				arr: zarr.Array<"int16", zarr.FetchStore>,
+			) => zarr.Array<"int16", zarr.FetchStore> & { bump: () => void; count: number }
+		`);
 	});
 });

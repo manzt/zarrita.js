@@ -26,28 +26,38 @@ type WrapperResult<R, S> =
 		? Promise<CollapseStore<S & Extensions<Inner>>>
 		: CollapseStore<S & Extensions<R>>;
 
-function createProxy(
-	store: object,
+/**
+ * Build a Proxy that serves `overrides` for listed keys and delegates the
+ * rest to `target`. Getters and methods run with `this = target` so that
+ * class instances with private fields (e.g. `FetchStore.#fetch`,
+ * `Array.#metadata`) continue to work when accessed through the wrapper.
+ */
+export function createProxy<T extends object>(
+	target: T,
 	overrides: Record<string | symbol, unknown>,
-) {
-	return new Proxy(store, {
-		get(target, prop, receiver) {
-			if (prop in overrides) {
-				return overrides[prop];
+): T {
+	let boundCache = new Map<string | symbol, unknown>();
+	return new Proxy(target, {
+		get(t, prop) {
+			if (prop in overrides) return overrides[prop];
+			let cached = boundCache.get(prop);
+			if (cached !== undefined) return cached;
+			let value = Reflect.get(t, prop, t);
+			if (typeof value === "function") {
+				let bound = value.bind(t);
+				boundCache.set(prop, bound);
+				return bound;
 			}
-			return Reflect.get(target, prop, receiver);
+			return value;
 		},
-		has(target, prop) {
-			return prop in overrides || Reflect.has(target, prop);
+		has(t, prop) {
+			return prop in overrides || Reflect.has(t, prop);
 		},
-		ownKeys(target) {
-			let keys = new Set([
-				...Reflect.ownKeys(target),
-				...Object.keys(overrides),
-			]);
+		ownKeys(t) {
+			let keys = new Set([...Reflect.ownKeys(t), ...Object.keys(overrides)]);
 			return [...keys];
 		},
-		getOwnPropertyDescriptor(target, prop) {
+		getOwnPropertyDescriptor(t, prop) {
 			if (prop in overrides) {
 				return {
 					configurable: true,
@@ -55,20 +65,18 @@ function createProxy(
 					value: overrides[prop],
 				};
 			}
-			return Reflect.getOwnPropertyDescriptor(target, prop);
+			return Reflect.getOwnPropertyDescriptor(t, prop);
 		},
 	});
 }
 
 type FactoryResult = Partial<AsyncReadable> & Record<string, unknown>;
 
-function assertFactoryResult(
+export function assertFactoryResult(
 	value: unknown,
 ): asserts value is Record<string | symbol, unknown> {
 	if (value == null || typeof value !== "object") {
-		throw new Error(
-			"Store middleware factory must return an object of overrides",
-		);
+		throw new Error("Middleware factory must return an object of overrides");
 	}
 }
 
