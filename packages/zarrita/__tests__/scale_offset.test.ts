@@ -85,6 +85,14 @@ describe("ScaleOffsetCodec", () => {
 		expect(() => codec.encode(chunk)).toThrow();
 	});
 
+	test("empty configuration defaults to scale=1, offset=0 (identity)", () => {
+		const codec = ScaleOffsetCodec.fromConfig({}, { dataType: "float64" });
+		const chunk = makeChunk(new Float64Array([1.5, -2.5, 0.0, 100.0]));
+		const original = new Float64Array(chunk.data);
+		const decoded = codec.decode(chunk);
+		expect(decoded.data).toStrictEqual(original);
+	});
+
 	test("throws for unsupported data type", () => {
 		expect(() =>
 			ScaleOffsetCodec.fromConfig(
