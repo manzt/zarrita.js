@@ -1,5 +1,5 @@
 import type { AbsolutePath, Readable } from "@zarrita/storage";
-import { KeyError, NodeNotFoundError } from "./errors.js";
+import { InvalidMetadataError, NotFoundError } from "./errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -122,15 +122,16 @@ async function loadConsolidatedV2(
 	let key = metadataKey ?? ".zmetadata";
 	let bytes = await store.get(`/${key}`);
 	if (!bytes) {
-		throw new NodeNotFoundError("v2 consolidated metadata", {
-			cause: new KeyError(`/${key}`),
+		throw new NotFoundError("v2 consolidated metadata", {
+			path: `/${key}`,
 		});
 	}
 	let meta: unknown = jsonDecodeObject(bytes);
 	if (!isConsolidatedV2(meta)) {
-		throw new NodeNotFoundError("v2 consolidated metadata", {
-			cause: new Error("Invalid or unsupported v2 consolidated format."),
-		});
+		throw new InvalidMetadataError(
+			"Invalid or unsupported v2 consolidated format",
+			{ path: `/${key}` },
+		);
 	}
 	let knownMeta: Record<AbsolutePath, Metadata> = {};
 	for (let [k, value] of Object.entries(meta.metadata)) {
@@ -144,17 +145,16 @@ async function loadConsolidatedV3(
 ): Promise<Record<AbsolutePath, Metadata>> {
 	let bytes = await store.get("/zarr.json");
 	if (!bytes) {
-		throw new NodeNotFoundError("v3 consolidated metadata", {
-			cause: new KeyError("/zarr.json"),
+		throw new NotFoundError("v3 consolidated metadata", {
+			path: "/zarr.json",
 		});
 	}
 	let rootMeta: unknown = jsonDecodeObject(bytes);
 	if (!isConsolidatedV3(rootMeta)) {
-		throw new NodeNotFoundError("v3 consolidated metadata", {
-			cause: new Error(
-				"Root zarr.json does not contain consolidated_metadata.",
-			),
-		});
+		throw new InvalidMetadataError(
+			"Root zarr.json does not contain consolidated_metadata",
+			{ path: "/zarr.json" },
+		);
 	}
 	let knownMeta: Record<AbsolutePath, Metadata> = {};
 	// Add root group metadata
@@ -271,7 +271,7 @@ export async function withConsolidated<Store extends Readable>(
 					: await loadConsolidatedV3(store);
 			return createListable(store, knownMeta);
 		} catch (err) {
-			rethrowUnless(err, NodeNotFoundError);
+			rethrowUnless(err, NotFoundError, InvalidMetadataError);
 			lastError = err;
 		}
 	}
@@ -296,7 +296,7 @@ export async function tryWithConsolidated<Store extends Readable>(
 	opts: WithConsolidatedOptions = {},
 ): Promise<Listable<Store> | Store> {
 	return withConsolidated(store, opts).catch((error: unknown) => {
-		rethrowUnless(error, NodeNotFoundError);
+		rethrowUnless(error, NotFoundError, InvalidMetadataError);
 		return store;
 	});
 }

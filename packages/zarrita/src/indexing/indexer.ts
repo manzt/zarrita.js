@@ -1,30 +1,24 @@
+import { InvalidSelectionError } from "../errors.js";
 import type { Indices, Slice } from "./types.js";
 import { product, range, slice, sliceIndices } from "./util.js";
-
-export class IndexError extends Error {
-	constructor(msg: string) {
-		super(msg);
-		this.name = "IndexError";
-	}
-}
 
 function errTooManyIndices(
 	selection: (number | Slice)[],
 	shape: readonly number[],
 ) {
-	throw new IndexError(
+	throw new InvalidSelectionError(
 		`too many indicies for array; expected ${shape.length}, got ${selection.length}`,
 	);
 }
 
 function errBoundscheck(dimLen: number) {
-	throw new IndexError(
+	throw new InvalidSelectionError(
 		`index out of bounds for dimension with length ${dimLen}`,
 	);
 }
 
 function errNegativeStep() {
-	throw new IndexError("only slices with step >= 1 are supported");
+	throw new InvalidSelectionError("only slices with step >= 1 are supported");
 }
 
 function checkSelectionLength(

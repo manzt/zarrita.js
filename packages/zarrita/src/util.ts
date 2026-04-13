@@ -1,4 +1,4 @@
-import { JsonDecodeError } from "./errors.js";
+import { InvalidMetadataError } from "./errors.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -62,7 +62,7 @@ export function jsonDecodeObject(bytes: Uint8Array) {
 	try {
 		return JSON.parse(str);
 	} catch (cause) {
-		throw new JsonDecodeError(cause);
+		throw new InvalidMetadataError("Failed to decode JSON", { cause });
 	}
 }
 
@@ -115,7 +115,11 @@ export function getCtr<D extends DataType>(
 			bool: BoolArray,
 		} as const
 	)[dataType];
-	assert(ctr, `Unknown or unsupported dataType: ${dataType}`);
+	if (!ctr) {
+		throw new InvalidMetadataError(
+			`Unknown or unsupported dataType: ${dataType}`,
+		);
+	}
 	return ctr;
 }
 
@@ -159,7 +163,7 @@ export function createChunkKeyEncoder({
 		const separator = configuration?.separator ?? ".";
 		return (chunkCoords) => chunkCoords.join(separator) || "0";
 	}
-	throw new Error(`Unknown chunk key encoding: ${name}`);
+	throw new InvalidMetadataError(`Unknown chunk key encoding: ${name}`);
 }
 
 function coerceDtype(
@@ -170,7 +174,9 @@ function coerceDtype(
 	}
 
 	let match = dtype.match(/^([<|>])(.*)$/);
-	assert(match, `Invalid dtype: ${dtype}`);
+	if (!match) {
+		throw new InvalidMetadataError(`Invalid dtype: ${dtype}`);
+	}
 
 	let [, endian, rest] = match;
 	let dataType =
@@ -189,7 +195,9 @@ function coerceDtype(
 			f8: "float64",
 		}[rest] ??
 		(rest.startsWith("S") || rest.startsWith("U") ? `v2:${rest}` : undefined);
-	assert(dataType, `Unsupported or unknown dtype: ${dtype}`);
+	if (!dataType) {
+		throw new InvalidMetadataError(`Unsupported or unknown dtype: ${dtype}`);
+	}
 	if (endian === "|") {
 		return { dataType } as { dataType: DataType };
 	}

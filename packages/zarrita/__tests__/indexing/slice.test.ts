@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-
+import { InvalidSelectionError } from "../../src/errors.js";
 import * as zarr from "../../src/index.js";
 import { get, set, slice } from "../../src/index.js";
-import { IndexError } from "../../src/indexing/indexer.js";
 
 const DATA = {
 	// biome-ignore format: the array should not be formatted
@@ -125,6 +124,6 @@ describe("slice", async () => {
 
 	it("Does not support negative indices", async () => {
 		let sel = [0, slice(null, null, -2), slice(null, null, 3)];
-		await expect(get(arr, sel)).rejects.toThrowError(IndexError);
+		await expect(get(arr, sel)).rejects.toThrowError(InvalidSelectionError);
 	});
 });

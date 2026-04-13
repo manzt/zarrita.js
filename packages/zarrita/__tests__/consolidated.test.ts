@@ -3,7 +3,7 @@ import * as url from "node:url";
 import { FileSystemStore } from "@zarrita/storage";
 import { assert, describe, expect, it } from "vitest";
 import { tryWithConsolidated, withConsolidated } from "../src/consolidated.js";
-import { NodeNotFoundError } from "../src/errors.js";
+import { NotFoundError } from "../src/errors.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";
 import { open } from "../src/open.js";
 
@@ -105,9 +105,9 @@ describe("withConsolidated", () => {
 		);
 		let try_open = () =>
 			withConsolidated(new FileSystemStore(root), { format: "v2" });
-		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowError(NotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
-			"[NodeNotFoundError: Node not found: v2 consolidated metadata]",
+			"[NotFoundError: Not found: v2 consolidated metadata]",
 		);
 	});
 });
@@ -172,7 +172,7 @@ describe("withConsolidated (v3)", () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let try_open = () =>
 			withConsolidated(new FileSystemStore(root), { format: "v3" });
-		await expect(try_open).rejects.toThrowError(NodeNotFoundError);
+		await expect(try_open).rejects.toThrowError(NotFoundError);
 	});
 });
 

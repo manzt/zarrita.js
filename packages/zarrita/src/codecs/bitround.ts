@@ -1,5 +1,6 @@
+import { InvalidMetadataError } from "../errors.js";
 import type { Chunk, Float32, Float64 } from "../metadata.js";
-import { assert } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 
 /**
  * A codec for bit-rounding.
@@ -21,7 +22,9 @@ export class BitroundCodec<D extends Float64 | Float32> {
 	kind = "array_to_array";
 
 	constructor(configuration: { keepbits: number }, _meta: { dataType: D }) {
-		assert(configuration.keepbits >= 0, "keepbits must be zero or positive");
+		if (configuration.keepbits < 0) {
+			throw new InvalidMetadataError("keepbits must be zero or positive");
+		}
 	}
 
 	static fromConfig<D extends Float32 | Float64>(
@@ -31,15 +34,7 @@ export class BitroundCodec<D extends Float64 | Float32> {
 		return new BitroundCodec(configuration, meta);
 	}
 
-	/**
-	 * Encode a chunk of data with bit-rounding.
-	 * @param _arr - The chunk to encode
-	 */
-	encode(_arr: Chunk<D>): Chunk<D> {
-		throw new Error(
-			"`BitroundCodec.encode` is not implemented. Please open an issue at https://github.com/manzt/zarrita.js/issues.",
-		);
-	}
+	encode = unimplementedEncode("bitround");
 
 	/**
 	 * Decode a chunk of data (no-op).

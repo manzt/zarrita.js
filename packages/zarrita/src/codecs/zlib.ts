@@ -1,4 +1,5 @@
 import { decompress } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 
 interface ZlibCodecConfig {
 	level: number;
@@ -11,11 +12,7 @@ export class ZlibCodec {
 		return new ZlibCodec();
 	}
 
-	encode(_bytes: Uint8Array): never {
-		throw new Error(
-			"Zlib encoding is not enabled by default. Please register a codec with `numcodecs/zlib`.",
-		);
-	}
+	encode = unimplementedEncode("zlib");
 
 	async decode(bytes: Uint8Array): Promise<Uint8Array> {
 		const buffer = await decompress(bytes, { format: "deflate" });

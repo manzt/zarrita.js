@@ -1,4 +1,5 @@
 import { decompress } from "../util.js";
+import { unimplementedEncode } from "./_shared.js";
 
 interface GzipCodecConfig {
 	level: number;
@@ -11,11 +12,7 @@ export class GzipCodec {
 		return new GzipCodec();
 	}
 
-	encode(_bytes: Uint8Array): never {
-		throw new Error(
-			"Gzip encoding is not enabled by default. Please register a custom codec with `numcodecs/gzip`.",
-		);
-	}
+	encode = unimplementedEncode("gzip");
 
 	async decode(bytes: Uint8Array): Promise<Uint8Array> {
 		const buffer = await decompress(bytes, { format: "gzip" });

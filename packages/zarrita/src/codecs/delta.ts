@@ -1,3 +1,4 @@
+import { InvalidMetadataError } from "../errors.js";
 import type { BigintDataType, Chunk, NumberDataType } from "../metadata.js";
 import { getCtr } from "../util.js";
 
@@ -51,10 +52,11 @@ export class DeltaCodec<D extends DeltaCompatibleType> {
 		_config: unknown,
 		meta: { dataType: D },
 	): DeltaCodec<D> {
-		if (!SUPPORTED.has(meta.dataType))
-			throw new Error(
+		if (!SUPPORTED.has(meta.dataType)) {
+			throw new InvalidMetadataError(
 				`Delta codec does not support data type: ${meta.dataType}`,
 			);
+		}
 		return new DeltaCodec(getCtr(meta.dataType));
 	}
 

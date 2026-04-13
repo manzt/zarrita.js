@@ -9,6 +9,7 @@ The Zarr V3 spec encodes numeric scalars in JSON as either:
 See https://github.com/zarr-developers/zarr-specs/blob/main/docs/v3/data-types/index.rst#permitted-fill-values
 */
 
+import { InvalidMetadataError, UnsupportedError } from "../errors.js";
 import type { BigintDataType, NumberDataType, Scalar } from "../metadata.js";
 
 export type NumericDataType = NumberDataType | BigintDataType;
@@ -48,8 +49,8 @@ function hexToFloat(hex: string, byteWidth: number): number {
 	const view = new DataView(buf);
 	if (byteWidth === 2) {
 		if (typeof view.getFloat16 !== "function") {
-			throw new Error(
-				"Decoding a float16 hex-encoded scalar requires DataView.prototype.getFloat16, which is not available in this runtime.",
+			throw new UnsupportedError(
+				"float16 hex-encoded scalar decoding (requires DataView.prototype.getFloat16)",
 			);
 		}
 		view.setUint16(0, Number(int));
@@ -77,7 +78,7 @@ export function parseJsonScalar<D extends NumericDataType>(
 ): Scalar<D> {
 	if (isBigintType(dataType)) {
 		if (typeof value !== "number" || !Number.isInteger(value)) {
-			throw new Error(
+			throw new InvalidMetadataError(
 				`Expected an integer value for data type "${dataType}", got ${JSON.stringify(value)}`,
 			);
 		}
@@ -85,7 +86,7 @@ export function parseJsonScalar<D extends NumericDataType>(
 	}
 	if (typeof value === "number") {
 		if (!isFloatType(dataType) && !Number.isInteger(value)) {
-			throw new Error(
+			throw new InvalidMetadataError(
 				`Expected an integer value for data type "${dataType}", got ${value}`,
 			);
 		}
@@ -93,7 +94,7 @@ export function parseJsonScalar<D extends NumericDataType>(
 	}
 	// value is SpecialFloat | HexString — only valid for float types
 	if (!isFloatType(dataType)) {
-		throw new Error(
+		throw new InvalidMetadataError(
 			`String-encoded scalar "${value}" is not valid for non-float data type "${dataType}"`,
 		);
 	}

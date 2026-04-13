@@ -63,7 +63,7 @@ describe("slice", () => {
 
 	test("slice throws on bigint exceeding MAX_SAFE_INTEGER", () => {
 		let big = BigInt(Number.MAX_SAFE_INTEGER) + 1n;
-		expect(() => slice(big)).toThrowError(RangeError);
+		expect(() => slice(big)).toThrowError(/exceeds Number.MAX_SAFE_INTEGER/);
 	});
 });
 
