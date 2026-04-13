@@ -78,19 +78,23 @@ export function createCodecPipeline<Dtype extends DataType>(
 	decode(bytes: Uint8Array): Promise<Chunk<Dtype>>;
 	resolvedFillValue(): Promise<Scalar<Dtype> | null>;
 } {
-	// Eagerly start loading codecs. The promise is shared by all methods.
-	let codecsPromise = loadCodecs(chunkMetadata);
+	// Lazily load codecs on first use. The promise is shared by all methods.
+	let codecsPromise: ReturnType<typeof loadCodecs<Dtype>> | undefined;
+	function getCodecs() {
+		if (!codecsPromise) codecsPromise = loadCodecs(chunkMetadata);
+		return codecsPromise;
+	}
 	return {
 		// The fill value after propagation through all array-to-array codecs'
 		// encode paths. This is the fill value in the type that the
 		// array-to-bytes codec sees — i.e. what "empty" looks like on disk.
 		// It is NOT the logical fill value the user declared in the array metadata.
 		async resolvedFillValue() {
-			let c = await codecsPromise;
+			let c = await getCodecs();
 			return c.resolvedFillValue as Scalar<Dtype> | null;
 		},
 		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
-			let codecs = await codecsPromise;
+			let codecs = await getCodecs();
 			for (const codec of codecs.arrayToArray) {
 				chunk = await codec.encode(chunk);
 			}
@@ -101,7 +105,7 @@ export function createCodecPipeline<Dtype extends DataType>(
 			return bytes;
 		},
 		async decode(bytes: Uint8Array): Promise<Chunk<Dtype>> {
-			let codecs = await codecsPromise;
+			let codecs = await getCodecs();
 			for (let i = codecs.bytesToBytes.length - 1; i >= 0; i--) {
 				bytes = await codecs.bytesToBytes[i].decode(bytes);
 			}
