@@ -1,5 +1,6 @@
 import type { Codec as _Codec } from "numcodecs";
 import { BitroundCodec } from "./codecs/bitround.js";
+import { CastValueCodec } from "./codecs/cast_value.js";
 import { BytesCodec } from "./codecs/bytes.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
 import { DeltaCodec } from "./codecs/delta.js";
@@ -10,13 +11,14 @@ import { ShuffleCodec } from "./codecs/shuffle.js";
 import { TransposeCodec } from "./codecs/transpose.js";
 import { VLenUTF8 } from "./codecs/vlen-utf8.js";
 import { ZlibCodec } from "./codecs/zlib.js";
-import type { Chunk, CodecMetadata, DataType } from "./metadata.js";
+import type { Chunk, CodecMetadata, DataType, Scalar } from "./metadata.js";
 import { assert } from "./util.js";
 
 type ChunkMetadata<D extends DataType> = {
 	dataType: D;
 	shape: number[];
 	codecs: CodecMetadata[];
+	fillValue: Scalar<D> | null;
 };
 
 type CodecEntry = {
@@ -24,7 +26,13 @@ type CodecEntry = {
 	kind?: "array_to_array" | "array_to_bytes" | "bytes_to_bytes";
 };
 
-type Codec = _Codec & { kind: CodecEntry["kind"] };
+type Codec = _Codec & {
+	kind: CodecEntry["kind"];
+	// Array-to-array codecs that change the data type (e.g. cast_value) must
+	// implement this to describe the metadata after encoding. The pipeline
+	// calls it so that subsequent codecs (especially bytes) see the correct type.
+	getEncodedMeta?: (meta: ChunkMetadata<DataType>) => ChunkMetadata<DataType>;
+};
 
 function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 	let blosc = () => import("numcodecs/blosc").then((m) => m.default);
@@ -46,6 +54,8 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("vlen-utf8", () => VLenUTF8)
 			.set("json2", () => JsonCodec)
 			.set("bitround", () => BitroundCodec)
+			.set("cast_value", () => CastValueCodec)
+			.set("scale_offset", () => ScaleOffsetCodec)
 			// numcodecs (v2 compat)
 			.set("numcodecs.blosc", blosc)
 			.set("numcodecs.lz4", lz4)
@@ -55,7 +65,6 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("numcodecs.vlen-utf8", () => VLenUTF8)
 			.set("numcodecs.shuffle", () => ShuffleCodec)
 			.set("numcodecs.delta", () => DeltaCodec)
-			.set("numcodecs.scale_offset", () => ScaleOffsetCodec)
 	);
 }
 
@@ -67,11 +76,21 @@ export function createCodecPipeline<Dtype extends DataType>(
 ): {
 	encode(chunk: Chunk<Dtype>): Promise<Uint8Array>;
 	decode(bytes: Uint8Array): Promise<Chunk<Dtype>>;
+	resolvedFillValue(): Promise<Scalar<Dtype> | null>;
 } {
-	let codecs: Awaited<ReturnType<typeof loadCodecs>>;
+	// Eagerly start loading codecs. The promise is shared by all methods.
+	let codecsPromise = loadCodecs(chunkMetadata);
 	return {
+		// The fill value after propagation through all array-to-array codecs'
+		// encode paths. This is the fill value in the type that the
+		// array-to-bytes codec sees — i.e. what "empty" looks like on disk.
+		// It is NOT the logical fill value the user declared in the array metadata.
+		async resolvedFillValue() {
+			let c = await codecsPromise;
+			return c.resolvedFillValue as Scalar<Dtype> | null;
+		},
 		async encode(chunk: Chunk<Dtype>): Promise<Uint8Array> {
-			if (!codecs) codecs = await loadCodecs(chunkMetadata);
+			let codecs = await codecsPromise;
 			for (const codec of codecs.arrayToArray) {
 				chunk = await codec.encode(chunk);
 			}
@@ -82,7 +101,7 @@ export function createCodecPipeline<Dtype extends DataType>(
 			return bytes;
 		},
 		async decode(bytes: Uint8Array): Promise<Chunk<Dtype>> {
-			if (!codecs) codecs = await loadCodecs(chunkMetadata);
+			let codecs = await codecsPromise;
 			for (let i = codecs.bytesToBytes.length - 1; i >= 0; i--) {
 				bytes = await codecs.bytesToBytes[i].decode(bytes);
 			}
@@ -119,11 +138,23 @@ async function loadCodecs<D extends DataType>(chunkMeta: ChunkMetadata<D>) {
 	let arrayToArray: ArrayToArrayCodec<D>[] = [];
 	let arrayToBytes: ArrayToBytesCodec<D> | undefined;
 	let bytesToBytes: BytesToBytesCodec[] = [];
+	// Track the "current" data type through the codec chain. Array-to-array
+	// codecs like cast_value may change the type, and subsequent codecs
+	// (especially bytes) need to see the updated type.
+	let currentMeta = { ...chunkMeta };
 	for await (let { Codec, meta } of promises) {
-		let codec = Codec.fromConfig(meta.configuration, chunkMeta);
+		let codec = Codec.fromConfig(meta.configuration, currentMeta);
 		switch (codec.kind) {
 			case "array_to_array":
 				arrayToArray.push(codec as unknown as ArrayToArrayCodec<D>);
+				// Array-to-array codecs like cast_value may change the data type
+				// (and derived metadata like fill_value) between the array's
+				// declared type and what's stored on disk. We call getEncodedMeta
+				// so that subsequent codecs in the chain — especially the bytes
+				// codec — see the correct on-disk type and fill value.
+				if (codec.getEncodedMeta) {
+					currentMeta = codec.getEncodedMeta(currentMeta) as ChunkMetadata<D>;
+				}
 				break;
 			case "array_to_bytes":
 				arrayToBytes = codec as unknown as ArrayToBytesCodec<D>;
@@ -134,12 +165,17 @@ async function loadCodecs<D extends DataType>(chunkMeta: ChunkMetadata<D>) {
 	}
 	if (!arrayToBytes) {
 		assert(
-			isTypedArrayLikeMeta(chunkMeta),
-			`Cannot encode ${chunkMeta.dataType} to bytes without a codec`,
+			isTypedArrayLikeMeta(currentMeta),
+			`Cannot encode ${currentMeta.dataType} to bytes without a codec`,
 		);
-		arrayToBytes = BytesCodec.fromConfig({ endian: "little" }, chunkMeta);
+		arrayToBytes = BytesCodec.fromConfig({ endian: "little" }, currentMeta);
 	}
-	return { arrayToArray, arrayToBytes, bytesToBytes };
+	return {
+		arrayToArray,
+		arrayToBytes,
+		bytesToBytes,
+		resolvedFillValue: currentMeta.fillValue,
+	};
 }
 
 function isTypedArrayLikeMeta<D extends DataType>(

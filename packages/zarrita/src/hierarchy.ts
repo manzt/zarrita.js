@@ -99,6 +99,7 @@ function createContext<Store extends Readable, D extends DataType>(
 				dataType: metadata.data_type,
 				shape: configuration.chunk_shape,
 				codecs: configuration.codecs,
+				fillValue: metadata.fill_value,
 			}),
 			getStrides(shape: number[]) {
 				return getStrides(shape, nativeOrder);
@@ -121,6 +122,7 @@ function createContext<Store extends Readable, D extends DataType>(
 			dataType: metadata.data_type,
 			shape: metadata.chunk_grid.configuration.chunk_shape,
 			codecs: metadata.codecs,
+			fillValue: metadata.fill_value,
 		}),
 		getStrides(shape: number[]) {
 			return getStrides(shape, nativeOrder);
