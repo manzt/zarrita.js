@@ -1,13 +1,13 @@
 {
 	"name": "@zarrita/ndarray",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"license": "MIT",
 	"nodeModulesDir": "auto",
 	"imports": {
 		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
 		"ndarray": "npm:ndarray@^1.0.19",
 		"ndarray-ops": "npm:ndarray-ops@^1.2.2",
-		"zarrita": "jsr:@zarrita/zarrita@^0.6.2"
+		"zarrita": "jsr:@zarrita/zarrita@^0.7.0"
 	},
 	"exports": {
 		".": "./src/index.ts"

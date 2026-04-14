@@ -1,5 +1,14 @@
 # @zarrita/ndarray
 
+## 0.1.9
+
+### Patch Changes
+
+- Enable `declarationMap` so "go to definition" resolves to `.ts` source instead of `.d.ts` files ([#361](https://github.com/manzt/zarrita.js/pull/361))
+
+- Updated dependencies [[`d7d1495`](https://github.com/manzt/zarrita.js/commit/d7d149560ad96f176d5836f0ab4d419f4c2850e8), [`fdac48d`](https://github.com/manzt/zarrita.js/commit/fdac48dd0a84be4a2bea56022cd12e199268649d), [`db2be5c`](https://github.com/manzt/zarrita.js/commit/db2be5c8274a062beed46ece6eb63509da284402), [`164370d`](https://github.com/manzt/zarrita.js/commit/164370db1b05dcbd45199de80c963f4c91dd224c), [`53eff05`](https://github.com/manzt/zarrita.js/commit/53eff0583257c990625b4b04a78e8f4614e2b692), [`6791b08`](https://github.com/manzt/zarrita.js/commit/6791b088e725acf545e9dfcc3ab22903c62bcff1), [`ceeb7a1`](https://github.com/manzt/zarrita.js/commit/ceeb7a1b6ebed19279cf0c54c1850e28d005f951), [`5038e34`](https://github.com/manzt/zarrita.js/commit/5038e34e3deb588a8697ecc3159b87f3340fc5fd), [`7d9224e`](https://github.com/manzt/zarrita.js/commit/7d9224e2091ee0de2dcab2ee05a3b8b093ccb711), [`0ed6f72`](https://github.com/manzt/zarrita.js/commit/0ed6f72164f49195b94e5258d488c20b7485667c), [`138e882`](https://github.com/manzt/zarrita.js/commit/138e88221f583710ea23db892f1594d360214ffe), [`b2b5a33`](https://github.com/manzt/zarrita.js/commit/b2b5a3319c4c8efc5379eaa3d6487977fe58cd04), [`1f79587`](https://github.com/manzt/zarrita.js/commit/1f7958756c0c10300e087fdfd0e514f41eec0e8c), [`3ea8ce6`](https://github.com/manzt/zarrita.js/commit/3ea8ce6f65e7be418deb17afc9592cc1f5939e8c), [`b8185ff`](https://github.com/manzt/zarrita.js/commit/b8185ff7f37dff67ceb1904afec73ed9d3a8ae4d), [`8d57213`](https://github.com/manzt/zarrita.js/commit/8d572137385e320221c24a37c54f33904e499a33), [`eca7a6c`](https://github.com/manzt/zarrita.js/commit/eca7a6c067cb4642cc0b10fbd0aeb338dada5bd3), [`e2a0568`](https://github.com/manzt/zarrita.js/commit/e2a0568f308628a8e246f069d9d81dbf053a7a82), [`717a483`](https://github.com/manzt/zarrita.js/commit/717a48346d499d7a974971eb16bf312e93f94bd4), [`fa49103`](https://github.com/manzt/zarrita.js/commit/fa49103d41be7321a7a06c8ce3920e1524b23a4f), [`e9f03dc`](https://github.com/manzt/zarrita.js/commit/e9f03dc41e621944f9b399591091a06517835b07)]:
+  - zarrita@0.7.0
+
 ## 0.1.8
 
 ### Patch Changes
