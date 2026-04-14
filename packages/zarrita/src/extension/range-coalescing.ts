@@ -10,13 +10,12 @@ import { defineStoreExtension } from "./define.js";
 
 type RequiredGetRange = NonNullable<AsyncReadable["getRange"]>;
 
-/** Narrow a Readable to an AsyncReadable with a non-optional getRange. */
 function assertRangeCapable(
 	store: Readable,
 ): asserts store is AsyncReadable & { getRange: RequiredGetRange } {
 	if (!store.getRange) {
 		throw new UnsupportedError(
-			"`zarr.withRangeBatching` requires a store with getRange",
+			"`zarr.withRangeCoalescing` requires a store with getRange",
 		);
 	}
 }
@@ -29,50 +28,6 @@ function mergeSignals(
 	if (present.length === 0) return undefined;
 	if (present.length === 1) return present[0];
 	return AbortSignal.any(present);
-}
-
-/**
- * Simple LRU cache using Map insertion order.
- * Oldest entry (first key) is evicted when capacity is exceeded.
- */
-class LRUCache<V> {
-	#map = new Map<string, V>();
-	#max: number;
-
-	constructor(max: number) {
-		this.#max = max;
-	}
-
-	has(key: string): boolean {
-		return this.#map.has(key);
-	}
-
-	get(key: string): V | undefined {
-		if (!this.#map.has(key)) {
-			return undefined;
-		}
-		let value = this.#map.get(key) as V;
-		// Move to end (most recently used)
-		this.#map.delete(key);
-		this.#map.set(key, value);
-		return value;
-	}
-
-	set(key: string, value: V): void {
-		this.#map.delete(key);
-		this.#map.set(key, value);
-		if (this.#map.size > this.#max) {
-			// Evict oldest (first inserted)
-			let first = this.#map.keys().next().value;
-			if (first !== undefined) {
-				this.#map.delete(first);
-			}
-		}
-	}
-
-	clear(): void {
-		this.#map.clear();
-	}
 }
 
 interface PendingRequest {
@@ -89,39 +44,49 @@ interface RangeGroup {
 	requests: PendingRequest[];
 }
 
-export interface RangeBatchingStats {
-	hits: number;
-	misses: number;
-	mergedRequests: number;
-	batchedRequests: number;
-}
-
-export interface RangeBatchingOptions {
-	/** Maximum number of entries in the LRU cache (default: 256). */
-	cacheSize?: number;
-	/** Byte gap threshold for merging adjacent ranges (default: 32768). */
-	coalesceSize?: number;
-}
-
 /**
- * Default coalesce size (in bytes): two requests separated by less than this
- * are merged into a single fetch. Fetching across a small gap is cheaper than
- * an extra round trip. 32 KB matches geotiff.js's BlockedSource heuristic and
- * Rust object_store's `OBJECT_STORE_COALESCE_DEFAULT`.
+ * Immutable report emitted once per microtask flush, per path, via the
+ * optional `onFlush` callback. A fresh object is allocated per emission.
  */
+export interface FlushReport {
+	/** The store path this flush covered. */
+	path: AbsolutePath;
+	/** How many HTTP fetches the coalescer issued for this path. */
+	groupCount: number;
+	/** How many caller-level `getRange` requests were folded into those fetches. */
+	requestCount: number;
+	/** Total bytes requested across all groups (the sum of group lengths). */
+	bytesFetched: number;
+}
+
+export interface RangeCoalescingOptions {
+	/**
+	 * Byte gap threshold: two pending requests separated by less than this
+	 * many bytes are merged into a single fetch. Fetching across a small gap
+	 * is cheaper than an extra round trip.
+	 *
+	 * Default: 32768 (matches geotiff.js's `BlockedSource` heuristic and
+	 * Rust `object_store`'s `OBJECT_STORE_COALESCE_DEFAULT`).
+	 */
+	coalesceSize?: number;
+	/**
+	 * Optional observability hook. Called once per microtask flush, per path,
+	 * with a fresh `FlushReport`. Errors thrown from the callback are
+	 * swallowed via `console.warn`; async return values are ignored.
+	 *
+	 * Suffix-length range queries (`{ suffixLength }`) bypass batching and
+	 * do not emit `onFlush`.
+	 */
+	onFlush?: (report: FlushReport) => void;
+}
+
 const DEFAULT_COALESCE_SIZE = 32768;
 
-/**
- * Groups sorted requests into contiguous ranges, coalescing across small gaps.
- * Modelled after geotiff.js BlockedSource.groupBlocks().
- */
 function groupRequests(
 	sorted: PendingRequest[],
 	coalesceSize: number,
 ): RangeGroup[] {
-	if (sorted.length === 0) {
-		return [];
-	}
+	if (sorted.length === 0) return [];
 	let groups: RangeGroup[] = [];
 	let current = [sorted[0]];
 	let groupStart = sorted[0].offset;
@@ -152,36 +117,48 @@ function groupRequests(
 	return groups;
 }
 
+function emitFlush(
+	onFlush: ((report: FlushReport) => void) | undefined,
+	report: FlushReport,
+): void {
+	if (!onFlush) return;
+	try {
+		onFlush(report);
+	} catch (err) {
+		console.warn("withRangeCoalescing: onFlush threw, swallowing:", err);
+	}
+}
+
 /**
- * Wraps a store with range-batching: concurrent `getRange()` calls within a
- * single microtask tick are merged into fewer HTTP requests and cached in an
- * LRU cache.
+ * Wraps a store with microtask-tick range batching: concurrent `getRange`
+ * calls within a single microtask are grouped by path, coalesced across
+ * small byte gaps, and issued as a single fetch per group. The coalesced
+ * blob is sliced on return and each caller receives exactly the bytes they
+ * asked for.
  *
- * ```typescript
+ * `withRangeCoalescing` carries no cache state. Pair with `withByteCaching`
+ * if you want cross-call caching.
+ *
+ * ```ts
  * import * as zarr from "zarrita";
  *
- * let store = zarr.withRangeBatching(new zarr.FetchStore("https://example.com/data.zarr"));
+ * let store = zarr.withRangeCoalescing(
+ *   new zarr.FetchStore("https://example.com/data.zarr"),
+ *   { coalesceSize: 32768 },
+ * );
  * ```
  */
-export const withRangeBatching = defineStoreExtension(
-	(_store, opts: RangeBatchingOptions = {}) => {
+export const withRangeCoalescing = defineStoreExtension(
+	(_store, opts: RangeCoalescingOptions = {}) => {
 		assertRangeCapable(_store);
 		let store = _store;
 		let boundGetRange = store.getRange.bind(store);
 
 		let coalesceSize = opts.coalesceSize ?? DEFAULT_COALESCE_SIZE;
-		let cache = new LRUCache<Uint8Array | undefined>(opts.cacheSize ?? 256);
-		let inflight = new Map<string, Promise<Uint8Array | undefined>>();
+		let onFlush = opts.onFlush;
 
 		let pending = new Map<AbsolutePath, PendingRequest[]>();
 		let scheduled = false;
-
-		let _stats: RangeBatchingStats = {
-			hits: 0,
-			misses: 0,
-			mergedRequests: 0,
-			batchedRequests: 0,
-		};
 
 		async function flush(): Promise<void> {
 			let work = new Map(pending);
@@ -192,7 +169,12 @@ export const withRangeBatching = defineStoreExtension(
 			for (let [path, requests] of work) {
 				requests.sort((a, b) => a.offset - b.offset);
 				let groups = groupRequests(requests, coalesceSize);
-				_stats.mergedRequests += groups.length;
+				emitFlush(onFlush, {
+					path,
+					groupCount: groups.length,
+					requestCount: requests.length,
+					bytesFetched: groups.reduce((sum, g) => sum + g.length, 0),
+				});
 				pathPromises.push(fetchGroups(path, groups));
 			}
 			await Promise.all(pathPromises);
@@ -217,15 +199,12 @@ export const withRangeBatching = defineStoreExtension(
 							);
 						}
 						for (let req of group.requests) {
-							let cacheKey = `${path}\0${req.offset}\0${req.length}`;
 							if (!data) {
-								cache.set(cacheKey, undefined);
 								req.resolve(undefined);
 								continue;
 							}
 							let start = req.offset - group.offset;
 							let slice = data.slice(start, start + req.length);
-							cache.set(cacheKey, slice);
 							req.resolve(slice);
 						}
 					} catch (err) {
@@ -238,58 +217,18 @@ export const withRangeBatching = defineStoreExtension(
 		}
 
 		return {
-			get(
-				key: AbsolutePath,
-				options?: GetOptions,
-			): Promise<Uint8Array | undefined> {
-				return store.get(key, options);
-			},
-
 			getRange(
 				key: AbsolutePath,
 				range: RangeQuery,
 				options?: GetOptions,
 			): Promise<Uint8Array | undefined> {
-				// Suffix requests (shard index reads) bypass batching - file size
-				// is unknown until the response arrives.
+				// Suffix reads (shard index fetches) can't be coalesced because
+				// file size is unknown until the response arrives. Pass through.
 				if ("suffixLength" in range) {
-					let cacheKey = `${key}\0suffix\0${range.suffixLength}`;
-					if (cache.has(cacheKey)) {
-						_stats.hits++;
-						return Promise.resolve(cache.get(cacheKey));
-					}
-					// Deduplicate concurrent suffix requests
-					let existing = inflight.get(cacheKey);
-					if (existing) {
-						_stats.hits++;
-						return existing;
-					}
-					_stats.misses++;
-					let promise = boundGetRange(key, range, options)
-						.then((data) => {
-							cache.set(cacheKey, data);
-							inflight.delete(cacheKey);
-							return data;
-						})
-						.catch((err) => {
-							inflight.delete(cacheKey);
-							throw err;
-						});
-					inflight.set(cacheKey, promise);
-					return promise;
+					return boundGetRange(key, range, options);
 				}
 
 				let { offset, length } = range;
-				let cacheKey = `${key}\0${offset}\0${length}`;
-
-				if (cache.has(cacheKey)) {
-					_stats.hits++;
-					return Promise.resolve(cache.get(cacheKey));
-				}
-
-				_stats.misses++;
-				_stats.batchedRequests++;
-
 				return new Promise((resolve, reject) => {
 					let reqs = pending.get(key);
 					if (!reqs) {
@@ -303,16 +242,11 @@ export const withRangeBatching = defineStoreExtension(
 						resolve,
 						reject,
 					});
-
 					if (!scheduled) {
 						scheduled = true;
 						queueMicrotask(() => flush());
 					}
 				});
-			},
-
-			get stats(): Readonly<RangeBatchingStats> {
-				return { ..._stats };
 			},
 		};
 	},

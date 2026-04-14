@@ -35,9 +35,10 @@ test("public API surface", () => {
 		  "select",
 		  "set",
 		  "slice",
+		  "withByteCaching",
 		  "withConsolidatedMetadata",
 		  "withMaybeConsolidatedMetadata",
-		  "withRangeBatching",
+		  "withRangeCoalescing",
 		]
 	`);
 });

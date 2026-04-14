@@ -2,4 +2,4 @@
 "zarrita": minor
 ---
 
-feat: add withRangeBatching for request batching and range merging
+feat: add `withRangeCoalescing` and `withByteCaching` for microtask-tick range batching and composable byte caching

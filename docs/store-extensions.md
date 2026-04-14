@@ -16,8 +16,8 @@ observability).
 ## Store extensions
 
 Wrap a store with `zarr.defineStoreExtension`, then compose with
-`zarr.extendStore`. **zarrita** ships with extensions for consolidated metadata
-and range batching:
+`zarr.extendStore`. **zarrita** ships three store extensions: consolidated
+metadata, range coalescing, and caching.
 
 ```ts
 import * as zarr from "zarrita";
@@ -25,12 +25,65 @@ import * as zarr from "zarrita";
 let store = await zarr.extendStore(
   new zarr.FetchStore("https://example.com/data.zarr"),
   zarr.withConsolidatedMetadata,
-  (s) => zarr.withRangeBatching(s, { cacheSize: 512 }),
+  (s) => zarr.withRangeCoalescing(s, { coalesceSize: 32768 }),
+  (s) => zarr.withByteCaching(s),
 );
 
 store.contents(); // from zarr.withConsolidatedMetadata
-store.stats;      // from zarr.withRangeBatching
 ```
+
+By default `withByteCaching` caches every store request (both `get()` and
+`getRange()`, with gets keyed under `path` and ranges keyed by a composite
+that encodes `offset`/`length` or `suffixLength`) and allocates an internal
+unbounded `Map` for storage. To control the cache, for example to bound its
+size with LRU eviction, pass a `cache` option implementing the `ByteCache`
+interface:
+
+```ts
+export interface ByteCache {
+  has(key: string): boolean;
+  get(key: string): Uint8Array | undefined;
+  set(key: string, value: Uint8Array | undefined): void;
+}
+```
+
+A plain `Map<string, Uint8Array | undefined>` satisfies this directly, and so
+does any third-party LRU library that exposes `has` / `get` / `set`. For
+example, using [`quick-lru`](https://github.com/sindresorhus/quick-lru):
+
+```ts
+import QuickLRU from "quick-lru";
+
+let cache = new QuickLRU<string, Uint8Array | undefined>({ maxSize: 256 });
+
+let store = await zarr.extendStore(
+  new zarr.FetchStore("https://example.com/data.zarr"),
+  (s) => zarr.withByteCaching(s, { cache }),
+);
+
+cache.clear();   // direct control via the user-owned reference
+```
+
+To narrow or reshape the cache policy, for example to cache only metadata
+files and skip chunk data, pass your own `keyFor` function. It returns a
+string to cache the result under, or `undefined` to skip caching that call:
+
+```ts
+let store = await zarr.extendStore(
+  new zarr.FetchStore("https://example.com/data.zarr"),
+  (s) => zarr.withByteCaching(s, {
+    keyFor(path, range) {
+      if (range !== undefined) return undefined;
+      return /\/(zarr\.json|\.zarray|\.zattrs|\.zgroup)$/.test(path)
+        ? path
+        : undefined;
+    },
+  }),
+);
+```
+
+That single primitive covers metadata-only policies, path-filtered caches,
+shard-index-only caches, and anything else you want to express.
 
 Each extension wraps the previous result. `zarr.extendStore` handles async
 extensions (like `zarr.withConsolidatedMetadata`, which fetches metadata during

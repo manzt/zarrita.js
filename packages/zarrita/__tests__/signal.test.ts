@@ -132,7 +132,7 @@ describe("signal propagation through extendStore pipeline", () => {
 		let fsStore = new zarr.FileSystemStore(fixturesRoot);
 		let { store: recorder, calls } = recordingStore(fsStore);
 		let composed = await zarr.extendStore(recorder, (s) =>
-			zarr.withRangeBatching(s),
+			zarr.withRangeCoalescing(s),
 		);
 		let arr = await zarr.open.v3(
 			zarr.root(composed).resolve("1d.chunked.compressed.sharded.i2"),
@@ -141,7 +141,7 @@ describe("signal propagation through extendStore pipeline", () => {
 		let ctl = new AbortController();
 		await zarr.get(arr, null, { signal: ctl.signal });
 		// At least one of the inner-store calls carried our signal through
-		// the batching extension.
+		// the coalescing extension.
 		let seen = calls.some((c) => c?.signal === ctl.signal);
 		expect(seen).toBe(true);
 	});

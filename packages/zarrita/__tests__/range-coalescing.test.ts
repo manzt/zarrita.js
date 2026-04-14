@@ -1,6 +1,9 @@
 import type { AbsolutePath, RangeQuery } from "@zarrita/storage";
 import { describe, expect, it, vi } from "vitest";
-import { withRangeBatching } from "../src/extension/range-batching.js";
+import {
+	type FlushReport,
+	withRangeCoalescing,
+} from "../src/extension/range-coalescing.js";
 
 /**
  * Create a fake store with controllable getRange.
@@ -30,13 +33,13 @@ function fakeStore() {
 	};
 }
 
-describe("withRangeBatching", () => {
+describe("withRangeCoalescing", () => {
 	describe("get() pass-through", () => {
-		it("delegates to inner store", async () => {
+		it("delegates to inner store without interception", async () => {
 			let inner = fakeStore();
 			let expected = new Uint8Array([1, 2, 3]);
 			inner.get.mockResolvedValueOnce(expected);
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 			let result = await store.get("/some/path");
 			expect(inner.get).toHaveBeenCalledOnce();
 			expect(result).toBe(expected);
@@ -46,7 +49,7 @@ describe("withRangeBatching", () => {
 	describe("getRange() batching", () => {
 		it("batches concurrent getRange calls into a single merged fetch", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let [r1, r2, r3] = await Promise.all([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
@@ -66,42 +69,35 @@ describe("withRangeBatching", () => {
 			expect(r1?.[0]).toBe(0);
 			expect(r2?.[0]).toBe(100);
 			expect(r3?.[0]).toBe(200);
-
-			expect(store.stats.batchedRequests).toBe(3);
-			expect(store.stats.mergedRequests).toBe(1);
 		});
 
 		it("splits ranges with large gaps into separate groups", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
-			// 200KB gap exceeds GAP_THRESHOLD (32KB)
 			await Promise.all([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
 				store.getRange("/data/chunk", { offset: 200000, length: 100 }),
 			]);
 
 			expect(inner.getRange).toHaveBeenCalledTimes(2);
-			expect(store.stats.mergedRequests).toBe(2);
 		});
 
 		it("honors custom coalesceSize", async () => {
 			let inner = fakeStore();
-			// 50KB gap, default 32KB coalesce size would split
-			let store = withRangeBatching(inner, { coalesceSize: 65536 });
+			let store = withRangeCoalescing(inner, { coalesceSize: 65536 });
 
 			await Promise.all([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
 				store.getRange("/data/chunk", { offset: 51300, length: 100 }),
 			]);
 
-			// 50KB gap < 64KB coalesce size, should merge
 			expect(inner.getRange).toHaveBeenCalledOnce();
 		});
 
 		it("groups requests from different paths independently", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			await Promise.all([
 				store.getRange("/data/a", { offset: 0, length: 100 }),
@@ -115,14 +111,13 @@ describe("withRangeBatching", () => {
 	describe("edge cases", () => {
 		it("handles overlapping ranges correctly", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let [r1, r2] = await Promise.all([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
 				store.getRange("/data/chunk", { offset: 50, length: 100 }),
 			]);
 
-			// Merged into single fetch [0, 150)
 			expect(inner.getRange).toHaveBeenCalledOnce();
 			let call = inner.getRange.mock.calls[0];
 			expect(call[1]).toEqual({ offset: 0, length: 150 });
@@ -135,7 +130,7 @@ describe("withRangeBatching", () => {
 
 		it("resolves concurrent identical offset ranges correctly", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let [r1, r2] = await Promise.all([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
@@ -150,109 +145,85 @@ describe("withRangeBatching", () => {
 		});
 	});
 
-	describe("caching", () => {
-		it("returns cached data on second request", async () => {
+	describe("suffix passthrough", () => {
+		it("passes suffix-length queries directly through to inner", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
-
-			await store.getRange("/data/chunk", { offset: 0, length: 100 });
-
-			// Second request should hit cache
-			let r2 = await store.getRange("/data/chunk", { offset: 0, length: 100 });
-
-			expect(inner.getRange).toHaveBeenCalledOnce();
-			expect(store.stats.hits).toBe(1);
-			expect(r2?.length).toBe(100);
-		});
-
-		it("caches suffix range requests", async () => {
-			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			await store.getRange("/data/shard", { suffixLength: 1024 });
-			await store.getRange("/data/shard", { suffixLength: 1024 });
-
 			expect(inner.getRange).toHaveBeenCalledOnce();
-			expect(store.stats.hits).toBe(1);
+			expect(inner.getRange.mock.calls[0][1]).toEqual({ suffixLength: 1024 });
 		});
 
-		it("deduplicates concurrent suffix requests", async () => {
+		it("does not batch suffix reads across microtasks", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
-			// Fire two suffix requests concurrently (same as concurrent band opens)
-			let [r1, r2] = await Promise.all([
+			await Promise.all([
 				store.getRange("/data/shard", { suffixLength: 1024 }),
 				store.getRange("/data/shard", { suffixLength: 1024 }),
 			]);
 
-			expect(inner.getRange).toHaveBeenCalledOnce();
-			expect(r1?.length).toBe(1024);
-			expect(r2?.length).toBe(1024);
-			expect(store.stats.hits).toBe(1);
-			expect(store.stats.misses).toBe(1);
-		});
-
-		it("evicts failed suffix request from inflight cache", async () => {
-			let inner = fakeStore();
-			let callCount = 0;
-			inner.getRange.mockImplementation(
-				(
-					_key: AbsolutePath,
-					range: RangeQuery,
-					_options?: RequestInit,
-				): Promise<Uint8Array | undefined> => {
-					callCount++;
-					if (callCount === 1 && "suffixLength" in range) {
-						return Promise.reject(new Error("transient error"));
-					}
-					if ("suffixLength" in range) {
-						return Promise.resolve(new Uint8Array(range.suffixLength));
-					}
-					return Promise.resolve(new Uint8Array(0));
-				},
-			);
-			let store = withRangeBatching(inner);
-
-			await expect(
-				store.getRange("/data/shard", { suffixLength: 1024 }),
-			).rejects.toThrow("transient error");
-
-			// Retry should succeed (not permanently poisoned)
-			let result = await store.getRange("/data/shard", { suffixLength: 1024 });
-			expect(result?.length).toBe(1024);
+			expect(inner.getRange).toHaveBeenCalledTimes(2);
 		});
 	});
 
-	describe("LRU eviction", () => {
-		it("evicts oldest entry when cache capacity exceeded", async () => {
+	describe("onFlush callback", () => {
+		it("emits one report per path per flush", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner, { cacheSize: 2 });
+			let reports: FlushReport[] = [];
+			let store = withRangeCoalescing(inner, {
+				onFlush: (r) => reports.push(r),
+			});
 
-			// Fill cache with 3 entries (capacity 2)
-			await store.getRange("/a", { offset: 0, length: 10 });
-			await store.getRange("/b", { offset: 0, length: 10 });
-			await store.getRange("/c", { offset: 0, length: 10 });
+			await Promise.all([
+				store.getRange("/data/a", { offset: 0, length: 100 }),
+				store.getRange("/data/a", { offset: 100, length: 100 }),
+				store.getRange("/data/b", { offset: 0, length: 50 }),
+			]);
 
-			// /a should be evicted, /b and /c cached
-			inner.getRange.mockClear();
-			await store.getRange("/b", { offset: 0, length: 10 });
-			expect(inner.getRange).not.toHaveBeenCalled();
-
-			await store.getRange("/a", { offset: 0, length: 10 });
-			expect(inner.getRange).toHaveBeenCalledOnce();
+			expect(reports).toHaveLength(2);
+			let a = reports.find((r) => r.path === "/data/a");
+			let b = reports.find((r) => r.path === "/data/b");
+			expect(a).toEqual({
+				path: "/data/a",
+				groupCount: 1,
+				requestCount: 2,
+				bytesFetched: 200,
+			});
+			expect(b).toEqual({
+				path: "/data/b",
+				groupCount: 1,
+				requestCount: 1,
+				bytesFetched: 50,
+			});
 		});
 
-		it("honors cacheSize option", async () => {
+		it("swallows errors thrown from the callback", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner, { cacheSize: 1 });
+			let warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			let store = withRangeCoalescing(inner, {
+				onFlush: () => {
+					throw new Error("boom");
+				},
+			});
 
-			await store.getRange("/a", { offset: 0, length: 10 });
-			await store.getRange("/b", { offset: 0, length: 10 });
+			await expect(
+				store.getRange("/data/chunk", { offset: 0, length: 100 }),
+			).resolves.toBeDefined();
+			expect(warn).toHaveBeenCalledOnce();
+			warn.mockRestore();
+		});
 
-			inner.getRange.mockClear();
-			await store.getRange("/a", { offset: 0, length: 10 });
-			expect(inner.getRange).toHaveBeenCalledOnce();
+		it("does not emit for suffix reads", async () => {
+			let inner = fakeStore();
+			let reports: FlushReport[] = [];
+			let store = withRangeCoalescing(inner, {
+				onFlush: (r) => reports.push(r),
+			});
+
+			await store.getRange("/data/shard", { suffixLength: 1024 });
+			expect(reports).toHaveLength(0);
 		});
 	});
 
@@ -260,7 +231,7 @@ describe("withRangeBatching", () => {
 		it("rejects all requests in a group when fetch fails", async () => {
 			let inner = fakeStore();
 			inner.getRange.mockRejectedValue(new Error("Network error"));
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let results = await Promise.allSettled([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
@@ -287,11 +258,10 @@ describe("withRangeBatching", () => {
 					if ("suffixLength" in range) {
 						return Promise.resolve(new Uint8Array(range.suffixLength));
 					}
-					// Return only half the requested bytes
 					return Promise.resolve(new Uint8Array(Math.floor(range.length / 2)));
 				},
 			);
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let results = await Promise.allSettled([
 				store.getRange("/data/chunk", { offset: 0, length: 100 }),
@@ -309,7 +279,7 @@ describe("withRangeBatching", () => {
 	describe("signal merging", () => {
 		it("merges caller signals via AbortSignal.any across a batch", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let a = new AbortController();
 			let b = new AbortController();
@@ -328,14 +298,13 @@ describe("withRangeBatching", () => {
 
 			let passedSignal = inner.getRange.mock.calls[0][2]?.signal;
 			expect(passedSignal).toBeInstanceOf(AbortSignal);
-			// Aborting either upstream signal should propagate to the merged one.
 			a.abort(new Error("a aborted"));
 			expect(passedSignal?.aborted).toBe(true);
 		});
 
 		it("passes a single signal through unchanged", async () => {
 			let inner = fakeStore();
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 			let ctl = new AbortController();
 
 			await store.getRange(
@@ -351,7 +320,7 @@ describe("withRangeBatching", () => {
 		it("resolves with undefined when inner returns undefined", async () => {
 			let inner = fakeStore();
 			inner.getRange.mockResolvedValue(undefined);
-			let store = withRangeBatching(inner);
+			let store = withRangeCoalescing(inner);
 
 			let result = await store.getRange("/data/chunk", {
 				offset: 0,
