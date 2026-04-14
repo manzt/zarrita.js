@@ -94,15 +94,15 @@ Consolidated metadata stores the entire hierarchy's metadata in a single
 location, avoiding per-node network requests. This is particularly useful
 with remote stores where each metadata fetch incurs latency.
 
-The `withConsolidated` helper wraps an existing [store](/packages/storage),
-proxying metadata requests with the consolidated metadata, thereby minimizing
-network requests. It supports both Zarr v2 (`.zmetadata`) and v3
-(`consolidated_metadata` in root `zarr.json`).
+The `withConsolidatedMetadata` extension wraps an existing
+[store](/packages/storage), short-circuiting metadata requests from the
+consolidated blob instead of going to the network. It supports both Zarr
+v2 (`.zmetadata`) and v3 (`consolidated_metadata` in root `zarr.json`).
 
 ```js{3}
 import * as zarr from "zarrita";
 
-let store = await zarr.withConsolidated(
+let store = await zarr.withConsolidatedMetadata(
 	new zarr.FetchStore("https://localhost:8080/data.zarr")
 );
 
@@ -111,7 +111,7 @@ let root = await zarr.open(store, { kind: "group" });
 let foo = await zarr.open(root.resolve("foo"), { kind: "array" });
 ```
 
-The store returned from `withConsolidated` is **readonly** and adds
+The store returned from `withConsolidatedMetadata` is **readonly** and adds
 `.contents()` to list the known contents of the hierarchy:
 
 ```js
@@ -123,23 +123,23 @@ format with the `format` option, or provide an array to try formats in order:
 
 ```js
 // v2 only
-let store = await zarr.withConsolidated(rawStore, { format: "v2" });
+let store = await zarr.withConsolidatedMetadata(rawStore, { format: "v2" });
 
 // v3 only
-let store = await zarr.withConsolidated(rawStore, { format: "v3" });
+let store = await zarr.withConsolidatedMetadata(rawStore, { format: "v3" });
 
 // try v3 first, fall back to v2
-let store = await zarr.withConsolidated(rawStore, { format: ["v3", "v2"] });
+let store = await zarr.withConsolidatedMetadata(rawStore, { format: ["v3", "v2"] });
 ```
 
 ::: tip
 
-The `withConsolidated` helper errors out if consolidated metadata is absent.
-Use `tryWithConsolidated` for uncertain cases; it leverages consolidated
-metadata if available.
+`withConsolidatedMetadata` throws if consolidated metadata is absent. Use
+`withMaybeConsolidatedMetadata` when you don't know up front; it uses
+consolidated metadata if available, and otherwise passes through.
 
 ```js
-let store = await zarr.tryWithConsolidated(
+let store = await zarr.withMaybeConsolidatedMetadata(
 	new zarr.FetchStore("https://localhost:8080/data.zarr"),
 );
 ```
@@ -156,48 +156,51 @@ for the ongoing spec discussion.
 :::
 
 
-## Batch and Cache Range Requests
+## Coalesce and Cache Range Requests
 
 When reading chunked data over HTTP, many small range requests can be
-expensive due to per-request latency. The `withRangeBatching` helper wraps a
-store so that concurrent `getRange()` calls within the same microtask tick are
-automatically merged into fewer, larger fetches. Results are cached in an LRU
-cache (assumes immutable data).
+expensive due to per-request latency. zarrita ships two composable store
+extensions for this: `withRangeCoalescing` merges concurrent range reads
+into fewer fetches, and `withByteCaching` caches the results. Either works
+on its own; together they give you batched-and-cached reads.
 
-```js{3-5}
+```js
 import * as zarr from "zarrita";
 
-let store = zarr.withRangeBatching(
+let store = await zarr.extendStore(
   new zarr.FetchStore("https://localhost:8080/data.zarr"),
+  (s) => zarr.withRangeCoalescing(s),
+  (s) => zarr.withByteCaching(s),
 );
 
 let arr = await zarr.open(store, { kind: "array" });
 ```
 
-Adjacent byte ranges separated by less than `coalesceSize` bytes (default
-32 KB) are coalesced into a single request. You can tune this along with the
-LRU cache capacity:
+`withRangeCoalescing` groups concurrent `getRange()` calls on the same path
+within a microtask tick, merges adjacent byte ranges separated by less than
+`coalesceSize` bytes (default 32 KB), and issues one fetch per group. When
+multiple callers each pass their own `AbortSignal` and their requests land
+in the same group, the signals are merged so the shared fetch aborts as
+soon as any caller aborts.
 
 ```js
-let store = zarr.withRangeBatching(
+let store = zarr.withRangeCoalescing(
   new zarr.FetchStore("https://localhost:8080/data.zarr"),
   {
-    coalesceSize: 65536, // merge ranges within 64 KB of each other
-    cacheSize: 512,      // keep up to 512 entries in the LRU cache
+    coalesceSize: 65_536, // merge ranges within 64 KB of each other
+    onFlush(report) {
+      // { path, groupCount, requestCount, bytesFetched }
+      console.log(report);
+    },
   },
 );
 ```
 
-When multiple callers each pass their own `AbortSignal` and their requests
-land in the same batch, the signals are merged via `AbortSignal.any`: the
-shared request aborts as soon as any one caller aborts.
-
-You can inspect batching statistics via `store.stats`:
-
-```js
-store.stats;
-// { hits: 12, misses: 4, batchedRequests: 16, mergedRequests: 4 }
-```
+`withByteCaching` is policy-agnostic: by default it caches every `get()`
+and `getRange()` response in an unbounded `Map`, but you can pass any
+`ByteCache`-compatible container (for example, an LRU) or a `keyFor`
+function to narrow the policy. See the
+[store extensions reference](./store-extensions.md) for the full API.
 
 
 ## Read Data with SharedArrayBuffer <Badge type="tip" text="v2 & v3" />
