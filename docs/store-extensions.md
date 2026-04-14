@@ -24,16 +24,16 @@ import * as zarr from "zarrita";
 
 let store = await zarr.extendStore(
   new zarr.FetchStore("https://example.com/data.zarr"),
-  zarr.withConsolidation,
+  zarr.withConsolidatedMetadata,
   (s) => zarr.withRangeBatching(s, { cacheSize: 512 }),
 );
 
-store.contents(); // from zarr.withConsolidation
+store.contents(); // from zarr.withConsolidatedMetadata
 store.stats;      // from zarr.withRangeBatching
 ```
 
 Each extension wraps the previous result. `zarr.extendStore` handles async
-extensions (like `zarr.withConsolidation`, which fetches metadata during
+extensions (like `zarr.withConsolidatedMetadata`, which fetches metadata during
 initialization) automatically, and always returns a `Promise`. An extension
 with no required options can be passed uncalled; otherwise wrap it in an arrow
 so the options are applied to the argument.
@@ -41,7 +41,7 @@ so the options are applied to the argument.
 You can also call extensions directly:
 
 ```ts
-let consolidated = await zarr.withConsolidation(
+let consolidated = await zarr.withConsolidatedMetadata(
   new zarr.FetchStore("https://example.com/data.zarr"),
   { format: "v3" },
 );

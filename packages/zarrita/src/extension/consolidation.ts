@@ -67,8 +67,8 @@ function isConsolidatedV3(meta: unknown): meta is GroupMetadata & {
 /** The format of consolidated metadata to use. */
 export type ConsolidatedFormat = "v2" | "v3";
 
-/** Options for {@linkcode withConsolidation} and {@linkcode withMaybeConsolidation}. */
-export interface ConsolidationOptions {
+/** Options for {@linkcode withConsolidatedMetadata} and {@linkcode withMaybeConsolidatedMetadata}. */
+export interface ConsolidatedMetadataOptions {
 	/**
 	 * The format(s) of consolidated metadata to try.
 	 *
@@ -197,22 +197,22 @@ export type Listable<Store extends Readable> = Store & {
  * @example
  * ```ts
  * // Direct
- * let store = await zarr.withConsolidation(new zarr.FetchStore("https://..."));
+ * let store = await zarr.withConsolidatedMetadata(new zarr.FetchStore("https://..."));
  *
  * // With options
- * let store = await zarr.withConsolidation(rawStore, { format: "v3" });
+ * let store = await zarr.withConsolidatedMetadata(rawStore, { format: "v3" });
  *
  * // In a pipeline
  * let store = await zarr.extendStore(
  *   new zarr.FetchStore("https://..."),
- *   (s) => zarr.withConsolidation(s, { format: "v3" }),
+ *   (s) => zarr.withConsolidatedMetadata(s, { format: "v3" }),
  * );
  *
  * store.contents(); // [{ path: "/", kind: "group" }, ...]
  * ```
  */
-export const withConsolidation = defineStoreExtension(
-	async (store, opts: ConsolidationOptions = {}) => {
+export const withConsolidatedMetadata = defineStoreExtension(
+	async (store, opts: ConsolidatedMetadataOptions = {}) => {
 		let formats = resolveFormats(store, opts.format);
 		let lastError: unknown;
 		for (let format of formats) {
@@ -265,17 +265,19 @@ export const withConsolidation = defineStoreExtension(
 );
 
 /**
- * Like {@linkcode withConsolidation}, but falls back to the original store if
+ * Like {@linkcode withConsolidatedMetadata}, but falls back to the original store if
  * no consolidated metadata is found (instead of throwing).
  */
-export async function withMaybeConsolidation<Store extends AsyncReadable>(
+export async function withMaybeConsolidatedMetadata<
+	Store extends AsyncReadable,
+>(
 	store: Store,
-	opts: ConsolidationOptions = {},
+	opts: ConsolidatedMetadataOptions = {},
 ): Promise<Listable<Store> | Store> {
-	return (withConsolidation(store, opts) as Promise<Listable<Store>>).catch(
-		(error: unknown) => {
-			rethrowUnless(error, NotFoundError, InvalidMetadataError);
-			return store;
-		},
-	);
+	return (
+		withConsolidatedMetadata(store, opts) as Promise<Listable<Store>>
+	).catch((error: unknown) => {
+		rethrowUnless(error, NotFoundError, InvalidMetadataError);
+		return store;
+	});
 }

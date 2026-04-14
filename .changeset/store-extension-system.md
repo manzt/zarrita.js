@@ -8,14 +8,14 @@ Introduce composable store and array extensions via `defineStoreExtension` and `
 
 - `zarr.defineStoreExtension(factory)` — define a store extension with automatic Proxy delegation. The factory receives an `AsyncReadable` store and options, returning overrides and extensions. Supports sync and async factories.
 - `zarr.defineArrayExtension(factory)` — define an array extension that intercepts `getChunk` on a `zarr.Array`. Same Proxy-delegation model.
-- `zarr.extendStore(store, ...extensions)` — compose store extensions in a pipeline. Each extension is `(store) => newStore`. Returns `Promise` to support async extensions like `withConsolidation`.
+- `zarr.extendStore(store, ...extensions)` — compose store extensions in a pipeline. Each extension is `(store) => newStore`. Returns `Promise` to support async extensions like `withConsolidatedMetadata`.
 - `zarr.extendArray(array, ...extensions)` — compose array extensions in a pipeline.
 
 **Renamed:**
 
-- `withConsolidated` → `withConsolidation`
-- `tryWithConsolidated` → `withMaybeConsolidation`
-- `WithConsolidatedOptions` → `ConsolidationOptions`
+- `withConsolidated` → `withConsolidatedMetadata`
+- `tryWithConsolidated` → `withMaybeConsolidatedMetadata`
+- `WithConsolidatedOptions` → `ConsolidatedMetadataOptions`
 - `BatchedRangeStoreOptions` → `RangeBatchingOptions`
 - `Stats` → `RangeBatchingStats`
 
@@ -29,7 +29,7 @@ import * as zarr from "zarrita";
 // Pipeline composition (use arrow functions for full type inference)
 let store = await zarr.extendStore(
   new zarr.FetchStore("https://..."),
-  zarr.withConsolidation,
+  zarr.withConsolidatedMetadata,
   (s) => zarr.withRangeBatching(s, { mergeOptions: (batch) => batch[0] }),
 );
 ```

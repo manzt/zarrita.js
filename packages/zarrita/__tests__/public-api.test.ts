@@ -35,10 +35,8 @@ test("public API surface", () => {
 		  "select",
 		  "set",
 		  "slice",
-		  "tryWithConsolidated",
-		  "withConsolidated",
-		  "withConsolidation",
-		  "withMaybeConsolidation",
+		  "withConsolidatedMetadata",
+		  "withMaybeConsolidatedMetadata",
 		  "withRangeBatching",
 		]
 	`);

@@ -14,21 +14,14 @@ export {
 	UnknownCodecError,
 	UnsupportedError,
 } from "./errors.js";
-/** @deprecated Use {@linkcode ConsolidationOptions} instead. */
 export type {
 	ConsolidatedFormat,
-	ConsolidationOptions,
-	ConsolidationOptions as WithConsolidatedOptions,
+	ConsolidatedMetadataOptions,
 	Listable,
 } from "./extension/consolidation.js";
-// deprecated re-exports
-/** @deprecated Use {@linkcode withConsolidation} instead. */
-/** @deprecated Use {@linkcode withMaybeConsolidation} instead. */
 export {
-	withConsolidation,
-	withConsolidation as withConsolidated,
-	withMaybeConsolidation,
-	withMaybeConsolidation as tryWithConsolidated,
+	withConsolidatedMetadata,
+	withMaybeConsolidatedMetadata,
 } from "./extension/consolidation.js";
 export { defineStoreExtension } from "./extension/define.js";
 export {
