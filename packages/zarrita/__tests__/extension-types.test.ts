@@ -27,7 +27,7 @@ describe("extendStore", () => {
 		function check() {
 			return zarr.extendStore(
 				new zarr.FetchStore(""),
-				zarr.withConsolidation,
+				zarr.withConsolidatedMetadata,
 				(s) => zarr.withRangeBatching(s),
 			);
 		}

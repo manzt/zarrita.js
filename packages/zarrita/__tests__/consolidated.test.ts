@@ -4,18 +4,18 @@ import { FileSystemStore } from "@zarrita/storage";
 import { assert, describe, expect, it } from "vitest";
 import { NotFoundError } from "../src/errors.js";
 import {
-	withConsolidation,
-	withMaybeConsolidation,
+	withConsolidatedMetadata,
+	withMaybeConsolidatedMetadata,
 } from "../src/extension/consolidation.js";
 import { Array as ZarrArray } from "../src/hierarchy.js";
 import { open } from "../src/open.js";
 
 let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-describe("withConsolidation", () => {
+describe("withConsolidatedMetadata", () => {
 	it("loads consolidated metadata", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withConsolidation(new FileSystemStore(root));
+		let store = await withConsolidatedMetadata(new FileSystemStore(root));
 		let map = new Map(store.contents().map((x) => [x.path, x.kind]));
 		expect(map).toMatchInlineSnapshot(`
 			Map {
@@ -57,7 +57,7 @@ describe("withConsolidation", () => {
 
 	it("loads chunk data from underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withConsolidation(new FileSystemStore(root));
+		let store = await withConsolidatedMetadata(new FileSystemStore(root));
 		// biome-ignore lint/style/noNonNullAssertion: Fine for a test
 		let entry = store
 			.contents()
@@ -95,7 +95,7 @@ describe("withConsolidation", () => {
 
 	it("loads and navigates from root", async () => {
 		let path_root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withConsolidation(new FileSystemStore(path_root));
+		let store = await withConsolidatedMetadata(new FileSystemStore(path_root));
 		let grp = await open(store, { kind: "group" });
 		expect(grp.kind).toBe("group");
 		let arr = await open(grp.resolve("1d.chunked.i2"), { kind: "array" });
@@ -108,7 +108,7 @@ describe("withConsolidation", () => {
 			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
 		);
 		let try_open = () =>
-			withConsolidation(new FileSystemStore(root), { format: "v2" });
+			withConsolidatedMetadata(new FileSystemStore(root), { format: "v2" });
 		await expect(try_open).rejects.toThrowError(NotFoundError);
 		await expect(try_open).rejects.toThrowErrorMatchingInlineSnapshot(
 			"[NotFoundError: Not found: v2 consolidated metadata]",
@@ -116,14 +116,14 @@ describe("withConsolidation", () => {
 	});
 });
 
-describe("withConsolidation (v3)", () => {
+describe("withConsolidatedMetadata (v3)", () => {
 	let v3root = path.join(
 		__dirname,
 		"../../../fixtures/v3/data.zarr/consolidated",
 	);
 
 	it("loads v3 consolidated metadata", async () => {
-		let store = await withConsolidation(new FileSystemStore(v3root), {
+		let store = await withConsolidatedMetadata(new FileSystemStore(v3root), {
 			format: "v3",
 		});
 		let map = new Map(store.contents().map((x) => [x.path, x.kind]));
@@ -139,7 +139,7 @@ describe("withConsolidation (v3)", () => {
 	});
 
 	it("loads chunk data from underlying store", async () => {
-		let store = await withConsolidation(new FileSystemStore(v3root), {
+		let store = await withConsolidatedMetadata(new FileSystemStore(v3root), {
 			format: "v3",
 		});
 		let grp = await open(store, { kind: "group" });
@@ -162,7 +162,7 @@ describe("withConsolidation (v3)", () => {
 	});
 
 	it("loads and navigates from root", async () => {
-		let store = await withConsolidation(new FileSystemStore(v3root), {
+		let store = await withConsolidatedMetadata(new FileSystemStore(v3root), {
 			format: "v3",
 		});
 		let grp = await open(store, { kind: "group" });
@@ -175,18 +175,18 @@ describe("withConsolidation (v3)", () => {
 	it("throws if v3 consolidated metadata is missing", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
 		let try_open = () =>
-			withConsolidation(new FileSystemStore(root), { format: "v3" });
+			withConsolidatedMetadata(new FileSystemStore(root), { format: "v3" });
 		await expect(try_open).rejects.toThrowError(NotFoundError);
 	});
 });
 
-describe("withConsolidation (format array)", () => {
+describe("withConsolidatedMetadata (format array)", () => {
 	it("tries formats in order", async () => {
 		let root = path.join(
 			__dirname,
 			"../../../fixtures/v3/data.zarr/consolidated",
 		);
-		let store = await withConsolidation(new FileSystemStore(root), {
+		let store = await withConsolidatedMetadata(new FileSystemStore(root), {
 			format: ["v3", "v2"],
 		});
 		let contents = store.contents();
@@ -197,7 +197,7 @@ describe("withConsolidation (format array)", () => {
 
 	it("falls back to second format", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withConsolidation(new FileSystemStore(root), {
+		let store = await withConsolidatedMetadata(new FileSystemStore(root), {
 			format: ["v3", "v2"],
 		});
 		let contents = store.contents();
@@ -205,10 +205,10 @@ describe("withConsolidation (format array)", () => {
 	});
 });
 
-describe("withMaybeConsolidation", () => {
+describe("withMaybeConsolidatedMetadata", () => {
 	it("creates Listable from consolidated store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withMaybeConsolidation(new FileSystemStore(root));
+		let store = await withMaybeConsolidatedMetadata(new FileSystemStore(root));
 		expect(store).toHaveProperty("contents");
 	});
 
@@ -217,13 +217,13 @@ describe("withMaybeConsolidation", () => {
 			__dirname,
 			"../../../fixtures/v2/data.zarr/3d.contiguous.i2",
 		);
-		let store = await withMaybeConsolidation(new FileSystemStore(root));
+		let store = await withMaybeConsolidatedMetadata(new FileSystemStore(root));
 		expect(store).toBeInstanceOf(FileSystemStore);
 	});
 
 	it("supports a zmetadataKey option", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withMaybeConsolidation(new FileSystemStore(root), {
+		let store = await withMaybeConsolidatedMetadata(new FileSystemStore(root), {
 			metadataKey: ".zmetadata",
 		});
 		expect(store).toHaveProperty("contents");
@@ -231,7 +231,7 @@ describe("withMaybeConsolidation", () => {
 
 	it("falls back to original store if metadataKey is incorrect", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withMaybeConsolidation(new FileSystemStore(root), {
+		let store = await withMaybeConsolidatedMetadata(new FileSystemStore(root), {
 			metadataKey: ".nonexistent",
 		});
 		expect(store).toBeInstanceOf(FileSystemStore);
@@ -240,12 +240,12 @@ describe("withMaybeConsolidation", () => {
 
 describe("Listable.getRange", () => {
 	it("does not expose getRange if the underlying store does not support it", async () => {
-		let store = await withMaybeConsolidation(new Map());
+		let store = await withMaybeConsolidatedMetadata(new Map());
 		expect("getRange" in store).toBeFalsy();
 	});
 	it("retrieves a byte range from an underlying store", async () => {
 		let root = path.join(__dirname, "../../../fixtures/v2/data.zarr");
-		let store = await withMaybeConsolidation(new FileSystemStore(root));
+		let store = await withMaybeConsolidatedMetadata(new FileSystemStore(root));
 		assert(typeof store.getRange === "function");
 	});
 });
