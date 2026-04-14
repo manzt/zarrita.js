@@ -32,7 +32,7 @@ test("public API surface", () => {
 		  "open",
 		  "registry",
 		  "root",
-		  "sel",
+		  "select",
 		  "set",
 		  "slice",
 		  "tryWithConsolidated",
