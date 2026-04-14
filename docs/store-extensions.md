@@ -163,7 +163,7 @@ For your own extensions, prefer in order:
    `AsyncReadable`.
 2. **If you must expose state, put the whole surface on one namespace key.**
    Name it after what the extension *is*. The composed type becomes
-   `AsyncReadable & { events: EventsHandle }` — a store composed with a
+   `AsyncReadable & { events: EventsHandle }`: a store composed with a
    handle, not a store that *inherits* new methods.
 
 `get`, `getRange`, and `arrayExtensions` are reserved.
@@ -183,7 +183,7 @@ const withLogging = zarr.defineStoreExtension(
 
 The caller owns the `log` function. Nothing on the store.
 
-**Namespaced composition.** Some state genuinely can't be externalized — an
+**Namespaced composition.** Some state can't be externalized; an
 event subscription registry is the canonical case. The listener set is
 dynamic, callers need to add and remove handlers at runtime, and you don't
 want `store.subscribe` / `store.unsubscribe` / `store.notify` scattered
@@ -258,7 +258,7 @@ let arr = await zarr.extendArray(
 await zarr.get(arr, null); // cache hits are served from the Map
 ```
 
-Only `getChunk` is interceptable — `shape`, `dtype`, `attrs`, `chunks`,
+Only `getChunk` is interceptable. `shape`, `dtype`, `attrs`, `chunks`,
 `store`, and `path` are part of the array's identity and are always delegated
 to the inner array. Any other keys on the factory result become extensions on
 the wrapped array.
@@ -275,13 +275,13 @@ perform async initialization.
 
 A store extension can declare an `arrayExtensions` field on its factory result.
 `zarr.open` reads that list from the composed store and wraps every
-`zarr.Array` it returns with those extensions — so downstream consumers don't
+`zarr.Array` it returns with those extensions, so downstream consumers don't
 need to remember to call `zarr.extendArray` at each call site.
 
 This is the primitive for **virtual-format adapters** (hdf5-as-virtual-zarr,
 tiff-as-virtual-zarr, parquet-as-virtual-zarr): a single factory parses the
 source once, synthesizes metadata at the transport layer, and hands decoded
-chunks at the data layer — sharing closure state between both concerns:
+chunks at the data layer, sharing closure state between both concerns:
 
 ```ts
 import * as zarr from "zarrita";
@@ -311,13 +311,13 @@ let store = await zarr.extendStore(raw, (s) =>
   hdf5VirtualZarr(s, { root: "/my_image" }),
 );
 
-// Downstream code knows nothing about the adapter — just opens and reads.
+// Downstream code knows nothing about the adapter; it just opens and reads.
 let arr = await zarr.open(store, { kind: "array", path: "/my_image" });
 await zarr.get(arr, [null, zarr.slice(0, 10)]);
 ```
 
 **Merge semantics.** When store extensions are stacked, each layer's
-`arrayExtensions` are concatenated with the inner store's — inner-first,
+`arrayExtensions` are concatenated with the inner store's, inner-first,
 outer-last. So if an inner layer contributes `[A]` and an outer layer
 contributes `[B]`, the composed store exposes `[A, B]`, and `zarr.open` applies
 them so that B wraps A (symmetric with how the store extensions themselves
