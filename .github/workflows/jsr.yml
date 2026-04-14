@@ -18,13 +18,13 @@ jobs:
           deno-version: v2.x
 
       - name: Publish @zarrita/storage
-        run: deno publish --unstable-sloppy-imports
+        run: deno publish --no-check --unstable-sloppy-imports
         working-directory: packages/@zarrita-storage
 
       # --allow-slow-types: Deno hits a bug in slow-type validation of the
       # overloaded `create` function.
       - name: Publish @zarrita/zarrita
-        run: deno publish --unstable-sloppy-imports --allow-slow-types
+        run: deno publish --no-check --unstable-sloppy-imports --allow-slow-types
         working-directory: packages/zarrita
 
       # --no-check: Deno v2 (TS 5.9) adds Float16Array to the default lib, which
