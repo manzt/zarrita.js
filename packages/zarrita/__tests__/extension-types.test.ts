@@ -13,14 +13,11 @@ describe("extendStore", () => {
 
 	test("direct form in pipeline", () => {
 		let store = zarr.extendStore(new zarr.FetchStore(""), (s) =>
-			zarr.withRangeBatching(s),
+			zarr.withRangeCoalescing(s),
 		);
-		expectType(store).toMatchInlineSnapshot(`
-			Required<AsyncReadable> & {
-				stats: Readonly<zarr.RangeBatchingStats>;
-				url: string | URL;
-			}
-		`);
+		expectType(store).toMatchInlineSnapshot(
+			`Required<AsyncReadable> & { url: string | URL }`,
+		);
 	});
 
 	test("no-config extension can be passed uncalled", () => {
@@ -28,13 +25,12 @@ describe("extendStore", () => {
 			return zarr.extendStore(
 				new zarr.FetchStore(""),
 				zarr.withConsolidatedMetadata,
-				(s) => zarr.withRangeBatching(s),
+				(s) => zarr.withRangeCoalescing(s),
 			);
 		}
 		expectType(check).toMatchInlineSnapshot(`
 			() => Promise<
 				Required<AsyncReadable> & {
-					stats: Readonly<zarr.RangeBatchingStats>;
 					url: string | URL;
 					contents: () => { path: AbsolutePath; kind: "array" | "group" }[];
 				}

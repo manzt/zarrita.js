@@ -14,6 +14,11 @@ export {
 	UnknownCodecError,
 	UnsupportedError,
 } from "./errors.js";
+export {
+	type ByteCache,
+	type CacheKeyFor,
+	withByteCaching,
+} from "./extension/caching.js";
 export type {
 	ConsolidatedFormat,
 	ConsolidatedMetadataOptions,
@@ -30,12 +35,10 @@ export {
 } from "./extension/define-array.js";
 export { extendArray } from "./extension/extend-array.js";
 export { extendStore } from "./extension/extend-store.js";
-export type {
-	RangeBatchingOptions,
-	RangeBatchingStats,
-} from "./extension/range-batching.js";
-// extensions
-export { withRangeBatching } from "./extension/range-batching.js";
+export {
+	type FlushReport,
+	withRangeCoalescing,
+} from "./extension/range-coalescing.js";
 export { Array, Group, Location, root } from "./hierarchy.js";
 // internal exports for @zarrita/ndarray
 export { get as _zarrita_internal_get } from "./indexing/get.js";
