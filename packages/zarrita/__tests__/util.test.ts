@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import * as zarr from "../src/index.js";
-import { sel, slice } from "../src/indexing/util.js";
+import { select, slice } from "../src/indexing/util.js";
 import type { ArrayMetadata, DataType } from "../src/metadata.js";
 import {
 	BoolArray,
@@ -266,7 +266,7 @@ describe("ensureCorrectScalar", () => {
 	});
 });
 
-describe("sel", () => {
+describe("select", () => {
 	async function make_array(dimensionNames?: string[]) {
 		let h = zarr.root();
 		return zarr.create(h.resolve("/test"), {
@@ -279,7 +279,7 @@ describe("sel", () => {
 
 	test("maps named dimensions to positional selection", async () => {
 		let arr = await make_array(["time", "lat", "lon"]);
-		expect(sel(arr, { lat: slice(10, 20), time: 0 })).toStrictEqual([
+		expect(select(arr, { lat: slice(10, 20), time: 0 })).toStrictEqual([
 			0,
 			{ start: 10, stop: 20, step: null },
 			null,
@@ -288,17 +288,19 @@ describe("sel", () => {
 
 	test("unspecified dimensions default to null", async () => {
 		let arr = await make_array(["time", "lat", "lon"]);
-		expect(sel(arr, { lon: 5 })).toStrictEqual([null, null, 5]);
+		expect(select(arr, { lon: 5 })).toStrictEqual([null, null, 5]);
 	});
 
 	test("throws for unknown dimension name", async () => {
 		let arr = await make_array(["time", "lat", "lon"]);
-		expect(() => sel(arr, { bad: 0 })).toThrow(/Unknown dimension name: "bad"/);
+		expect(() => select(arr, { bad: 0 })).toThrow(
+			/Unknown dimension name: "bad"/,
+		);
 	});
 
 	test("throws when array has no dimension_names", async () => {
 		let arr = await make_array();
-		expect(() => sel(arr, { time: 0 })).toThrow(
+		expect(() => select(arr, { time: 0 })).toThrow(
 			/does not have dimension_names/,
 		);
 	});

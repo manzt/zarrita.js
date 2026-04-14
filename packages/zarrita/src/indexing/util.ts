@@ -137,7 +137,7 @@ export function slice(
 }
 
 /** @category Utility */
-export function sel<D extends DataType, Store extends Readable>(
+export function select<D extends DataType, Store extends Readable>(
 	arr: ZarrArray<D, Store>,
 	selection: Record<string, Slice | number | null>,
 ): (Slice | number | null)[] {

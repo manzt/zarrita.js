@@ -56,7 +56,7 @@ export type {
 	Slice,
 } from "./indexing/types.js";
 export {
-	sel,
+	select,
 	slice,
 	sliceIndices as _zarrita_internal_sliceIndices,
 } from "./indexing/util.js";
