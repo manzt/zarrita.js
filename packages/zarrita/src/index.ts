@@ -1,3 +1,29 @@
+/**
+ * A minimal, modular Zarr implementation for JavaScript.
+ *
+ * Zarrita reads and writes chunked, n-dimensional arrays backed by pluggable
+ * stores (HTTP, filesystem, in-memory, ...) and supports both Zarr v2 and v3
+ * on-disk formats. The API is deliberately small: open an {@linkcode Array}
+ * or {@linkcode Group} from a store, then read or write chunks with
+ * {@linkcode get} and {@linkcode set}.
+ *
+ * ```ts
+ * import * as zarr from "zarrita";
+ *
+ * const store = new zarr.FetchStore("https://example.com/data.zarr");
+ * const arr = await zarr.open(store, { kind: "array" });
+ *
+ * // Read a 2D sub-region into an ndarray-like view.
+ * const region = await zarr.get(arr, [zarr.slice(0, 10), null]);
+ * console.log(region.shape, region.data);
+ * ```
+ *
+ * See the {@link https://manzt.github.io/zarrita.js/ | cookbook} for more
+ * recipes (creation, consolidated metadata, store extensions, slicing).
+ *
+ * @module
+ */
+
 // re-export all the storage interface types
 export type * from "@zarrita/storage";
 // re-export fetch store from storage
