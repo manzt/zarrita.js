@@ -1,5 +1,235 @@
 # zarrita
 
+## 0.7.0
+
+### Minor Changes
+
+- Add `AbortSignal` support to `open`, `get`, and `set`. The signal is forwarded to `store.get` calls and checked between async steps for early cancellation. ([#379](https://github.com/manzt/zarrita.js/pull/379))
+
+  ```ts
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  await zarr.open(store, { kind: "array", signal });
+  await zarr.get(arr, [null], { signal });
+  await zarr.set(arr, [null], value, { signal });
+  ```
+
+- Add `dimension_names` support to `create()` and expose `dimensionNames` getter on `Array`. For v2 arrays, `_ARRAY_DIMENSIONS` from attributes is automatically mapped to `dimensionNames`. ([#377](https://github.com/manzt/zarrita.js/pull/377))
+
+- Add `fillValue` getter on `Array` to expose the fill value from array metadata. Works uniformly across v2 and v3 arrays, with proper deserialization of IEEE 754 special values (`NaN`, `Infinity`, `-Infinity`). ([#378](https://github.com/manzt/zarrita.js/pull/378))
+
+- Add `select` helper for named-dimension selection. Converts a record of dimension names to the positional selection array that `get` and `set` accept, using the array's `dimensionNames` metadata. Throws for unknown dimension names. ([#382](https://github.com/manzt/zarrita.js/pull/382))
+
+  ```ts
+  let arr = await zarr.open(store, { kind: "array" });
+  // arr.dimensionNames -> ["time", "lat", "lon"]
+
+  let selection = zarr.select(arr, { lat: zarr.slice(100, 200), time: 0 });
+  // -> [0, slice(100, 200), null]
+
+  let result = await zarr.get(arr, selection);
+  ```
+
+- Add v3 consolidated metadata support to `withConsolidatedMetadata`. The v3 format reads `consolidated_metadata` from the root `zarr.json`, matching zarr-python's implementation. Note that v3 consolidated metadata is not yet part of the official Zarr v3 spec and should be considered experimental. ([#383](https://github.com/manzt/zarrita.js/pull/383))
+
+  A new `format` option controls which format(s) to try, accepting a single string or an array for fallback ordering. When omitted, format is auto-detected using the store's version history.
+
+  ```ts
+  await withConsolidatedMetadata(store); // auto-detect
+  await withConsolidatedMetadata(store, { format: "v2" }); // v2 only
+  await withConsolidatedMetadata(store, { format: "v3" }); // v3 only
+  await withConsolidatedMetadata(store, { format: ["v3", "v2"] }); // try v3, fall back to v2
+  ```
+
+- Auto-apply array extensions carried by a store ([#399](https://github.com/manzt/zarrita.js/pull/399))
+
+  A store extension factory may now declare an `arrayExtensions` field on its
+  returned overrides. `defineStoreExtension` merges each layer's list with the
+  inner store's (inner-first, outer-last), and `zarr.open` applies the resulting
+  list to every `zarr.Array` it returns — so downstream consumers don't need to
+  call `zarr.extendArray` at each call site.
+
+  This is the primitive for virtual-format adapters (hdf5-as-virtual-zarr,
+  tiff-as-virtual-zarr, parquet-as-virtual-zarr) that pair a transport-layer
+  store extension (synthesizing metadata keys) with a data-layer array extension
+  (supplying decoded chunks) from a single factory with shared closure state:
+
+  ```ts
+  const hdf5VirtualZarr = zarr.defineStoreExtension(
+    (inner, opts: { root: string }) => {
+      let parsed = parseHdf5(opts.root);
+      return {
+        async get(key, options) {
+          if (isVirtualMetadataKey(key, parsed))
+            return synthesizeJson(key, parsed);
+          return inner.get(key, options);
+        },
+        arrayExtensions: [
+          zarr.defineArrayExtension((_inner) => ({
+            async getChunk(coords) {
+              return parsed.readChunk(coords);
+            },
+          })),
+        ],
+      };
+    }
+  );
+
+  let store = await zarr.extendStore(raw, (s) =>
+    hdf5VirtualZarr(s, { root: "/img" })
+  );
+  let arr = await zarr.open(store, { kind: "array", path: "/img" }); // auto-wrapped
+  ```
+
+  Also exports a new public type `zarr.ArrayExtension` for authoring these lists.
+
+- Accept `bigint` in `slice()` ([#381](https://github.com/manzt/zarrita.js/pull/381))
+
+- **BREAKING**: `zarr.create` options now use camelCase (`chunkShape`, `fillValue`, `chunkSeparator`, `dimensionNames`). ([#387](https://github.com/manzt/zarrita.js/pull/387))
+
+  ```ts
+  await zarr.create(store, {
+    dtype: "float32", // was data_type
+    shape: [100, 100],
+    chunkShape: [10, 10], // was chunk_shape
+    fillValue: 0, // was fill_value
+    dimensionNames: ["y", "x"], // was dimension_names
+  });
+  ```
+
+- feat: add `withRangeCoalescing` and `withByteCaching` for microtask-tick range batching and composable byte caching ([#347](https://github.com/manzt/zarrita.js/pull/347))
+
+- Add `cast_value` and `scale_offset` v3 codecs ([#395](https://github.com/manzt/zarrita.js/pull/395))
+
+  Implements the [`cast_value`](https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/cast_value) and [`scale_offset`](https://github.com/zarr-developers/zarr-extensions/tree/main/codecs/scale_offset) codecs from zarr-extensions, enabling reads of arrays that use these array-to-array transformations.
+
+- Add `numcodecs.` namespace for v2 codec registry and built-in shuffle/delta codecs ([#385](https://github.com/manzt/zarrita.js/pull/385))
+
+  V2 filters and compressors are now registered under a `numcodecs.` prefix
+  (e.g., `numcodecs.blosc`, `numcodecs.zlib`) matching zarr-python's convention.
+  This separates v2-specific codecs from the v3 codec namespace.
+
+  Adds built-in `numcodecs.shuffle` and `numcodecs.delta` codecs for reading v2
+  data that uses these common numcodecs filters. Both are pure JS with no WASM
+  dependencies.
+
+  Custom v2 codecs can be registered under the same namespace:
+
+  ```ts
+  zarr.registry.set("numcodecs.my-filter", async () => ({
+    fromConfig(config) {
+      return {
+        kind: "bytes_to_bytes",
+        encode(data) {
+          /* ... */
+        },
+        decode(data) {
+          /* ... */
+        },
+      };
+    },
+  }));
+  ```
+
+- Introduce composable store and array extensions ([#398](https://github.com/manzt/zarrita.js/pull/398))
+
+  **New primitives for wrapping stores and arrays:**
+
+  - `zarr.defineStoreExtension(factory)` — define a store extension with automatic `Proxy` delegation. The factory receives an `AsyncReadable` and user options, returning overrides and extension fields. Supports sync and async factories.
+  - `zarr.defineArrayExtension(factory)` — define an array extension that intercepts `getChunk` on a `zarr.Array`. Same Proxy-delegation model.
+  - `zarr.extendStore(store, ...extensions)` — compose store extensions in a pipeline. Returns a `Promise` so async extensions (e.g. `withConsolidatedMetadata`) can initialize during composition.
+  - `zarr.extendArray(array, ...extensions)` — compose array extensions in a pipeline.
+
+  **Store extensions shipped in the box:**
+
+  - `zarr.withConsolidatedMetadata` (and `zarr.withMaybeConsolidatedMetadata`) — short-circuit metadata reads from a pre-fetched consolidated blob, v2 `.zmetadata` or v3 `zarr.json` with the `consolidated_metadata` block. Replaces the previous `withConsolidated` / `tryWithConsolidated`.
+  - `zarr.withRangeCoalescing` — microtask-tick range batcher. Concurrent `getRange` calls within a single microtask are grouped by path, coalesced across a byte-gap threshold, and issued as a single fetch per group. Emits `onFlush` callbacks with immutable `FlushReport` objects for observability.
+  - `zarr.withByteCaching` — byte cache over `get()` and `getRange()`. By default, caches every request (gets under `path`, ranges under a composite key that encodes `offset`/`length` or `suffixLength`). An optional `keyFor` function (of type `CacheKeyFor`) lets callers narrow or reshape the policy by returning a cache key per call, or `undefined` to skip. The cache container is any object implementing `ByteCache` (`has` / `get` / `set`); a plain `Map` satisfies it and is the default when no `cache` option is supplied.
+
+  **Removed:**
+
+  - `BatchedRangeStore` (class)
+
+  **Example:**
+
+  ```ts
+  import * as zarr from "zarrita";
+
+  let store = await zarr.extendStore(
+    new zarr.FetchStore("https://example.com/data.zarr"),
+    zarr.withConsolidatedMetadata,
+    (s) => zarr.withRangeCoalescing(s, { coalesceSize: 32768 }),
+    (s) => zarr.withByteCaching(s)
+  );
+
+  let arr = await zarr.open(store, { kind: "array" });
+  await zarr.get(arr, null);
+  ```
+
+  **Defining custom extensions:**
+
+  ```ts
+  const withTrace = zarr.defineStoreExtension(
+    (store, opts: { log: (key: string) => void }) => ({
+      async get(key, options) {
+        opts.log(key);
+        return store.get(key, options);
+      },
+    })
+  );
+  ```
+
+- Add structured errors with `isZarritaError` type guard ([#396](https://github.com/manzt/zarrita.js/pull/396))
+
+  Zarrita now throws a small set of tagged error types from a single internal hierarchy, replacing the ad-hoc mix of plain `Error`s and one-off custom classes (`NodeNotFoundError`, `JsonDecodeError`, `KeyError`, `IndexError`). The classes are exported alongside an `isZarritaError` runtime guard; module documentation steers callers toward the guard so `instanceof` checks aren't load-bearing.
+
+  Six tags cover every distinct failure mode reachable from `zarr.open`, `zarr.get`, and `zarr.set`:
+
+  - `NotFoundError` — store returned nothing, or `open({ kind })` found a different node kind (`found: "array" | "group"`).
+  - `InvalidMetadataError` — JSON decode failure, unknown dtype, unknown chunk-key encoding, codec config rejected at load time.
+  - `UnknownCodecError` — codec name not in the registry; carries the `codec` name so callers can register and retry.
+  - `CodecPipelineError` — codec encode/decode threw at runtime; carries `direction`, `codec`, and the underlying `cause`.
+  - `InvalidSelectionError` — bad rank, out-of-bounds, zero step, dimension-name mismatch, scalar-shape mismatch.
+  - `UnsupportedError` — capability limit (sharded set, codec encode paths that aren't implemented, runtime missing `DataView.prototype.getFloat16`).
+
+  ```ts
+  try {
+    await zarr.open(store, { kind: "array" });
+  } catch (e) {
+    if (zarr.isZarritaError(e, "NotFoundError")) {
+      // e.path / e.found are available
+    } else if (zarr.isZarritaError(e, "UnknownCodecError")) {
+      // e.codec is the unregistered codec name
+    }
+  }
+  ```
+
+  `isZarritaError(e)` with no tag arguments narrows to any zarrita error.
+
+### Patch Changes
+
+- Allow `attrs` option in top-level `open()` to skip loading `.zattrs` for v2 stores ([#372](https://github.com/manzt/zarrita.js/pull/372))
+
+- Add support for the delta codec ([`0ed6f72`](https://github.com/manzt/zarrita.js/commit/0ed6f72164f49195b94e5258d488c20b7485667c))
+
+- Fix `NarrowDataType` to correctly narrow the `"boolean"` query to `Bool` ([#359](https://github.com/manzt/zarrita.js/pull/359))
+
+- Fix `fill_value` serialization and deserialization for `NaN`, `Infinity`, and `-Infinity` per the Zarr v3 spec ([#373](https://github.com/manzt/zarrita.js/pull/373))
+
+- Fix `zarr.open` version autodetection failing in browsers when servers return non-JSON responses for v2 metadata keys ([#374](https://github.com/manzt/zarrita.js/pull/374))
+
+- Fix `get` and `set` for scalar arrays (`shape=[]`) ([#380](https://github.com/manzt/zarrita.js/pull/380))
+
+- Support reading v2 `fixedscaleoffset`-encoded arrays ([#397](https://github.com/manzt/zarrita.js/pull/397))
+
+  Translates the numcodecs `fixedscaleoffset` filter into the native v3 `scale_offset` + `cast_value` codec pair on read. Covers both v2 arrays (via the `filters` field) and v3 arrays produced by zarr-python's `numcodecs.zarr3` wrapper (via the `numcodecs.fixedscaleoffset` codec name). Arrays are exposed with the logical (decoded) data type even though the bytes on disk are quantized.
+
+- Enable `declarationMap` so "go to definition" resolves to `.ts` source instead of `.d.ts` files ([#361](https://github.com/manzt/zarrita.js/pull/361))
+
+- Updated dependencies [[`b2e8698`](https://github.com/manzt/zarrita.js/commit/b2e8698c2e8ef4deb92724de758f446be08400cc), [`e2a0568`](https://github.com/manzt/zarrita.js/commit/e2a0568f308628a8e246f069d9d81dbf053a7a82), [`7a6654c`](https://github.com/manzt/zarrita.js/commit/7a6654ccdfbd29e683ba7f86b7768c619e855cb5), [`5df59fe`](https://github.com/manzt/zarrita.js/commit/5df59fee0c7171c69fe88e99e095d52aa599d7a3)]:
+  - @zarrita/storage@0.2.0
+
 ## 0.6.2
 
 ### Patch Changes

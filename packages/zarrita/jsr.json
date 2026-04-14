@@ -1,10 +1,10 @@
 {
 	"name": "@zarrita/zarrita",
-	"version": "0.6.2",
+	"version": "0.7.0",
 	"license": "MIT",
 	"nodeModulesDir": "auto",
 	"imports": {
-		"@zarrita/storage": "jsr:@zarrita/storage@^0.1.4",
+		"@zarrita/storage": "jsr:@zarrita/storage@^0.2.0",
 		"numcodecs": "npm:numcodecs@^0.3.2"
 	},
 	"exports": {
