@@ -9,7 +9,6 @@ test("public API surface", () => {
 		  "ByteStringArray",
 		  "CodecPipelineError",
 		  "FetchStore",
-		  "FileSystemStore",
 		  "Group",
 		  "InvalidMetadataError",
 		  "InvalidSelectionError",
