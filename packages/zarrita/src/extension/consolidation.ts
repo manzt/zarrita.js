@@ -9,17 +9,11 @@ import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
 	Attributes,
-	DataType,
 	GroupMetadata,
 	GroupMetadataV2,
 } from "../metadata.js";
 import { VERSION_COUNTER } from "../open.js";
-import {
-	ensureCorrectScalar,
-	jsonDecodeObject,
-	jsonEncodeObject,
-	rethrowUnless,
-} from "../util.js";
+import { jsonDecodeObject, jsonEncodeObject, rethrowUnless } from "../util.js";
 import { defineStoreExtension } from "./define.js";
 
 type ConsolidatedMetadataV2 = {
@@ -161,11 +155,6 @@ async function loadConsolidatedV3(
 	)) {
 		let normalized = path.startsWith("/") ? path : `/${path}`;
 		let key = `${normalized}/zarr.json` as AbsolutePath;
-		if (meta.node_type === "array") {
-			(meta as ArrayMetadata<DataType>).fill_value = ensureCorrectScalar(
-				meta as ArrayMetadata<DataType>,
-			);
-		}
 		knownMeta[key] = meta;
 	}
 	return knownMeta;

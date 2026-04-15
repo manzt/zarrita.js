@@ -178,6 +178,60 @@ describe("withConsolidatedMetadata (v3)", () => {
 			withConsolidatedMetadata(new FileSystemStore(root), { format: "v3" });
 		await expect(try_open).rejects.toThrowError(NotFoundError);
 	});
+
+	// Regression for https://github.com/manzt/zarrita.js/issues/410: opening an
+	// int64/uint64 array from a consolidated store used to poison the cache
+	// with a BigInt fill_value, so the next `store.get` would throw
+	// "Do not know how to serialize a BigInt" from `JSON.stringify`.
+	it("opens int64/uint64 arrays without poisoning the cache", async () => {
+		let baseMeta = {
+			node_type: "array",
+			zarr_format: 3,
+			shape: [4],
+			chunk_grid: {
+				name: "regular",
+				configuration: { chunk_shape: [4] },
+			},
+			chunk_key_encoding: {
+				name: "default",
+				configuration: { separator: "/" },
+			},
+			codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+			attributes: {},
+		};
+		let rootMeta = {
+			zarr_format: 3,
+			node_type: "group",
+			attributes: {},
+			consolidated_metadata: {
+				kind: "inline",
+				must_understand: false,
+				metadata: {
+					time: { ...baseMeta, data_type: "int64", fill_value: 0 },
+					band: { ...baseMeta, data_type: "int16", fill_value: 0 },
+				},
+			},
+		};
+		let bytes = new TextEncoder().encode(JSON.stringify(rootMeta));
+		let backing = {
+			async get(key: string) {
+				return key === "/zarr.json" ? bytes : undefined;
+			},
+		};
+		let store = await withConsolidatedMetadata(backing, { format: "v3" });
+		let grp = await open(store, { kind: "group" });
+		let time = await open(grp.resolve("time"), { kind: "array" });
+		let band = await open(grp.resolve("band"), { kind: "array" });
+		expect(time.dtype).toBe("int64");
+		expect(band.dtype).toBe("int16");
+		// `ensureCorrectScalar` still runs on the freshly-decoded copy inside
+		// `_openV3`, so int64 fill_values are converted to BigInt.
+		expect(typeof time.fillValue).toBe("bigint");
+		// Re-opening the same array must also work — proves the cache entry
+		// stayed JSON-serializable after the first open.
+		let timeAgain = await open(grp.resolve("time"), { kind: "array" });
+		expect(timeAgain.dtype).toBe("int64");
+	});
 });
 
 describe("withConsolidatedMetadata (format array)", () => {
