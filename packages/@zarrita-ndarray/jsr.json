@@ -7,7 +7,7 @@
 		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
 		"ndarray": "npm:ndarray@^1.0.19",
 		"ndarray-ops": "npm:ndarray-ops@^1.2.2",
-		"zarrita": "jsr:@zarrita/zarrita@^0.7.0"
+		"zarrita": "jsr:@zarrita/zarrita@^0.7.1"
 	},
 	"exports": {
 		".": "./src/index.ts"
