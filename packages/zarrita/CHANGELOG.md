@@ -1,5 +1,19 @@
 # zarrita
 
+## 0.7.1
+
+### Patch Changes
+
+- Drop `FileSystemStore` from the `zarrita` root barrel, which accidentally landed in 0.7.0 as part of #384. Node users who still want `FileSystemStore` can import it directly: ([#411](https://github.com/manzt/zarrita.js/pull/411))
+
+  ```ts
+  import { FileSystemStore } from "@zarrita/storage";
+  // or
+  import FileSystemStore from "@zarrita/storage/fs";
+  ```
+
+- Fix `TypeError: Do not know how to serialize a BigInt` when opening an `int64`/`uint64` array from a `withConsolidatedMetadata` store. ([`861b5fb`](https://github.com/manzt/zarrita.js/commit/861b5fbfd046b9090954c11576bf9d6288f07318))
+
 ## 0.7.0
 
 ### Minor Changes
