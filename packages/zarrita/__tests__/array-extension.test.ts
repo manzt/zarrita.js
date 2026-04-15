@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as url from "node:url";
+import { FileSystemStore } from "@zarrita/storage";
 import { describe, expect, it } from "vitest";
 import { defineArrayExtension } from "../src/extension/define-array.js";
 import * as zarr from "../src/index.js";
@@ -8,7 +9,7 @@ let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 let fixturesRoot = path.resolve(__dirname, "../../../fixtures/v3/data.zarr");
 
 async function openFixture(name: string) {
-	let store = new zarr.FileSystemStore(fixturesRoot);
+	let store = new FileSystemStore(fixturesRoot);
 	return zarr.open.v3(zarr.root(store).resolve(name), { kind: "array" });
 }
 
@@ -129,7 +130,7 @@ describe("zarr.open auto-apply of store arrayExtensions", () => {
 		let withTracedArray = zarr.defineStoreExtension(() => ({
 			arrayExtensions: [(a) => withTrace(a)],
 		}));
-		let store = withTracedArray(new zarr.FileSystemStore(fixturesRoot));
+		let store = withTracedArray(new FileSystemStore(fixturesRoot));
 		let arr = await zarr.open.v3(zarr.root(store).resolve("1d.chunked.i2"), {
 			kind: "array",
 		});
@@ -158,7 +159,7 @@ describe("zarr.open auto-apply of store arrayExtensions", () => {
 			arrayExtensions: [(a) => withB(a)],
 		}));
 		let store = await zarr.extendStore(
-			new zarr.FileSystemStore(fixturesRoot),
+			new FileSystemStore(fixturesRoot),
 			storeExtA,
 			storeExtB,
 		);
@@ -186,7 +187,7 @@ describe("zarr.open auto-apply of store arrayExtensions", () => {
 		let withTracedArray = zarr.defineStoreExtension(() => ({
 			arrayExtensions: [(a) => withTrace(a)],
 		}));
-		let store = withTracedArray(new zarr.FileSystemStore(fixturesRoot));
+		let store = withTracedArray(new FileSystemStore(fixturesRoot));
 		let group = await zarr.open.v3(zarr.root(store), { kind: "group" });
 		let arr = await zarr.open.v3(group.resolve("1d.chunked.i2"), {
 			kind: "array",
@@ -196,7 +197,7 @@ describe("zarr.open auto-apply of store arrayExtensions", () => {
 	});
 
 	it("returns the array as-is when the store has no arrayExtensions", async () => {
-		let store = new zarr.FileSystemStore(fixturesRoot);
+		let store = new FileSystemStore(fixturesRoot);
 		let arr = await zarr.open.v3(zarr.root(store).resolve("1d.chunked.i2"), {
 			kind: "array",
 		});
