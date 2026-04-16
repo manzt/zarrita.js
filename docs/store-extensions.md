@@ -87,9 +87,10 @@ shard-index-only caches, and anything else you want to express.
 
 Each extension wraps the previous result. `zarr.extendStore` handles async
 extensions (like `zarr.withConsolidatedMetadata`, which fetches metadata during
-initialization) automatically, and always returns a `Promise`. An extension
-with no required options can be passed uncalled; otherwise wrap it in an arrow
-so the options are applied to the argument.
+initialization) automatically — returning a `Promise` only when at least one
+extension is async, and returning synchronously otherwise. An extension with no
+required options can be passed uncalled; otherwise wrap it in an arrow so the
+options are applied to the argument.
 
 You can also call extensions directly:
 
@@ -268,8 +269,8 @@ be written once and applied to any concrete `Array<D, S>`. At the call site the
 outer generics are preserved, so downstream `zarr.get(wrapped)` calls return
 the right specific type.
 
-Like `extendStore`, `extendArray` always returns a `Promise` so extensions can
-perform async initialization.
+Like `extendStore`, `extendArray` returns a `Promise` only when at least one
+extension is async, and returns synchronously otherwise.
 
 ## Auto-applying array extensions from a store
 
