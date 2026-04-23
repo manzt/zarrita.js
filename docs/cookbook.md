@@ -111,8 +111,8 @@ let root = await zarr.open(store, { kind: "group" });
 let foo = await zarr.open(root.resolve("foo"), { kind: "array" });
 ```
 
-The store returned from `withConsolidatedMetadata` is **readonly** and adds
-`.contents()` to list the known contents of the hierarchy:
+The store returned from `withConsolidatedMetadata` adds `.contents()` to list
+the known contents of the hierarchy:
 
 ```js
 store.contents(); // [{ path: "/", kind: "group" }, { path: "/foo", kind: "array" }, ...]
