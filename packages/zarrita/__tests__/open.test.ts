@@ -567,6 +567,33 @@ describe("v2", () => {
 		});
 	});
 
+	it("1d.contiguous.bitround.f4", async () => {
+		// Regression for https://github.com/manzt/zarrita.js/issues/415:
+		// the v2 `bitround` filter id is normalized to `numcodecs.bitround`
+		// on read, which must resolve in the default codec registry.
+		let arr = await open.v2(store.resolve("/1d.contiguous.bitround.f4"), {
+			kind: "array",
+		});
+		assert(arr.is("float32"));
+		// Input [1.1, 2.2, 3.3, 4.4] bit-rounded with keepbits=3.
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Float32Array([1.125, 2.25, 3.25, 4.5]),
+			shape: [4],
+			stride: [1],
+		});
+	});
+
+	it("1d.contiguous.json2.O", async () => {
+		// v2 `json2` object codec: id is normalized to `numcodecs.json2` and
+		// must resolve in the default codec registry.
+		let arr = await open.v2(store.resolve("/1d.contiguous.json2.O"), {
+			kind: "array",
+		});
+		let chunk = await arr.getChunk([0]);
+		expect(chunk.data).toStrictEqual(["foo", "bar", "baz", "qux"]);
+		expect(chunk.shape).toStrictEqual([4]);
+	});
+
 	it("1d.contiguous.fixedscaleoffset.f4", async () => {
 		// numcodecs FixedScaleOffset is translated on read into the v3
 		// `scale_offset` + `cast_value` codec pair. The array is stored as

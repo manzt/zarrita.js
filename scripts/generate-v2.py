@@ -12,7 +12,18 @@ import shutil
 
 import zarr
 import numpy as np
-from numcodecs import Zlib, Blosc, LZ4, Zstd, VLenUTF8, Shuffle, Delta, FixedScaleOffset
+from numcodecs import (
+    Zlib,
+    Blosc,
+    LZ4,
+    Zstd,
+    VLenUTF8,
+    Shuffle,
+    Delta,
+    FixedScaleOffset,
+    BitRound,
+    JSON,
+)
 
 SELF_DIR = pathlib.Path(__file__).parent
 
@@ -230,6 +241,31 @@ root.create_dataset(
     filters=[
         FixedScaleOffset(offset=1000, scale=10, dtype="<f4", astype="<i2")
     ],
+)
+
+# 1d.contiguous.bitround.f4 -- lossy mantissa truncation via numcodecs BitRound.
+# Regression fixture for https://github.com/manzt/zarrita.js/issues/415:
+# zarrita normalizes v2 filter ids to `numcodecs.<id>` on read, so the v3
+# `bitround` registry entry alone did not resolve `numcodecs.bitround`.
+root.create_dataset(
+    "1d.contiguous.bitround.f4",
+    data=np.array([1.1, 2.2, 3.3, 4.4], dtype="<f4"),
+    dtype="<f4",
+    chunks=(4,),
+    compressor=None,
+    filters=[BitRound(keepbits=3)],
+)
+
+# 1d.contiguous.json2.O -- object array encoded with numcodecs JSON.
+# Regression fixture for v2 filter id normalization: `json2` becomes
+# `numcodecs.json2` on read and must resolve in the default codec registry.
+root.create_dataset(
+    "1d.contiguous.json2.O",
+    data=np.array(["foo", "bar", "baz", "qux"], dtype=object),
+    dtype="O",
+    chunks=(4,),
+    compressor=None,
+    object_codec=JSON(),
 )
 
 # Group with spaces in the name

@@ -146,6 +146,25 @@
             ],
             "zarr_format": 2
         },
+        "1d.contiguous.bitround.f4/.zarray": {
+            "chunks": [
+                4
+            ],
+            "compressor": null,
+            "dtype": "<f4",
+            "fill_value": 0.0,
+            "filters": [
+                {
+                    "id": "bitround",
+                    "keepbits": 3
+                }
+            ],
+            "order": "C",
+            "shape": [
+                4
+            ],
+            "zarr_format": 2
+        },
         "1d.contiguous.blosc.i2/.zarray": {
             "chunks": [
                 4
@@ -312,6 +331,36 @@
             "dtype": "<i4",
             "fill_value": 0,
             "filters": null,
+            "order": "C",
+            "shape": [
+                4
+            ],
+            "zarr_format": 2
+        },
+        "1d.contiguous.json2.O/.zarray": {
+            "chunks": [
+                4
+            ],
+            "compressor": null,
+            "dtype": "|O",
+            "fill_value": 0,
+            "filters": [
+                {
+                    "allow_nan": true,
+                    "check_circular": true,
+                    "encoding": "utf-8",
+                    "ensure_ascii": true,
+                    "id": "json2",
+                    "indent": null,
+                    "separators": [
+                        ",",
+                        ":"
+                    ],
+                    "skipkeys": false,
+                    "sort_keys": true,
+                    "strict": true
+                }
+            ],
             "order": "C",
             "shape": [
                 4
