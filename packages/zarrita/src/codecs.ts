@@ -69,6 +69,8 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("numcodecs.vlen-utf8", () => VLenUTF8)
 			.set("numcodecs.shuffle", () => ShuffleCodec)
 			.set("numcodecs.delta", () => DeltaCodec)
+			.set("numcodecs.bitround", () => BitroundCodec)
+			.set("numcodecs.json2", () => JsonCodec)
 	);
 }
 

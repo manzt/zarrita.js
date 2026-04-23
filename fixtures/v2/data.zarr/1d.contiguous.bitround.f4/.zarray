@@ -1,0 +1,19 @@
+{
+    "chunks": [
+        4
+    ],
+    "compressor": null,
+    "dtype": "<f4",
+    "fill_value": 0.0,
+    "filters": [
+        {
+            "id": "bitround",
+            "keepbits": 3
+        }
+    ],
+    "order": "C",
+    "shape": [
+        4
+    ],
+    "zarr_format": 2
+}
