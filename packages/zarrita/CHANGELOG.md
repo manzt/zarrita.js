@@ -1,5 +1,11 @@
 # zarrita
 
+## 0.7.2
+
+### Patch Changes
+
+- Fix `UnknownCodecError` when reading zarr v2 arrays that use the `bitround` or `json2` codec. ([#416](https://github.com/manzt/zarrita.js/pull/416))
+
 ## 0.7.1
 
 ### Patch Changes
