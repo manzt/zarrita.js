@@ -28,7 +28,7 @@ jobs:
           pnpm install
           pnpm build
         working-directory: docs
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/.vitepress/dist
 
