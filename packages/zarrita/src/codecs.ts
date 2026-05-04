@@ -36,6 +36,10 @@ type Codec = _Codec & {
 	// implement this to describe the metadata after encoding. The pipeline
 	// calls it so that subsequent codecs (especially bytes) see the correct type.
 	getEncodedMeta?: (meta: ChunkMetadata<DataType>) => ChunkMetadata<DataType>;
+	// Maps a decoded byte size to the encoded byte size when that's a
+	// deterministic function of the input. Used by sharding to compute the
+	// shard-index suffix length without fetching the index first.
+	computeEncodedSize?: (decodedSize: number) => number;
 };
 
 function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
@@ -82,6 +86,7 @@ export function createCodecPipeline<Dtype extends DataType>(
 ): {
 	encode(chunk: Chunk<Dtype>): Promise<Uint8Array>;
 	decode(bytes: Uint8Array): Promise<Chunk<Dtype>>;
+	computeEncodedSize(decodedSize: number): Promise<number>;
 } {
 	// Lazily load codecs on first use. The promise is shared by all methods.
 	let codecsPromise: ReturnType<typeof loadCodecs<Dtype>> | undefined;
@@ -129,7 +134,32 @@ export function createCodecPipeline<Dtype extends DataType>(
 			}
 			return chunk;
 		},
+		async computeEncodedSize(decodedSize: number): Promise<number> {
+			let codecs = await getCodecs();
+			let size = applyEncodedSize(
+				codecs.arrayToBytes.name,
+				codecs.arrayToBytes.codec,
+				decodedSize,
+			);
+			for (const { name, codec } of codecs.bytesToBytes) {
+				size = applyEncodedSize(name, codec, size);
+			}
+			return size;
+		},
 	};
+}
+
+function applyEncodedSize(
+	name: string,
+	codec: { computeEncodedSize?: (n: number) => number },
+	size: number,
+): number {
+	if (!codec.computeEncodedSize) {
+		throw new InvalidMetadataError(
+			`Codec "${name}" cannot compute its encoded size; it is not a fixed-size codec and cannot be used in a sharding index pipeline`,
+		);
+	}
+	return codec.computeEncodedSize(size);
 }
 
 type ArrayToArrayCodec<D extends DataType> = {
@@ -140,11 +170,13 @@ type ArrayToArrayCodec<D extends DataType> = {
 type ArrayToBytesCodec<D extends DataType> = {
 	encode: (data: Chunk<D>) => Promise<Uint8Array> | Uint8Array;
 	decode: (data: Uint8Array) => Promise<Chunk<D>> | Chunk<D>;
+	computeEncodedSize?: (decodedSize: number) => number;
 };
 
 type BytesToBytesCodec = {
 	encode: (data: Uint8Array) => Promise<Uint8Array>;
 	decode: (data: Uint8Array) => Promise<Uint8Array>;
+	computeEncodedSize?: (decodedSize: number) => number;
 };
 
 type Named<T> = { name: string; codec: T };

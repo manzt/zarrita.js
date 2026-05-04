@@ -9,4 +9,7 @@ export class Crc32cCodec {
 	decode(arr: Uint8Array): Uint8Array {
 		return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength - 4);
 	}
+	computeEncodedSize(decodedSize: number): number {
+		return decodedSize + 4;
+	}
 }

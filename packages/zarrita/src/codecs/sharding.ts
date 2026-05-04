@@ -25,8 +25,11 @@ export function createShardedChunkGetter(
 		fillValue: null,
 	});
 
-	let checksumSize = 4;
-	let indexSize = 16 * indexShape.reduce((a, b) => a * b, 1);
+	// The shard index is a uint64 array with shape [...indexShape, 2]
+	// (offset, length) per inner chunk. Its on-disk size depends on the
+	// index_codecs pipeline — e.g. crc32c appends 4 bytes — so we ask the
+	// pipeline rather than hardcoding any constant.
+	let rawIndexSize = 16 * indexShape.reduce((a, b) => a * b, 1);
 	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
 	return async (chunkCoord: number[], options?: GetOptions) => {
 		let shardCoord = chunkCoord.map((d, i) => Math.floor(d / indexShape[i]));
@@ -34,13 +37,8 @@ export function createShardedChunkGetter(
 
 		if (!(shardPath in cache)) {
 			cache[shardPath] = (async () => {
-				let bytes = await getRange(
-					shardPath,
-					{
-						suffixLength: indexSize + checksumSize,
-					},
-					options,
-				);
+				let suffixLength = await indexCodec.computeEncodedSize(rawIndexSize);
+				let bytes = await getRange(shardPath, { suffixLength }, options);
 				return bytes ? await indexCodec.decode(bytes) : null;
 			})().catch((err) => {
 				delete cache[shardPath];

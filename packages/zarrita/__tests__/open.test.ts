@@ -4,7 +4,9 @@ import * as url from "node:url";
 import { Float16Array } from "@petamoriken/float16";
 import {
 	type AbsolutePath,
+	type AsyncReadable,
 	FileSystemStore,
+	type RangeQuery,
 	ZipFileStore,
 } from "@zarrita/storage";
 import {
@@ -1524,6 +1526,89 @@ describe("v3", async () => {
 				shape: [1, 1, 1],
 				stride: [1, 1, 1],
 			});
+		});
+	});
+
+	it("reads sharded array when index_codecs has no checksum (#424)", async () => {
+		// Hand-built sharded array where index_codecs is just `bytes` (no
+		// crc32c). The shard layout is: 4 raw data bytes followed by a 64-byte
+		// index (4 chunks * 16 bytes per offset/length pair).
+		let shard = new Uint8Array(4 + 4 * 16);
+		shard.set([10, 20, 30, 40], 0);
+		let view = new DataView(shard.buffer);
+		for (let i = 0; i < 4; i++) {
+			view.setBigUint64(4 + i * 16, BigInt(i), true);
+			view.setBigUint64(4 + i * 16 + 8, 1n, true);
+		}
+
+		let entries = new Map<AbsolutePath, Uint8Array>();
+		let enc = new TextEncoder();
+		entries.set(
+			"/zarr.json",
+			enc.encode(
+				JSON.stringify({
+					zarr_format: 3,
+					node_type: "array",
+					shape: [4],
+					data_type: "uint8",
+					chunk_grid: {
+						name: "regular",
+						configuration: { chunk_shape: [4] },
+					},
+					chunk_key_encoding: {
+						name: "default",
+						configuration: { separator: "/" },
+					},
+					fill_value: 0,
+					codecs: [
+						{
+							name: "sharding_indexed",
+							configuration: {
+								chunk_shape: [1],
+								codecs: [
+									{ name: "bytes", configuration: { endian: "little" } },
+								],
+								index_codecs: [
+									{ name: "bytes", configuration: { endian: "little" } },
+								],
+								index_location: "end",
+							},
+						},
+					],
+					attributes: {},
+				}),
+			),
+		);
+		entries.set("/c/0", shard);
+
+		let memStore: AsyncReadable = {
+			get(key) {
+				return Promise.resolve(entries.get(key));
+			},
+			getRange(key: AbsolutePath, range: RangeQuery) {
+				let bytes = entries.get(key);
+				if (!bytes) return Promise.resolve(undefined);
+				if ("suffixLength" in range) {
+					return Promise.resolve(
+						bytes.slice(bytes.length - range.suffixLength),
+					);
+				}
+				return Promise.resolve(
+					bytes.slice(range.offset, range.offset + range.length),
+				);
+			},
+		};
+
+		let arr = await open.v3(root(memStore), { kind: "array" });
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Uint8Array([10]),
+			shape: [1],
+			stride: [1],
+		});
+		expect(await arr.getChunk([3])).toStrictEqual({
+			data: new Uint8Array([40]),
+			shape: [1],
+			stride: [1],
 		});
 	});
 });
