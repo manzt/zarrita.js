@@ -17,7 +17,7 @@
 		"@petamoriken/float16": "^3.9.3",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"@types/node": "^25.6.0",
-		"@typescript/native-preview": "7.0.0-dev.20260408.1",
+		"@typescript/native-preview": "7.0.0-dev.20260504.1",
 		"publint": "^0.3.18",
 		"tintype": "^0.1.1",
 		"vitest": "^4.1.5"
