@@ -61,6 +61,10 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 		return bytes;
 	}
 
+	computeEncodedSize(decodedSize: number): number {
+		return decodedSize;
+	}
+
 	decode(bytes: Uint8Array): Chunk<D> {
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
 			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
