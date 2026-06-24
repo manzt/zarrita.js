@@ -72,6 +72,38 @@ function getArrayOrder(
 	return maybeTransposeCodec?.configuration?.order ?? "C";
 }
 
+/**
+ * Project a full-rank axis permutation onto a subset of axes, preserving the
+ * relative order of the surviving axes. `axes` lists the original axis indices
+ * that survive (ascending, matching the output shape). For order `[2, 1, 0]`
+ * and surviving axes `[1, 2]` (axis 0 dropped) this yields `[1, 0]`: of the
+ * kept axes, axis 2 comes before axis 1 in the original order.
+ */
+function projectOrder(
+	order: globalThis.Array<number>,
+	axes: number[],
+): number[] {
+	let rank = new Map(axes.map((axis, i) => [axis, i]));
+	return order.filter((axis) => rank.has(axis)).map((axis) => rank.get(axis)!);
+}
+
+function makeStrideGetter(
+	nativeOrder: "C" | "F" | globalThis.Array<number>,
+): (shape: number[], axes?: number[]) => number[] {
+	return (shape, axes) => {
+		// An explicit transpose order is defined over the array's full rank.
+		// A selection that drops dimensions (e.g. integer indexing) yields an
+		// output of lower rank; project the order onto the surviving axes so
+		// the output keeps the array's native order rather than silently
+		// reverting to C-contiguous. See #427.
+		let order =
+			globalThis.Array.isArray(nativeOrder) && axes
+				? projectOrder(nativeOrder, axes)
+				: nativeOrder;
+		return getStrides(shape, order);
+	};
+}
+
 const CONTEXT_MARKER = Symbol("zarrita.context");
 
 export function getContext<T>(obj: { [CONTEXT_MARKER]: T }): T {
@@ -101,9 +133,7 @@ function createContext<D extends DataType>(
 				codecs: configuration.codecs,
 				fillValue: metadata.fill_value,
 			}),
-			getStrides(shape: number[]) {
-				return getStrides(shape, nativeOrder);
-			},
+			getStrides: makeStrideGetter(nativeOrder),
 			getChunkBytes: createShardedChunkGetter(
 				location,
 				metadata.chunk_grid.configuration.chunk_shape,
@@ -124,9 +154,7 @@ function createContext<D extends DataType>(
 			codecs: metadata.codecs,
 			fillValue: metadata.fill_value,
 		}),
-		getStrides(shape: number[]) {
-			return getStrides(shape, nativeOrder);
-		},
+		getStrides: makeStrideGetter(nativeOrder),
 		async getChunkBytes(chunkCoords, options) {
 			let chunkKey = sharedContext.encodeChunkKey(chunkCoords);
 			let chunkPath = location.resolve(chunkKey).path;
@@ -144,8 +172,13 @@ interface ArrayContext<D extends DataType> {
 	encodeChunkKey(chunkCoords: number[]): string;
 	/** The TypedArray constructor for this array chunks. */
 	TypedArray: TypedArrayConstructor<D>;
-	/** A function to get the strides for a given shape, using the array order */
-	getStrides(shape: number[]): number[];
+	/**
+	 * Get the strides for a given output shape, using the array's native order.
+	 * `axes` lists the original axis indices the shape corresponds to (used to
+	 * project a transpose order onto a dimension-reducing selection); omit it
+	 * for a full-rank shape.
+	 */
+	getStrides(shape: number[], axes?: number[]): number[];
 	/** The fill value for this array. */
 	fillValue: Scalar<D> | null;
 	/** A function to get the bytes for a given chunk. */
