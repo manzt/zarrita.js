@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"reference-spec-reader": "^0.2.0",
-		"unzipit": "2.0.0"
+		"unzipit": "2.0.1"
 	},
 	"publishConfig": {
 		"main": "dist/src/index.js",
