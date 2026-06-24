@@ -200,6 +200,12 @@ interface ChunkProjection {
 export class BasicIndexer {
 	dimIndexers: (SliceDimIndexer | IntDimIndexer)[];
 	shape: number[];
+	/**
+	 * Original axis indices that survive the selection (slices, not integer
+	 * indices), in ascending order — i.e. the input axis each output dimension
+	 * came from. Used to project the array's native order onto the output.
+	 */
+	outputAxes: number[];
 
 	constructor({ selection, shape, chunkShape }: BasicIndexerProps) {
 		// setup per-dimension indexers
@@ -216,6 +222,10 @@ export class BasicIndexer {
 		this.shape = this.dimIndexers
 			.filter((ixr) => ixr instanceof SliceDimIndexer)
 			.map((sixr) => sixr.nitems);
+		this.outputAxes = this.dimIndexers
+			.map((ixr, axis) => ({ ixr, axis }))
+			.filter(({ ixr }) => ixr instanceof SliceDimIndexer)
+			.map(({ axis }) => axis);
 	}
 
 	*[Symbol.iterator](): IterableIterator<ChunkProjection> {

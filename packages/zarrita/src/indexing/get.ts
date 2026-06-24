@@ -84,7 +84,7 @@ export async function get<
 	let out = setter.prepare(
 		data,
 		indexer.shape,
-		context.getStrides(indexer.shape),
+		context.getStrides(indexer.shape, indexer.outputAxes),
 	);
 
 	let queue = opts.createQueue?.() ?? createQueue();
