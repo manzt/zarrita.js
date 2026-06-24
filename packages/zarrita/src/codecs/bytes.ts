@@ -56,6 +56,7 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
+			bytes = bytes.slice();
 			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
 		}
 		return bytes;
@@ -63,6 +64,9 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 
 	decode(bytes: Uint8Array): Chunk<D> {
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
+			// Copy before swapping so we never mutate the input in place; it
+			// may be a shared buffer (e.g. from `withByteCaching`). See #431.
+			bytes = bytes.slice();
 			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
 		}
 		return {
