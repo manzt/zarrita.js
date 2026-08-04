@@ -210,12 +210,68 @@ function setScalarBinary(
 	}
 }
 
+/**
+ * If every remaining dimension is a step-1 slice whose elements are laid out
+ * back to back in both `src` and `dest`, the whole selection is one unbroken
+ * run of memory on both sides and can be copied with a single `set`.
+ *
+ * That holds when each stride is the product of the lengths inside it, which
+ * is checked from the innermost dimension outward. The condition is on the
+ * strides rather than on which dimensions were taken whole, so an array whose
+ * `order` is not C-contiguous simply fails it rather than being copied wrongly.
+ *
+ * Returns the run's size and its start offset in each side, or `null` if the
+ * caller has to recurse.
+ */
+function contiguousSpan(
+	projections: Projection[],
+	destStride: number[],
+	srcStride: number[],
+) {
+	// a selection that drops dimensions leaves the two sides at different
+	// ranks, so the strides no longer line up with the projections; the
+	// recursion strips those dimensions off before this can apply
+	if (
+		projections.length !== destStride.length ||
+		projections.length !== srcStride.length
+	) {
+		return null;
+	}
+	let size = 1;
+	let destOffset = 0;
+	let srcOffset = 0;
+	for (let i = projections.length - 1; i >= 0; i--) {
+		const proj = projections[i];
+		// an integer index drops a dimension, so the two sides stop lining up
+		if (proj.from === null || proj.to === null) return null;
+		if (destStride[i] !== size || srcStride[i] !== size) return null;
+		const [from, to, step] = proj.to;
+		const [sfrom, , sstep] = proj.from;
+		if (step !== 1 || sstep !== 1) return null;
+		destOffset += size * from;
+		srcOffset += size * sfrom;
+		size *= indicesLen(from, to, step);
+	}
+	return { size, destOffset, srcOffset };
+}
+
 function setFromChunkBinary(
 	dest: { data: Uint8Array; stride: number[] },
 	src: { data: Uint8Array; stride: number[] },
 	bytesPerElement: number,
 	projections: Projection[],
 ) {
+	// NB: we have a contiguous block of memory
+	// so we can just copy over all the data at once.
+	const span = contiguousSpan(projections, dest.stride, src.stride);
+	if (span !== null) {
+		const offset = span.srcOffset * bytesPerElement;
+		dest.data.set(
+			src.data.subarray(offset, offset + span.size * bytesPerElement),
+			span.destOffset * bytesPerElement,
+		);
+		return;
+	}
 	const [proj, ...projs] = projections;
 	const [dstride, ...dstrides] = dest.stride;
 	const [sstride, ...sstrides] = src.stride;
@@ -259,18 +315,7 @@ function setFromChunkBinary(
 	const [sfrom, _, sstep] = proj.from;
 	const len = indicesLen(from, to, step);
 	if (projs.length === 0) {
-		// NB: we have a contiguous block of memory
-		// so we can just copy over all the data at once.
-		if (step === 1 && sstep === 1 && dstride === 1 && sstride === 1) {
-			let offset = sfrom * bytesPerElement;
-			let size = len * bytesPerElement;
-			dest.data.set(
-				src.data.subarray(offset, offset + size),
-				from * bytesPerElement,
-			);
-			return;
-		}
-		// Otherwise, we have to copy over each element individually.
+		// not contiguous, so we have to copy over each element individually.
 		for (let i = 0; i < len; i++) {
 			let offset = sstride * (sfrom + sstep * i) * bytesPerElement;
 			dest.data.set(
