@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TransposeCodec } from "../src/codecs/transpose.js";
 import * as zarr from "../src/index.js";
 
 /** Read a chunk's values in logical (C) order, honoring its strides. */
@@ -112,6 +113,21 @@ describe("transpose codec", () => {
 		let data = new Int32Array(24).map((_, i) => i);
 		await zarr.set(arr, null, { data, shape: [2, 3, 4], stride: [12, 4, 1] });
 		expect(store.get("/a/c/0/0/0")?.length).toBe(24 * 4);
+	});
+
+	// The copy walked `src` linearly, which assumes it is laid out with the
+	// first axis fastest. It is reached whenever the chunk handed to `encode`
+	// is not already in the target layout — including when two strides tie,
+	// which a length-1 dimension causes.
+	it("encodes a chunk that is not already in the target layout", () => {
+		// (i,j) holds 3i + j, laid out C-contiguous
+		let data = new Int32Array(6).map((_, i) => i);
+		let codec = new TransposeCodec({ order: [1, 0] }, { shape: [2, 3] });
+		let out = codec.encode({ data, shape: [2, 3], stride: [3, 1] });
+		expect(out.stride).toEqual([1, 2]);
+		expect(globalThis.Array.from(out.data as Int32Array)).toEqual([
+			0, 3, 1, 4, 2, 5,
+		]);
 	});
 
 	it("preserves native order on dimension-reducing reads", async () => {

@@ -78,9 +78,13 @@ function convertArrayOrder<D extends DataType>(
 	let srcData = proxy(src.data);
 	let outData = proxy(out.data);
 
-	for (let srcIdx = 0; srcIdx < size; srcIdx++) {
+	for (let n = 0; n < size; n++) {
+		// walking `src` linearly assumed it was laid out with the first axis
+		// fastest; address it through its own strides instead
+		let srcIdx = 0;
 		let outIdx = 0;
 		for (let dim = 0; dim < nDims; dim++) {
+			srcIdx += index[dim] * src.stride[dim];
 			outIdx += index[dim] * out.stride[dim];
 		}
 		outData[outIdx] = srcData[srcIdx];
