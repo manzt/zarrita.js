@@ -48,13 +48,14 @@ function emptyLike<D extends DataType>(
 		chunk.data instanceof ByteStringArray ||
 		chunk.data instanceof UnicodeStringArray
 	) {
-		data = new (chunk.constructor as TypedArrayConstructor<D>)(
-			// @ts-expect-error
-			chunk.data.length,
+		// these take the character width ahead of the length
+		data = new (chunk.data.constructor as TypedArrayConstructor<D>)(
+			// @ts-expect-error - the two argument form is not on the shared type
 			chunk.data.chars,
+			chunk.data.length,
 		);
 	} else {
-		data = new (chunk.constructor as TypedArrayConstructor<D>)(
+		data = new (chunk.data.constructor as TypedArrayConstructor<D>)(
 			chunk.data.length,
 		);
 	}
@@ -77,9 +78,13 @@ function convertArrayOrder<D extends DataType>(
 	let srcData = proxy(src.data);
 	let outData = proxy(out.data);
 
-	for (let srcIdx = 0; srcIdx < size; srcIdx++) {
+	for (let n = 0; n < size; n++) {
+		// walking `src` linearly assumed it was laid out with the first axis
+		// fastest; address it through its own strides instead
+		let srcIdx = 0;
 		let outIdx = 0;
 		for (let dim = 0; dim < nDims; dim++) {
+			srcIdx += index[dim] * src.stride[dim];
 			outIdx += index[dim] * out.stride[dim];
 		}
 		outData[outIdx] = srcData[srcIdx];
@@ -123,37 +128,31 @@ type Order = "C" | "F" | Array<number>;
 export class TransposeCodec {
 	kind = "array_to_array";
 	#order: Array<number>;
-	#inverseOrder: Array<number>;
 
 	constructor(configuration: { order?: Order }, meta: { shape: number[] }) {
 		let value = configuration.order ?? "C";
 		let rank = meta.shape.length;
 		let order = new Array<number>(rank);
-		let inverseOrder = new Array<number>(rank);
 
 		if (value === "C") {
 			for (let i = 0; i < rank; ++i) {
 				order[i] = i;
-				inverseOrder[i] = i;
 			}
 		} else if (value === "F") {
 			for (let i = 0; i < rank; ++i) {
 				order[i] = rank - i - 1;
-				inverseOrder[i] = rank - i - 1;
 			}
 		} else {
 			order = value;
-			order.forEach((x, i) => {
-				assert(
-					inverseOrder[x] === undefined,
-					`Invalid permutation: ${JSON.stringify(value)}`,
-				);
-				inverseOrder[x] = i;
+			// every axis appears exactly once
+			let seen = new Array<boolean>(rank);
+			order.forEach((x) => {
+				assert(!seen[x], `Invalid permutation: ${JSON.stringify(value)}`);
+				seen[x] = true;
 			});
 		}
 
 		this.#order = order;
-		this.#inverseOrder = inverseOrder;
 	}
 
 	static fromConfig(
@@ -164,11 +163,14 @@ export class TransposeCodec {
 	}
 
 	encode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
-		if (matchesOrder(arr, this.#inverseOrder)) {
+		// `decode` hands back a chunk laid out in `#order`, so that is what the
+		// stored bytes have to be. Converting to `#inverseOrder` here agreed
+		// with `decode` only when the permutation was its own inverse.
+		if (matchesOrder(arr, this.#order)) {
 			// can skip making a copy
 			return arr;
 		}
-		return convertArrayOrder(arr, this.#inverseOrder);
+		return convertArrayOrder(arr, this.#order);
 	}
 
 	decode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
