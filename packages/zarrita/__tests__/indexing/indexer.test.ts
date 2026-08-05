@@ -43,18 +43,26 @@ describe("normalizeIntegerSelection", () => {
 		[-2, 5, 3],
 		[-2.2, 5, 3],
 		[4.3, 5, 4],
-	])("normalizeIntegerSelection(%i, %i) -> %i", (dim_selection, dim_length, expected) => {
-		expect(normalizeIntegerSelection(dim_selection, dim_length)).toBe(expected);
-	});
+	])(
+		"normalizeIntegerSelection(%i, %i) -> %i",
+		(dim_selection, dim_length, expected) => {
+			expect(normalizeIntegerSelection(dim_selection, dim_length)).toBe(
+				expected,
+			);
+		},
+	);
 	test.each([
 		[5, 5],
 		[6, 5],
 		[-6, 5],
-	])("normalizeIntegerSelection(%i, %i) -> throws", (dim_selection, dim_length) => {
-		expect(() =>
-			normalizeIntegerSelection(dim_selection, dim_length),
-		).toThrowError();
-	});
+	])(
+		"normalizeIntegerSelection(%i, %i) -> throws",
+		(dim_selection, dim_length) => {
+			expect(() =>
+				normalizeIntegerSelection(dim_selection, dim_length),
+			).toThrowError();
+		},
+	);
 });
 
 describe("BasicIndexer", () => {

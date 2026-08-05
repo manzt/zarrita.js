@@ -249,13 +249,12 @@ describe("ensureCorrectScalar", () => {
 		}
 	});
 
-	test.each([
-		"float16",
-		"float32",
-		"float64",
-	] as const)("%s preserves numeric fill_value", (dtype) => {
-		expect(ensureCorrectScalar(make_metadata(dtype, 1.5))).toBe(1.5);
-	});
+	test.each(["float16", "float32", "float64"] as const)(
+		"%s preserves numeric fill_value",
+		(dtype) => {
+			expect(ensureCorrectScalar(make_metadata(dtype, 1.5))).toBe(1.5);
+		},
+	);
 
 	test("string dtype fill_value 'NaN' stays as string", () => {
 		expect(ensureCorrectScalar(make_metadata("string", "NaN"))).toBe("NaN");

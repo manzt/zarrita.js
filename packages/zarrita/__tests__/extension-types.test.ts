@@ -93,8 +93,8 @@ describe("defineStoreExtension", () => {
 		expectType(store).toMatchInlineSnapshot(`
 			Required<AsyncReadable> & {
 				url: string | URL;
-				methodB: () => string;
 				methodA: () => number;
+				methodB: () => string;
 			}
 		`);
 	});
