@@ -220,6 +220,9 @@ function setScalarBinary(
  * strides rather than on which dimensions were taken whole, so an array whose
  * `order` is not C-contiguous simply fails it rather than being copied wrongly.
  *
+ * The test finds C-contiguity only. A transposed array can be one run on both
+ * sides. This test does not accept it. The limit is deliberate.
+ *
  * Returns the run's size and its start offset in each side, or `null` if the
  * caller has to recurse.
  */
@@ -261,8 +264,6 @@ function setFromChunkBinary(
 	bytesPerElement: number,
 	projections: Projection[],
 ) {
-	// NB: we have a contiguous block of memory
-	// so we can just copy over all the data at once.
 	const span = contiguousSpan(projections, dest.stride, src.stride);
 	if (span !== null) {
 		const offset = span.srcOffset * bytesPerElement;

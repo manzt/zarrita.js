@@ -9,29 +9,33 @@ import * as zarr from "../../src/index.js";
  * it wrongly returns the wrong values rather than throwing.
  */
 
+function cStride(shape: number[]) {
+	return shape.map((_, i) => shape.slice(i + 1).reduce((a, b) => a * b, 1));
+}
+
+/** A C-ordered chunk holding `0..n`, offset by `base`. */
+function chunk(shape: number[], base = 0) {
+	const size = shape.reduce((a, b) => a * b, 1);
+	const data = new Int32Array(size);
+	for (let i = 0; i < size; i++) {
+		data[i] = base + i;
+	}
+	return { data, shape, stride: cStride(shape) };
+}
+
 async function filled(shape: number[], chunkShape: number[], order?: number[]) {
-	const store = new Map<string, Uint8Array>();
-	const codecs: Record<string, unknown>[] = [];
+	const codecs: zarr.CodecMetadata[] = [];
 	if (order) {
 		codecs.push({ name: "transpose", configuration: { order } });
 	}
 	codecs.push({ name: "bytes", configuration: { endian: "little" } });
-	const arr = await zarr.create(store as never, {
+	const arr = await zarr.create(zarr.root(new Map()).resolve("/a"), {
 		shape,
 		chunkShape,
 		dtype: "int32",
-		// biome-ignore lint/suspicious/noExplicitAny: inline codec metadata
-		codecs: codecs as any,
+		codecs,
 	});
-	const size = shape.reduce((a, b) => a * b, 1);
-	const data = new Int32Array(size);
-	for (let i = 0; i < size; i++) {
-		data[i] = i;
-	}
-	const stride = shape.map((_, i) =>
-		shape.slice(i + 1).reduce((a, b) => a * b, 1),
-	);
-	await zarr.set(arr, null, { data, shape, stride });
+	await zarr.set(arr, null, chunk(shape));
 	return arr;
 }
 
@@ -101,5 +105,68 @@ describe("contiguous copy", () => {
 		expect(res.stride).toStrictEqual([1, 2]);
 		// stride [1, 2] means row 1 is at [0], [2], [4]
 		expect(res.data).toStrictEqual(new Int32Array([3, 6, 4, 7, 5, 8]));
+	});
+});
+
+/**
+ * The same code copies in both directions. A write swaps the two sides of each
+ * projection. The shortcut also occurs on a write, with the chunk as the
+ * destination. Read tests alone do not find an error in that direction.
+ */
+describe("contiguous copy, writing", () => {
+	it("takes trailing dimensions whole, across a chunk boundary", async () => {
+		const arr = await filled([4, 3, 2], [2, 3, 2]);
+		await zarr.set(arr, [zarr.slice(1, 3), null, null], chunk([2, 3, 2], 100));
+		const res = await zarr.get(arr, null);
+		expect(res.data).toStrictEqual(
+			new Int32Array([
+				0, 1, 2, 3, 4, 5, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+				111, 18, 19, 20, 21, 22, 23,
+			]),
+		);
+	});
+
+	it("is not contiguous when an inner dimension is taken in part", async () => {
+		const arr = await filled([4, 4], [4, 4]);
+		await zarr.set(
+			arr,
+			[zarr.slice(1, 3), zarr.slice(1, 3)],
+			chunk([2, 2], 100),
+		);
+		const res = await zarr.get(arr, null);
+		expect(res.data).toStrictEqual(
+			new Int32Array([
+				0, 1, 2, 3, 4, 100, 101, 7, 8, 102, 103, 11, 12, 13, 14, 15,
+			]),
+		);
+	});
+
+	it("is not contiguous when an inner dimension is split across chunks", async () => {
+		const arr = await filled([4, 4], [4, 2]);
+		await zarr.set(arr, [zarr.slice(1, 3), null], chunk([2, 4], 100));
+		const res = await zarr.get(arr, null);
+		expect(res.data).toStrictEqual(
+			new Int32Array([
+				0, 1, 2, 3, 100, 101, 102, 103, 104, 105, 106, 107, 12, 13, 14, 15,
+			]),
+		);
+	});
+
+	it("is not contiguous when the step is not 1", async () => {
+		const arr = await filled([8], [8]);
+		await zarr.set(arr, [zarr.slice(0, 8, 2)], chunk([4], 100));
+		const res = await zarr.get(arr, null);
+		expect(res.data).toStrictEqual(
+			new Int32Array([100, 1, 101, 3, 102, 5, 103, 7]),
+		);
+	});
+
+	it("is not contiguous when an integer index drops the outer dimension", async () => {
+		const arr = await filled([4, 3], [2, 3]);
+		await zarr.set(arr, [1, null], chunk([3], 100));
+		const res = await zarr.get(arr, null);
+		expect(res.data).toStrictEqual(
+			new Int32Array([0, 1, 2, 100, 101, 102, 6, 7, 8, 9, 10, 11]),
+		);
 	});
 });
