@@ -221,9 +221,11 @@ function setFromChunkBinary(
 	const [sstride, ...sstrides] = src.stride;
 	if (proj.from === null) {
 		if (projs.length === 0) {
+			// NB: the last dimension is only at stride 1 for a C-contiguous
+			// chunk; an array with a transpose `order` has some other axis there
 			dest.data.set(
 				src.data.subarray(0, bytesPerElement),
-				proj.to * bytesPerElement,
+				dstride * proj.to * bytesPerElement,
 			);
 			return;
 		}
@@ -240,7 +242,7 @@ function setFromChunkBinary(
 	}
 	if (proj.to === null) {
 		if (projs.length === 0) {
-			let offset = proj.from * bytesPerElement;
+			let offset = sstride * proj.from * bytesPerElement;
 			dest.data.set(src.data.subarray(offset, offset + bytesPerElement), 0);
 			return;
 		}
