@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
 	"assist": {
 		"actions": {
 			"source": { "organizeImports": "on" }
@@ -8,7 +8,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"style": {
 				"useConst": "off",
 				"noParameterAssign": "off"
@@ -22,6 +22,7 @@
 		"includes": [
 			"**",
 			"!**/fixtures",
+			"!docs/public",
 			"!**/.changeset",
 			"!**/package.json",
 			"!**/jsr.json"

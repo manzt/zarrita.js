@@ -83,19 +83,23 @@ describe("slice indices", () => {
 		[2, 10, -1, 4, [2, 3, -1]],
 		[null, null, -3, 14, [13, -1, -3]],
 		[null, null, -3, 2, [1, -1, -3]],
-	])("sliceIndices(slice(%o, %o, %o), %i) -> %o", (start, stop, step, indices, expected) => {
-		expect(sliceIndices(slice(start, stop, step), indices)).toStrictEqual(
-			expected,
-		);
-	});
+	])(
+		"sliceIndices(slice(%o, %o, %o), %i) -> %o",
+		(start, stop, step, indices, expected) => {
+			expect(sliceIndices(slice(start, stop, step), indices)).toStrictEqual(
+				expected,
+			);
+		},
+	);
 
-	test.each([
-		[null, null, 0, 1],
-	])("sliceIndices(slice(%o, %o, %o), %i) -> throws", (start, stop, step, indices) => {
-		expect(() =>
-			sliceIndices(slice(start, stop, step), indices),
-		).toThrowError();
-	});
+	test.each([[null, null, 0, 1]])(
+		"sliceIndices(slice(%o, %o, %o), %i) -> throws",
+		(start, stop, step, indices) => {
+			expect(() =>
+				sliceIndices(slice(start, stop, step), indices),
+			).toThrowError();
+		},
+	);
 });
 
 describe("range", () => {
