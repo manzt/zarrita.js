@@ -524,6 +524,23 @@ a = zarr.create_array(
 )
 a[:] = np.arange(27).reshape(3, 3, 3)
 
+# 3d.contiguous.transpose.i4
+# The order [2, 0, 1] is not its own inverse. The other transpose fixtures
+# use [1, 0, 2] and [2, 1, 0], and each one of these is its own inverse.
+# Such an order gives the same layout for the codec and for its inverse.
+# This fixture makes sure that zarrita reads the correct one.
+a = zarr.create_array(
+    store,
+    name="3d.contiguous.transpose.i4",
+    dtype="int32",
+    shape=(2, 3, 4),
+    chunks=(2, 3, 4),
+    filters=[zarr.codecs.TransposeCodec(order=[2, 0, 1])],
+    serializer=zarr.codecs.BytesCodec(endian="little"),
+    compressors=None,
+)
+a[:] = np.arange(24).reshape(2, 3, 4)
+
 # Group with spaces in the name
 g = zarr.create_group(store, path="my group with spaces")
 g.attrs["description"] = "A group with spaces in the name"

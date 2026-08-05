@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TransposeCodec } from "../src/codecs/transpose.js";
 import * as zarr from "../src/index.js";
+import { ByteStringArray, UnicodeStringArray } from "../src/typedarray.js";
 
 /** Read a chunk's values in logical (C) order, honoring its strides. */
 function toLogical<D extends zarr.DataType>(chunk: zarr.Chunk<D>): unknown[] {
@@ -127,6 +128,31 @@ describe("transpose codec", () => {
 		expect(out.stride).toEqual([1, 2]);
 		expect(globalThis.Array.from(out.data as Int32Array)).toEqual([
 			0, 3, 1, 4, 2, 5,
+		]);
+	});
+
+	// `emptyLike` makes the copy with the constructor of `chunk.data`. The
+	// string arrays get the character width first and the length second. If
+	// the two arguments change places, the copy gets the wrong size. No other
+	// test uses this branch.
+	// Element (i,j) contains `s${3i + j}`. The layout is C-contiguous.
+	let strings = ["s0", "s1", "s2", "s3", "s4", "s5"];
+	it.each([
+		["UnicodeStringArray", () => new UnicodeStringArray(4, strings)],
+		["ByteStringArray", () => new ByteStringArray(4, strings)],
+	] as const)("encodes a chunk backed by %s", (_name, makeData) => {
+		let data = makeData();
+		let codec = new TransposeCodec({ order: [1, 0] }, { shape: [2, 3] });
+		let out = codec.encode({ data, shape: [2, 3], stride: [3, 1] });
+		expect(out.data.length).toBe(6);
+		expect(out.stride).toEqual([1, 2]);
+		expect([...(out.data as UnicodeStringArray | ByteStringArray)]).toEqual([
+			"s0",
+			"s3",
+			"s1",
+			"s4",
+			"s2",
+			"s5",
 		]);
 	});
 

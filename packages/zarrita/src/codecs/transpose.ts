@@ -72,7 +72,9 @@ function convertArrayOrder<D extends DataType>(
 ): Chunk<D> {
 	let out = emptyLike(src, target);
 	let nDims = src.shape.length;
-	let size = src.data.length;
+	// Calculate the count of elements from the shape. Do not use the length
+	// of the backing store. The two values are different if `src` is a view.
+	let size = src.shape.reduce((a, b) => a * b, 1);
 	let index = Array(nDims).fill(0);
 
 	let srcData = proxy(src.data);
