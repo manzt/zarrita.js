@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import * as zarr from "../../src/index.js";
+import { chunk, filled } from "../helpers.js";
 
 /**
  * Slicing the outermost dimension while taking the rest whole selects one
@@ -8,36 +9,6 @@ import * as zarr from "../../src/index.js";
  * These pin the cases where that shortcut must *not* be taken, since taking
  * it wrongly returns the wrong values rather than throwing.
  */
-
-function cStride(shape: number[]) {
-	return shape.map((_, i) => shape.slice(i + 1).reduce((a, b) => a * b, 1));
-}
-
-/** A C-ordered chunk holding `0..n`, offset by `base`. */
-function chunk(shape: number[], base = 0) {
-	const size = shape.reduce((a, b) => a * b, 1);
-	const data = new Int32Array(size);
-	for (let i = 0; i < size; i++) {
-		data[i] = base + i;
-	}
-	return { data, shape, stride: cStride(shape) };
-}
-
-async function filled(shape: number[], chunkShape: number[], order?: number[]) {
-	const codecs: zarr.CodecMetadata[] = [];
-	if (order) {
-		codecs.push({ name: "transpose", configuration: { order } });
-	}
-	codecs.push({ name: "bytes", configuration: { endian: "little" } });
-	const arr = await zarr.create(zarr.root(new Map()).resolve("/a"), {
-		shape,
-		chunkShape,
-		dtype: "int32",
-		codecs,
-	});
-	await zarr.set(arr, null, chunk(shape));
-	return arr;
-}
 
 describe("contiguous copy", () => {
 	it("takes trailing dimensions whole, across a chunk boundary", async () => {

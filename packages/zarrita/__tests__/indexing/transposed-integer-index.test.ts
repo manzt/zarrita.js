@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import * as zarr from "../../src/index.js";
+import { toLogical } from "../helpers.js";
 
 /**
  * An integer index drops a dimension, and the copy for that dimension is a
@@ -28,26 +29,6 @@ async function transposed() {
 	const data = new Int32Array(60).map((_, i) => i);
 	await zarr.set(arr, null, { data, shape: SHAPE, stride: STRIDE });
 	return arr;
-}
-
-/** Read a chunk's values in logical (C) order, honoring its strides. */
-function toLogical<D extends zarr.DataType>(chunk: zarr.Chunk<D>): unknown[] {
-	const { data, shape, stride } = chunk;
-	const total = shape.reduce((a, b) => a * b, 1);
-	const index = new globalThis.Array(shape.length).fill(0);
-	const out: unknown[] = [];
-	for (let n = 0; n < total; n++) {
-		out.push(
-			(data as ArrayLike<unknown>)[
-				index.reduce((acc, v, d) => acc + v * stride[d], 0)
-			],
-		);
-		for (let d = shape.length - 1; d >= 0; d--) {
-			if (++index[d] < shape[d]) break;
-			index[d] = 0;
-		}
-	}
-	return out;
 }
 
 describe("integer index into a transposed array", () => {

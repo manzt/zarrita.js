@@ -2,23 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TransposeCodec } from "../src/codecs/transpose.js";
 import * as zarr from "../src/index.js";
 import { ByteStringArray, UnicodeStringArray } from "../src/typedarray.js";
-
-/** Read a chunk's values in logical (C) order, honoring its strides. */
-function toLogical<D extends zarr.DataType>(chunk: zarr.Chunk<D>): unknown[] {
-	let { data, shape, stride } = chunk;
-	let total = shape.reduce((a, b) => a * b, 1);
-	let index = new globalThis.Array(shape.length).fill(0);
-	let out: unknown[] = [];
-	for (let n = 0; n < total; n++) {
-		let offset = index.reduce((acc, v, d) => acc + v * stride[d], 0);
-		out.push((data as ArrayLike<unknown>)[offset]);
-		for (let d = shape.length - 1; d >= 0; d--) {
-			if (++index[d] < shape[d]) break;
-			index[d] = 0;
-		}
-	}
-	return out;
-}
+import { toLogical } from "./helpers.js";
 
 async function make(codecs: zarr.CodecMetadata[]) {
 	let arr = await zarr.create(zarr.root(new Map()).resolve("/a"), {
