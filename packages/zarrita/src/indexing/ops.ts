@@ -18,7 +18,7 @@ import type {
 	Slice,
 } from "./types.js";
 
-/** A 1D "view" of an array that can be used to set values in the array. */
+/** A 1D view of an array. Use it to set values in the array. */
 function objectArrayView<T>(arr: T[], offset = 0, size?: number) {
 	let length = size ?? arr.length - offset;
 	return {
@@ -38,14 +38,13 @@ function objectArrayView<T>(arr: T[], offset = 0, size?: number) {
 }
 
 /**
- * Convert a chunk to a Uint8Array that can be used with the binary
- * set functions. This is necessary because the binary set functions
- * require a contiguous block of memory, and allows us to support more than
- * just the browser's TypedArray objects.
+ * Convert a chunk to a `Uint8Array` for the binary set functions.
  *
- * WARNING: This function is not meant to be used directly and is NOT type-safe.
- * In the case of `Array` instances, it will return a `objectArrayView` of
- * the underlying, which is supported by our binary set functions.
+ * The binary set functions need a contiguous block of memory. This conversion
+ * also accepts data that is not a browser `TypedArray`.
+ *
+ * WARNING: This function is not type-safe. Do not call it directly. For an
+ * `Array`, it returns an `objectArrayView` of the chunk data.
  */
 function compatChunk<D extends DataType>(
 	arr: Chunk<D>,
@@ -73,27 +72,25 @@ function compatChunk<D extends DataType>(
 	};
 }
 
-/** Hack to get the constructor of a typed array constructor from an existing TypedArray. */
+/** Get the constructor of an existing `TypedArray`. */
 function getTypedArrayConstructor<
 	D extends Exclude<DataType, "v2:object" | "string">,
 >(arr: TypedArray<D>): TypedArrayConstructor<D> {
 	if ("chars" in arr) {
-		// our custom TypedArray needs to bind the number of characters per
-		// element to the constructor.
+		// The string arrays take the character width as the first argument.
 		return arr.constructor.bind(null, arr.chars);
 	}
 	return arr.constructor as TypedArrayConstructor<D>;
 }
 
 /**
- * Convert a scalar to a Uint8Array that can be used with the binary
- * set functions. This is necessary because the binary set functions
- * require a contiguous block of memory, and allows us to support more
- * than just the browser's TypedArray objects.
+ * Convert a scalar to a `Uint8Array` for the binary set functions.
  *
- * WARNING: This function is not meant to be used directly and is NOT type-safe.
- * In the case of `Array` instances, it will return a `objectArrayView` of
- * the scalar, which is supported by our binary set functions.
+ * The binary set functions need a contiguous block of memory. This conversion
+ * also accepts data that is not a browser `TypedArray`.
+ *
+ * WARNING: This function is not type-safe. Do not call it directly. For an
+ * `Array`, it returns an `objectArrayView` of the scalar.
  */
 function compatScalar<D extends DataType>(
 	arr: Chunk<D>,
@@ -211,29 +208,26 @@ function setScalarBinary(
 }
 
 /**
- * If every remaining dimension is a step-1 slice whose elements are laid out
- * back to back in both `src` and `dest`, the whole selection is one unbroken
- * run of memory on both sides and can be copied with a single `set`.
+ * Find the selection that is one unbroken run of memory on both sides, which
+ * the caller can copy with a single `set`.
  *
- * That holds when each stride is the product of the lengths inside it, which
- * is checked from the innermost dimension outward. The condition is on the
- * strides rather than on which dimensions were taken whole, so an array whose
- * `order` is not C-contiguous simply fails it rather than being copied wrongly.
+ * The run exists when each remaining dimension is a step-1 slice and each
+ * stride is the product of the lengths inside it, checked from the innermost
+ * dimension outward. The test is on the strides, so a transposed chunk fails
+ * it and falls to the element-by-element path, which is always correct. The
+ * limit to C-contiguous layouts is deliberate.
  *
- * The test finds C-contiguity only. A transposed array can be one run on both
- * sides. This test does not accept it. The limit is deliberate.
- *
- * Returns the run's size and its start offset in each side, or `null` if the
- * caller has to recurse.
+ * Returns the size of the run and its start offset on each side, or `null`
+ * when the caller must recurse.
  */
 function contiguousSpan(
 	projections: Projection[],
 	destStride: number[],
 	srcStride: number[],
 ) {
-	// a selection that drops dimensions leaves the two sides at different
-	// ranks, so the strides no longer line up with the projections; the
-	// recursion strips those dimensions off before this can apply
+	// A dropped dimension leaves the two sides at different ranks, so the
+	// strides no longer agree with the projections. The recursion removes
+	// them first.
 	if (
 		projections.length !== destStride.length ||
 		projections.length !== srcStride.length
@@ -245,7 +239,6 @@ function contiguousSpan(
 	let srcOffset = 0;
 	for (let i = projections.length - 1; i >= 0; i--) {
 		const proj = projections[i];
-		// an integer index drops a dimension, so the two sides stop lining up
 		if (proj.from === null || proj.to === null) return null;
 		if (destStride[i] !== size || srcStride[i] !== size) return null;
 		const [from, to, step] = proj.to;
@@ -278,8 +271,8 @@ function setFromChunkBinary(
 	const [sstride, ...sstrides] = src.stride;
 	if (proj.from === null) {
 		if (projs.length === 0) {
-			// NB: the last dimension is only at stride 1 for a C-contiguous
-			// chunk; an array with a transpose `order` has some other axis there
+			// The last axis has stride 1 in a C-contiguous chunk only. A
+			// transpose `order` can put a different axis there.
 			dest.data.set(
 				src.data.subarray(0, bytesPerElement),
 				dstride * proj.to * bytesPerElement,
@@ -318,7 +311,7 @@ function setFromChunkBinary(
 	const [sfrom, _, sstep] = proj.from;
 	const len = indicesLen(from, to, step);
 	if (projs.length === 0) {
-		// not contiguous, so we have to copy over each element individually.
+		// Not one run of memory, so copy each element.
 		for (let i = 0; i < len; i++) {
 			let offset = sstride * (sfrom + sstep * i) * bytesPerElement;
 			dest.data.set(
