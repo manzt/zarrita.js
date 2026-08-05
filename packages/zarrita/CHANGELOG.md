@@ -1,5 +1,19 @@
 # zarrita
 
+## 0.7.4
+
+### Patch Changes
+
+- Fix `BytesCodec` mutating its input buffer in place when byte-swapping big-endian data. Combined with `withByteCaching`, this corrupted cached chunks so repeated reads alternated between correct and incorrect values. The codec now copies before swapping on both encode and decode. ([#433](https://github.com/manzt/zarrita.js/pull/433))
+
+- Copy a selection in one go when it is contiguous in both the chunk and the output ([#443](https://github.com/manzt/zarrita.js/pull/443))
+
+- Fix writes through the transpose codec when the order is not its own inverse ([#444](https://github.com/manzt/zarrita.js/pull/444))
+
+- Fix transpose codec on dimension-reducing selections ([#435](https://github.com/manzt/zarrita.js/pull/435))
+
+- Fix reads and writes through an integer index on a transposed array ([#445](https://github.com/manzt/zarrita.js/pull/445))
+
 ## 0.7.3
 
 ### Patch Changes
