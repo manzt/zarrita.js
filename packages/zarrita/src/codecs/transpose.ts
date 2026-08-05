@@ -48,7 +48,7 @@ function emptyLike<D extends DataType>(
 		chunk.data instanceof ByteStringArray ||
 		chunk.data instanceof UnicodeStringArray
 	) {
-		// these take the character width ahead of the length
+		// These constructors take the character width before the length.
 		data = new (chunk.data.constructor as TypedArrayConstructor<D>)(
 			// @ts-expect-error - the two argument form is not on the shared type
 			chunk.data.chars,
@@ -72,15 +72,15 @@ function convertArrayOrder<D extends DataType>(
 ): Chunk<D> {
 	let out = emptyLike(src, target);
 	let nDims = src.shape.length;
-	let size = src.data.length;
+	// Calculate the number of elements from the shape. The backing store can be
+	// longer than the chunk when `src` is a view.
+	let size = src.shape.reduce((a, b) => a * b, 1);
 	let index = Array(nDims).fill(0);
 
 	let srcData = proxy(src.data);
 	let outData = proxy(out.data);
 
 	for (let n = 0; n < size; n++) {
-		// walking `src` linearly assumed it was laid out with the first axis
-		// fastest; address it through its own strides instead
 		let srcIdx = 0;
 		let outIdx = 0;
 		for (let dim = 0; dim < nDims; dim++) {
@@ -144,7 +144,7 @@ export class TransposeCodec {
 			}
 		} else {
 			order = value;
-			// every axis appears exactly once
+			// Each axis appears exactly once.
 			let seen = new Array<boolean>(rank);
 			order.forEach((x) => {
 				assert(!seen[x], `Invalid permutation: ${JSON.stringify(value)}`);
@@ -163,11 +163,9 @@ export class TransposeCodec {
 	}
 
 	encode<D extends DataType>(arr: Chunk<D>): Chunk<D> {
-		// `decode` hands back a chunk laid out in `#order`, so that is what the
-		// stored bytes have to be. Converting to `#inverseOrder` here agreed
-		// with `decode` only when the permutation was its own inverse.
+		// `decode` returns a chunk in `#order`. The stored bytes must use the
+		// same order.
 		if (matchesOrder(arr, this.#order)) {
-			// can skip making a copy
 			return arr;
 		}
 		return convertArrayOrder(arr, this.#order);

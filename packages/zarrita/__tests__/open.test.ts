@@ -773,6 +773,31 @@ describe("v3", async () => {
 		});
 	});
 
+	it("3d.contiguous.transpose.i4", async () => {
+		// The order [2, 0, 1] is not its own inverse. If `decode` used the
+		// inverse order, it would give the stride [1, 8, 2] and read the wrong
+		// element at each coordinate. zarr-python wrote these bytes. Thus this
+		// test holds zarrita to the format and not only to its own writes.
+		let arr = await open.v3(store.resolve("/3d.contiguous.transpose.i4"), {
+			kind: "array",
+		});
+		let chunk = await arr.getChunk([0, 0, 0]);
+		expect(chunk.stride).toStrictEqual([3, 1, 6]);
+
+		// Read each coordinate through the stride. Element (i,j,k) is
+		// 12i + 4j + k.
+		let { data, stride } = chunk as { data: Int32Array; stride: number[] };
+		let values: number[] = [];
+		for (let i = 0; i < 2; i++) {
+			for (let j = 0; j < 3; j++) {
+				for (let k = 0; k < 4; k++) {
+					values.push(data[i * stride[0] + j * stride[1] + k * stride[2]]);
+				}
+			}
+		}
+		expect(values).toStrictEqual([...globalThis.Array(24).keys()]);
+	});
+
 	it("1d.contiguous.u1", async () => {
 		let arr = await open.v3(store.resolve("/1d.contiguous.u1"), {
 			kind: "array",
