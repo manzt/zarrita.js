@@ -73,6 +73,13 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 			bytes = bytes.slice();
 			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
 		}
+		if (bytes.byteOffset % this.#BYTES_PER_ELEMENT !== 0) {
+			// Typed array views must start at an offset that's a multiple of
+			// their element size. The store may hand back a view into a larger
+			// buffer (e.g. a shard's suffix bytes) that doesn't happen to land
+			// on such a boundary, so copy into a fresh, aligned buffer.
+			bytes = bytes.slice();
+		}
 		return {
 			data: new this.#TypedArray(
 				bytes.buffer,

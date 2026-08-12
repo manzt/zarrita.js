@@ -37,4 +37,24 @@ describe("BytesCodec", () => {
 
 		expect(data).toEqual(snapshot);
 	});
+
+	it("decodes a view whose byteOffset isn't a multiple of BYTES_PER_ELEMENT", () => {
+		// uint64 (BigUint64Array) needs 8-byte alignment. A store can hand back
+		// a Uint8Array view into a larger buffer (e.g. a shard's suffix bytes)
+		// whose byteOffset doesn't land on an 8-byte boundary; the TypedArray
+		// constructor throws `RangeError: start offset ... should be a multiple
+		// of 8` unless we copy into a fresh, aligned buffer first.
+		let codec = BytesCodec.fromConfig(
+			{ endian: "little" },
+			{ dataType: "uint64" as const, shape: [2], codecs: [] },
+		);
+		let backing = new Uint8Array(17);
+		backing.set([1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0], 1);
+		let bytes = backing.subarray(1, 17);
+		expect(bytes.byteOffset).toBe(1);
+
+		let chunk = codec.decode(bytes);
+
+		expect(Array.from(chunk.data)).toEqual([1n, 2n]);
+	});
 });
