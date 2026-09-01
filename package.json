@@ -13,7 +13,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.7",
-		"@changesets/cli": "^2.31.1",
+		"@changesets/cli": "^3.0.1",
 		"@petamoriken/float16": "^3.9.3",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"@types/node": "^26.1.2",
