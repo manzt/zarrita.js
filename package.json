@@ -12,15 +12,15 @@
 		"version": "changeset version && node scripts/sync-jsr.mjs"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.7",
+		"@biomejs/biome": "2.5.11",
 		"@changesets/cli": "^2.31.1",
 		"@petamoriken/float16": "^3.9.3",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
-		"@types/node": "^26.1.2",
-		"publint": "^0.3.23",
+		"@types/node": "^26.4.0",
+		"publint": "^0.3.24",
 		"tintype": "^0.2.0",
 		"typescript": "^7.0.2",
-		"vitest": "^4.1.10"
+		"vitest": "^4.1.11"
 	},
 	"packageManager": "pnpm@9.7.0"
 }
