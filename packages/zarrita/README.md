@@ -39,7 +39,7 @@ const chunk = await arr.getChunk([0, 0]);
 // Option 1: Builtin getter, no dependencies
 const full = await zarr.get(arr); // { data: Int32Array, shape: number[], stride: number[] }
 
-// Option 2: scijs/ndarray getter, includes `ndarray` and `ndarray-ops` dependencies
+// Option 2: scijs/ndarray getter, includes `ndarray` and `@stackline/ndarray-ops`
 import { get } from "@zarrita/ndarray";
 const full = await get(arr); // ndarray.Ndarray<Int32Array>
 

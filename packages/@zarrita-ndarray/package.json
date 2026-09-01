@@ -25,9 +25,8 @@
 		}
 	},
 	"dependencies": {
-		"@types/ndarray-ops": "^1.2.4",
+		"@stackline/ndarray-ops": "^1.0.0",
 		"ndarray": "^1.0.19",
-		"ndarray-ops": "^1.2.2",
 		"zarrita": "workspace:^"
 	},
 	"devDependencies": {

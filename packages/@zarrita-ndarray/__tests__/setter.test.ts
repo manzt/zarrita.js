@@ -1,5 +1,5 @@
+import { assign } from "@stackline/ndarray-ops";
 import ndarray, { type TypedArray } from "ndarray";
-import { assign } from "ndarray-ops";
 import { describe, expect, it } from "vitest";
 import {
 	_zarrita_internal_getStrides as get_strides,

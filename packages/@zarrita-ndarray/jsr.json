@@ -4,9 +4,8 @@
 	"license": "MIT",
 	"nodeModulesDir": "auto",
 	"imports": {
-		"@types/ndarray-ops": "npm:@types/ndarray-ops@^1.2.4",
+		"@stackline/ndarray-ops": "npm:@stackline/ndarray-ops@^1.0.0",
 		"ndarray": "npm:ndarray@^1.0.19",
-		"ndarray-ops": "npm:ndarray-ops@^1.2.2",
 		"zarrita": "jsr:@zarrita/zarrita@^0.7.4"
 	},
 	"exports": {

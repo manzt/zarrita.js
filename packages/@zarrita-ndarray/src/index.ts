@@ -1,5 +1,5 @@
+import ops from "@stackline/ndarray-ops";
 import ndarray from "ndarray";
-import ops from "ndarray-ops";
 import * as zarr from "zarrita";
 
 /**
@@ -28,7 +28,6 @@ export const _internal_setter: {
 		selection: (number | zarr.Indices)[],
 		value: zarr.Scalar<D>,
 	) {
-		// @ts-expect-error - ndarray-ops types are incorrect
 		ops.assigns(view(dest, selection), value);
 	},
 	setFromChunk<D extends zarr.DataType>(

@@ -20,10 +20,9 @@
 		"numcodecs": "^0.3.2"
 	},
 	"devDependencies": {
+		"@stackline/ndarray-ops": "^1.0.0",
 		"@types/ndarray": "^1.0.14",
-		"@types/ndarray-ops": "^1.2.7",
-		"ndarray": "^1.0.19",
-		"ndarray-ops": "^1.2.2"
+		"ndarray": "^1.0.19"
 	},
 	"publishConfig": {
 		"main": "dist/src/index.js",

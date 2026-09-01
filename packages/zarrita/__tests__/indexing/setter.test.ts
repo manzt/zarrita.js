@@ -1,5 +1,5 @@
+import { assign } from "@stackline/ndarray-ops";
 import ndarray from "ndarray";
-import { assign } from "ndarray-ops";
 import { describe, expect, it } from "vitest";
 
 import type * as zarr from "../../src/index.js";

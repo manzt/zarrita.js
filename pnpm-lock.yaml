@@ -50,15 +50,12 @@ importers:
 
   packages/@zarrita-ndarray:
     dependencies:
-      '@types/ndarray-ops':
-        specifier: ^1.2.4
-        version: 1.2.7
+      '@stackline/ndarray-ops':
+        specifier: ^1.0.0
+        version: 1.0.0
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
-      ndarray-ops:
-        specifier: ^1.2.2
-        version: 1.2.2
       zarrita:
         specifier: workspace:^
         version: link:../zarrita
@@ -85,18 +82,15 @@ importers:
         specifier: ^0.3.2
         version: 0.3.2
     devDependencies:
+      '@stackline/ndarray-ops':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@types/ndarray':
         specifier: ^1.0.14
         version: 1.0.14
-      '@types/ndarray-ops':
-        specifier: ^1.2.7
-        version: 1.2.7
       ndarray:
         specifier: ^1.0.19
         version: 1.0.19
-      ndarray-ops:
-        specifier: ^1.2.2
-        version: 1.2.2
 
 packages:
 
@@ -938,6 +932,10 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
+  '@stackline/ndarray-ops@1.0.0':
+    resolution: {integrity: sha512-x6JPdN1xq3F65CFbmrE8JlMB/HDQsJH4hMiQqhAbQIgs25hXCKz6Wh1md9T4nFiW8ZF/VRRxOYR/GYnoUABAGA==}
+    engines: {node: '>=18.0.0'}
+
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -972,9 +970,6 @@ packages:
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
-
-  '@types/ndarray-ops@1.2.7':
-    resolution: {integrity: sha512-dQKT1Kfpw83LhzuJp6N7nO03m8Bjv84E1cew3poHK5DgojCXppJPLONQafVzOK3gQNW5sZfjRQgOZG2aSZdQJg==}
 
   '@types/ndarray@1.0.14':
     resolution: {integrity: sha512-oANmFZMnFQvb219SSBIhI1Ih/r4CvHDOzkWyJS/XRqkMrGH5/kaPSA1hQhdIBzouaE+5KpE/f5ylI9cujmckQg==}
@@ -1310,9 +1305,6 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  cwise-compiler@1.1.3:
-    resolution: {integrity: sha512-WXlK/m+Di8DMMcCjcWr4i+XzcQra9eCdXIJrgh4TUgh0pIS/yJduLxS9JgefsHJ/YVLdgPtXm9r62W92MvanEQ==}
-
   dataloader@1.4.0:
     resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
 
@@ -1557,9 +1549,6 @@ packages:
     resolution: {integrity: sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
-
-  ndarray-ops@1.2.2:
-    resolution: {integrity: sha512-BppWAFRjMYF7N/r6Ie51q6D4fs0iiGmeXIACKY66fLpnwIui3Wc3CXiD/30mgLbDjPpSLrsqcp3Z62+IcHZsDw==}
 
   ndarray@1.0.19:
     resolution: {integrity: sha512-B4JHA4vdyZU30ELBw3g7/p9bZupyew5a7tX1Y/gGeF2hafrPaQZhgrGQfsvgfYbgdFZjYwuEcnaobeM/WMW+HQ==}
@@ -1838,9 +1827,6 @@ packages:
 
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
-
-  uniq@1.0.1:
-    resolution: {integrity: sha512-Gw+zz50YNKPDKXs+9d+aKAjVwpjNwqzvNpLigIruT4HA9lMZNdMqs9x07kKHB/L9WRzqp4+DlTU5s4wG2esdoA==}
 
   unist-util-is@6.0.0:
     resolution: {integrity: sha512-2qCTHimwdxLfz+YzdGfkqNlH0tLi9xjTnHddPmJwtIG9MGsdbutfTc4P+haPD7l7Cjxf/WZj+we5qfVPvvxfYw==}
@@ -2745,6 +2731,8 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
+  '@stackline/ndarray-ops@1.0.0': {}
+
   '@standard-schema/spec@1.1.0': {}
 
   '@svitejs/changesets-changelog-github-compact@1.2.0':
@@ -2781,10 +2769,6 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/mdurl@2.0.0': {}
-
-  '@types/ndarray-ops@1.2.7':
-    dependencies:
-      '@types/ndarray': 1.0.14
 
   '@types/ndarray@1.0.14': {}
 
@@ -3073,10 +3057,6 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  cwise-compiler@1.1.3:
-    dependencies:
-      uniq: 1.0.1
-
   dataloader@1.4.0: {}
 
   dequal@2.0.3: {}
@@ -3354,10 +3334,6 @@ snapshots:
   nanoid@3.3.11: {}
 
   nanoid@3.3.17: {}
-
-  ndarray-ops@1.2.2:
-    dependencies:
-      cwise-compiler: 1.1.3
 
   ndarray@1.0.19:
     dependencies:
@@ -3662,8 +3638,6 @@ snapshots:
       '@typescript/typescript-win32-x64': 7.0.2
 
   undici-types@8.3.0: {}
-
-  uniq@1.0.1: {}
 
   unist-util-is@6.0.0:
     dependencies:
