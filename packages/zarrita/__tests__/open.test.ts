@@ -20,7 +20,7 @@ import {
 	vi,
 } from "vitest";
 
-import { NotFoundError } from "../src/errors.js";
+import { InvalidMetadataError, NotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
 import type {
 	ArrayMetadata,
@@ -1634,6 +1634,75 @@ describe("v3", async () => {
 			data: new Uint8Array([40]),
 			shape: [1],
 			stride: [1],
+		});
+	});
+
+	describe("v3 fixed_length_utf32", () => {
+		// Zarr v3 extension data types are objects rather than plain strings.
+		// NumPy's `<U{n}` lands here when xarray writes a v3 store, so this is the
+		// shape of a string coordinate produced by the Python stack.
+		let meta = {
+			zarr_format: 3,
+			node_type: "array",
+			shape: [3],
+			data_type: {
+				name: "fixed_length_utf32",
+				configuration: { length_bytes: 24 },
+			},
+			chunk_grid: { name: "regular", configuration: { chunk_shape: [3] } },
+			chunk_key_encoding: { name: "default" },
+			codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+			fill_value: "",
+			attributes: {},
+		};
+
+		function store() {
+			// Six code points per element, null-padded, little endian.
+			let codePoints = new Int32Array(3 * 6);
+			["hello", "world", "zarr"].forEach((word, i) => {
+				for (let j = 0; j < word.length; j++) {
+					codePoints[i * 6 + j] = word.codePointAt(j) as number;
+				}
+			});
+			let entries = new Map<AbsolutePath, Uint8Array>();
+			entries.set("/zarr.json", new TextEncoder().encode(JSON.stringify(meta)));
+			entries.set("/c/0", new Uint8Array(codePoints.buffer));
+			return entries;
+		}
+
+		it("exposes the data type tagged with its length", async () => {
+			let arr = await open.v3(root(store()), { kind: "array" });
+			expect(arr.dtype).toBe("fixed_length_utf32:24");
+			expect(arr.shape).toEqual([3]);
+		});
+
+		it("reads the strings, stripping the null padding", async () => {
+			let arr = await open.v3(root(store()), { kind: "array" });
+			let chunk = await arr.getChunk([0]);
+			expect(globalThis.Array.from(chunk.data as Iterable<string>)).toEqual([
+				"hello",
+				"world",
+				"zarr",
+			]);
+		});
+
+		it("rejects a length that is not whole UTF-32 code points", async () => {
+			let entries = store();
+			entries.set(
+				"/zarr.json",
+				new TextEncoder().encode(
+					JSON.stringify({
+						...meta,
+						data_type: {
+							name: "fixed_length_utf32",
+							configuration: { length_bytes: 6 },
+						},
+					}),
+				),
+			);
+			await expect(open.v3(root(entries), { kind: "array" })).rejects.toThrow(
+				InvalidMetadataError,
+			);
 		});
 	});
 });
