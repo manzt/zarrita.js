@@ -96,6 +96,12 @@ export function getCtr<D extends DataType>(
 			Number(chars),
 		);
 	}
+	let utf32 = dataType.match(/^fixed_length_utf32:(\d+)$/);
+	if (utf32) {
+		// Same layout as v2 `<U{n}`: fixed-width, null-padded UTF-32 code points.
+		// @ts-expect-error
+		return UnicodeStringArray.bind(null, Number(utf32[1]) / 4);
+	}
 	// Handle v3 variable-length string type
 	if (dataType === "string") {
 		return globalThis.Array as unknown as TypedArrayConstructor<D>;
@@ -387,7 +393,10 @@ export function isDataType<Query extends DataTypeQuery>(
 	let isBoolean = dtype === "bool";
 	if (query === "boolean") return isBoolean;
 	let isString =
-		dtype.startsWith("v2:U") || dtype.startsWith("v2:S") || dtype === "string";
+		dtype.startsWith("v2:U") ||
+		dtype.startsWith("v2:S") ||
+		dtype.startsWith("fixed_length_utf32:") ||
+		dtype === "string";
 	if (query === "string") return isString;
 	let isBigint = dtype === "int64" || dtype === "uint64";
 	if (query === "bigint") return isBigint;
@@ -409,6 +418,36 @@ export function isShardingCodec(
 	codec: CodecMetadata,
 ): codec is ShardingCodecMetadata {
 	return codec?.name === "sharding_indexed";
+}
+
+/**
+ * Flatten a v3 `data_type` into a `DataType`.
+ *
+ * Built-in v3 data types are plain strings, but extension data types are
+ * objects like `{ name, configuration }`. We fold the configuration into the
+ * name so the result stays a string, as the rest of the library assumes.
+ */
+export function coerceV3DataType(dataType: unknown): DataType {
+	if (typeof dataType === "string") {
+		return dataType as DataType;
+	}
+	if (
+		typeof dataType === "object" &&
+		dataType !== null &&
+		"name" in dataType &&
+		dataType.name === "fixed_length_utf32"
+	) {
+		let { length_bytes: lengthBytes } =
+			("configuration" in dataType
+				? (dataType.configuration as { length_bytes?: unknown })
+				: undefined) ?? {};
+		if (typeof lengthBytes === "number" && lengthBytes % 4 === 0) {
+			return `fixed_length_utf32:${lengthBytes}`;
+		}
+	}
+	throw new InvalidMetadataError(
+		`Unsupported data type: ${JSON.stringify(dataType)}`,
+	);
 }
 
 export function ensureCorrectScalar<D extends DataType>(
