@@ -170,6 +170,23 @@ import { FileSystemStore } from "@zarrita/storage";
 const store = new FileSystemStore("data.zarr");
 ```
 
+### FileSystemHandleStore <Badge type="tip" text="Readable" /> <Badge type="tip" text="Writable" />
+
+The **FileSystemHandleStore** reads and writes a
+[`FileSystemDirectoryHandle`](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle)
+in the browser. It supports handles from the
+[Origin Private File System](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
+(OPFS), available in all major browsers, or a directory picked by the user via
+the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker),
+which only Chromium-based browsers support.
+
+```javascript
+import { FileSystemHandleStore } from "@zarrita/storage";
+
+const storeFSA = new FileSystemHandleStore(await showDirectoryPicker());
+const storeOPFS = new FileSystemHandleStore(await navigator.storage.getDirectory());
+```
+
 ### ZipFileStore <Badge type="warning" text="experimental" /> <Badge type="tip" text="Readable" />
 
 The **ZipFileStore** enables reading a Zarr store collected in a single Zip
