@@ -20,9 +20,9 @@
 		"numcodecs": "^0.3.2"
 	},
 	"devDependencies": {
-		"@types/ndarray": "^1.0.14",
+		"@types/ndarray": "^1.1.0",
 		"@types/ndarray-ops": "^1.2.7",
-		"ndarray": "^1.0.19",
+		"ndarray": "^1.1.1",
 		"ndarray-ops": "^1.2.2"
 	},
 	"publishConfig": {
