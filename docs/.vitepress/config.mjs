@@ -3,6 +3,7 @@ import { tabsMarkdownPlugin } from "vitepress-plugin-tabs";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+	base: "/zarrita.js/",
 	title: "zarrita.js",
 	description: "Zarr building blocks for JavaScript",
 	head: [
@@ -11,7 +12,7 @@ export default defineConfig({
 			{
 				rel: "icon",
 				type: "image/svg+xml",
-				href: "/favicon.svg",
+				href: "/zarrita.js/favicon.svg",
 			},
 		],
 	],
