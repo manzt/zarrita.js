@@ -598,6 +598,42 @@ a = zarr.create_array(
 a[:] = data
 
 # Consolidated group — a subgroup with its own consolidated metadata
+# 1d.chunked.structured
+# The version of zarr-python pinned above writes a NumPy structured dtype with
+# the data type name "structured", fields as [name, data_type] pairs, a
+# base64 fill value, and a `bytes` codec without `endian`. That is the form
+# from before `struct` was registered, which readers still have to accept.
+# generate-v3-struct.py writes the same records in the registered form.
+record = np.dtype(
+    [
+        ("id", "<i4"),
+        ("flag", "?"),
+        ("value", "<f8"),
+        ("big", "<i8"),
+        ("label", "<U3"),
+        ("tag", "S4"),
+        ("point", [("x", "<f4"), ("y", "<f4")]),
+    ]
+)
+a = zarr.create_array(
+    store,
+    name="1d.chunked.structured",
+    dtype=record,
+    chunks=(2,),
+    shape=(5,),
+    compressors=None,
+)
+# The last chunk is left unwritten, so that it reads as the fill value.
+a[:3] = np.array(
+    [
+        (1, True, 1.5, 2**40, "ab", b"xy", (1.0, 2.0)),
+        (2, False, -2.5, -5, "cd\u00e9", b"wxyz", (3.0, 4.0)),
+        (3, True, np.nan, 7, "", b"", (5.0, 6.0)),
+    ],
+    dtype=record,
+)
+
+
 consolidated = zarr.create_group(store, path="consolidated")
 consolidated.attrs["answer"] = 42
 

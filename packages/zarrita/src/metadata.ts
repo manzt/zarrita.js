@@ -1,6 +1,7 @@
 import type {
 	BoolArray,
 	ByteStringArray,
+	StructArray,
 	UnicodeStringArray,
 } from "./typedarray.js";
 
@@ -47,6 +48,66 @@ export type String = "string";
 /** @category Object */
 export type ObjectType = "v2:object";
 
+/**
+ * A fixed-length string of UTF-32 code points, as a field of a
+ * {@linkcode Struct}.
+ *
+ * @see {@link https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/fixed_length_utf32}
+ * @category Struct
+ */
+export type FixedLengthUtf32 = {
+	name: "fixed_length_utf32";
+	configuration: { length_bytes: number };
+};
+
+/**
+ * A fixed-length byte string, as a field of a {@linkcode Struct}. zarr-python
+ * writes this for a NumPy `S` field.
+ *
+ * @category Struct
+ */
+export type NullTerminatedBytes = {
+	name: "null_terminated_bytes";
+	configuration: { length_bytes: number };
+};
+
+/**
+ * The data types a field of a {@linkcode Struct} can have.
+ *
+ * @category Struct
+ */
+export type StructFieldDataType =
+	| NumberDataType
+	| BigintDataType
+	| Bool
+	| FixedLengthUtf32
+	| NullTerminatedBytes
+	| Struct;
+
+/** @category Struct */
+export type StructField = { name: string; data_type: StructFieldDataType };
+
+/**
+ * A record of named, typed fields, like a NumPy structured dtype.
+ *
+ * @see {@link https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/struct}
+ * @category Struct
+ */
+export type Struct = {
+	name: "struct";
+	configuration: { fields: StructField[] };
+};
+
+/**
+ * One element of an array with the {@linkcode Struct} data type: the value
+ * of each field, by name.
+ *
+ * @category Struct
+ */
+export type StructScalar = {
+	[field: string]: number | bigint | boolean | string | StructScalar;
+};
+
 export type NumberDataType =
 	| Int8
 	| Int16
@@ -67,7 +128,8 @@ export type DataType =
 	| BigintDataType
 	| StringDataType
 	| ObjectType
-	| Bool;
+	| Bool
+	| Struct;
 
 export type Attributes = Record<string, unknown>;
 
@@ -78,6 +140,7 @@ export type Scalar<D extends DataType> = D extends Bool ? boolean
 	: D extends StringDataType ? string
 	: D extends NumberDataType ? number
 	: D extends ObjectType ? unknown
+	: D extends Struct ? StructScalar
 	: never;
 
 export type CodecMetadata = {
@@ -163,6 +226,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends ByteStr ? ByteStringArray
 	: D extends String ? Array<string>
 	: D extends ObjectType ? Array<unknown>
+	: D extends Struct ? StructArray
 	: never;
 
 export type TypedArrayConstructor<D extends DataType> = {

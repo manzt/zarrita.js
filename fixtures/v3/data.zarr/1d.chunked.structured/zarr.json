@@ -1,0 +1,88 @@
+{
+  "shape": [
+    5
+  ],
+  "data_type": {
+    "name": "structured",
+    "configuration": {
+      "fields": [
+        [
+          "id",
+          "int32"
+        ],
+        [
+          "flag",
+          "bool"
+        ],
+        [
+          "value",
+          "float64"
+        ],
+        [
+          "big",
+          "int64"
+        ],
+        [
+          "label",
+          {
+            "name": "fixed_length_utf32",
+            "configuration": {
+              "length_bytes": 12
+            }
+          }
+        ],
+        [
+          "tag",
+          {
+            "name": "null_terminated_bytes",
+            "configuration": {
+              "length_bytes": 4
+            }
+          }
+        ],
+        [
+          "point",
+          {
+            "name": "structured",
+            "configuration": {
+              "fields": [
+                [
+                  "x",
+                  "float32"
+                ],
+                [
+                  "y",
+                  "float32"
+                ]
+              ]
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "chunk_grid": {
+    "name": "regular",
+    "configuration": {
+      "chunk_shape": [
+        2
+      ]
+    }
+  },
+  "chunk_key_encoding": {
+    "name": "default",
+    "configuration": {
+      "separator": "/"
+    }
+  },
+  "fill_value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA",
+  "codecs": [
+    {
+      "name": "bytes"
+    }
+  ],
+  "attributes": {},
+  "zarr_format": 3,
+  "node_type": "array",
+  "storage_transformers": []
+}

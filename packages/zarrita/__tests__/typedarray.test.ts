@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 
+import type { Struct } from "../src/metadata.js";
 import {
 	BoolArray,
 	ByteStringArray,
+	byteswapStructInplace,
+	StructArray,
 	UnicodeStringArray,
 } from "../src/typedarray.js";
 
@@ -355,5 +358,171 @@ describe("UnicodeStringArray", () => {
 		let arr = new UnicodeStringArray(3, 5);
 		arr.fill("foo");
 		expect(Array.from(arr)).toStrictEqual(["foo", "foo", "foo", "foo", "foo"]);
+	});
+});
+
+describe("StructArray", () => {
+	// 4 + 1 + 8 = 13 bytes, packed: the layout in the `struct` specification.
+	let dtype: Struct = {
+		name: "struct",
+		configuration: {
+			fields: [
+				{ name: "id", data_type: "int32" },
+				{ name: "flags", data_type: "uint8" },
+				{ name: "value", data_type: "float64" },
+			],
+		},
+	};
+
+	test("new (dtype, size: number) -> StructArray", () => {
+		let arr = new StructArray(dtype, 2);
+		expect({
+			length: arr.length,
+			BYTES_PER_ELEMENT: arr.BYTES_PER_ELEMENT,
+			byteOffset: arr.byteOffset,
+			byteLength: arr.byteLength,
+			data: Array.from(arr),
+		}).toStrictEqual({
+			length: 2,
+			BYTES_PER_ELEMENT: 13,
+			byteOffset: 0,
+			byteLength: 26,
+			data: [
+				{ id: 0, flags: 0, value: 0 },
+				{ id: 0, flags: 0, value: 0 },
+			],
+		});
+	});
+
+	test("new (dtype, buffer: ArrayBuffer) -> StructArray", () => {
+		let bytes = new Uint8Array(1 + 2 * 13);
+		let view = new DataView(bytes.buffer);
+		// The first record starts at byte 1, which no typed array of int32 or
+		// float64 could, and its fields are packed.
+		view.setInt32(1, -2, true);
+		view.setUint8(5, 255);
+		view.setFloat64(6, 1.5, true);
+		view.setInt32(14, 7, true);
+		let arr = new StructArray(dtype, bytes.buffer, 1, 2);
+		expect(arr.byteOffset).toBe(1);
+		expect(arr.length).toBe(2);
+		expect(Array.from(arr)).toStrictEqual([
+			{ id: -2, flags: 255, value: 1.5 },
+			{ id: 7, flags: 0, value: 0 },
+		]);
+	});
+
+	test("new (dtype, values: Iterable) -> StructArray", () => {
+		let values = [
+			{ id: 1, flags: 2, value: 0.25 },
+			{ id: -1, flags: 3, value: Number.NaN },
+		];
+		let arr = new StructArray(dtype, values);
+		expect(arr.length).toBe(2);
+		expect(Array.from(arr)).toStrictEqual(values);
+	});
+
+	test("set, get, and fill", () => {
+		let arr = new StructArray(dtype, 3);
+		arr.fill({ id: 4, flags: 1, value: -1 });
+		arr.set(1, { id: 5, flags: 0, value: 2 });
+		expect(arr.get(0)).toStrictEqual({ id: 4, flags: 1, value: -1 });
+		expect(arr.get(1)).toStrictEqual({ id: 5, flags: 0, value: 2 });
+		expect(arr.get(2)).toStrictEqual({ id: 4, flags: 1, value: -1 });
+		// A record needs every field.
+		expect(() => arr.set(0, { id: 1, flags: 1 })).toThrow(
+			"Missing struct field: value",
+		);
+	});
+
+	test("every kind of field, and a nested struct", () => {
+		let all: Struct = {
+			name: "struct",
+			configuration: {
+				fields: [
+					{ name: "i1", data_type: "int8" },
+					{ name: "u2", data_type: "uint16" },
+					{ name: "i8", data_type: "int64" },
+					{ name: "u8", data_type: "uint64" },
+					{ name: "f4", data_type: "float32" },
+					{ name: "ok", data_type: "bool" },
+					{
+						name: "label",
+						data_type: {
+							name: "fixed_length_utf32",
+							configuration: { length_bytes: 12 },
+						},
+					},
+					{
+						name: "tag",
+						data_type: {
+							name: "null_terminated_bytes",
+							configuration: { length_bytes: 4 },
+						},
+					},
+					{
+						name: "point",
+						data_type: {
+							name: "struct",
+							configuration: {
+								fields: [
+									{ name: "x", data_type: "float32" },
+									{ name: "y", data_type: "float32" },
+								],
+							},
+						},
+					},
+				],
+			},
+		};
+		let value = {
+			i1: -3,
+			u2: 65535,
+			i8: -(2n ** 62n),
+			u8: 2n ** 63n,
+			f4: 0.5,
+			ok: true,
+			label: "a\u{1F600}b",
+			tag: "xyz",
+			point: { x: 1, y: 2 },
+		};
+		let arr = new StructArray(all, [value]);
+		expect(arr.BYTES_PER_ELEMENT).toBe(1 + 2 + 8 + 8 + 4 + 1 + 12 + 4 + 8);
+		expect(arr.get(0)).toStrictEqual(value);
+		// Strings longer than the field are cut to fit.
+		arr.set(0, { ...value, label: "abcdef", tag: "abcdef" });
+		expect(arr.get(0).label).toBe("abc");
+		expect(arr.get(0).tag).toBe("abcd");
+	});
+
+	test("reverses the bytes of each field, not of the record", () => {
+		let arr = new StructArray(dtype, [{ id: 1, flags: 2, value: 1.5 }]);
+		let bytes = new Uint8Array(arr.buffer).slice();
+		byteswapStructInplace(bytes, dtype);
+		let view = new DataView(bytes.buffer);
+		expect(view.getInt32(0, false)).toBe(1);
+		expect(view.getUint8(4)).toBe(2);
+		expect(view.getFloat64(5, false)).toBe(1.5);
+	});
+
+	test("refuses metadata it cannot read", () => {
+		let struct = (fields: unknown): Struct =>
+			({ name: "struct", configuration: { fields } }) as Struct;
+		expect(() => new StructArray(struct([]), 0)).toThrow(
+			"A struct data type needs fields",
+		);
+		expect(
+			() => new StructArray(struct([{ name: "t", data_type: "string" }]), 0),
+		).toThrow('Unknown or unsupported struct field data type: "string"');
+		expect(
+			() =>
+				new StructArray(
+					struct([
+						{ name: "a", data_type: "int8" },
+						{ name: "a", data_type: "int8" },
+					]),
+					0,
+				),
+		).toThrow('Struct field names must be unique: "a"');
 	});
 });

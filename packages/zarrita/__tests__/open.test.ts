@@ -22,6 +22,8 @@ import {
 
 import { NotFoundError } from "../src/errors.js";
 import { root } from "../src/hierarchy.js";
+import { get } from "../src/indexing/ops.js";
+import { slice } from "../src/indexing/util.js";
 import type {
 	ArrayMetadata,
 	ArrayMetadataV2,
@@ -32,6 +34,7 @@ import { open } from "../src/open.js";
 import {
 	BoolArray,
 	ByteStringArray,
+	StructArray,
 	UnicodeStringArray,
 } from "../src/typedarray.js";
 
@@ -1343,6 +1346,181 @@ describe("v3", async () => {
 				data: new Int16Array(expected),
 				shape: [3, 3, 1],
 				stride: [3, 1, 1],
+			});
+		});
+	});
+
+	describe("struct", () => {
+		let fields = [
+			{ name: "id", data_type: "int32" },
+			{ name: "flag", data_type: "bool" },
+			{ name: "value", data_type: "float64" },
+			{ name: "big", data_type: "int64" },
+			{
+				name: "label",
+				data_type: {
+					name: "fixed_length_utf32",
+					configuration: { length_bytes: 12 },
+				},
+			},
+			{
+				name: "tag",
+				data_type: {
+					name: "null_terminated_bytes",
+					configuration: { length_bytes: 4 },
+				},
+			},
+			{
+				name: "point",
+				data_type: {
+					name: "struct",
+					configuration: {
+						fields: [
+							{ name: "x", data_type: "float32" },
+							{ name: "y", data_type: "float32" },
+						],
+					},
+				},
+			},
+		];
+		let records = [
+			{
+				id: 1,
+				flag: true,
+				value: 1.5,
+				big: 2n ** 40n,
+				label: "ab",
+				tag: "xy",
+				point: { x: 1, y: 2 },
+			},
+			{
+				id: 2,
+				flag: false,
+				value: -2.5,
+				big: -5n,
+				label: "cd\u00e9",
+				tag: "wxyz",
+				point: { x: 3, y: 4 },
+			},
+			{
+				id: 3,
+				flag: true,
+				value: Number.NaN,
+				big: 7n,
+				label: "",
+				tag: "",
+				point: { x: 5, y: 6 },
+			},
+		];
+		// zarr-python's default: zero for numbers, and "0" for strings.
+		let fill = {
+			id: 0,
+			flag: false,
+			value: 0,
+			big: 0n,
+			label: "0",
+			tag: "0",
+			point: { x: 0, y: 0 },
+		};
+
+		// The same records as `struct`, little- and big-endian, and under
+		// `structured`, the name and metadata from before it was registered.
+		describe.each([
+			"1d.chunked.struct",
+			"1d.chunked.struct.be",
+			"1d.chunked.structured",
+		])("%s", async (name) => {
+			let arr = await open.v3(store.resolve(`/${name}`), { kind: "array" });
+
+			it("has correct metadata", () => {
+				expect(arr.dtype).toStrictEqual({
+					name: "struct",
+					configuration: { fields },
+				});
+				expect(arr.is("struct")).toBe(true);
+				expect(arr.is("number")).toBe(false);
+				expect(arr.is("string")).toBe(false);
+				expect(arr.shape).toStrictEqual([5]);
+				expect(arr.chunks).toStrictEqual([2]);
+			});
+
+			it("reads a chunk", async () => {
+				assert(arr.is("struct"));
+				let chunk = await arr.getChunk([0]);
+				expect(chunk.data).toBeInstanceOf(StructArray);
+				expect(chunk.data.BYTES_PER_ELEMENT).toBe(45);
+				expect(Array.from(chunk.data)).toStrictEqual(records.slice(0, 2));
+				expect(chunk.shape).toStrictEqual([2]);
+				expect(chunk.stride).toStrictEqual([1]);
+			});
+
+			it("reads the whole array, with the fill value where nothing was written", async () => {
+				let { data, shape } = await get(arr);
+				expect(shape).toStrictEqual([5]);
+				// The second chunk holds one record that was written and one
+				// that was not. The third chunk was never stored.
+				expect(Array.from(data)).toStrictEqual([...records, fill, fill]);
+			});
+
+			it("reads a slice and a single record", async () => {
+				let { data, shape } = await get(arr, [slice(1, 3)]);
+				expect(shape).toStrictEqual([2]);
+				expect(Array.from(data)).toStrictEqual(records.slice(1, 3));
+				expect(await get(arr, [1])).toStrictEqual(records[1]);
+				expect(await get(arr, [4])).toStrictEqual(fill);
+			});
+		});
+
+		it("refuses other data types that are objects, with a reason", async () => {
+			let metadata = {
+				zarr_format: 3,
+				node_type: "array",
+				shape: [2],
+				data_type: {
+					name: "numpy.datetime64",
+					configuration: { unit: "s", scale_factor: 1 },
+				},
+				chunk_grid: { name: "regular", configuration: { chunk_shape: [2] } },
+				chunk_key_encoding: { name: "default" },
+				fill_value: 0,
+				codecs: [{ name: "bytes", configuration: { endian: "little" } }],
+				attributes: {},
+			};
+			let memStore = new Map<AbsolutePath, Uint8Array>([
+				["/zarr.json", new TextEncoder().encode(JSON.stringify(metadata))],
+			]);
+			await expect(open.v3(root(memStore), { kind: "array" })).rejects.toThrow(
+				'Unknown or unsupported dataType: {"name":"numpy.datetime64"',
+			);
+		});
+
+		describe("2d.chunked.compressed.struct", async () => {
+			let arr = await open.v3(store.resolve("/2d.chunked.compressed.struct"), {
+				kind: "array",
+			});
+			let written = (i: number, j: number) => ({ a: 10 * i + j, b: i + j / 4 });
+			let fill = { a: 7, b: Number.NaN };
+
+			it("reads the whole array", async () => {
+				let { data, shape, stride } = await get(arr);
+				expect(shape).toStrictEqual([3, 4]);
+				expect(stride).toStrictEqual([4, 1]);
+				expect(Array.from(data)).toStrictEqual([
+					...[written(0, 0), written(0, 1), written(0, 2), fill],
+					...[written(1, 0), written(1, 1), written(1, 2), fill],
+					...[fill, fill, fill, fill],
+				]);
+			});
+
+			it("reads a selection across chunks", async () => {
+				let { data, shape } = await get(arr, [slice(0, 2), slice(1, 3)]);
+				expect(shape).toStrictEqual([2, 2]);
+				expect(Array.from(data)).toStrictEqual([
+					...[written(0, 1), written(0, 2)],
+					...[written(1, 1), written(1, 2)],
+				]);
+				expect(await get(arr, [null, 2])).toMatchObject({ shape: [3] });
+				expect(await get(arr, [1, 2])).toStrictEqual(written(1, 2));
 			});
 		});
 	});

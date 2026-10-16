@@ -87,6 +87,7 @@ export { open } from "./open.js";
 export {
 	BoolArray,
 	ByteStringArray,
+	StructArray,
 	UnicodeStringArray,
 } from "./typedarray.js";
 export { getStrides as _zarrita_internal_getStrides } from "./util.js";

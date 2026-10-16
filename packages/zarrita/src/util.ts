@@ -13,11 +13,14 @@ import type {
 	ObjectType,
 	Scalar,
 	StringDataType,
+	Struct,
+	StructScalar,
 	TypedArrayConstructor,
 } from "./metadata.js";
 import {
 	BoolArray,
 	ByteStringArray,
+	StructArray,
 	UnicodeStringArray,
 } from "./typedarray.js";
 
@@ -86,6 +89,17 @@ export function getCtr<D extends DataType>(
 ): TypedArrayConstructor<D> {
 	if (dataType === "v2:object") {
 		return globalThis.Array as unknown as TypedArrayConstructor<D>;
+	}
+	if (typeof dataType !== "string") {
+		if (dataType?.name !== "struct") {
+			throw new InvalidMetadataError(
+				`Unknown or unsupported dataType: ${JSON.stringify(dataType)}`,
+			);
+		}
+		// Validates the fields, so that an unsupported one fails here.
+		new StructArray(dataType, 0);
+		// @ts-expect-error - the bound constructor matches TypedArrayConstructor
+		return StructArray.bind(null, dataType);
 	}
 	let match = dataType.match(/v2:([US])(\d+)/);
 	if (match) {
@@ -354,7 +368,8 @@ export type DataTypeQuery =
 	| "number"
 	| "bigint"
 	| "object"
-	| "string";
+	| "string"
+	| "struct";
 
 export type NarrowDataType<
 	Dtype extends DataType,
@@ -369,7 +384,9 @@ export type NarrowDataType<
 				? StringDataType
 				: Query extends "object"
 					? ObjectType
-					: Extract<Query, Dtype>;
+					: Query extends "struct"
+						? Struct
+						: Extract<Query, Dtype>;
 
 export function isDataType<Query extends DataTypeQuery>(
 	dtype: DataType,
@@ -380,10 +397,17 @@ export function isDataType<Query extends DataTypeQuery>(
 		query !== "bigint" &&
 		query !== "boolean" &&
 		query !== "object" &&
-		query !== "string"
+		query !== "string" &&
+		query !== "struct"
 	) {
 		return dtype === query;
 	}
+	// A struct is the one data type that is not a string. Metadata can hold
+	// other objects, which no query matches.
+	if (typeof dtype !== "string") {
+		return query === "struct" && dtype?.name === "struct";
+	}
+	if (query === "struct") return false;
 	let isBoolean = dtype === "bool";
 	if (query === "boolean") return isBoolean;
 	let isString =
@@ -411,9 +435,101 @@ export function isShardingCodec(
 	return codec?.name === "sharding_indexed";
 }
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: necessary for null byte removal
+const NULL_BYTES = /\x00/g;
+
+function decodeBase64(text: string): Uint8Array {
+	return Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+}
+
+const SPECIAL_FLOATS: Record<string, number> = {
+	NaN: NaN,
+	Infinity: Infinity,
+	"-Infinity": -Infinity,
+};
+
+/**
+ * Convert the fill value of a struct, as it is in the metadata document,
+ * into the value of each field.
+ *
+ * This is done once, when the document is read: a byte string field holds
+ * base64 there, which cannot be told from its decoded value.
+ */
+export function structFillValue(dataType: Struct, fill: unknown): StructScalar {
+	if (typeof fill === "string") {
+		// Arrays written before `struct` was registered hold the packed bytes
+		// of one record, base64-encoded and little-endian.
+		let bytes = decodeBase64(fill);
+		return new StructArray(dataType, bytes.buffer, 0, 1).get(0);
+	}
+	if (typeof fill !== "object" || fill === null) {
+		throw new InvalidMetadataError(
+			`Invalid fill value for a struct: ${JSON.stringify(fill)}`,
+		);
+	}
+	let record: StructScalar = {};
+	for (let { name, data_type } of dataType.configuration.fields) {
+		let value = (fill as Record<string, unknown>)[name];
+		if (value === undefined) {
+			throw new InvalidMetadataError(
+				`The fill value of a struct needs a value for field ${JSON.stringify(name)}`,
+			);
+		}
+		if (typeof data_type !== "string") {
+			if (data_type.name === "struct") {
+				record[name] = structFillValue(data_type, value);
+			} else if (data_type.name === "null_terminated_bytes") {
+				record[name] = new TextDecoder()
+					.decode(decodeBase64(String(value)))
+					.replace(NULL_BYTES, "");
+			} else {
+				record[name] = String(value);
+			}
+		} else if (data_type === "int64" || data_type === "uint64") {
+			record[name] = BigInt(value as number);
+		} else if (typeof value === "string" && value in SPECIAL_FLOATS) {
+			record[name] = SPECIAL_FLOATS[value];
+		} else {
+			record[name] = value as number | boolean;
+		}
+	}
+	return record;
+}
+
+/**
+ * Bring a v3 data type into the form the rest of zarrita expects.
+ *
+ * `structured` is the name `struct` had before it was registered, with
+ * fields as `[name, data_type]` pairs. It is read as a `struct`.
+ */
+export function normalizeDataType(dataType: unknown): DataType {
+	if (typeof dataType !== "object" || dataType === null) {
+		return dataType as DataType;
+	}
+	let { name, configuration } = dataType as {
+		name?: string;
+		configuration?: { fields?: unknown };
+	};
+	if (name !== "struct" && name !== "structured") {
+		return dataType as DataType;
+	}
+	if (!globalThis.Array.isArray(configuration?.fields)) {
+		throw new InvalidMetadataError("A struct data type needs fields");
+	}
+	let fields = configuration.fields.map((field) => {
+		let [fieldName, fieldType] = globalThis.Array.isArray(field)
+			? field
+			: [field?.name, field?.data_type];
+		return { name: fieldName, data_type: normalizeDataType(fieldType) };
+	});
+	return { name: "struct", configuration: { fields } } as Struct;
+}
+
 export function ensureCorrectScalar<D extends DataType>(
 	metadata: ArrayMetadata<D>,
 ): Scalar<D> | null {
+	// The fill value of a struct is converted when its metadata is read.
+	if (typeof metadata.data_type !== "string") return metadata.fill_value;
 	if (
 		(metadata.data_type === "uint64" || metadata.data_type === "int64") &&
 		metadata.fill_value != null

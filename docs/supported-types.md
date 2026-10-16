@@ -17,7 +17,10 @@ Zarr has a wide range of supported datatypes. zarrita translates these into an a
 | [`float64`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/float64) | [`Float64Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array)     |
 | [`bool`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/bool)       | `BoolArray`                                                                                                         |
 | [`string`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/string)   | [`Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)\<string\>         |
+| [`struct`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/struct)   | `StructArray`                                                                                                       |
 
+
+A `struct` array holds records with named fields, like a NumPy structured dtype. Each element of a `StructArray` reads as an object with a value for every field. The fields can be the numeric types and `bool` above, [`fixed_length_utf32`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/fixed_length_utf32), zarr-python's `null_terminated_bytes`, and another `struct`. Arrays written under the earlier name, [`structured`](https://github.com/zarr-developers/zarr-extensions/tree/main/data-types/structured), are read as `struct`. Writing `struct` arrays is not supported.
 
 [Zarr V2 types](https://zarr.readthedocs.io/en/stable/user-guide/data_types/#data-types-in-zarr-version-2) are mapped to the above, with some specific additional cases.
 
