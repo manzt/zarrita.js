@@ -11,6 +11,7 @@
 		".": "./src/index.ts",
 		"./fetch": "./src/fetch.ts",
 		"./fs": "./src/fs.ts",
+		"./fs-handle": "./src/fs-handle.ts",
 		"./ref": "./src/ref.ts",
 		"./zip": "./src/zip.ts"
 	},

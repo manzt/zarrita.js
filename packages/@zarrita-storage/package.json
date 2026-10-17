@@ -22,6 +22,10 @@
 			"types": "./src/fs.ts",
 			"import": "./src/fs.ts"
 		},
+		"./fs-handle": {
+			"types": "./src/fs-handle.ts",
+			"import": "./src/fs-handle.ts"
+		},
 		"./ref": {
 			"types": "./src/ref.ts",
 			"import": "./src/ref.ts"
@@ -49,6 +53,10 @@
 			"./fs": {
 				"types": "./dist/src/fs.d.ts",
 				"import": "./dist/src/fs.js"
+			},
+			"./fs-handle": {
+				"types": "./dist/src/fs-handle.d.ts",
+				"import": "./dist/src/fs-handle.js"
 			},
 			"./ref": {
 				"types": "./dist/src/ref.d.ts",
