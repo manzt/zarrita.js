@@ -1178,6 +1178,35 @@ describe("v3", async () => {
 		});
 	});
 
+	it("1d.chunked.compressed.sharded.start.i2", async () => {
+		let ranges: RangeQuery[] = [];
+		let base = store.store;
+		let spy_store = {
+			get: (key: AbsolutePath) => base.get(key),
+			getRange: (key: AbsolutePath, range: RangeQuery) => {
+				ranges.push(range);
+				return base.getRange(key, range);
+			},
+		};
+		let arr = await open.v3(
+			root(spy_store).resolve("1d.chunked.compressed.sharded.start.i2"),
+			{ kind: "array" },
+		);
+		expect(await arr.getChunk([0])).toStrictEqual({
+			data: new Int16Array([1]),
+			shape: [1],
+			stride: [1],
+		});
+		expect(await arr.getChunk([1])).toStrictEqual({
+			data: new Int16Array([2]),
+			shape: [1],
+			stride: [1],
+		});
+		// The shard index is read from the start of the shard, not its suffix.
+		expect(ranges[0]).toHaveProperty("offset", 0);
+		expect(ranges[0]).not.toHaveProperty("suffixLength");
+	});
+
 	describe("1d.chunked.filled.compressed.sharded.i2", async () => {
 		let arr = await open.v3(
 			store.resolve("1d.chunked.filled.compressed.sharded.i2"),
