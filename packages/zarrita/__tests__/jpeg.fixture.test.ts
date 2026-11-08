@@ -1,12 +1,24 @@
 import * as fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as url from "node:url";
-import { describe, expect, it } from "vitest";
-
+import { init as initJPEGDecoder } from "@jsquash/jpeg/decode.js";
+import { beforeAll, describe, expect, it } from "vitest";
 import { createCodecPipeline } from "../src/codecs.js";
 import type { ArrayMetadata } from "../src/metadata.js";
 
 describe("JPEG codec interoperability fixture", () => {
+	async function initializeDecoder() {
+		const require = createRequire(import.meta.url);
+		const decoderPath = require.resolve(
+			"@jsquash/jpeg/codec/dec/mozjpeg_dec.js",
+		);
+		const wasm = await fs.readFile(decoderPath.replace(/\.js$/, ".wasm"));
+		const wasmBytes = new Uint8Array(wasm.byteLength);
+		wasmBytes.set(wasm);
+		await initJPEGDecoder(await WebAssembly.compile(wasmBytes.buffer));
+	}
+
 	function createPipeline(metadata: ArrayMetadata<"uint8">) {
 		return createCodecPipeline({
 			dataType: metadata.data_type,
@@ -15,6 +27,8 @@ describe("JPEG codec interoperability fixture", () => {
 			fillValue: metadata.fill_value,
 		});
 	}
+
+	beforeAll(initializeDecoder);
 
 	it("decodes a grayscale Zarr array written by zarr-ext-jpeg", async () => {
 		const fixtureRoot = path.resolve(
@@ -51,10 +65,10 @@ describe("JPEG codec interoperability fixture", () => {
 		expect(chunk.shape).toEqual(expected.shape);
 		expect(chunk.stride).toEqual([expected.shape[1], 1]);
 		expect(chunk.data).toHaveLength(source.length);
-		expect(Math.max(...errors)).toBeLessThanOrEqual(20);
+		expect(Math.max(...errors)).toBeLessThanOrEqual(5);
 		expect(
 			errors.reduce((sum, error) => sum + error, 0) / errors.length,
-		).toBeLessThanOrEqual(5);
+		).toBeLessThanOrEqual(1.5);
 	});
 
 	it("decodes a YCbCr Zarr array written by zarr-ext-jpeg", async () => {
@@ -108,10 +122,10 @@ describe("JPEG codec interoperability fixture", () => {
 		expect(chunk.shape).toEqual(expected.shape);
 		expect(chunk.stride).toEqual([1, width * channels, channels]);
 		expect(errors).toHaveLength(channels * height * width);
-		expect(Math.max(...errors)).toBeLessThanOrEqual(32);
+		expect(Math.max(...errors)).toBeLessThanOrEqual(5);
 		expect(
 			errors.reduce((sum, error) => sum + error, 0) / errors.length,
-		).toBeLessThanOrEqual(8);
+		).toBeLessThanOrEqual(1.1);
 	});
 
 	it("decodes an RGB Zarr array written by zarr-ext-jpeg", async () => {
@@ -160,9 +174,9 @@ describe("JPEG codec interoperability fixture", () => {
 		expect(chunk.shape).toEqual(expected.shape);
 		expect(chunk.stride).toEqual([1, width * channels, channels]);
 		expect(errors).toHaveLength(channels * height * width);
-		expect(Math.max(...errors)).toBeLessThanOrEqual(32);
+		expect(Math.max(...errors)).toBeLessThanOrEqual(1);
 		expect(
 			errors.reduce((sum, error) => sum + error, 0) / errors.length,
-		).toBeLessThanOrEqual(8);
+		).toBeLessThanOrEqual(0.1);
 	});
 });
