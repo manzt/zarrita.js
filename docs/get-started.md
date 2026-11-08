@@ -6,7 +6,7 @@ v0.7.0 contains one breaking change and one deprecation. See the
 :::
 
 **zarrita** supports a variety of environments, including the browser, Node.js,
-and Deno.
+and Deno 
 
 ## Try Zarr online
 
@@ -81,7 +81,6 @@ automatically loads the other dependencies.
     "imports": {
       "zarrita": "https://unpkg.com/zarrita",
       "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage/dist/src/fetch.js",
-      "@jsquash/jpeg": "https://unpkg.com/@jsquash/jpeg@1.6.0/index.js",
       "@jsquash/jpeg/": "https://unpkg.com/@jsquash/jpeg@1.6.0/",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.3/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.3/lz4",
@@ -113,30 +112,6 @@ automatically loads the other dependencies.
 
 :::
 
-## Reading JPEG-compressed arrays
-
-JPEG decoding requires an explicit one-time initialization. Load the jSquash
-decoder's WASM file using your runtime or bundler, compile it, then pass the
-result to `initializeJPEGDecoder` before reading JPEG-compressed arrays.
-
-For example, in Node.js:
-
-```javascript
-import { createRequire } from "node:module";
-import { readFile } from "node:fs/promises";
-import * as zarr from "zarrita";
-
-const require = createRequire(import.meta.resolve("zarrita"));
-const decoderPath = require.resolve(
-  "@jsquash/jpeg/codec/dec/mozjpeg_dec.js",
-);
-const wasmBytes = await readFile(decoderPath.replace(/\.js$/, ".wasm"));
-const wasmModule = await WebAssembly.compile(new Uint8Array(wasmBytes).buffer);
-await zarr.initializeJPEGDecoder(wasmModule);
-```
-
-In browsers and Deno, load the same WASM asset using the mechanism appropriate
-to your app, then call `initializeJPEGDecoder` with its compiled module.
 
 ## Installing from npm
 
