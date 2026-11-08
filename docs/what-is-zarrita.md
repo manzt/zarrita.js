@@ -2,8 +2,9 @@
 
 **zarrita** is a modular Zarr implementation in TypeScript.
 
-- **Zero dependencies** (optionally
-  [`scijs/ndarray`](https://github.com/scijs/ndarray))
+- Modular codec dependencies are loaded on demand, including the
+  [`@jsquash/jpeg`](https://github.com/jamsinclair/jSquash) decoder for JPEG
+  chunks
 - Supports **v2** or **v3** protocols, C & F-order arrays, and diverse
   data-types
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
