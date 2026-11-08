@@ -5,10 +5,8 @@
 ![GitHub Actions](https://github.com/manzt/zarrita.js/actions/workflows/ci.yml/badge.svg)
 
 a minimal & modular Zarr implementation in TypeScript
-
-- Modular codec dependencies are loaded on demand, including the
-  [`@jsquash/jpeg`](https://github.com/jamsinclair/jSquash) decoder for JPEG
-  chunks
+- **Zero dependencies** (optionally
+  [`scijs/ndarray`](https://github.com/scijs/ndarray))
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)
 - Supports **v2** or **v3** protocols, C & F-order arrays, diverse data-types,
   and [ZEP2 Sharding](https://zarr.dev/zeps/draft/ZEP0002.html)

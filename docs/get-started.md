@@ -6,7 +6,7 @@ v0.7.0 contains one breaking change and one deprecation. See the
 :::
 
 **zarrita** supports a variety of environments, including the browser, Node.js,
-and Deno 
+and Deno.
 
 ## Try Zarr online
 
