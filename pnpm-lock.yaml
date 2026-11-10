@@ -78,6 +78,9 @@ importers:
 
   packages/zarrita:
     dependencies:
+      '@jsquash/jpeg':
+        specifier: ^1.6.0
+        version: 1.6.0
       '@zarrita/storage':
         specifier: workspace:^
         version: link:../@zarrita-storage
@@ -638,6 +641,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@jsquash/jpeg@1.6.0':
+    resolution: {integrity: sha512-zwN46Awh1VM6gXlIcALwb5WzqK5H2e6+Awcs1QP8AvS8ohsK/sbE4esvmH4jhlhW7+CgiUUww66vg0aTnlSIMA==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -2538,6 +2544,8 @@ snapshots:
       '@types/node': 26.1.2
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@jsquash/jpeg@1.6.0': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:
