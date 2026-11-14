@@ -372,6 +372,30 @@ a = zarr.create_array(
 )
 a[:] = data
 
+# 1d.chunked.compressed.sharded.start.i2
+# `create_array(shards=...)` has no way to set index_location, so build the
+# codecs by hand to place the shard index at the start of each shard instead
+# of appending it.
+data = np.array([1, 2, 3, 4], dtype="i2")
+a = zarr.create(
+    store=store,
+    path="1d.chunked.compressed.sharded.start.i2",
+    shape=data.shape,
+    dtype=data.dtype,
+    chunk_shape=(2,),
+    codecs=[
+        zarr.codecs.ShardingCodec(
+            chunk_shape=(1,),
+            codecs=[
+                zarr.codecs.BytesCodec(endian="little"),
+                zarr.codecs.GzipCodec(),
+            ],
+            index_location="start",
+        )
+    ],
+)
+a[:] = data
+
 # 1d.chunked.filled.compressed.sharded.i2
 data = np.array([1, 2, 0, 0], dtype="i2")
 a = zarr.create_array(

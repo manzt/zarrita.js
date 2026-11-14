@@ -402,6 +402,7 @@ export type ShardingCodecMetadata = {
 		chunk_shape: number[];
 		codecs: CodecMetadata[];
 		index_codecs: CodecMetadata[];
+		index_location?: "start" | "end";
 	};
 };
 

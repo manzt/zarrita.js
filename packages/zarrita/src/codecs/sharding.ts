@@ -30,6 +30,10 @@ export function createShardedChunkGetter(
 	// index_codecs pipeline — e.g. crc32c appends 4 bytes — so we ask the
 	// pipeline rather than hardcoding any constant.
 	let rawIndexSize = 16 * indexShape.reduce((a, b) => a * b, 1);
+	// The index is appended to the shard by default, but writers may place it
+	// first (`index_location: "start"`) to avoid rewriting the shard tail when
+	// appending chunks. Offsets in the index are absolute either way.
+	let indexLocation = shardingConfig.index_location ?? "end";
 	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
 	return async (chunkCoord: number[], options?: GetOptions) => {
 		let shardCoord = chunkCoord.map((d, i) => Math.floor(d / indexShape[i]));
@@ -37,8 +41,14 @@ export function createShardedChunkGetter(
 
 		if (!(shardPath in cache)) {
 			cache[shardPath] = (async () => {
-				let suffixLength = await indexCodec.computeEncodedSize(rawIndexSize);
-				let bytes = await getRange(shardPath, { suffixLength }, options);
+				let indexLength = await indexCodec.computeEncodedSize(rawIndexSize);
+				let bytes = await getRange(
+					shardPath,
+					indexLocation === "start"
+						? { offset: 0, length: indexLength }
+						: { suffixLength: indexLength },
+					options,
+				);
 				return bytes ? await indexCodec.decode(bytes) : null;
 			})().catch((err) => {
 				delete cache[shardPath];
