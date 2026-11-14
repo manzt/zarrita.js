@@ -162,6 +162,117 @@ describe("FetchStore", () => {
 		);
 	});
 
+	it("falls back to a suffix request when HEAD has no Content-Length", async () => {
+		let full = await new FetchStore(href).get("/zarr.json");
+		assert(full);
+		let requests: Request[] = [];
+		let store = new FetchStore(href, {
+			async fetch(request) {
+				requests.push(request);
+				if (request.method === "HEAD") {
+					return new Response(null, { status: 200 });
+				}
+				// The test server ignores suffix ranges, so answer for it.
+				let suffix = request.headers.get("Range")?.match(/^bytes=-(\d+)$/);
+				assert(suffix && full);
+				return new Response(full.slice(-Number(suffix[1])), { status: 206 });
+			},
+		});
+		let bytes = await store.getRange("/zarr.json", { suffixLength: 50 });
+		expect(requests.map((r) => r.method)).toEqual(["HEAD", "GET"]);
+		expect(requests[1].headers.get("Range")).toBe("bytes=-50");
+		expect(bytes).toEqual(full.slice(-50));
+	});
+
+	describe("200 response to a range request", () => {
+		function endlessBody(chunkSize = 64) {
+			let pulled = { bytes: 0 };
+			let stream = new ReadableStream<Uint8Array>({
+				pull(controller) {
+					pulled.bytes += chunkSize;
+					controller.enqueue(new Uint8Array(chunkSize));
+				},
+			});
+			return { stream, pulled };
+		}
+
+		it("throws when the server ignores Range", async () => {
+			let store = new FetchStore(href, {
+				fetch(request) {
+					let headers = new Headers(request.headers);
+					headers.delete("Range");
+					return fetch(new Request(request, { headers }));
+				},
+			});
+			await expect(
+				store.getRange("/zarr.json", { offset: 4, length: 50 }),
+			).rejects.toThrow(/ignored the Range header/);
+			await expect(
+				store.getRange("/zarr.json", { suffixLength: 50 }),
+			).rejects.toThrow(/ignored the Range header/);
+		});
+
+		it("throws without reading a body whose Content-Length is too long", async () => {
+			let { stream, pulled } = endlessBody();
+			let store = new FetchStore(href, {
+				async fetch() {
+					return new Response(stream, {
+						status: 200,
+						headers: { "Content-Length": "10000000000" },
+					});
+				},
+			});
+			await expect(
+				store.getRange("/zarr.json", { offset: 0, length: 100 }),
+			).rejects.toThrow(/ignored the Range header/);
+			// a ReadableStream pulls once up front to fill its queue
+			expect(pulled.bytes).toBeLessThanOrEqual(64);
+		});
+
+		it("stops reading a body without Content-Length past the range", async () => {
+			let { stream, pulled } = endlessBody();
+			let store = new FetchStore(href, {
+				async fetch() {
+					return new Response(stream, { status: 200 });
+				},
+			});
+			await expect(
+				store.getRange("/zarr.json", { offset: 0, length: 100 }),
+			).rejects.toThrow(/ignored the Range header/);
+			expect(pulled.bytes).toBeLessThanOrEqual(100 + 2 * 64);
+		});
+
+		it("returns a body that is exactly the requested bytes", async () => {
+			let full = await new FetchStore(href).get("/zarr.json");
+			assert(full);
+			let store = new FetchStore(href, {
+				async fetch() {
+					return new Response(full.slice(4, 54));
+				},
+			});
+			expect(
+				await store.getRange("/zarr.json", { offset: 4, length: 50 }),
+			).toEqual(full.slice(4, 54));
+		});
+	});
+
+	it("clamps a suffix longer than the file to the whole file", async () => {
+		let requests: Request[] = [];
+		let store = new FetchStore(href, {
+			async fetch(request) {
+				requests.push(request);
+				return fetch(request);
+			},
+		});
+		let full = await store.get("/zarr.json");
+		assert(full);
+		let bytes = await store.getRange("/zarr.json", {
+			suffixLength: full.length + 100,
+		});
+		expect(requests[2].headers.get("Range")).toBe(`bytes=0-${full.length - 1}`);
+		expect(bytes).toEqual(full);
+	});
+
 	it("reads partial - offset, length", async () => {
 		let store = new FetchStore(href);
 		let bytes = await store.getRange("/zarr.json", { offset: 4, length: 50 });

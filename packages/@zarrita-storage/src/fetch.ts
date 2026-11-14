@@ -27,6 +27,63 @@ async function handleResponse(
 	);
 }
 
+/**
+ * Read a 200 response to a range request without buffering the whole file.
+ *
+ * A 200 is either the whole file, from a server that ignored `Range`, or the
+ * exact bytes, from a custom `fetch`. Reading stops just past the requested
+ * length, so the first case throws and the second returns the bytes.
+ */
+async function readRangeFrom200(
+	response: Response,
+	range: RangeQuery,
+): Promise<Uint8Array> {
+	let limit = "suffixLength" in range ? range.suffixLength : range.length;
+	let declared = parseContentLength(response.headers.get("Content-Length"));
+	if (declared !== undefined && declared > limit) {
+		await response.body?.cancel();
+		throw ignoredRangeError(response);
+	}
+	if (!response.body) {
+		return new Uint8Array(0);
+	}
+	let reader = response.body.getReader();
+	let chunks: Uint8Array[] = [];
+	let total = 0;
+	while (true) {
+		let result = await reader.read();
+		if (result.done) break;
+		total += result.value.length;
+		if (total > limit) {
+			await reader.cancel();
+			throw ignoredRangeError(response);
+		}
+		chunks.push(result.value);
+	}
+	let bytes = new Uint8Array(total);
+	let offset = 0;
+	for (let chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.length;
+	}
+	return bytes;
+}
+
+function ignoredRangeError(response: Response): Error {
+	return new Error(
+		`Server ignored the Range header for ${response.url} and sent the whole file. ` +
+			"Range reads need a server that answers with 206 Partial Content.",
+	);
+}
+
+function parseContentLength(value: string | null): number | undefined {
+	if (value === null || !/^\d+$/.test(value.trim())) {
+		return undefined;
+	}
+	let length = Number(value);
+	return length > 0 ? length : undefined;
+}
+
 /** Options for configuring a {@link FetchStore}. */
 interface FetchStoreOptions {
 	/**
@@ -108,6 +165,10 @@ interface FetchStoreOptions {
  * | **200 / 206** | Success — body is read as `Uint8Array` |
  * | **Any other** | Throws an error |
  *
+ * Range reads (`getRange`) need a server that answers with 206 Partial
+ * Content. If a range request gets a 200 with more bytes than requested, the
+ * server ignored `Range` and the read throws before downloading the file.
+ *
  * If you need to remap status codes (e.g., S3 returns 403 for missing keys
  * on private buckets), provide a custom `fetch` implementation.
  *
@@ -179,6 +240,9 @@ class FetchStore implements AsyncReadable {
 			let request = this.#buildRequest(url, rangeInit);
 			response = await this.#fetch(request);
 		}
+		if (response.status === 200) {
+			return readRangeFrom200(response, range);
+		}
 		return handleResponse(response);
 	}
 
@@ -187,32 +251,34 @@ class FetchStore implements AsyncReadable {
 		suffixLength: number,
 		options: RequestInit,
 	): Promise<Response> {
-		if (this.#useSuffixRequest) {
-			let init: RequestInit = {
+		if (!this.#useSuffixRequest) {
+			let headRequest = this.#buildRequest(url, {
 				...options,
-				headers: { ...options.headers, Range: `bytes=-${suffixLength}` },
-			};
-			return this.#fetch(this.#buildRequest(url, init));
+				method: "HEAD",
+			});
+			let response = await this.#fetch(headRequest);
+			if (!response.ok) {
+				return response;
+			}
+			let length = parseContentLength(response.headers.get("Content-Length"));
+			if (length !== undefined) {
+				let offset = Math.max(0, length - suffixLength);
+				let rangeInit: RequestInit = {
+					...options,
+					headers: {
+						...options.headers,
+						Range: `bytes=${offset}-${length - 1}`,
+					},
+				};
+				return this.#fetch(this.#buildRequest(url, rangeInit));
+			}
+			// No usable length (#432), so fall back to a suffix request.
 		}
-		let headRequest = this.#buildRequest(url, {
+		let init: RequestInit = {
 			...options,
-			method: "HEAD",
-		});
-		let response = await this.#fetch(headRequest);
-		if (!response.ok) {
-			return response;
-		}
-		let contentLength = response.headers.get("Content-Length");
-		let length = Number(contentLength);
-		let offset = length - suffixLength;
-		let rangeInit: RequestInit = {
-			...options,
-			headers: {
-				...options.headers,
-				Range: `bytes=${offset}-${length - 1}`,
-			},
+			headers: { ...options.headers, Range: `bytes=-${suffixLength}` },
 		};
-		return this.#fetch(this.#buildRequest(url, rangeInit));
+		return this.#fetch(this.#buildRequest(url, init));
 	}
 }
 
