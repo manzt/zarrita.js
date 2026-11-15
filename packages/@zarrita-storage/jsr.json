@@ -1,11 +1,11 @@
 {
 	"name": "@zarrita/storage",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"license": "MIT",
 	"nodeModulesDir": "auto",
 	"imports": {
 		"reference-spec-reader": "npm:reference-spec-reader@^0.2.0",
-		"unzipit": "npm:unzipit@2.0.1"
+		"unzipit": "npm:unzipit@2.1.1"
 	},
 	"exports": {
 		".": "./src/index.ts",

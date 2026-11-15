@@ -1,5 +1,11 @@
 # @zarrita/storage
 
+## 0.2.1
+
+### Patch Changes
+
+- `FetchStore` no longer downloads a whole file when only part of it was requested. If a server leaves out `Content-Length`, the store asks for the last bytes directly. If a server ignores the `Range` header, the read throws instead of downloading everything. ([#472](https://github.com/manzt/zarrita.js/pull/472))
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # zarrita
 
+## 0.7.6
+
+### Patch Changes
+
+- Arrays created with `zarr.create` can now be opened by other Zarr libraries such as zarr-python. When `codecs` or `fillValue` is left out, the array gets a `bytes` codec (`vlen-utf8` for strings) and a fill value of zero. Creating `int64` and `uint64` arrays also works now. ([#473](https://github.com/manzt/zarrita.js/pull/473))
+
+- Support `index_location: "start"` in the sharding codec. Shard indexes were always read from the end of the shard, so stores written with the index first failed with `416 Range Not Satisfiable`. ([#466](https://github.com/manzt/zarrita.js/pull/466))
+- Updated dependencies [[`884c3a9`](https://github.com/manzt/zarrita.js/commit/884c3a971135fb74fd39ba4f2279621da1e8a04e)]:
+  - @zarrita/storage@0.2.1
+
 ## 0.7.5
 
 ### Patch Changes
