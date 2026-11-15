@@ -141,9 +141,9 @@ describe("signal propagation through extendStore pipeline", () => {
 		);
 		let ctl = new AbortController();
 		await zarr.get(arr, null, { signal: ctl.signal });
-		// At least one of the inner-store calls carried our signal through
-		// the coalescing extension.
-		let seen = calls.some((c) => c?.signal === ctl.signal);
+		// Shared requests run on their own signal, which is aborted once every
+		// caller has aborted, so it is not the caller's own signal.
+		let seen = calls.some((c) => c?.signal instanceof AbortSignal);
 		expect(seen).toBe(true);
 	});
 });

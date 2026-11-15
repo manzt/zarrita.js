@@ -276,14 +276,56 @@ describe("withRangeCoalescing", () => {
 		});
 	});
 
-	describe("signal merging", () => {
-		it("merges caller signals via AbortSignal.any across a batch", async () => {
-			let inner = fakeStore();
-			let store = withRangeCoalescing(inner);
+	describe("aborting", () => {
+		/** A store whose getRange stays pending until its signal aborts. */
+		function hangingStore() {
+			let signals: AbortSignal[] = [];
+			return {
+				signals,
+				get: vi.fn(() => Promise.resolve<Uint8Array | undefined>(undefined)),
+				getRange: vi.fn(
+					(_key: AbsolutePath, _range: RangeQuery, options?: RequestInit) =>
+						new Promise<Uint8Array | undefined>((_resolve, reject) => {
+							let signal = options?.signal;
+							if (!signal) return;
+							signals.push(signal);
+							signal.addEventListener("abort", () => reject(signal.reason));
+						}),
+				),
+			};
+		}
 
+		it("one caller aborting does not fail the rest of its group", async () => {
+			let inner = hangingStore();
+			let store = withRangeCoalescing(inner);
 			let a = new AbortController();
 			let b = new AbortController();
-			await Promise.all([
+			let first = store.getRange(
+				"/data/chunk",
+				{ offset: 0, length: 100 },
+				{ signal: a.signal },
+			);
+			let second = store.getRange(
+				"/data/chunk",
+				{ offset: 100, length: 100 },
+				{ signal: b.signal },
+			);
+			await Promise.resolve();
+			a.abort(new Error("a aborted"));
+			await expect(first).rejects.toThrow("a aborted");
+			expect(inner.signals[0].aborted).toBe(false);
+			let state = await Promise.race([second, Promise.resolve("pending")]);
+			expect(state).toBe("pending");
+			b.abort(new Error("b aborted"));
+			await expect(second).rejects.toThrow("b aborted");
+		});
+
+		it("cancels the fetch once every caller has aborted", async () => {
+			let inner = hangingStore();
+			let store = withRangeCoalescing(inner);
+			let a = new AbortController();
+			let b = new AbortController();
+			let reads = Promise.allSettled([
 				store.getRange(
 					"/data/chunk",
 					{ offset: 0, length: 100 },
@@ -295,24 +337,28 @@ describe("withRangeCoalescing", () => {
 					{ signal: b.signal },
 				),
 			]);
-
-			let passedSignal = inner.getRange.mock.calls[0][2]?.signal;
-			expect(passedSignal).toBeInstanceOf(AbortSignal);
-			a.abort(new Error("a aborted"));
-			expect(passedSignal?.aborted).toBe(true);
+			await Promise.resolve();
+			a.abort();
+			expect(inner.signals[0].aborted).toBe(false);
+			b.abort();
+			expect(inner.signals[0].aborted).toBe(true);
+			await reads;
 		});
 
-		it("passes a single signal through unchanged", async () => {
-			let inner = fakeStore();
+		it("never cancels a fetch that a caller without a signal waits on", async () => {
+			let inner = hangingStore();
 			let store = withRangeCoalescing(inner);
-			let ctl = new AbortController();
-
-			await store.getRange(
+			let a = new AbortController();
+			let first = store.getRange(
 				"/data/chunk",
 				{ offset: 0, length: 100 },
-				{ signal: ctl.signal },
+				{ signal: a.signal },
 			);
-			expect(inner.getRange.mock.calls[0][2]?.signal).toBe(ctl.signal);
+			store.getRange("/data/chunk", { offset: 100, length: 100 });
+			await Promise.resolve();
+			a.abort(new Error("a aborted"));
+			await expect(first).rejects.toThrow("a aborted");
+			expect(inner.signals[0].aborted).toBe(false);
 		});
 	});
 
