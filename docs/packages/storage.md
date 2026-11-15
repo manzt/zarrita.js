@@ -71,6 +71,11 @@ The store interprets HTTP responses as follows:
 | **200 / 206** | Success — body is read as `Uint8Array`     |
 | **Any other** | Throws an error                            |
 
+Range reads, which sharded arrays depend on, need a server that answers with
+**206 Partial Content**. If a range request gets a **200** with more bytes than
+requested, the server ignored the `Range` header, and the read throws instead of
+downloading the whole file.
+
 If your backend returns different status codes for missing keys (e.g., S3
 returns **403** for missing keys on private buckets), you can remap them with a
 custom `fetch` (see below).
