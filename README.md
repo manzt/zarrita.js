@@ -5,7 +5,6 @@
 ![GitHub Actions](https://github.com/manzt/zarrita.js/actions/workflows/ci.yml/badge.svg)
 
 a minimal & modular Zarr implementation in TypeScript
-
 - **Zero dependencies** (optionally
   [`scijs/ndarray`](https://github.com/scijs/ndarray))
 - Runs natively in **Node**, **Browsers**, and **Deno** (ESM)

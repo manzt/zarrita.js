@@ -5,6 +5,7 @@ import { CastValueCodec } from "./codecs/cast_value.js";
 import { Crc32cCodec } from "./codecs/crc32c.js";
 import { DeltaCodec } from "./codecs/delta.js";
 import { GzipCodec } from "./codecs/gzip.js";
+import { JPEGCodec } from "./codecs/jpeg.js";
 import { JsonCodec } from "./codecs/json2.js";
 import { ScaleOffsetCodec } from "./codecs/scale_offset.js";
 import { ShuffleCodec } from "./codecs/shuffle.js";
@@ -56,6 +57,7 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("zstd", zstd)
 			.set("gzip", gzip)
 			.set("zlib", zlib)
+			.set("jpeg", () => JPEGCodec)
 			.set("transpose", () => TransposeCodec)
 			.set("bytes", () => BytesCodec)
 			.set("crc32c", () => Crc32cCodec)

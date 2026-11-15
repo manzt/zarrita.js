@@ -81,6 +81,7 @@ automatically loads the other dependencies.
     "imports": {
       "zarrita": "https://unpkg.com/zarrita",
       "@zarrita/storage/fetch": "https://unpkg.com/@zarrita/storage/dist/src/fetch.js",
+      "@jsquash/jpeg/": "https://unpkg.com/@jsquash/jpeg@1.6.0/",
       "numcodecs/blosc": "https://unpkg.com/numcodecs@0.3/blosc",
       "numcodecs/lz4": "https://unpkg.com/numcodecs@0.3/lz4",
       "numcodecs/zlib": "https://unpkg.com/numcodecs@0.3/zlib",
@@ -110,6 +111,7 @@ automatically loads the other dependencies.
 ```
 
 :::
+
 
 ## Installing from npm
 
