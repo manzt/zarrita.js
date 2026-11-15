@@ -40,7 +40,7 @@ test("create array", async () => {
 	expect(a.dtype).toBe("int32");
 	expect(a.chunks).toStrictEqual([2, 5]);
 	expect(a.attrs).toStrictEqual(attributes);
-	expect(a.fillValue).toBeNull();
+	expect(a.fillValue).toBe(0);
 	expect(
 		json_decode(h.store.get("/arthur/dent/zarr.json")),
 	).toMatchInlineSnapshot(`
@@ -64,9 +64,16 @@ test("create array", async () => {
 		    },
 		    "name": "default",
 		  },
-		  "codecs": [],
+		  "codecs": [
+		    {
+		      "configuration": {
+		        "endian": "little",
+		      },
+		      "name": "bytes",
+		    },
+		  ],
 		  "data_type": "int32",
-		  "fill_value": null,
+		  "fill_value": 0,
 		  "node_type": "array",
 		  "shape": [
 		    5,
@@ -109,6 +116,61 @@ describe("create array with IEEE 754 special fill values", () => {
 		expect(meta.fill_value).toBe(expected_json);
 		expect(a.fillValue).toBe(fill_value);
 	});
+});
+
+describe("create array defaults to valid v3 metadata", () => {
+	test.each([
+		["int32", 0, 0, "bytes"],
+		["float64", 0, 0, "bytes"],
+		["int64", 0n, 0, "bytes"],
+		["uint64", 0n, 0, "bytes"],
+		["bool", false, false, "bytes"],
+		["string", "", "", "vlen-utf8"],
+	] as const)("%s", async (dtype, fillValue, jsonFillValue, codec) => {
+		let h = zarr.root();
+		let a = await zarr.create(h.resolve("/test"), {
+			shape: [4],
+			chunkShape: [2],
+			dtype,
+		});
+		let meta = json_decode(h.store.get("/test/zarr.json"));
+		expect(meta.fill_value).toBe(jsonFillValue);
+		expect(meta.codecs.map((c: { name: string }) => c.name)).toEqual([codec]);
+		expect(a.fillValue).toBe(fillValue);
+		let chunk = await a.getChunk([0]);
+		expect(Array.from(chunk.data as ArrayLike<unknown>)).toEqual([
+			fillValue,
+			fillValue,
+		]);
+	});
+
+	test("keeps codecs that are passed", async () => {
+		let h = zarr.root();
+		let codecs = [
+			{ name: "bytes", configuration: { endian: "big" } },
+			{ name: "gzip", configuration: { level: 1 } },
+		];
+		await zarr.create(h.resolve("/test"), {
+			shape: [4],
+			chunkShape: [2],
+			dtype: "int32",
+			codecs,
+		});
+		expect(json_decode(h.store.get("/test/zarr.json")).codecs).toEqual(codecs);
+	});
+});
+
+test("create array with a uint64 fill value beyond 2^53", async () => {
+	let h = zarr.root();
+	let a = await zarr.create(h.resolve("/test"), {
+		shape: [2],
+		chunkShape: [2],
+		dtype: "uint64",
+		fillValue: 2n ** 64n - 1n,
+	});
+	let text = new TextDecoder().decode(h.store.get("/test/zarr.json"));
+	expect(text).toContain('"fill_value": 18446744073709551615');
+	expect(a.fillValue).toBe(2n ** 64n - 1n);
 });
 
 test("create array with dimension_names", async () => {
