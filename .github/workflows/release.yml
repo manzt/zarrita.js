@@ -32,9 +32,9 @@ jobs:
         id: changesets
         uses: changesets/action@v2
         with:
-          title: Create Release
-          version: pnpm run version
-          publish: pnpm changeset publish
+          pr-title: Create Release
+          version-script: pnpm run version
+          publish-script: pnpm changeset publish
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
