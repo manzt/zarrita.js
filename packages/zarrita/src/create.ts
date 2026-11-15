@@ -9,7 +9,7 @@ import type {
 	GroupMetadata,
 	Scalar,
 } from "./metadata.js";
-import { jsonEncodeObject } from "./util.js";
+import { isDataType, jsonEncodeObject } from "./util.js";
 
 interface CreateGroupOptions {
 	attributes?: Record<string, unknown>;
@@ -72,6 +72,23 @@ async function createGroup<Store extends Mutable>(
 	return new Group(location.store, location.path, metadata);
 }
 
+// The v3 spec requires an array-to-bytes codec and a fill value that matches
+// the data type, so other implementations can read what we write (#471).
+function defaultCodecs(dtype: DataType): CodecMetadata[] {
+	if (dtype === "string") {
+		return [{ name: "vlen-utf8", configuration: {} }];
+	}
+	return [{ name: "bytes", configuration: { endian: "little" } }];
+}
+
+function defaultFillValue<D extends DataType>(dtype: D): Scalar<D> | null {
+	if (isDataType(dtype, "bigint")) return 0n as Scalar<D>;
+	if (isDataType(dtype, "number")) return 0 as Scalar<D>;
+	if (isDataType(dtype, "boolean")) return false as Scalar<D>;
+	if (isDataType(dtype, "string")) return "" as Scalar<D>;
+	return null;
+}
+
 async function createArray<Store extends Mutable, Dtype extends DataType>(
 	location: Location<Store>,
 	options: CreateArrayOptions<Dtype>,
@@ -93,8 +110,10 @@ async function createArray<Store extends Mutable, Dtype extends DataType>(
 				separator: options.chunkSeparator ?? "/",
 			},
 		},
-		codecs: options.codecs ?? [],
-		fill_value: options.fillValue ?? null,
+		codecs: options.codecs?.length
+			? options.codecs
+			: defaultCodecs(options.dtype),
+		fill_value: options.fillValue ?? defaultFillValue(options.dtype),
 		dimension_names: options.dimensionNames,
 		attributes: options.attributes ?? {},
 	} satisfies ArrayMetadata<Dtype>;

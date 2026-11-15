@@ -21,10 +21,17 @@ import {
 	UnicodeStringArray,
 } from "./typedarray.js";
 
+// JSON.stringify can't encode a bigint, and converting to a number loses
+// precision past 2^53, so emit a placeholder and swap in the digits after.
+const BIGINT_PLACEHOLDER = "__zarrita_bigint__";
+
 export function jsonEncodeObject(o: Record<string, unknown>): Uint8Array {
 	const str = JSON.stringify(
 		o,
 		(_key, value) => {
+			if (typeof value === "bigint") {
+				return `${BIGINT_PLACEHOLDER}${value}`;
+			}
 			// JSON.stringify converts NaN/Infinity/-Infinity to null.
 			// Zarr v3 spec requires these as string representations.
 			if (typeof value === "number") {
@@ -35,7 +42,7 @@ export function jsonEncodeObject(o: Record<string, unknown>): Uint8Array {
 			return value;
 		},
 		2,
-	);
+	).replace(new RegExp(`"${BIGINT_PLACEHOLDER}(-?\\d+)"`, "g"), "$1");
 	return new TextEncoder().encode(str);
 }
 
