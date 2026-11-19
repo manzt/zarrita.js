@@ -14,6 +14,7 @@ test("public API surface", () => {
 		  "InvalidSelectionError",
 		  "Location",
 		  "NotFoundError",
+		  "StructArray",
 		  "UnicodeStringArray",
 		  "UnknownCodecError",
 		  "UnsupportedError",

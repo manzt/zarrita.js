@@ -8,6 +8,7 @@ import type {
 import {
 	BoolArray,
 	ByteStringArray,
+	StructArray,
 	UnicodeStringArray,
 } from "../typedarray.js";
 import { assert, getStrides } from "../util.js";
@@ -20,7 +21,8 @@ function proxy<D extends DataType>(arr: TypedArray<D>): TypedArrayProxy<D> {
 	if (
 		arr instanceof BoolArray ||
 		arr instanceof ByteStringArray ||
-		arr instanceof UnicodeStringArray
+		arr instanceof UnicodeStringArray ||
+		arr instanceof StructArray
 	) {
 		// @ts-expect-error - TS cannot infer arr is a TypedArrayProxy<D>
 		const arrp: TypedArrayProxy<D> = new Proxy(arr, {
@@ -52,6 +54,13 @@ function emptyLike<D extends DataType>(
 		data = new (chunk.data.constructor as TypedArrayConstructor<D>)(
 			// @ts-expect-error - the two argument form is not on the shared type
 			chunk.data.chars,
+			chunk.data.length,
+		);
+	} else if (chunk.data instanceof StructArray) {
+		// This constructor takes the data type before the length.
+		data = new (chunk.data.constructor as TypedArrayConstructor<D>)(
+			// @ts-expect-error - the two argument form is not on the shared type
+			chunk.data.dtype,
 			chunk.data.length,
 		);
 	} else {

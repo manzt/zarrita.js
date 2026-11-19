@@ -4,6 +4,7 @@ import type {
 	DataType,
 	TypedArrayConstructor,
 } from "../metadata.js";
+import { byteswapStructInplace } from "../typedarray.js";
 import { byteswapInplace, getCtr, getStrides } from "../util.js";
 
 const LITTLE_ENDIAN_OS = systemIsLittleEndian();
@@ -31,12 +32,14 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 	#BYTES_PER_ELEMENT: number;
 	#shape: Array<number>;
 	#endian?: "little" | "big";
+	#dataType: D;
 
 	constructor(
 		configuration: { endian?: "little" | "big" } | undefined,
 		meta: { dataType: D; shape: number[]; codecs: CodecMetadata[] },
 	) {
 		this.#endian = configuration?.endian;
+		this.#dataType = meta.dataType;
 		this.#TypedArray = getCtr(meta.dataType);
 		this.#shape = meta.shape;
 		this.#stride = getStrides(meta.shape, "C");
@@ -55,6 +58,15 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 
 	encode(arr: Chunk<D>): Uint8Array {
 		let bytes = new Uint8Array(arr.data.buffer);
+		if (typeof this.#dataType !== "string") {
+			// A struct is held little-endian in memory whatever the machine,
+			// and each of its fields is reversed on its own.
+			if (this.#endian === "big") {
+				bytes = bytes.slice();
+				byteswapStructInplace(bytes, this.#dataType);
+			}
+			return bytes;
+		}
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
 			bytes = bytes.slice();
 			byteswapInplace(bytes, bytesPerElement(this.#TypedArray));
@@ -67,6 +79,23 @@ export class BytesCodec<D extends Exclude<DataType, "v2:object" | "string">> {
 	}
 
 	decode(bytes: Uint8Array): Chunk<D> {
+		if (typeof this.#dataType !== "string") {
+			if (this.#endian === "big") {
+				// Copy before swapping, as below.
+				bytes = bytes.slice();
+				byteswapStructInplace(bytes, this.#dataType);
+			}
+			// A struct is read through a DataView, which needs no alignment.
+			return {
+				data: new this.#TypedArray(
+					bytes.buffer,
+					bytes.byteOffset,
+					bytes.byteLength / this.#BYTES_PER_ELEMENT,
+				),
+				shape: this.#shape,
+				stride: this.#stride,
+			};
+		}
 		if (LITTLE_ENDIAN_OS && this.#endian === "big") {
 			// Copy before swapping so we never mutate the input in place; it
 			// may be a shared buffer (e.g. from `withByteCaching`). See #431.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BytesCodec } from "../src/codecs/bytes.js";
+import type { Struct } from "../src/metadata.js";
 
 let meta = (dataType: "int32") => ({ dataType, shape: [2], codecs: [] });
 
@@ -56,5 +57,49 @@ describe("BytesCodec", () => {
 		let chunk = codec.decode(bytes);
 
 		expect(Array.from(chunk.data)).toEqual([1n, 2n]);
+	});
+
+	describe("struct", () => {
+		let dataType: Struct = {
+			name: "struct",
+			configuration: {
+				fields: [
+					{ name: "id", data_type: "int16" },
+					{ name: "flag", data_type: "bool" },
+					{ name: "value", data_type: "float32" },
+				],
+			},
+		};
+		let structMeta = { dataType, shape: [2], codecs: [] };
+		// Two records of 7 bytes: (1, true, 1.5) and (-2, false, -0.25)
+		let little = [1, 0, 1, 0, 0, 0xc0, 0x3f, 0xfe, 0xff, 0, 0, 0, 0x80, 0xbe];
+		let big = [0, 1, 1, 0x3f, 0xc0, 0, 0, 0xff, 0xfe, 0, 0xbe, 0x80, 0, 0];
+		let records = [
+			{ id: 1, flag: true, value: 1.5 },
+			{ id: -2, flag: false, value: -0.25 },
+		];
+
+		it.each([
+			["little", little],
+			["big", big],
+		] as const)("decodes and encodes %s-endian records", (endian, stored) => {
+			let codec = BytesCodec.fromConfig({ endian }, structMeta);
+			let bytes = new Uint8Array(stored);
+			let chunk = codec.decode(bytes);
+			expect(Array.from(chunk.data)).toStrictEqual(records);
+			expect(chunk.shape).toStrictEqual([2]);
+			// Decoding leaves the stored bytes as they were.
+			expect(Array.from(bytes)).toStrictEqual(stored);
+			expect(Array.from(codec.encode(chunk))).toStrictEqual(stored);
+		});
+
+		it("reads records that start at any byte offset", () => {
+			let codec = BytesCodec.fromConfig({ endian: "little" }, structMeta);
+			let padded = new Uint8Array([9, 9, 9, ...little]);
+			let chunk = codec.decode(padded.subarray(3));
+			expect(Array.from(chunk.data)).toStrictEqual(records);
+			// The bytes are viewed where they are, without a copy.
+			expect(chunk.data.buffer).toBe(padded.buffer);
+		});
 	});
 });
