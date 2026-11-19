@@ -44,6 +44,13 @@ export type ByteStr = `v2:S${number}`;
 /** @category String */
 export type String = "string";
 
+/**
+ * The v3 `fixed_length_utf32` extension dtype, tagged with its `length_bytes`.
+ *
+ * @category String
+ */
+export type FixedLengthUtf32 = `fixed_length_utf32:${number}`;
+
 /** @category Object */
 export type ObjectType = "v2:object";
 
@@ -60,7 +67,7 @@ export type NumberDataType =
 
 export type BigintDataType = Int64 | Uint64;
 
-export type StringDataType = UnicodeStr | ByteStr | String;
+export type StringDataType = UnicodeStr | ByteStr | String | FixedLengthUtf32;
 
 export type DataType =
 	| NumberDataType
@@ -159,7 +166,7 @@ export type TypedArray<D extends DataType> = D extends Int8 ? Int8Array
 	: D extends Float32 ? Float32Array
 	: D extends Float64 ? Float64Array
 	: D extends Bool ? BoolArray
-	: D extends UnicodeStr ? UnicodeStringArray
+	: D extends UnicodeStr | FixedLengthUtf32 ? UnicodeStringArray
 	: D extends ByteStr ? ByteStringArray
 	: D extends String ? Array<string>
 	: D extends ObjectType ? Array<unknown>

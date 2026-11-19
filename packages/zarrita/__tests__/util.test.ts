@@ -9,6 +9,7 @@ import {
 } from "../src/typedarray.js";
 import {
 	byteswapInplace,
+	coerceV3DataType,
 	ensureCorrectScalar,
 	getCtr,
 	getStrides,
@@ -39,6 +40,7 @@ describe("getCtr", () => {
 			["v2:U6", UnicodeStringArray],
 			["v2:S6", ByteStringArray],
 			["string", Array],
+			["fixed_length_utf32:24", UnicodeStringArray],
 		])("%s -> %o", (dtype, ctr) => {
 			const T = getCtr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
@@ -73,6 +75,7 @@ describe("getCtr", () => {
 			["v2:U6", UnicodeStringArray],
 			["v2:S6", ByteStringArray],
 			["string", Array],
+			["fixed_length_utf32:24", UnicodeStringArray],
 		])("%s -> %o", (dtype, ctr) => {
 			const T = getCtr(dtype);
 			expect(new T(1)).toBeInstanceOf(ctr);
@@ -129,6 +132,7 @@ describe("isDataType", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
+		["fixed_length_utf32:24", false],
 	])("isDataType(%s, 'number') -> %s", (dtype, expected) => {
 		expect(isDataType(dtype, "number")).toBe(expected);
 	});
@@ -150,6 +154,7 @@ describe("isDataType", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
+		["fixed_length_utf32:24", false],
 	])("isDataType(%s, 'boolean') -> %s", (dtype, expected) => {
 		expect(isDataType(dtype, "boolean")).toBe(expected);
 	});
@@ -171,6 +176,7 @@ describe("isDataType", () => {
 		["v2:S6", false],
 		["v2:object", false],
 		["string", false],
+		["fixed_length_utf32:24", false],
 	])("isDataType(%s, 'bigint') -> %s", (dtype, expected) => {
 		expect(isDataType(dtype, "bigint")).toBe(expected);
 	});
@@ -192,6 +198,7 @@ describe("isDataType", () => {
 		["v2:S6", true],
 		["v2:object", false],
 		["string", true],
+		["fixed_length_utf32:24", true],
 	])("isDataType(%s, 'string') -> %s", (dtype, expected) => {
 		expect(isDataType(dtype, "string")).toBe(expected);
 	});
@@ -213,6 +220,7 @@ describe("isDataType", () => {
 		"v2:S6",
 		"v2:object",
 		"string",
+		"fixed_length_utf32:24",
 	])("isDataType(%s, %s) -> true", (dtype) => {
 		expect(isDataType(dtype, dtype)).toBe(true);
 	});
@@ -711,5 +719,33 @@ describe("v2ToV3ArrayMetadata", () => {
 			  },
 			]
 		`);
+	});
+});
+
+describe("coerceV3DataType", () => {
+	test("passes built-in data types through", () => {
+		expect(coerceV3DataType("int32")).toBe("int32");
+		expect(coerceV3DataType("string")).toBe("string");
+	});
+
+	test("tags fixed_length_utf32 with its length", () => {
+		expect(
+			coerceV3DataType({
+				name: "fixed_length_utf32",
+				configuration: { length_bytes: 24 },
+			}),
+		).toBe("fixed_length_utf32:24");
+	});
+
+	test.each([
+		{ name: "fixed_length_utf32" },
+		{ name: "fixed_length_utf32", configuration: {} },
+		{ name: "fixed_length_utf32", configuration: { length_bytes: "24" } },
+		// Not a whole number of UTF-32 code points.
+		{ name: "fixed_length_utf32", configuration: { length_bytes: 6 } },
+		{ name: "numpy.datetime64", configuration: { unit: "s" } },
+		null,
+	])("rejects %j", (dataType) => {
+		expect(() => coerceV3DataType(dataType)).toThrow(zarr.InvalidMetadataError);
 	});
 });

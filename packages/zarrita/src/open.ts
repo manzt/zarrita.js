@@ -32,6 +32,7 @@ import type {
 	GroupMetadata,
 } from "./metadata.js";
 import {
+	coerceV3DataType,
 	ensureCorrectScalar,
 	jsonDecodeObject,
 	rethrowUnless,
@@ -180,6 +181,7 @@ async function _openV3<Store extends Readable>(
 	}
 	let metaDoc: ArrayMetadata<DataType> | GroupMetadata = jsonDecodeObject(meta);
 	if (metaDoc.node_type === "array") {
+		metaDoc.data_type = coerceV3DataType(metaDoc.data_type);
 		metaDoc.fill_value = ensureCorrectScalar(metaDoc);
 	}
 	return metaDoc.node_type === "array"
