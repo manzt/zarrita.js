@@ -74,7 +74,7 @@ describe("signal propagation through zarr.get", () => {
 		);
 		let ctl = new AbortController();
 		await zarr.get(arr, null, { signal: ctl.signal });
-		// The shard index + shard chunk reads should both see our signal.
+		// Chunk data reads receive the caller's signal directly.
 		let rangeCalls = calls.filter((c) => c?.signal === ctl.signal);
 		expect(rangeCalls.length).toBeGreaterThan(0);
 	});
@@ -129,21 +129,27 @@ describe("zarr.set cancels on signal", () => {
 });
 
 describe("signal propagation through extendStore pipeline", () => {
-	it("reaches the inner store through multiple extensions", async () => {
+	it("aborts an in-flight chunk data read in the inner store", async () => {
 		let fsStore = new FileSystemStore(fixturesRoot);
-		let { store: recorder, calls } = recordingStore(fsStore);
-		let composed = await zarr.extendStore(recorder, (s) =>
-			zarr.withRangeCoalescing(s),
-		);
+		let started = Promise.withResolvers<AbortSignal | undefined>();
+		let store: AsyncReadable = {
+			get: fsStore.get.bind(fsStore),
+			getRange(key, range, opts) {
+				if ("offset" in range) started.resolve(opts?.signal);
+				return fsStore.getRange(key, range, opts);
+			},
+		};
+		let composed = zarr.extendStore(store, zarr.withRangeCoalescing);
 		let arr = await zarr.open.v3(
 			zarr.root(composed).resolve("1d.chunked.compressed.sharded.i2"),
 			{ kind: "array" },
 		);
 		let ctl = new AbortController();
-		await zarr.get(arr, null, { signal: ctl.signal });
-		// Shared requests run on their own signal, which is aborted once every
-		// caller has aborted, so it is not the caller's own signal.
-		let seen = calls.some((c) => c?.signal instanceof AbortSignal);
-		expect(seen).toBe(true);
+		let read = zarr.get(arr, [0], { signal: ctl.signal });
+		let innerSignal = await started.promise;
+		expect(innerSignal?.aborted).toBe(false);
+		ctl.abort(new Error("cancel chunk read"));
+		expect(innerSignal?.reason).toBe(ctl.signal.reason);
+		await expect(read).rejects.toBe(ctl.signal.reason);
 	});
 });

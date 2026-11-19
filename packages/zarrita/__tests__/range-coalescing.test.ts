@@ -295,6 +295,41 @@ describe("withRangeCoalescing", () => {
 			};
 		}
 
+		it("fetches only the live range when a caller aborts before the flush", async () => {
+			let inner = fakeStore();
+			let store = withRangeCoalescing(inner);
+			let ctl = new AbortController();
+			let first = store.getRange(
+				"/data/chunk",
+				{ offset: 0, length: 2 },
+				{ signal: ctl.signal },
+			);
+			let range = { offset: 2, length: 2 };
+			let second = store.getRange("/data/chunk", range);
+			ctl.abort(new Error("cancel first"));
+
+			await expect(first).rejects.toBe(ctl.signal.reason);
+			await expect(second).resolves.toEqual(new Uint8Array([2, 3]));
+			expect(inner.getRange).toHaveBeenCalledOnce();
+			let [, fetched, options] = inner.getRange.mock.calls[0];
+			expect(options?.signal?.aborted).toBe(false);
+			expect(fetched).toEqual(range);
+		});
+
+		it("skips the fetch when all queued reads are already aborted", async () => {
+			let inner = fakeStore();
+			let store = withRangeCoalescing(inner);
+			let signal = AbortSignal.abort(new Error("already cancelled"));
+			let read = store.getRange(
+				"/data/chunk",
+				{ offset: 0, length: 2 },
+				{ signal },
+			);
+
+			await expect(read).rejects.toBe(signal.reason);
+			expect(inner.getRange).not.toHaveBeenCalled();
+		});
+
 		it("one caller aborting does not fail the rest of its group", async () => {
 			let inner = hangingStore();
 			let store = withRangeCoalescing(inner);

@@ -157,7 +157,12 @@ export const withRangeCoalescing = defineStoreExtension(
 			scheduled = false;
 
 			let pathPromises: Promise<void>[] = [];
-			for (let [path, requests] of work) {
+			for (let [path, queued] of work) {
+				let requests = queued.filter((req) => {
+					if (!req.signal?.aborted) return true;
+					req.reject(req.signal.reason);
+					return false;
+				});
 				requests.sort((a, b) => a.offset - b.offset);
 				let groups = groupRequests(requests, coalesceSize);
 				emitFlush(onFlush, {
