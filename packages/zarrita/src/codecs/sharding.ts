@@ -3,6 +3,7 @@ import { createCodecPipeline } from "../codecs.js";
 import { UnsupportedError } from "../errors.js";
 import type { Location } from "../hierarchy.js";
 import type { Chunk } from "../metadata.js";
+import { SharedRequest } from "../shared-request.js";
 import type { ShardingCodecMetadata } from "../util.js";
 
 const MAX_BIG_UINT = 18446744073709551615n;
@@ -34,28 +35,35 @@ export function createShardedChunkGetter(
 	// first (`index_location: "start"`) to avoid rewriting the shard tail when
 	// appending chunks. Offsets in the index are absolute either way.
 	let indexLocation = shardingConfig.index_location ?? "end";
-	let cache: Record<string, Promise<Chunk<"uint64"> | null>> = {};
+	let cache: Record<string, SharedRequest<Chunk<"uint64"> | null>> = {};
 	return async (chunkCoord: number[], options?: GetOptions) => {
 		let shardCoord = chunkCoord.map((d, i) => Math.floor(d / indexShape[i]));
 		let shardPath = location.resolve(encodeShardKey(shardCoord)).path;
 
-		if (!(shardPath in cache)) {
-			cache[shardPath] = (async () => {
-				let indexLength = await indexCodec.computeEncodedSize(rawIndexSize);
-				let bytes = await getRange(
-					shardPath,
-					indexLocation === "start"
-						? { offset: 0, length: indexLength }
-						: { suffixLength: indexLength },
-					options,
-				);
-				return bytes ? await indexCodec.decode(bytes) : null;
-			})().catch((err) => {
-				delete cache[shardPath];
-				throw err;
+		// Reads in the same shard share one index fetch. It is cancelled only
+		// once every read waiting on it has aborted, and a cancelled or failed
+		// fetch is replaced so later reads start a fresh one.
+		let request = cache[shardPath];
+		if (!request || request.abandoned) {
+			let created = new SharedRequest(async (signal) => {
+				try {
+					let indexLength = await indexCodec.computeEncodedSize(rawIndexSize);
+					let bytes = await getRange(
+						shardPath,
+						indexLocation === "start"
+							? { offset: 0, length: indexLength }
+							: { suffixLength: indexLength },
+						{ ...options, signal },
+					);
+					return bytes ? await indexCodec.decode(bytes) : null;
+				} catch (err) {
+					if (cache[shardPath] === created) delete cache[shardPath];
+					throw err;
+				}
 			});
+			request = cache[shardPath] = created;
 		}
-		let index = await cache[shardPath];
+		let index = await request.join(options?.signal);
 
 		if (index === null) {
 			return undefined;

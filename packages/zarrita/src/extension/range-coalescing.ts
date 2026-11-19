@@ -6,6 +6,7 @@ import type {
 	Readable,
 } from "@zarrita/storage";
 import { UnsupportedError } from "../errors.js";
+import { SharedRequest } from "../shared-request.js";
 import { defineStoreExtension } from "./define.js";
 
 type RequiredGetRange = NonNullable<AsyncReadable["getRange"]>;
@@ -18,16 +19,6 @@ function assertRangeCapable(
 			"`zarr.withRangeCoalescing` requires a store with getRange",
 		);
 	}
-}
-
-function mergeSignals(
-	signals: ReadonlyArray<AbortSignal | undefined>,
-): AbortSignal | undefined {
-	let present: AbortSignal[] = [];
-	for (let s of signals) if (s) present.push(s);
-	if (present.length === 0) return undefined;
-	if (present.length === 1) return present[0];
-	return AbortSignal.any(present);
 }
 
 interface PendingRequest {
@@ -166,7 +157,12 @@ export const withRangeCoalescing = defineStoreExtension(
 			scheduled = false;
 
 			let pathPromises: Promise<void>[] = [];
-			for (let [path, requests] of work) {
+			for (let [path, queued] of work) {
+				let requests = queued.filter((req) => {
+					if (!req.signal?.aborted) return true;
+					req.reject(req.signal.reason);
+					return false;
+				});
 				requests.sort((a, b) => a.offset - b.offset);
 				let groups = groupRequests(requests, coalesceSize);
 				emitFlush(onFlush, {
@@ -186,8 +182,9 @@ export const withRangeCoalescing = defineStoreExtension(
 		): Promise<void> {
 			await Promise.all(
 				groups.map(async (group) => {
-					let signal = mergeSignals(group.requests.map((r) => r.signal));
-					try {
+					// The fetch is cancelled only once every caller in the group
+					// has aborted, so one abort can't fail its neighbors.
+					let shared = new SharedRequest(async (signal) => {
 						let data = await boundGetRange(
 							path,
 							{ offset: group.offset, length: group.length },
@@ -198,20 +195,16 @@ export const withRangeCoalescing = defineStoreExtension(
 								`Short read: expected ${group.length} bytes but received ${data.length}`,
 							);
 						}
-						for (let req of group.requests) {
-							if (!data) {
-								req.resolve(undefined);
-								continue;
-							}
-							let start = req.offset - group.offset;
-							let slice = data.slice(start, start + req.length);
-							req.resolve(slice);
-						}
-					} catch (err) {
-						for (let req of group.requests) {
-							req.reject(err);
-						}
-					}
+						return data;
+					});
+					await Promise.all(
+						group.requests.map((req) =>
+							shared.join(req.signal).then((data) => {
+								let start = req.offset - group.offset;
+								req.resolve(data?.slice(start, start + req.length));
+							}, req.reject),
+						),
+					);
 				}),
 			);
 		}
