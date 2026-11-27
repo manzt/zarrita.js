@@ -80,6 +80,10 @@ function getTypedArrayConstructor<
 		// The string arrays take the character width as the first argument.
 		return arr.constructor.bind(null, arr.chars);
 	}
+	if ("dtype" in arr) {
+		// A struct array takes its data type as the first argument.
+		return arr.constructor.bind(null, arr.dtype);
+	}
 	return arr.constructor as TypedArrayConstructor<D>;
 }
 

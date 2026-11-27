@@ -33,8 +33,11 @@ import type {
 } from "./metadata.js";
 import {
 	ensureCorrectScalar,
+	isDataType,
 	jsonDecodeObject,
+	normalizeDataType,
 	rethrowUnless,
+	structFillValue,
 	v2ToV3ArrayMetadata,
 	v2ToV3GroupMetadata,
 } from "./util.js";
@@ -180,6 +183,13 @@ async function _openV3<Store extends Readable>(
 	}
 	let metaDoc: ArrayMetadata<DataType> | GroupMetadata = jsonDecodeObject(meta);
 	if (metaDoc.node_type === "array") {
+		metaDoc.data_type = normalizeDataType(metaDoc.data_type);
+		if (isDataType(metaDoc.data_type, "struct") && metaDoc.fill_value != null) {
+			metaDoc.fill_value = structFillValue(
+				metaDoc.data_type,
+				metaDoc.fill_value,
+			);
+		}
 		metaDoc.fill_value = ensureCorrectScalar(metaDoc);
 	}
 	return metaDoc.node_type === "array"

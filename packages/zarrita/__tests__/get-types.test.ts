@@ -99,6 +99,14 @@ describe("Chunk type per dtype", () => {
 		);
 	});
 
+	test("struct", async () => {
+		let chunk = await zarr.get(mockArray<zarr.Struct>());
+		expectType(chunk).toMatchInlineSnapshot(`zarr.Chunk<zarr.Struct>`);
+		expectType(chunk.data).toMatchInlineSnapshot(
+			`zarr.StructArray<ArrayBufferLike>`,
+		);
+	});
+
 	test("string", async () => {
 		let chunk = await zarr.get(mockArray<zarr.String>());
 		expectType(chunk).toMatchInlineSnapshot(`zarr.Chunk<"string">`);
@@ -173,6 +181,7 @@ describe("Chunk type per union dtype", () => {
 				| Int16Array<ArrayBufferLike>
 				| Int32Array<ArrayBufferLike>
 				| Int8Array<ArrayBufferLike>
+				| zarr.StructArray<ArrayBufferLike>
 				| Uint16Array<ArrayBufferLike>
 				| Uint32Array<ArrayBufferLike>
 				| Uint8Array<ArrayBufferLike>
@@ -262,6 +271,11 @@ describe("Scalar type per dtype (point selection)", () => {
 	test("bool", async () => {
 		let scalar = await zarr.get(mockArray<zarr.Bool>(), [0, 0]);
 		expectType(scalar).toMatchInlineSnapshot(`boolean`);
+	});
+
+	test("struct", async () => {
+		let scalar = await zarr.get(mockArray<zarr.Struct>(), [0, 0]);
+		expectType(scalar).toMatchInlineSnapshot(`zarr.StructScalar`);
 	});
 
 	test("string", async () => {
