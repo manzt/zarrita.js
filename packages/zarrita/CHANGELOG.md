@@ -1,5 +1,11 @@
 # zarrita
 
+## 0.7.7
+
+### Patch Changes
+
+- Aborting one read no longer fails other reads that share its request. Reads in the same shard share one index fetch, and `withRangeCoalescing` merges nearby reads into one fetch. That shared fetch is now cancelled only once every read waiting on it has aborted. ([#477](https://github.com/manzt/zarrita.js/pull/477))
+
 ## 0.7.6
 
 ### Patch Changes
