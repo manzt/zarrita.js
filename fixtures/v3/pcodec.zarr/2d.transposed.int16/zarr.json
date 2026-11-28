@@ -1,0 +1,44 @@
+{
+  "shape": [
+    1000,
+    6
+  ],
+  "data_type": "int16",
+  "chunk_grid": {
+    "name": "regular",
+    "configuration": {
+      "chunk_shape": [
+        256,
+        4
+      ]
+    }
+  },
+  "chunk_key_encoding": {
+    "name": "default",
+    "configuration": {
+      "separator": "/"
+    }
+  },
+  "fill_value": 0,
+  "codecs": [
+    {
+      "name": "transpose",
+      "configuration": {
+        "order": [
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "name": "numcodecs.pcodec",
+      "configuration": {
+        "level": 8
+      }
+    }
+  ],
+  "attributes": {},
+  "zarr_format": 3,
+  "node_type": "array",
+  "storage_transformers": []
+}

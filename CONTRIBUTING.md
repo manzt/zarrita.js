@@ -27,6 +27,8 @@ pnpm test      # run tests
 | `pnpm format`              | Format code                                    |
 | `pnpm publint`             | Check each package is publish-ready            |
 | `pnpm run update-fixtures` | Regenerate v2/v3 test fixtures (requires `uv`) |
+| `uv run scripts/generate-pcodec.py` | Regenerate the pcodec fixtures (`fixtures/v{2,3}/pcodec.zarr`) |
+| `scripts/build-pcodec-wasm.sh` | Rebuild the pcodec WebAssembly module (requires Rust with the `wasm32-unknown-unknown` target) |
 | `pnpm clean`               | Remove all `dist/` folders                     |
 
 ## Project structure
@@ -34,6 +36,7 @@ pnpm test      # run tests
 ```
 packages/
   zarrita/            # main package — core Zarr implementation
+    pcodec-wasm/      # Rust crate compiled to src/codecs/pcodec-wasm.ts
   @zarrita-storage/   # storage backends (fetch, fs, zip, ref)
   @zarrita-ndarray/   # optional scijs/ndarray integration
 fixtures/

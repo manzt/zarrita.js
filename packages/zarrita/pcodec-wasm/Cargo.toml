@@ -1,0 +1,22 @@
+[package]
+name = "zarrita-pcodec-wasm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+description = "pcodec (pco) standalone compression compiled to WebAssembly for zarrita.js"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# pco 1.1.0 is the library behind Python's pcodec 1.1.0 (numcodecs.PCodec)
+pco = "=1.1.0"
+half = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
