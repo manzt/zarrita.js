@@ -6,6 +6,7 @@ import { Crc32cCodec } from "./codecs/crc32c.js";
 import { DeltaCodec } from "./codecs/delta.js";
 import { GzipCodec } from "./codecs/gzip.js";
 import { JsonCodec } from "./codecs/json2.js";
+import { PcodecCodec } from "./codecs/pcodec.js";
 import { ScaleOffsetCodec } from "./codecs/scale_offset.js";
 import { ShuffleCodec } from "./codecs/shuffle.js";
 import { TransposeCodec } from "./codecs/transpose.js";
@@ -75,6 +76,7 @@ function createDefaultRegistry(): Map<string, () => Promise<CodecEntry>> {
 			.set("numcodecs.delta", () => DeltaCodec)
 			.set("numcodecs.bitround", () => BitroundCodec)
 			.set("numcodecs.json2", () => JsonCodec)
+			.set("numcodecs.pcodec", () => PcodecCodec)
 	);
 }
 

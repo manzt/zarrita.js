@@ -31,7 +31,9 @@
 			"!docs/public",
 			"!**/.changeset",
 			"!**/package.json",
-			"!**/jsr.json"
+			"!**/jsr.json",
+			"!**/pcodec-wasm.ts",
+			"!**/pcodec-wasm/target"
 		]
 	},
 	"vcs": {
